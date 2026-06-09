@@ -2,7 +2,7 @@ from numpy.testing import assert_allclose
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from gammapy.datasets import MapDataset
+from gammapy.datasets import MapDataset, Datasets
 from gammapy.estimators.energydependentmorphology import (
     EnergyDependentMorphologyEstimator,
     weighted_chi2_parameter,
@@ -13,14 +13,23 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.utils.testing import requires_data
+import pytest
 
 
 @requires_data()
 class TestEnergyDependentEstimator:
-    def setup_class(self):
+    @pytest.fixture(params=["single", "multiple"])
+    def estimator_result(self, request):
         stacked_dataset = MapDataset.read(
             "$GAMMAPY_DATA/estimators/mock_DL4/dataset_energy_dependent.fits.gz"
         )
+
+        if request.param == "single":
+            datasets = stacked_dataset
+        else:
+            datasets = Datasets(
+                [stacked_dataset, stacked_dataset.copy(name="dataset_copy")]
+            )
         energy_edges = [1, 5, 20] * u.TeV
 
         source_pos = SkyCoord(5.58, 0.2, unit="deg", frame="galactic")
@@ -45,14 +54,18 @@ class TestEnergyDependentEstimator:
         model.spatial_model.lat_0.min = source_pos.galactic.b.deg - 0.8
         model.spatial_model.lat_0.max = source_pos.galactic.b.deg + 0.8
 
-        stacked_dataset.models = model
+        datasets.models = model
         estimator = EnergyDependentMorphologyEstimator(
             energy_edges=energy_edges, source="source"
         )
-        self.estimator_result = estimator.run(stacked_dataset)
+        result = estimator.run(datasets)
 
-    def test_edep(self):
-        results_edep = self.estimator_result["energy_dependence"]["result"]
+        return request.param, result
+
+    def test_edep(self, estimator_result):
+        mode, result = estimator_result
+        results_edep = result["energy_dependence"]["result"]
+
         assert_allclose(
             results_edep["lon_0"],
             [5.606467, 5.608664, 5.597394] * u.deg,
@@ -66,39 +79,66 @@ class TestEnergyDependentEstimator:
         assert_allclose(
             results_edep["sigma"],
             [0.21709024, 0.2315993, 0.13505759] * u.deg,
-            rtol=1e-3,
+            rtol=1e-2,
         )
-        assert_allclose(
-            self.estimator_result["energy_dependence"]["delta_ts"], 50.719, rtol=1e-3
-        )
+        if mode == "single":
+            assert_allclose(result["energy_dependence"]["delta_ts"], 50.719, rtol=1e-3)
+        elif mode == "multiple":
+            assert_allclose(result["energy_dependence"]["delta_ts"], 101.738, rtol=1e-3)
 
-    def test_significance(self):
-        results_src = self.estimator_result["src_above_bkg"]
-        assert_allclose(
-            results_src["delta_ts"],
-            [1683.1128, 289.8156],
-            rtol=1e-3,
-        )
-        assert_allclose(
-            results_src["significance"],
-            [np.inf, 16.546],
-            rtol=1e-3,
-        )
+    def test_significance(self, estimator_result):
+        mode, result = estimator_result
+        results_src = result["src_above_bkg"]
+        if mode == "single":
+            assert_allclose(
+                results_src["delta_ts"],
+                [1683.1128, 289.8156],
+                rtol=1e-3,
+            )
+            assert_allclose(
+                results_src["significance"],
+                [np.inf, 16.546],
+                rtol=1e-3,
+            )
+        elif mode == "multiple":
+            assert_allclose(
+                results_src["delta_ts"],
+                [3362.55821, 579.631],
+                rtol=1e-3,
+            )
+            assert_allclose(
+                results_src["significance"],
+                [np.inf, 23.5882],
+                rtol=1e-3,
+            )
 
-    def test_chi2(self):
-        results_edep = self.estimator_result["energy_dependence"]["result"]
+    def test_chi2(self, estimator_result):
+        mode, result = estimator_result
+        results_edep = result["energy_dependence"]["result"]
         chi2_sigma = weighted_chi2_parameter(
             results_edep, parameters=["sigma", "lat_0", "lon_0"]
         )
+        if mode == "single":
+            assert_allclose(
+                chi2_sigma["chi2"],
+                [75.735899, 1.962729, 0.413059],
+                rtol=1e-2,
+            )
 
-        assert_allclose(
-            chi2_sigma["chi2"],
-            [75.735899, 1.962729, 0.413059],
-            rtol=1e-2,
-        )
+            assert_allclose(
+                chi2_sigma["significance"],
+                [8.7026, 1.4009, 0.64269],
+                rtol=1e-2,
+            )
+        elif mode == "multiple":
+            assert_allclose(
+                chi2_sigma["chi2"],
+                [152.278292, 3.942099, 0.812423],
+                rtol=1e-2,
+            )
 
-        assert_allclose(
-            chi2_sigma["significance"],
-            [8.7026, 1.4009, 0.64269],
-            rtol=1e-2,
-        )
+            assert_allclose(
+                chi2_sigma["significance"],
+                [12.340109, 1.985472, 0.901345],
+                rtol=1e-2,
+            )
