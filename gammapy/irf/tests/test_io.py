@@ -245,6 +245,30 @@ class TestIRFWrite:
         assert_allclose(hdu_center.data["THETA_LO"][0], offset_center.center.value)
         assert_allclose(hdu_center.data["THETA_HI"][0], hdu_center.data["THETA_LO"][0])
 
+    @requires_data()
+    def test_psf_3gauss_to_table(self):
+        filename = "$GAMMAPY_DATA/tests/unbundled/irfs/psf.fits"
+        psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
+
+        table = psf.to_table()
+        assert table.colnames == [
+            "ENERG_LO",
+            "ENERG_HI",
+            "THETA_LO",
+            "THETA_HI",
+            "SIGMA_1",
+            "SIGMA_2",
+            "SIGMA_3",
+            "SCALE",
+            "AMPL_2",
+            "AMPL_3",
+        ]
+
+        psf2 = EnergyDependentMultiGaussPSF.from_hdulist(psf.to_hdulist())
+        assert psf.axes == psf2.axes
+        for name in psf.required_parameters:
+            assert_allclose(psf2.data[name], psf.data[name])
+
     def test_array_to_container(self):
         assert_allclose(self.aeff.quantity, self.aeff_data)
         assert_allclose(self.edisp.quantity, self.edisp_data)
