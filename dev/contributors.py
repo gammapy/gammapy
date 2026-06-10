@@ -25,7 +25,7 @@ def pick_name(a, b):
 
 
 def add(contributors, emails, counts, name, email, kind):
-    name = name.strip()
+    name = re.sub(r"^(co-authored-by:|signed-off-by:)\s*", "", name.strip(), flags=re.I)
     key = email.strip().lower()
     key = key.split("@")[0]
 
