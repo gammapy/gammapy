@@ -24,10 +24,10 @@ def pick_name(a, b):
     return long if any(c.isupper() for c in long) else short
 
 
-def add(contributors, counts, name, email, kind):
+def add(contributors, emails, counts, name, email, kind):
     name = name.strip()
-    email = email.strip().lower()
-    key = email.split("@")[0]
+    key = email.strip().lower()
+    key = key.split("@")[0]
 
     if "bot" in name.lower() or email.endswith("github.com"):
         return
@@ -36,8 +36,24 @@ def add(contributors, counts, name, email, kind):
         name = pick_name(name, contributors[key])
 
     contributors[key] = name
+    emails[key].add(email)
 
     counts[key][kind] += 1
+
+
+def is_first_time_contributor(email, since):
+    out = git(
+        [
+            "log",
+            f"--until={since}",
+            "--author",
+            email,
+            "-n",
+            "1",
+            "--pretty=%H",
+        ]
+    )
+    return out.strip() == ""
 
 
 def main():
@@ -52,6 +68,7 @@ def main():
         min_contrib = int(sys.argv[i + 1])
 
     contributors = {}
+    emails = defaultdict(set)
     counts = defaultdict(lambda: {"commits": 0, "co": 0, "reviews": 0})
 
     co = re.compile(r"Co-authored-by:\s*(.+?)\s*<(.+?)>", re.I)
@@ -77,15 +94,15 @@ def main():
 
         is_signed = False
         for name, email in signed.findall(body):
-            add(contributors, counts, name, email, "commits")
+            add(contributors, emails, counts, name, email, "commits")
             is_signed = True
 
         if not is_signed and "<" in author:
             name, email = author.rsplit("<", 1)
-            add(contributors, counts, name, email.strip(">"), "commits")
+            add(contributors, emails, counts, name, email.strip(">"), "commits")
 
         for name, email in co.findall(body):
-            add(contributors, counts, name, email, "co")
+            add(contributors, emails, counts, name, email, "co")
 
     msgs = git(
         [
@@ -101,25 +118,37 @@ def main():
         for a, b in re.findall(r"(?:\(#(\d+)\)|Merge pull request #(\d+))", msg):
             prs.update(filter(None, (a, b)))
 
+    # detect first-time contributors per key
+    is_new_key = {}
+    for key, key_emails in emails.items():
+        # must be new across ALL known emails
+        is_new_key[key] = all(
+            is_first_time_contributor(email, since) for email in key_emails
+        )
+
     # merging
     merged = {}
-    merged_counts = defaultdict(lambda: {"commits": 0, "co": 0, "reviews": 0})
+    merged_counts = defaultdict(lambda: {"commits": 0, "co": 0})
+    merged_new = defaultdict(lambda: True)
 
-    for email, name in contributors.items():
-        key = normalise(name)
+    for key, name in contributors.items():
+        mkey = normalise(name)
 
-        if key not in merged or len(name) > len(merged[key]):
-            merged[key] = name
+        if mkey not in merged or len(name) > len(merged[mkey]):
+            merged[mkey] = name
 
-        for k in ("commits", "co", "reviews"):
-            merged_counts[key][k] += counts[email][k]
+        for k in ("commits", "co"):
+            merged_counts[mkey][k] += counts[key][k]
 
-    items = [(merged[k], merged_counts[k]) for k in merged]
+        merged_new[mkey] = merged_new[mkey] and is_new_key[key]
+
+    items = [(k, merged[k], merged_counts[k]) for k in merged]
 
     print("## Contributors\n")
     visible = 0
-    for name, s in sorted(items, key=lambda x: x[0].split()[-1]):
-        total = s["commits"] + s["co"] + s["reviews"]
+    new_visible = 0
+    for key, name, s in sorted(items, key=lambda x: x[1].split()[-1]):
+        total = s["commits"] + s["co"]
 
         if total < min_contrib:
             continue
@@ -129,13 +158,17 @@ def main():
             parts.append(f"{s['commits']} commit{'s' if s['commits'] > 1 else ''}")
         if s["co"]:
             parts.append(f"{s['co']} co-authored")
-        if s["reviews"]:
-            parts.append(f"{s['reviews']} review{'s' if s['reviews'] > 1 else ''}")
 
-        print(f"- {name}" + (f" ({', '.join(parts)})" if parts else ""))
+        star = " "
+        if merged_new[key]:
+            star = "* "
+            new_visible += 1
+
+        print(f"-{star}{name}" + (f" ({', '.join(parts)})" if parts else ""))
         visible += 1
 
     print()
+    print(f"New contributors: {new_visible} (Marked with * in the list)")
     print(f"Total contributors: {visible}")
     print(f"Total merged PRs: {len(prs)}")
 
