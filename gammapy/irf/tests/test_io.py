@@ -1,9 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy.table import Table
 from gammapy.irf import (
     Background3D,
     EffectiveAreaTable2D,
@@ -106,11 +108,15 @@ class TestIRFWrite:
         )
         self.fov_lon_lo = np.linspace(-6, 6, 11)[:-1] * u.deg
         self.fov_lon_hi = np.linspace(-6, 6, 11)[1:] * u.deg
-        self.fov_lon_axis = MapAxis.from_bounds(-6, 6, nbin=10, name="fov_lon")
+        self.fov_lon_axis = MapAxis.from_bounds(
+            -6, 6, nbin=10, unit="deg", name="fov_lon"
+        )
 
         self.fov_lat_lo = np.linspace(-6, 6, 11)[:-1] * u.deg
         self.fov_lat_hi = np.linspace(-6, 6, 11)[1:] * u.deg
-        self.fov_lat_axis = MapAxis.from_bounds(-6, 6, nbin=10, name="fov_lat")
+        self.fov_lat_axis = MapAxis.from_bounds(
+            -6, 6, nbin=10, unit="deg", name="fov_lat"
+        )
 
         self.aeff_data = np.random.rand(9, 3) * u.cm * u.cm
         self.edisp_data = np.random.rand(9, 3, 3)
@@ -121,6 +127,7 @@ class TestIRFWrite:
             data=self.aeff_data.value,
             unit=self.aeff_data.unit,
         )
+
         self.edisp = EnergyDispersion2D(
             axes=[
                 self.energy_axis_true,
@@ -137,6 +144,134 @@ class TestIRFWrite:
         self.bkg = Background3D(
             axes=axes, data=self.bkg_data.value, unit=self.bkg_data.unit
         )
+        self.rad_max = RadMax2D(
+            axes=[self.energy_axis_true.copy(name="energy"), self.offset_axis],
+            data=np.random.rand(9, 3),
+            unit="deg",
+        )
+
+    def test_aeff_to_hdulist(self):
+        with pytest.raises(ValueError, match="Not a valid supported format: 'gadf'"):
+            hdulist = self.aeff.to_hdulist(format="gadf")
+        hdulist = self.aeff.to_hdulist()
+        assert hdulist[0].name == "PRIMARY"
+        assert hdulist[1].name == "EFFECTIVE AREA"
+        assert hdulist[1].header["TUNIT1"] == "TeV"
+        assert hdulist[1].header["TUNIT3"] == "deg"
+        assert hdulist[1].header["TUNIT5"] == "cm2"
+        assert hdulist[1].columns.names == [
+            "ENERG_LO",
+            "ENERG_HI",
+            "THETA_LO",
+            "THETA_HI",
+            "EFFAREA",
+        ]
+        assert_allclose(hdulist[1].data["EFFAREA"][0].T, self.aeff_data.value)
+
+        aeff2 = EffectiveAreaTable2D.from_hdulist(hdulist)
+        assert self.aeff.axes == aeff2.axes
+        assert_allclose(self.aeff.data, aeff2.data)
+
+    def test_edisp_to_hdulist(self):
+        hdulist = self.edisp.to_hdulist()
+        assert hdulist[1].name == "ENERGY DISPERSION"
+        assert hdulist[1].header["TUNIT1"] == "TeV"
+        assert hdulist[1].header["TUNIT3"] == ""
+        assert hdulist[1].header["TUNIT5"] == "deg"
+        assert hdulist[1].header["TUNIT7"] == ""
+        assert hdulist[1].columns.names == [
+            "ENERG_LO",
+            "ENERG_HI",
+            "MIGRA_LO",
+            "MIGRA_HI",
+            "THETA_LO",
+            "THETA_HI",
+            "MATRIX",
+        ]
+        assert_allclose(hdulist[1].data["MATRIX"][0].T, self.edisp_data)
+
+        edisp2 = EnergyDispersion2D.from_hdulist(hdulist)
+        assert self.edisp.axes == edisp2.axes
+        assert_allclose(self.edisp.data, edisp2.data)
+
+    def test_bkg_to_hdulist(self):
+        hdulist = self.bkg.to_hdulist()
+        assert hdulist[1].name == "BACKGROUND"
+        assert hdulist[1].header["TUNIT1"] == "TeV"
+        assert hdulist[1].header["TUNIT3"] == "deg"
+        assert hdulist[1].header["TUNIT7"] == "MeV-1 s-1 sr-1"
+        assert hdulist[1].columns.names == [
+            "ENERG_LO",
+            "ENERG_HI",
+            "DETX_LO",
+            "DETX_HI",
+            "DETY_LO",
+            "DETY_HI",
+            "BKG",
+        ]
+        assert_allclose(hdulist[1].data["BKG"][0].T, self.bkg_data.value)
+
+        bkg2 = Background3D.from_hdulist(hdulist)
+        assert self.bkg.axes == bkg2.axes
+        assert_allclose(self.bkg.data, bkg2.data)
+
+    def test_radmax_to_hdulist(self):
+        hdulist = self.rad_max.to_hdulist()
+        assert hdulist[1].name == "RAD_MAX"
+        assert hdulist[1].columns.names == [
+            "ENERG_LO",
+            "ENERG_HI",
+            "THETA_LO",
+            "THETA_HI",
+            "RAD_MAX",
+        ]
+        rad_max2 = RadMax2D.from_hdulist(hdulist)
+        assert self.rad_max.axes == rad_max2.axes
+        assert_allclose(self.rad_max.data, rad_max2.data)
+
+    def test_to_table_node_types(self):
+        # Offset axis set-up with edge nodes
+        hdu = self.aeff.to_table_hdu()
+        assert_allclose(hdu.data["THETA_LO"][0], self.offset_axis.edges[:-1].value)
+        assert_allclose(hdu.data["THETA_HI"][0], self.offset_axis.edges[1:].value)
+
+        # Offset axis set-up with center nodes
+        offset_center = MapAxis.from_bounds(
+            0, 1, nbin=3, unit="deg", name="offset", node_type="center"
+        )
+        aeff_center = EffectiveAreaTable2D(
+            axes=[self.energy_axis_true, offset_center],
+            data=self.aeff_data.value,
+            unit=self.aeff_data.unit,
+        )
+        hdu_center = aeff_center.to_table_hdu()
+        assert_allclose(hdu_center.data["THETA_LO"][0], offset_center.center.value)
+        assert_allclose(hdu_center.data["THETA_HI"][0], hdu_center.data["THETA_LO"][0])
+
+    @requires_data()
+    def test_psf_3gauss_to_table(self):
+        filename = "$GAMMAPY_DATA/tests/unbundled/irfs/psf.fits"
+        psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
+        with pytest.raises(ValueError, match="Not a valid supported format: 'gadf'"):
+            table = psf.to_table(format="gadf")
+        table = psf.to_table()
+        assert table.colnames == [
+            "ENERG_LO",
+            "ENERG_HI",
+            "THETA_LO",
+            "THETA_HI",
+            "SIGMA_1",
+            "SIGMA_2",
+            "SIGMA_3",
+            "SCALE",
+            "AMPL_2",
+            "AMPL_3",
+        ]
+
+        psf2 = EnergyDependentMultiGaussPSF.from_hdulist(psf.to_hdulist())
+        assert psf.axes == psf2.axes
+        for name in psf.required_parameters:
+            assert_allclose(psf2.data[name], psf.data[name])
 
     def test_array_to_container(self):
         assert_allclose(self.aeff.quantity, self.aeff_data)
