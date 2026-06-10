@@ -58,8 +58,9 @@ def is_first_time_contributor(email, since):
 
 def main():
     if len(sys.argv) < 3:
-        sys.exit('Usage: contributors.py "since" "until" [--min-contributions N]')
-
+        sys.exit(
+            'Usage: contributors.py "since" "until" [--min-contributions N] [--debug]'
+        )
     since, until = sys.argv[1], sys.argv[2]
 
     min_contrib = 0
@@ -67,9 +68,11 @@ def main():
         i = sys.argv.index("--min-contributions")
         min_contrib = int(sys.argv[i + 1])
 
+    debug = "--debug" in sys.argv
+
     contributors = {}
     emails = defaultdict(set)
-    counts = defaultdict(lambda: {"commits": 0, "co": 0, "reviews": 0})
+    counts = defaultdict(lambda: {"commits": 0, "co": 0})
 
     co = re.compile(r"Co-authored-by:\s*(.+?)\s*<(.+?)>", re.I)
     signed = re.compile(r"Signed-off-by:\s*(.+?)\s*<(.+?)>", re.I)
@@ -165,12 +168,26 @@ def main():
             new_visible += 1
 
         print(f"-{star}{name}" + (f" ({', '.join(parts)})" if parts else ""))
+
+        if debug:
+            debug_emails = sorted(
+                emails[k] for k, v in contributors.items() if normalise(v) == key
+            )
+            # flatten set-of-sets safely
+            debug_emails = sorted({e for subset in debug_emails for e in subset})
+            print(f"    emails: {', '.join(debug_emails)}")
+
         visible += 1
 
     print()
     print(f"New contributors: {new_visible} (Marked with * in the list)")
     print(f"Total contributors: {visible}")
     print(f"Total merged PRs: {len(prs)}")
+
+    if debug:
+        print("\n## Debug: PR list")
+        for pr in sorted(prs, key=int):
+            print(f"- #{pr}")
 
 
 if __name__ == "__main__":
