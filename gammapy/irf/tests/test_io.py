@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -150,6 +151,8 @@ class TestIRFWrite:
         )
 
     def test_aeff_to_hdulist(self):
+        with pytest.raises(ValueError, match="Not a valid supported format: 'gadf'"):
+            hdulist = self.aeff.to_hdulist(format="gadf")
         hdulist = self.aeff.to_hdulist()
         assert hdulist[0].name == "PRIMARY"
         assert hdulist[1].name == "EFFECTIVE AREA"
@@ -249,7 +252,8 @@ class TestIRFWrite:
     def test_psf_3gauss_to_table(self):
         filename = "$GAMMAPY_DATA/tests/unbundled/irfs/psf.fits"
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
-
+        with pytest.raises(ValueError, match="Not a valid supported format: 'gadf'"):
+            table = psf.to_table(format="gadf")
         table = psf.to_table()
         assert table.colnames == [
             "ENERG_LO",
