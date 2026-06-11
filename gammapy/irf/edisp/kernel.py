@@ -321,7 +321,7 @@ class EDispKernel(IRF):
         ----------
         format : {"ogip", "ogip-sherpa"}
             Format to use. Default is "ogip".
-        creation : `~gammapy.utils.metadata.CreatorMetadata`, optional
+        creation : `~gammapy.utils.metadata.CreatorMetaData`, optional
             Creation metadata to add to the file. If None, default metadata is added.
             Default is None.
 
