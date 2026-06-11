@@ -500,9 +500,9 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         Map template with a "time" axes and optionally an "energy" axes.
     tref : float, optional
         Reference time for the time-axes in the map.
-    filename : string
+    filename : string, optional
         Default name for the serialisation.
-    interp_kwargs : dict
+    interp_kwargs : dict, optional
         Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
         For energy independent models the default arguments are
             {'method': 'linear', 'values_scale':'lin', 'fill_value': 0}.
