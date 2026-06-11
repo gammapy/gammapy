@@ -56,8 +56,8 @@ bayesian = [
     "arviz>=1",
     "xarray",
     "nautilus-sampler",
-    "asdf",
 ]
+asdf = ["asdf", "asdf-astropy"]
 distributed = [
     "ray[default]>=2.9,<2.55; python_version < '3.14'",
     "ray[default]>=2.55; python_version >= '3.14'",
@@ -70,9 +70,9 @@ extra = [
     "numba",
 ]
 
-all = ["gammapy[extra, bayesian, distributed]"]
+all = ["gammapy[extra, bayesian, distributed, asdf]"]
 
-all_no_ray = ["gammapy[extra, bayesian]"]
+all_no_ray = ["gammapy[extra, bayesian, asdf]"]
 
 cov =  ["gammapy[extra, bayesian]"]
 
