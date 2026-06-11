@@ -16,7 +16,7 @@ from gammapy.utils.interpolation import (
     ScaledRegularGridInterpolator,
     interpolation_scale,
 )
-from gammapy.utils.metadata import CreatorMetaData, add_creator_metadata
+from gammapy.utils.metadata import add_creator_metadata
 from gammapy.utils.scripts import make_path
 from .io import IRF_DL3_HDU_SPECIFICATION, IRF_MAP_HDU_SPECIFICATION, gadf_is_pointlike
 
