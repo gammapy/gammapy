@@ -21,6 +21,7 @@ from gammapy.maps import MapAxis
 from gammapy.utils.metadata import (
     METADATA_FITS_KEYS,
     CreatorMetaData,
+    add_creator_metadata,
     MetaData,
     ObsInfoMetaData,
     PointingInfoMetaData,
@@ -326,6 +327,14 @@ class TestMetaDataPropagation:
             "rad_max_2d": (rad_max, {"creator"}),
             "psf": (psf, {"creator"}),
         }
+
+    def test_add_metadata(self):
+        header = self.products["aeff_2d"][0].to_table_hdu().header
+        add_creator_metadata(header)
+        assert header["CREATOR"].startswith("Gammapy")
+        creation = CreatorMetaData(date="2022-01-01", creator="Test", origin="CTA")
+        add_creator_metadata(header, creation)
+        assert header["CREATOR"] == "Test"
 
     def test_metadata_propagation(self):
         missing = []
