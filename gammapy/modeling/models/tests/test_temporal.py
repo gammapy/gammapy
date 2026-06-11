@@ -41,9 +41,35 @@ def test_light_curve_str(light_curve):
 
 @requires_data()
 def test_light_curve_evaluate(light_curve):
+    past_t_min = Time(
+        light_curve.t_ref.quantity
+        + light_curve.map.geom.axes["time"].edges[0]
+        - 0.01 * u.day,
+        format="mjd",
+    )
+    past_t_max = Time(
+        light_curve.t_ref.quantity
+        + light_curve.map.geom.axes["time"].edges[-1]
+        + 0.01 * u.day,
+        format="mjd",
+    )
     t = Time(59500, format="mjd")
     val = light_curve(t)
     assert_allclose(val, 0.015512, rtol=1e-5)
+
+    val = light_curve(past_t_min)
+    assert_allclose(val, 0.0, rtol=1e-7)
+
+    val = light_curve(past_t_max)
+    assert_allclose(val, 0.0, rtol=1e-7)
+
+    light_curve._interp_kwargs["fill_value"] = 2
+    val = light_curve(past_t_max)
+    assert_allclose(val, 2.0, rtol=1e-7)
+
+    light_curve._interp_kwargs["fill_value"] = np.nan
+    val = light_curve(past_t_max)
+    assert_allclose(val, np.nan)
 
 
 @requires_data()
