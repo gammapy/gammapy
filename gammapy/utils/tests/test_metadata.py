@@ -268,8 +268,6 @@ def test_subclass_to_from_header():
         test_meta.extra = 3
 
 
-# --- container tag -> header keywords that must always be present -------------
-# Keys mirror METADATA_FITS_KEYS in gammapy/utils/metadata.py (ORIGIN is optional).
 REQUIRED_KEYWORDS = {
     "creator": ["CREATOR", "CREATED"],
     # "obs_info": ["TELESCOP", "INSTRUME"],
