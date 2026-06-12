@@ -37,7 +37,7 @@ def test_map_axis_roundtrip(axis, tmp_path):
         assert af["axis"] == axis
 
 
-tested_read_examples = [
+tested_read_mapaxis_examples = [
     {
         "example": """!<asdf://gammapy.org/gammapy/tags/maps/mapaxis-1.0.0>
           name: energy
@@ -88,7 +88,7 @@ tested_read_examples = [
 ]
 
 
-@pytest.mark.parametrize("example", tested_read_examples)
+@pytest.mark.parametrize("example", tested_read_mapaxis_examples)
 def test_map_axis_read_examples(example):
     buff = yaml_to_asdf(f"example: {example['example'].strip()}")
 

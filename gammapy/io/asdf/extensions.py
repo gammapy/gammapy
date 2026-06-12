@@ -6,7 +6,7 @@ via an ``entry-point`` in the ``pyproject.toml`` file.
 
 from asdf.extension import ManifestExtension
 
-from .converters.maps.mapaxis import MapAxisConverter
+from .converters.maps.axes import MapAxisConverter
 
 GAMMAPY_CONVERTERS = [
     MapAxisConverter(),
