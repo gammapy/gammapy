@@ -435,7 +435,7 @@ class FluxCollectionEstimator:
             )
             fp_models.append(template_model)
 
-        npred_frozen = fp_dataset.npred_signal(frozen_names, stack=True)
+        npred_frozen = dataset.npred_signal(frozen_names, stack=True)
         bkg_frozen = TemplateNPredModel(
             npred_frozen,
             name="frozen_" + fp_dataset.name,
