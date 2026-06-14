@@ -1,0 +1,1 @@
+Adds check on `~gammapy.utils.coordinates.FoVAltAzFrame` init method to ensure `origin` is consistent with `location` and `obstime`.
