@@ -260,7 +260,7 @@ def test_monochromatic_two_photon():
 
     energy = np.linspace(0.5, 1.5, 20001) * u.TeV
     dnde = flux.evaluate(energy)
-    integral = np.trapz(dnde.to_value("TeV-1"), energy.to_value("TeV"))
+    integral = np.trapezoid(dnde.to_value("TeV-1"), energy.to_value("TeV"))
     assert_allclose(integral, 2.0, rtol=1e-3)
 
 
@@ -399,7 +399,7 @@ def test_box_single_mass_normalization():
 
     energy = np.linspace(e_min.to_value("GeV"), e_max.to_value("GeV"), 5000) * u.GeV
     dnde = flux.evaluate(energy)
-    integral = np.trapz(dnde.to_value("GeV-1"), energy.to_value("GeV"))
+    integral = np.trapezoid(dnde.to_value("GeV-1"), energy.to_value("GeV"))
     assert_allclose(integral, 2.0, rtol=1e-2)
 
 
