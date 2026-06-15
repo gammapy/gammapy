@@ -52,3 +52,22 @@ class TimeMapAxisConverter(Converter):
             reference_time=node["reference_time"],
             interp=node.get("interp", "lin"),
         )
+
+
+class LabelMapAxisConverter(Converter):
+    tags = ["asdf://gammapy.org/gammapy/tags/maps/labelmapaxis-1.0.0"]
+    types = ["gammapy.maps.axes.LabelMapAxis"]
+
+    def to_yaml_tree(self, obj, tag, ctx):
+        return {
+            "labels": list(obj._labels),
+            "name": obj.name,
+        }
+
+    def from_yaml_tree(self, node, tag, ctx):
+        from gammapy.maps import LabelMapAxis
+
+        return LabelMapAxis(
+            labels=node["labels"],
+            name=node.get("name", ""),
+        )

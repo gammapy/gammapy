@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from gammapy.maps import MapAxis, TimeMapAxis
+from gammapy.maps import MapAxis, TimeMapAxis, LabelMapAxis
 from astropy.time import Time
 from astropy import units as u
 
@@ -218,6 +218,61 @@ tested_read_timemapaxis_examples = [
 
 @pytest.mark.parametrize("example", tested_read_timemapaxis_examples)
 def test_time_map_axis_read_examples(example):
+    buff = yaml_to_asdf(f"example: {example['example'].strip()}")
+
+    if example.get("truth") is not None:
+        with asdf.open(buff) as af:
+            assert af["example"] == example["truth"]
+    else:
+        with pytest.raises(asdf.exceptions.ValidationError):
+            asdf.open(buff)
+
+
+tested_label_map_axis = [
+    LabelMapAxis(labels=["label-1", "label-2", "label-3"], name="label-axis"),
+    LabelMapAxis(labels=["label-1", "label-2", "label-3"]),
+]
+
+
+@pytest.mark.parametrize("label_axis", tested_label_map_axis)
+def test_label_map_axis_roundtrip(label_axis, tmp_path):
+    file_path = tmp_path / "test.asdf"
+    with asdf.AsdfFile() as af:
+        af["label_axis"] = label_axis
+        af.write_to(file_path)
+
+    with asdf.open(file_path) as af:
+        assert af["label_axis"] == label_axis
+
+
+tested_read_labelmapaxis_examples = [
+    {
+        "example": """!<asdf://gammapy.org/gammapy/tags/maps/labelmapaxis-1.0.0>
+      labels: [label-1, label-2, label-3]
+      name: label-axis
+      """,
+        "truth": LabelMapAxis(
+            labels=["label-1", "label-2", "label-3"], name="label-axis"
+        ),
+    },
+    {
+        "example": """!<asdf://gammapy.org/gammapy/tags/maps/labelmapaxis-1.0.0>
+     labels: [label-1, label-2, label-3]
+     name: ""
+     """,
+        "truth": LabelMapAxis(labels=["label-1", "label-2", "label-3"]),
+    },
+    {
+        "example": """!<asdf://gammapy.org/gammapy/tags/maps/labelmapaxis-1.0.0>
+     labels:
+     name: ''
+     """,
+    },
+]
+
+
+@pytest.mark.parametrize("example", tested_read_labelmapaxis_examples)
+def test_label_map_axis_read_examples(example):
     buff = yaml_to_asdf(f"example: {example['example'].strip()}")
 
     if example.get("truth") is not None:

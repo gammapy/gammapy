@@ -6,11 +6,16 @@ via an ``entry-point`` in the ``pyproject.toml`` file.
 
 from asdf.extension import ManifestExtension
 
-from .converters.maps.axes import MapAxisConverter, TimeMapAxisConverter
+from .converters.maps.axes import (
+    MapAxisConverter,
+    TimeMapAxisConverter,
+    LabelMapAxisConverter,
+)
 
 GAMMAPY_CONVERTERS = [
     MapAxisConverter(),
     TimeMapAxisConverter(),
+    LabelMapAxisConverter(),
 ]
 
 GAMMAPY_EXTENSIONS = [
