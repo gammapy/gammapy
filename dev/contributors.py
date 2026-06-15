@@ -167,7 +167,10 @@ def main():
             star = "* "
             new_visible += 1
 
-        print(f"-{star}{name}" + (f" ({', '.join(parts)})" if parts else ""))
+        if debug:
+            print(f"-{star}{name}" + (f" ({', '.join(parts)})" if parts else ""))
+        else:
+            print(f"-{star}{name}")
 
         if debug:
             debug_emails = sorted(
