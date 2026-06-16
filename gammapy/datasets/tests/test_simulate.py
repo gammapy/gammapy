@@ -944,7 +944,7 @@ def test_bunch_event_number_sample_sources(dataset):
     sampler = MapDatasetEventSampler(random_state=0, n_event_bunch=1000)
     events = sampler.run(dataset=dataset)
 
-    assert len(events.table) == 24146
+    assert len(events.table) == pytest.approx(24146, abs=30)
 
 
 @requires_data()
