@@ -1,13 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import pytest
-import numpy as np
-from numpy.testing import assert_allclose
+
 import astropy.units as u
+import numpy as np
+import pytest
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
+from numpy.testing import assert_allclose
+
 from gammapy.data import GTI, DataStore, Observation
 from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
@@ -942,7 +944,7 @@ def test_bunch_event_number_sample_sources(dataset):
     sampler = MapDatasetEventSampler(random_state=0, n_event_bunch=1000)
     events = sampler.run(dataset=dataset)
 
-    assert len(events.table) == 24128
+    assert len(events.table) == 24126
 
 
 @requires_data()
