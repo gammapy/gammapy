@@ -235,7 +235,7 @@ plt.show()
 
 channel = "Z"
 massDM = 10 * u.TeV
-diff_flux = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel)
+diff_flux = DarkMatterAnnihilationSpectralModel(mDM=massDM, channel=channel)
 int_flux = (
     jfact * diff_flux.integral(energy_min=0.1 * u.TeV, energy_max=10 * u.TeV)
 ).to("cm-2 s-1")
@@ -260,7 +260,7 @@ plt.show()
 
 channel = "Z"
 massDM = 10 * u.TeV
-diff_flux = DarkMatterDecaySpectralModel(mass=massDM, channel=channel)
+diff_flux = DarkMatterDecaySpectralModel(mDM=massDM, channel=channel)
 int_flux = (
     jfact_decay * diff_flux.integral(energy_min=0.1 * u.TeV, energy_max=10 * u.TeV)
 ).to("cm-2 s-1")
