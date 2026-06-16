@@ -15,7 +15,8 @@ channels. They are presented in this notebook.
 The basic concepts of indirect dark matter searches, however, are not
 explained. So this is aimed at people who already know what the want to
 do. A good introduction to indirect dark matter searches is given for
-example `here <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C/abstract>`__ (Chapter 1 and 5).
+example `here <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C/abstract>`__ \n
+(Chapter 1 and 5).
 
 """
 
@@ -26,23 +27,23 @@ example `here <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C/abstract>`_
 # As always, we start with some setup for the notebook, and with imports.
 #
 
-import numpy as np
 import astropy.units as u
-from astropy.coordinates import SkyCoord
-from regions import CircleSkyRegion, RectangleSkyRegion
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+import numpy as np
+from astropy.coordinates import SkyCoord
 from matplotlib.colors import LogNorm
+from regions import CircleSkyRegion, RectangleSkyRegion
+
 from gammapy.astro.darkmatter import (
+    ContinuumPrimaryFlux,
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
     JFactory,
-    PrimaryFlux,
     profiles,
 )
 from gammapy.maps import WcsGeom, WcsNDMap
-
 
 ######################################################################
 # Profiles
@@ -106,7 +107,8 @@ plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
-# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band around the plane
+# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3
+#  deg band around the plane
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")
@@ -154,7 +156,8 @@ plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
-# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band around the plane
+# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg
+#  band around the plane
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")
@@ -189,7 +192,7 @@ print(
 # For more info see https://arxiv.org/pdf/1012.4515.pdf
 #
 
-fluxes = PrimaryFlux(mDM="1 TeV", channel="eL")
+fluxes = ContinuumPrimaryFlux(mDM="1 TeV", channel="eL")
 print(fluxes.allowed_channels)
 
 fig, axes = plt.subplots(2, 2, figsize=(10, 9))
@@ -203,7 +206,7 @@ for mDM, ax in zip(mDMs, axes):
     ax.set_ylabel("dN/dE")
 
     for channel in ["tau", "mu", "b", "Z"]:
-        fluxes = PrimaryFlux(mDM=mDM, channel=channel)
+        fluxes = ContinuumPrimaryFlux(mDM=mDM, channel=channel)
         fluxes.channel = channel
         fluxes.plot(
             energy_bounds=[mDM / 100, mDM],
@@ -235,7 +238,8 @@ flux_map = WcsNDMap(geom=geom, data=int_flux.value, unit="cm-2 s-1")
 plt.figure()
 ax = flux_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(
-    f"Flux [{int_flux.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')}, channel={fluxes.channel}"
+    f"Flux [{int_flux.unit}]\n \
+        m$_{{DM}}$={fluxes.mDM.to('TeV')}, channel={fluxes.channel}"
 )
 
 plt.show()
@@ -259,7 +263,8 @@ flux_map = WcsNDMap(geom=geom, data=int_flux.value, unit="cm-2 s-1")
 plt.figure()
 ax = flux_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(
-    f"Flux [{int_flux.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')}, channel={fluxes.channel}"
+    f"Flux [{int_flux.unit}]\n \
+        m$_{{DM}}$={fluxes.mDM.to('TeV')}, channel={fluxes.channel}"
 )
 
 plt.show()
