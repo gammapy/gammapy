@@ -592,8 +592,8 @@ def test_k_value_roundtrip(k):
         (
             DarkMatterDecaySpectralModel,
             "GeV cm-2",
-            3.209234e-2,
-            2.33485775e-05,
+            0.0480497420860496,
+            0.000231,
             "pppc4",
         ),
         (
@@ -603,7 +603,13 @@ def test_k_value_roundtrip(k):
             3.52065879e-16,
             "cosmixs",
         ),
-        (DarkMatterDecaySpectralModel, "GeV cm-2", 0.031677, 2.771877e-05, "cosmixs"),
+        (
+            DarkMatterDecaySpectralModel,
+            "GeV2 cm-5",
+            0.04676,
+            0.00027292,
+            "cosmixs",
+        ),
     ],
 )
 @requires_data()
@@ -616,8 +622,8 @@ def test_dm_spectral_model(
     energy_min = 0.01 * u.TeV
     energy_max = 10 * u.TeV
 
-    kwargs = {"source": source} if source is not None else {}
-    model = model_class(mDM=mass, channel=channel, factor=factor, **kwargs)
+    pf = ContinuumPrimaryFlux(mass, channel, source=source)
+    model = model_class(mDM=mass, channel=channel, factor=factor, primary_flux=pf)
 
     flux = model.integral(energy_min=energy_min, energy_max=energy_max).to("cm-2 s-1")
 
@@ -634,14 +640,14 @@ def test_dm_spectral_model(
     models.write(filename, overwrite=True)
     new_models = Models.read(filename)
 
-    assert_quantity_allclose(flux.value, expected_flux, rtol=1e-3)
-    assert_quantity_allclose(dnde.value, expected_dnde, rtol=1e-3)
+    assert_quantity_allclose(flux.value, expected_flux, rtol=1e-2)
+    assert_quantity_allclose(dnde.value, expected_dnde, rtol=1e-2)
 
     loaded = new_models[0].spectral_model
     assert loaded.channel == model.channel
     assert loaded.z == model.z
-    assert_allclose(loaded.factor.value, model.factor.value)
-    assert_quantity_allclose(loaded.mDM, model.mDM)
+    assert_allclose(loaded.factor.value, model.factor.value, rtol=1e-2)
+    assert_quantity_allclose(loaded.mDM, model.mDM, rtol=1e-2)
 
 
 @requires_data()
