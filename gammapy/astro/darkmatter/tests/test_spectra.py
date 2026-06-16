@@ -603,13 +603,7 @@ def test_k_value_roundtrip(k):
             3.52065879e-16,
             "cosmixs",
         ),
-        (
-            DarkMatterDecaySpectralModel,
-            "GeV2 cm-5",
-            0.04676,
-            0.00027292,
-            "cosmixs",
-        ),
+        (DarkMatterDecaySpectralModel, "GeV cm-2", 0.04676, 0.00027292, "cosmixs"),
     ],
 )
 @requires_data()
