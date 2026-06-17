@@ -7,9 +7,9 @@ via an ``entry-point`` in the ``pyproject.toml`` file.
 from asdf.extension import ManifestExtension
 
 from .converters.maps.axes import (
+    LabelMapAxisConverter,
     MapAxisConverter,
     TimeMapAxisConverter,
-    LabelMapAxisConverter,
 )
 
 GAMMAPY_CONVERTERS = [
