@@ -7,7 +7,7 @@ title: |
   Represents LabelMapAxis.
 
 description: |
-     Support the serialization of LabelMapAxis which represents Map axis using labels.
+     Support the serialization of LabelMapAxis which represents a map axis using labels.
 
 type: object
 properties:
