@@ -13,7 +13,8 @@ from gammapy.astro.darkmatter import (
     MonochromaticPrimaryFlux,
     VIBPrimaryFlux,
 )
-from gammapy.modeling.models import Models, SkyModel
+from gammapy.astro.darkmatter.spectra import _PrimaryFluxValidator
+from gammapy.modeling.models import Models, SkyModel, SpectralModel
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 # ---------------------------------------------------------------------------
@@ -87,6 +88,15 @@ def test_primary_flux_cosmixs():
 
 
 @requires_data()
+def test_resolve_table_path_unknown_source(monkeypatch):
+    flux = ContinuumPrimaryFlux(mDM=1 * u.TeV, channel="b", source="pppc4")
+    flux._source = "unknown_predefined"
+    flux._source_type = "predefined"
+    with pytest.raises(ValueError, match="Unknown source"):
+        flux._resolve_table_path()
+
+
+@requires_data()
 def test_continuum_to_from_dict_roundtrip():
     flux = ContinuumPrimaryFlux(channel="W", mDM=1 * u.TeV)
     data = flux.to_dict()
@@ -126,6 +136,14 @@ def test_custom_source_invalid_path():
 def test_source_non_string_raises_typeerror():
     with pytest.raises(TypeError, match="source must be a string"):
         ContinuumPrimaryFlux(mDM=1 * u.TeV, channel="b", source=123)
+
+
+@requires_data()
+def test_continuum_source_none_branch():
+    with pytest.warns(UserWarning, match="PPPC4 will be used by default"):
+        flux = ContinuumPrimaryFlux(mDM=1 * u.TeV, channel="b", source=None)
+    assert flux.source == "pppc4"
+    assert flux._source_type == "predefined"
 
 
 @requires_data()
@@ -246,6 +264,18 @@ def test_mDM_out_of_bounds():
         ContinuumPrimaryFlux(mDM=1 * u.eV, channel="b")
 
 
+def test_custom_source_no_mapping_dict(tmp_path):
+    custom_file = tmp_path / "spectra.ecsv"
+    t = Table(
+        {"mDM": [500.0, 1000.0] * u.GeV, "Log[10,x]": [-3.0, -3.0], "b": [1e-15, 1e-15]}
+    )
+    t.write(custom_file, format="ascii.ecsv")
+    flux = ContinuumPrimaryFlux(
+        mDM=500 * u.GeV, channel="b", source=str(custom_file), mapping_dict=None
+    )
+    assert flux.mapping_dict is None
+
+
 # ---------------------------------------------------------------------------
 # MonochromaticPrimaryFlux
 # ---------------------------------------------------------------------------
@@ -279,6 +309,24 @@ def test_monochromatic_one_photon_z_counterpart():
 def test_monochromatic_one_photon_h_counterpart_default_mass():
     flux = MonochromaticPrimaryFlux(mDM=1 * u.TeV, n_gamma_photons=1, counterpart="h")
     assert flux.counterpart_mass == 125.1 * u.GeV
+
+
+def test_monochromatic_known_counterpart_explicit_mass_override():
+    flux = MonochromaticPrimaryFlux(
+        mDM=1 * u.TeV,
+        n_gamma_photons=1,
+        counterpart="z",
+        counterpart_mass=80,
+    )
+    assert flux.counterpart_mass == 80 * u.GeV
+
+
+def test_monochromatic_two_photon_counterpart_mass_none():
+    flux = MonochromaticPrimaryFlux(mDM=1 * u.TeV, n_gamma_photons=2)
+    assert flux.counterpart is None
+    assert flux.counterpart_mass is None
+    flux.counterpart_mass = None
+    assert flux.counterpart_mass is None
 
 
 def test_monochromatic_one_photon_custom_counterpart_mass():
@@ -431,9 +479,22 @@ def test_box_kinematically_forbidden():
         BoxPrimaryFlux(mDM=10 * u.GeV, mPhi=[100] * u.GeV)
 
 
+def test_box_mphi_getter():
+    flux = BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=[100, 50] * u.GeV)
+    assert flux.mPhi is not None
+
+
 def test_box_invalid_mphi_length():
     with pytest.raises(ValueError, match="exactly 1 or 2 values"):
         BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=[10, 20, 30] * u.GeV)
+
+
+def test_box_mphi_setter_none():
+    flux = BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=[100] * u.GeV)
+    flux.mPhi = None
+    assert flux.mPhi is None
+    assert flux.mPhi1 is None
+    assert flux.mPhi2 is None
 
 
 def test_box_negative_mphi():
@@ -449,6 +510,19 @@ def test_box_to_from_dict_roundtrip():
     assert_quantity_allclose(new_flux.mDM, flux.mDM)
     assert_quantity_allclose(new_flux.mPhi1, flux.mPhi1)
     assert_quantity_allclose(new_flux.mPhi2, flux.mPhi2)
+
+
+def test_box_single_scalar_mphi():
+    flux = BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=100 * u.GeV)
+    assert flux.mPhi1 == 100 * u.GeV
+    assert flux.mPhi2 == 100 * u.GeV
+
+
+def test_box_evaluate_scalar_energy():
+    flux = BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=[100] * u.GeV)
+    # Si da error aquí, hay que cambiar len(energy) por np.atleast_1d
+    dnde = flux.evaluate(np.array([500]) * u.GeV)
+    assert dnde.shape == (1,)
 
 
 # ---------------------------------------------------------------------------
@@ -502,6 +576,17 @@ def test_primary_flux_mass_mismatch_warns():
         DarkMatterAnnihilationSpectralModel(
             mDM=mDM, channel="b", primary_flux=mono_flux
         )
+
+
+def test_primary_flux_validator_missing_impl():
+    try:
+
+        class BadModel(_PrimaryFluxValidator, SpectralModel):
+            pass
+
+        pytest.fail("Expected TypeError was not raised")
+    except TypeError as e:
+        assert "must implement" in str(e)
 
 
 @requires_data()
@@ -736,3 +821,20 @@ def test_unknown_primary_flux_type_in_from_dict():
 
     with pytest.raises(ValueError, match="Unknown primary_flux type"):
         DarkMatterAnnihilationSpectralModel.from_dict(data)
+
+
+@requires_data()
+def test_decay_expected_primary_flux_mass_direct():
+    model = DarkMatterDecaySpectralModel(mDM=2 * u.TeV, channel="b")
+    result = model._expected_primary_flux_mass()
+    assert_quantity_allclose(result, 1 * u.TeV)
+
+
+@requires_data()
+def test_unknown_primary_flux_type_in_decay_from_dict():
+    model = DarkMatterDecaySpectralModel(mDM=1 * u.TeV, channel="b")
+    data = model.to_dict()
+    data["spectral"]["primary_flux"]["type"] = "NotARealFluxType"
+
+    with pytest.raises(ValueError, match="Unknown primary_flux type"):
+        DarkMatterDecaySpectralModel.from_dict(data)
