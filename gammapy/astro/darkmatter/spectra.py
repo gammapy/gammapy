@@ -93,17 +93,16 @@ class _PrimaryFluxValidator:
                 f"got: {type(value).__name__}"
             )
 
-        if hasattr(value, "mDM"):
-            expected = self._expected_primary_flux_mass()
-            actual = u.Quantity(value.mDM)
-            rel_diff = abs((actual - expected) / expected).decompose().value
-            if rel_diff > 0.01:
-                warnings.warn(
-                    f"primary_flux.mDM ({actual}) does not match the expected "
-                    f"mass ({expected}). Results may be inconsistent.",
-                    UserWarning,
-                    stacklevel=2,
-                )
+        actual = u.Quantity(value.mDM)
+        expected = self._expected_primary_flux_mass()
+        rel_diff = abs((actual - expected) / expected).decompose().value
+        if rel_diff > 0.01:
+            warnings.warn(
+                f"primary_flux.mDM ({actual}) does not match the expected "
+                f"mass ({expected}). Results may be inconsistent.",
+                UserWarning,
+                stacklevel=2,
+            )
 
         if isinstance(value, ContinuumPrimaryFlux) and hasattr(self, "channel"):
             if value.channel != self.channel:
