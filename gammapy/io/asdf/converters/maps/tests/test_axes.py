@@ -2,16 +2,17 @@
 import numpy as np
 import pytest
 
-from gammapy.maps import MapAxis, TimeMapAxis, LabelMapAxis
-from astropy.time import Time
 from astropy import units as u
+from astropy.time import Time
+from gammapy.maps import LabelMapAxis, MapAxis, TimeMapAxis
+from gammapy.utils.testing import assert_time_allclose
 
 asdf = pytest.importorskip("asdf")
 pytest.importorskip("asdf.testing")
 from asdf.testing.helpers import yaml_to_asdf  # noqa: E402
 
 
-tested_map_axes = [
+tested_map_axis = [
     MapAxis(nodes=[0.25, 0.75, 1.0, 2.0], interp="lin", node_type="edges"),
     MapAxis(
         nodes=[1, 3, 7], unit="TeV", name="energy", interp="log", node_type="center"
@@ -28,7 +29,7 @@ tested_map_axes = [
 ]
 
 
-@pytest.mark.parametrize("axis", tested_map_axes)
+@pytest.mark.parametrize("axis", tested_map_axis)
 def test_map_axis_roundtrip(axis, tmp_path):
     file_path = tmp_path / "test.asdf"
     with asdf.AsdfFile() as af:
@@ -128,7 +129,9 @@ def test_time_map_axis_roundtrip(time_axis, tmp_path):
         af.write_to(file_path)
 
     with asdf.open(file_path) as af:
-        assert af["time_axis"] == time_axis
+        result = af["time_axis"]
+        assert result == time_axis
+        assert_time_allclose(result.reference_time, time_axis.reference_time)
 
 
 tested_read_timemapaxis_examples = [
@@ -176,21 +179,6 @@ tested_read_timemapaxis_examples = [
     {
         "example": """!<asdf://gammapy.org/gammapy/tags/maps/timemapaxis-1.0.0>
          name : time
-         interp : log
-         reference_time : !time/time-1.4.0 2020-01-01 00:00:00.000
-         edges_max : !unit/quantity-1.3.0
-           unit: !unit/unit-1.0.0 d
-           value: !core/ndarray-1.1.0
-             data: [11]
-         edges_min : !unit/quantity-1.3.0
-            unit: !unit/unit-1.0.0 d
-            value: !core/ndarray-1.1.0
-             data: [1]
-           """,
-    },
-    {
-        "example": """!<asdf://gammapy.org/gammapy/tags/maps/timemapaxis-1.0.0>
-         name : time
          interp : lin
          reference_time : !time/time-1.4.0 2020-01-01 00:00:00.000
          edges_min : !unit/quantity-1.3.0
@@ -228,6 +216,25 @@ def test_time_map_axis_read_examples(example):
             asdf.open(buff)
 
 
+def test_time_map_axis_invalid_interp():
+    example = """!<asdf://gammapy.org/gammapy/tags/maps/timemapaxis-1.0.0>
+             name : time
+             interp : log
+             reference_time : !time/time-1.4.0 2020-01-01 00:00:00.000
+             edges_max : !unit/quantity-1.3.0
+               unit: !unit/unit-1.0.0 d
+               value: !core/ndarray-1.1.0
+                 data: [11]
+             edges_min : !unit/quantity-1.3.0
+                unit: !unit/unit-1.0.0 d
+                value: !core/ndarray-1.1.0
+                 data: [1]
+               """
+    buff = yaml_to_asdf(f"example: {example.strip()}")
+    with pytest.raises(asdf.exceptions.ValidationError):
+        asdf.open(buff)
+
+
 tested_label_map_axis = [
     LabelMapAxis(labels=["label-1", "label-2", "label-3"], name="label-axis"),
     LabelMapAxis(labels=["label-1", "label-2", "label-3"]),
@@ -248,25 +255,24 @@ def test_label_map_axis_roundtrip(label_axis, tmp_path):
 tested_read_labelmapaxis_examples = [
     {
         "example": """!<asdf://gammapy.org/gammapy/tags/maps/labelmapaxis-1.0.0>
-      labels: [label-1, label-2, label-3]
-      name: label-axis
-      """,
+         labels: [label-1, label-2, label-3]
+         name: label-axis
+         """,
         "truth": LabelMapAxis(
             labels=["label-1", "label-2", "label-3"], name="label-axis"
         ),
     },
     {
         "example": """!<asdf://gammapy.org/gammapy/tags/maps/labelmapaxis-1.0.0>
-     labels: [label-1, label-2, label-3]
-     name: ""
-     """,
+         labels: [label-1, label-2, label-3]
+         name: ""
+         """,
         "truth": LabelMapAxis(labels=["label-1", "label-2", "label-3"]),
     },
     {
         "example": """!<asdf://gammapy.org/gammapy/tags/maps/labelmapaxis-1.0.0>
-     labels:
-     name: ''
-     """,
+         name: ''
+         """,
     },
 ]
 

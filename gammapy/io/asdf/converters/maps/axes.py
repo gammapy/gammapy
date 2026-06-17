@@ -60,7 +60,7 @@ class LabelMapAxisConverter(Converter):
 
     def to_yaml_tree(self, obj, tag, ctx):
         return {
-            "labels": list(obj._labels),
+            "labels": obj.center.tolist(),
             "name": obj.name,
         }
 

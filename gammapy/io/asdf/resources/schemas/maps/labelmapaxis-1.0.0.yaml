@@ -19,7 +19,6 @@ properties:
     type: array
     items:
       type: string
-
     description: |
       Labels to be used for the axis nodes.
 
