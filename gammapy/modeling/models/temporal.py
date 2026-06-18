@@ -12,6 +12,7 @@ from gammapy.maps import MapAxis, RegionNDMap, TimeMapAxis
 from astropy.utils import lazyproperty
 from gammapy.modeling import Parameter
 from gammapy.utils.compat import COPY_IF_NEEDED
+from gammapy.utils.deprecation import deprecated_renamed_argument
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
@@ -490,7 +491,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     When the temporal model is energy-dependent, the default interpolation scheme is
     linear with a log scale for the values. The interpolation method and scale values
-    can be changed with the ``interp_kwargs`` argument.
+    were changed with the deprecater ``method`` and ``values_scale`` arguments.
+    In these settings can be now changed with the ``interp_kwargs`` argument.
 
     For more information see :ref:`LightCurve-temporal-model`.
 
@@ -499,15 +501,19 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     map : `~gammapy.maps.RegionNDMap`
         Map template with a "time" axes and optionally an "energy" axes.
     tref : float, optional
-        Reference time for the time-axes in the map.
+        Reference time for the time-axes in the map. Default is: 2000-01-01
     filename : string, optional
-        Default name for the serialisation.
+        Default name for the serialisation. Default is "".
     interp_kwargs : dict, optional
         Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
         For energy independent models the default arguments are
             {'method': 'linear', 'values_scale':'lin', 'fill_value': 0}.
         For energy-dependent models the default arguments are
             {'method': 'linear', 'values_scale':'log', 'fill_value': 0}.
+    method : string, optional, deprecated
+        Method to use for interpolation. Default is "linear".
+    values_scale : string, optional, deprecated
+        Optional value scaling. Default is "log" for energy dependent models and "lin" otherwise.
 
     Examples
     --------
@@ -551,7 +557,18 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     _t_ref_default = Time("2000-01-01")
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
 
-    def __init__(self, map, t_ref=None, filename=None, interp_kwargs=None):
+    @deprecated_renamed_argument(
+        ["method", "values_scale"], ["interp_kwargs", None], ["2.1.1", "2.1.1"]
+    )
+    def __init__(
+        self,
+        map,
+        t_ref=None,
+        filename=None,
+        interp_kwargs=None,
+        method=None,
+        values_scale=None,
+    ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
 
@@ -561,6 +578,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         if t_ref:
             self.reference_time = t_ref
 
+        if filename is None:
+            log.warning(
+                "The filename is not defined. Therefore, the model will not be serialised correctly. "
+                'To set the filename, the "template_model.filename" attribute can be used.'
+            )
         self.filename = filename
 
         if self.is_energy_dependent:
@@ -572,6 +594,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         interp_kwargs.setdefault("values_scale", values_scale)
         interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
+        if method:
+            interp_kwargs["method"] = method
+        if values_scale:
+            interp_kwargs["values_scale"] = values_scale
+
         self._interp_kwargs = interp_kwargs
 
     def __str__(self):
