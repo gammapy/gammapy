@@ -558,16 +558,16 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
 
     @deprecated_renamed_argument(
-        ["method", "values_scale"], ["interp_kwargs", None], ["2.1.1", "2.1.1"]
+        ["method", "values_scale"], [None, None], ["2.1.1", "2.1.1"]
     )
     def __init__(
         self,
         map,
         t_ref=None,
         filename=None,
-        interp_kwargs=None,
         method=None,
         values_scale=None,
+        interp_kwargs=None,
     ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
@@ -594,6 +594,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         interp_kwargs.setdefault("values_scale", values_scale)
         interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
+        #TODO: remove these two if tests with deprecation
         if method:
             interp_kwargs["method"] = method
         if values_scale:
