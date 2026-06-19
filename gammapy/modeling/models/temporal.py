@@ -594,7 +594,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         interp_kwargs.setdefault("values_scale", values_scale)
         interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
-        #TODO: remove these two if tests with deprecation
+
+        # TODO: remove these two if tests with deprecation
         if method:
             interp_kwargs["method"] = method
         if values_scale:
