@@ -587,13 +587,15 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         if self.is_energy_dependent:
             values_scale = "log"
+            fill_value = -np.inf
         else:
             values_scale = "lin"
+            fill_value = 0
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("values_scale", values_scale)
         interp_kwargs.setdefault("method", "linear")
-        interp_kwargs.setdefault("fill_value", 0)
+        interp_kwargs.setdefault("fill_value", fill_value)
 
         # TODO: remove these two if tests with deprecation
         if method:
