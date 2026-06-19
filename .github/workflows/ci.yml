@@ -84,11 +84,19 @@ jobs:
           run-install: false
           post-cleanup: false
       - name: Apply workarounds
+        if: ${{ matrix.os != 'windows-latest' }}
         run: |
           # Workaround for https://github.com/prefix-dev/pixi/issues/3762
           sed -i.bak 's@editable = true@editable = false@g' pixi.toml
           rm pixi.toml.bak
           # Show any changes
+          git diff
+      - name: Apply workarounds (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}  # Braces are required for expressions
+        shell: pwsh
+        run: |
+          # Workaround for https://github.com/prefix-dev/pixi/issues/3762
+          (Get-Content pixi.toml) -replace 'editable = true', 'editable = false' | Set-Content pixi.toml
           git diff
       - uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
         with:
@@ -170,13 +178,13 @@ jobs:
       - uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
         with:
           cache: false
-          environments: ${{ matrix.pixi_env }}
+          environments: docs
       - name: download datasets
         run: |
           pixi run gammapy download datasets
       - name: test build docs
         run: |
-          pixi run build_docs
+          pixi run build-docs
       - name: Upload HTML output
         uses: actions/upload-artifact@v7
         with:
