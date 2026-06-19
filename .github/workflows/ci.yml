@@ -94,7 +94,7 @@ jobs:
         if: ${{ matrix.gammapy_data }}
         env:
           GAMMAPY_DATA: ${{ github.workspace }}/gammapy-datasets/dev
-        run: pixi run -e ${{ matrix.pixi_env }} -- -n auto
+        run: pixi run -e ${{ matrix.pixi_env }} pytest -- -n auto
       - name: Upload coverage to codecov
         if: "contains(matrix.pixi_env, 'coverage')"
         uses: codecov/codecov-action@v6
