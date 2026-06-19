@@ -55,7 +55,7 @@ jobs:
             gammapy_data: true
             allowed_fail: true
           - os: ubuntu-latest
-            pixi_env: 'all-py313'
+            pixi_env: 'all'
             gammapy_data: true
             allowed_fail: false
           - os: ubuntu-latest
