@@ -261,11 +261,9 @@ class SpectralModel(ModelBase):
 
         Returns
         -------
-        median, errn , errp: tuple of `~astropy.units.Quantity`
+        median, errn , errp : tuple of `~astropy.units.Quantity`
             Median, negative, and positive errors
-
         """
-
         samples[~np.isfinite(samples)] = np.nan
         cdf = stats.norm.cdf
         median = np.nanpercentile(samples, 50, axis=-1)
@@ -2099,8 +2097,10 @@ class TemplateSpectralModel(SpectralModel):
         Fill table from an EBL model (Franceschini, 2008)
 
         >>> from gammapy.modeling.models import TemplateSpectralModel
-        >>> filename = '$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz'
-        >>> table_model = TemplateSpectralModel.read_xspec_model(filename=filename, param=0.3)
+        >>> filename = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
+        >>> table_model = TemplateSpectralModel.read_xspec_model(
+        ...     filename=filename, param=0.3
+        ... )
         """
         # TODO: Format of the file should be described and discussed in
         # https://gamma-astro-data-formats.readthedocs.io/en/latest/index.html

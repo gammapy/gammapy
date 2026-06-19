@@ -260,7 +260,6 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             return self._nan_result(datasets, model, energy_min, energy_max)
 
     def _nan_result(self, datasets, model, energy_min, energy_max):
-        """NaN result."""
         energy_axis = MapAxis.from_energy_edges([energy_min, energy_max])
 
         with np.errstate(invalid="ignore", divide="ignore"):
@@ -302,7 +301,7 @@ class FluxCollectionEstimator:
     """Estimate the flux points from a collection of sources simultaneously.
 
     This estimator computes spectral flux points for a *collection of sources*
-    over a set of predefined energy bins. The normalizations of all
+    over a set of predefined energy bins. The normalisations of all
     `~gammapy.modeling.models.SkyModel` objects listed in ``models`` are fitted
     jointly in each energy bin, while all other `~gammapy.modeling.models.SkyModel`
     components in the datasets remain frozen. Re-optimization of each dataset’s
@@ -331,10 +330,10 @@ class FluxCollectionEstimator:
         Norm parameter used for the fit.
         Default is None and a new parameter is created with value=1, name="norm".
         If the `solver` is a sampler the default prior is uniform between [-10, 10].
-    solver : `~gammapy.modeling.Fit` or `~gammapy.modeling.Sampler`
+    solver : `~gammapy.modeling.Fit` or `~gammapy.modeling.Sampler`, optional
         Fit or Sampler instance specifying the backend and options.
         Default is a Sampler with options live_points=300, frac_remain=0.3.
-    reoptimize : bool
+    reoptimize : bool, optional
         Whether to reoptimize each dataset.background_model. Default is False.
         Only SkyModel given in `models` will be fitted the others remain frozen,
         regardless of this option.
@@ -436,7 +435,7 @@ class FluxCollectionEstimator:
             )
             fp_models.append(template_model)
 
-        npred_frozen = fp_dataset.npred_signal(frozen_names, stack=True)
+        npred_frozen = dataset.npred_signal(frozen_names, stack=True)
         bkg_frozen = TemplateNPredModel(
             npred_frozen,
             name="frozen_" + fp_dataset.name,
@@ -584,7 +583,7 @@ class FluxCollectionEstimator:
         Returns
         -------
         result : dict
-            Dict with results
+            Dictionary with results
         """
         datasets = Datasets(datasets)
         if len(datasets) == 0:
@@ -619,7 +618,7 @@ class FluxCollectionEstimator:
         Parameters
         ----------
         fp_results : dict
-            dict used to generate the flux points table.
+            Dictionary used to generate the flux points table.
 
         Returns
         -------
