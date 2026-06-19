@@ -137,4 +137,4 @@ all-no-ray = { features = ["test", "all-no-ray"] }
 # Tooling environments
 docs = { features = ["docs"], solve-group = "docs" }
 coverage = { features = ["test", "coverage"], solve-group = "coverage" }
-pre-commit = { features = ["gammapy", "pre-commit"], solve-group = "gammapy" }
+pre-commit = { features = ["pre-commit"], no-default-feature = true }
