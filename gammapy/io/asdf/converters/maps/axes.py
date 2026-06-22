@@ -83,3 +83,24 @@ class LabelMapAxisConverter(Converter):
             labels=node["labels"],
             name=node.get("name", ""),
         )
+
+
+class MapAxesConverter(Converter):
+    """ASDF converter for the MapAxes class."""
+
+    tags = ["asdf://gammapy.org/gammapy/tags/maps/mapaxes-1.0.0"]
+    types = ["gammapy.maps.axes.MapAxes"]
+
+    def to_yaml_tree(self, obj, tag, ctx):
+        """Convert a MapAxes object into a node suitable for YAML serialization."""
+        return {
+            "axes": list(obj),
+        }
+
+    def from_yaml_tree(self, node, tag, ctx):
+        """Reconstruct a MapAxes object from a YAML node."""
+        from gammapy.maps import MapAxes
+
+        return MapAxes(
+            axes=node["axes"],
+        )

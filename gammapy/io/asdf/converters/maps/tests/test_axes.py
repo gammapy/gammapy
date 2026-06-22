@@ -4,7 +4,7 @@ import pytest
 
 from astropy import units as u
 from astropy.time import Time
-from gammapy.maps import LabelMapAxis, MapAxis, TimeMapAxis
+from gammapy.maps import LabelMapAxis, MapAxes, MapAxis, TimeMapAxis
 from gammapy.utils.testing import assert_time_allclose
 
 asdf = pytest.importorskip("asdf")
@@ -279,6 +279,128 @@ tested_read_labelmapaxis_examples = [
 
 @pytest.mark.parametrize("example", tested_read_labelmapaxis_examples)
 def test_label_map_axis_read_examples(example):
+    buff = yaml_to_asdf(f"example: {example['example'].strip()}")
+
+    if example.get("truth") is not None:
+        with asdf.open(buff) as af:
+            assert af["example"] == example["truth"]
+    else:
+        with pytest.raises(asdf.exceptions.ValidationError):
+            asdf.open(buff)
+
+
+tested_map_axes = [
+    MapAxes(
+        [
+            TimeMapAxis(
+                edges_min=[0, 1, 2] * u.d,
+                edges_max=[1, 2, 3] * u.d,
+                reference_time=Time("1999-01-01"),
+            ),
+            MapAxis(nodes=[0.25, 0.75, 1.0, 2.0], interp="lin", node_type="edges"),
+            LabelMapAxis(labels=["label-1", "label-2", "label-3"], name="label-axis"),
+        ]
+    ),
+    MapAxes(
+        [
+            MapAxis(
+                nodes=[1, 3, 7],
+                unit="TeV",
+                name="energy",
+                interp="log",
+                node_type="center",
+            ),
+            LabelMapAxis(labels=["label-1", "label-2", "label-3"]),
+        ]
+    ),
+    MapAxes(
+        [
+            TimeMapAxis(
+                edges_min=[1, 10] * u.d,
+                edges_max=[2, 13] * u.d,
+                reference_time=Time("2020-03-19"),
+            ),
+            MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=4),
+        ]
+    ),
+]
+
+
+@pytest.mark.parametrize("axes", tested_map_axes)
+def test_map_axes_roundtrip(axes, tmp_path):
+    file_path = tmp_path / "test.asdf"
+    with asdf.AsdfFile() as af:
+        af["axes"] = axes
+        af.write_to(file_path)
+
+    with asdf.open(file_path) as af:
+        assert af["axes"] == axes
+
+
+tested_read_mapaxes_examples = [
+    {
+        "example": """!<asdf://gammapy.org/gammapy/tags/maps/mapaxes-1.0.0>
+       axes:
+         - !<asdf://gammapy.org/gammapy/tags/maps/timemapaxis-1.0.0>
+            name : test_time
+            interp : lin
+            reference_time : !time/time-1.4.0 2020-01-01 00:00:00.000
+            edges_max : !unit/quantity-1.3.0
+               unit: !unit/unit-1.0.0 h
+               value: !core/ndarray-1.1.0
+                 data : [12, 36, 60]
+            edges_min : !unit/quantity-1.3.0
+               unit: !unit/unit-1.0.0 h
+               value: !core/ndarray-1.1.0
+                 data: [0, 24, 48]
+         -  !<asdf://gammapy.org/gammapy/tags/maps/mapaxis-1.0.0>
+              name: energy
+              interp: log
+              node_type: edges
+              boundary_type: monotonic
+              nodes: !core/ndarray-1.1.0 [0.25, 0.75, 1.0, 2.0]
+              unit: TeV
+         -  !<asdf://gammapy.org/gammapy/tags/maps/labelmapaxis-1.0.0>
+             labels: [label-1, label-2, label-3]
+             name: label-axis
+             """,
+        "truth": MapAxes(
+            [
+                TimeMapAxis(
+                    name="test_time",
+                    edges_min=[0, 24, 48] * u.h,
+                    edges_max=[12, 36, 60] * u.h,
+                    reference_time=Time("2020-01-01"),
+                ),
+                MapAxis(
+                    nodes=[0.25, 0.75, 1.0, 2.0],
+                    name="energy",
+                    unit="TeV",
+                    interp="log",
+                    node_type="edges",
+                    boundary_type="monotonic",
+                ),
+                LabelMapAxis(
+                    labels=["label-1", "label-2", "label-3"], name="label-axis"
+                ),
+            ],
+        ),
+    },
+    {
+        "example": """!<asdf://gammapy.org/gammapy/tags/maps/mapaxes-1.0.0>""",
+    },
+    {
+        "example": """!<asdf://gammapy.org/gammapy/tags/maps/mapaxes-1.0.0>
+         axes:
+           name: bad_item
+           value: 5
+        """,
+    },
+]
+
+
+@pytest.mark.parametrize("example", tested_read_mapaxes_examples)
+def test_map_axes_read_examples(example):
     buff = yaml_to_asdf(f"example: {example['example'].strip()}")
 
     if example.get("truth") is not None:
