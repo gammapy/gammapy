@@ -50,7 +50,7 @@ jobs:
             tox_env: 'py314-test-alldeps'
             gammapy_data: true
             allowed_fail: false
-          - os: macos-latest
+          - os: macos-15-arm64
             python: '3.13'
             tox_env: 'py313-test'
             gammapy_data: true
@@ -60,7 +60,7 @@ jobs:
             tox_env: 'py312-test-alldeps_noray'
             gammapy_data: true
             allowed_fail: false
-          - os: macos-14
+          - os: macos-26
             python: '3.12'
             tox_env: 'py312-test'
             allowed_fail: false
