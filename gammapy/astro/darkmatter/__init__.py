@@ -28,7 +28,8 @@ __all__ = [
     "DMProfile",
     "EinastoProfile",
     "IsothermalProfile",
-    "LogNormalNuisancePriorMooreProfile",
+    "LogNormalNuisancePrior",
+    "MooreProfile",
     "NFWProfile",
     "ZhaoProfile",
 ]
