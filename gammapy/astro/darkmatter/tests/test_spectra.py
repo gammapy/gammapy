@@ -1,7 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from pathlib import Path
+from unittest.mock import patch
+
+import astropy.units as u
+import numpy as np
 import pytest
 from numpy.testing import assert_allclose
-import astropy.units as u
+
 from gammapy.astro.darkmatter import (
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
@@ -16,10 +21,19 @@ def test_primary_flux():
     with pytest.raises(ValueError):
         PrimaryFlux(channel="Spam", mDM=1 * u.TeV)
 
+    with pytest.raises(ValueError):
+        PrimaryFlux(channel="b", mDM=1000 * u.TeV)
+
     primflux = PrimaryFlux(channel="W", mDM=1 * u.TeV)
     actual = primflux(500 * u.GeV)
     desired = 9.3319318e-05 / u.GeV
     assert_quantity_allclose(actual, desired)
+
+
+def test_primary_flux_source_case_insensitive():
+    with patch.object(Path, "exists", return_value=False):
+        with pytest.raises(FileNotFoundError):
+            PrimaryFlux(mDM=1 * u.TeV, channel="b", source="PPPC4")
 
 
 @pytest.mark.parametrize(
@@ -127,3 +141,122 @@ def test_primary_flux_cosmixs():
         PrimaryFlux(channel="u", mDM=1 * u.TeV, source="pppc4")
     with pytest.raises(ValueError):
         PrimaryFlux(channel="s", mDM=1 * u.TeV, source="pppc4")
+
+
+# ─── DarkMatterAnnihilationSpectralModel — nuisance ──────────────────────────
+
+
+@requires_data()
+def test_annihilation_no_sigma_frozen():
+    """Without sigmas, log10_jfactor must stay frozen."""
+    jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
+    model = DarkMatterAnnihilationSpectralModel(
+        mass=5 * u.TeV, channel="b", jfactor=jfactor
+    )
+    assert model.log10_jfactor.frozen is True
+    assert model.log10_jfactor.prior is None
+
+
+@requires_data()
+def test_annihilation_with_sigma_stat_unfreezes():
+    """With sigma_stat, log10_jfactor must be free and have a prior."""
+    jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
+    model = DarkMatterAnnihilationSpectralModel(
+        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma_stat=0.2
+    )
+    assert model.log10_jfactor.frozen is False
+    assert model.log10_jfactor.prior is not None
+    assert_allclose(model.log10_jfactor.value, np.log10(3.41e19), rtol=1e-6)
+
+
+@requires_data()
+def test_annihilation_prior_bounds():
+    """log10_jfactor bounds must be ±5*sigma_total around the observed value."""
+    jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
+    sigma_stat = 0.3
+    sigma_syst = 0.4
+    sigma_total = np.sqrt(sigma_stat**2 + sigma_syst**2)  # 0.5
+    log10_j_obs = np.log10(3.41e19)
+    model = DarkMatterAnnihilationSpectralModel(
+        mass=5 * u.TeV,
+        channel="b",
+        jfactor=jfactor,
+        sigma_stat=sigma_stat,
+        sigma_syst=sigma_syst,
+    )
+    assert_allclose(model.log10_jfactor.min, log10_j_obs - 5 * sigma_total, rtol=1e-6)
+    assert_allclose(model.log10_jfactor.max, log10_j_obs + 5 * sigma_total, rtol=1e-6)
+
+
+@requires_data()
+def test_annihilation_sigma_stat_validates():
+    jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
+    with pytest.raises(ValueError):
+        DarkMatterAnnihilationSpectralModel(
+            mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma_stat=-0.1
+        )
+    with pytest.raises(TypeError):
+        DarkMatterAnnihilationSpectralModel(
+            mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma_stat="bad"
+        )
+
+
+@requires_data()
+def test_annihilation_evaluate_uses_log10_jfactor():
+    """evaluate() must scale correctly when log10_jfactor is shifted by 1 dex."""
+    jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
+    model = DarkMatterAnnihilationSpectralModel(
+        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma_stat=0.5
+    )
+    log10_j = np.log10(3.41e19)
+    flux_nominal = model.evaluate(energy=1 * u.TeV, scale=1, log10_jfactor=log10_j)
+    flux_10x = model.evaluate(energy=1 * u.TeV, scale=1, log10_jfactor=log10_j + 1)
+    assert_allclose(flux_10x.value / flux_nominal.value, 10.0, rtol=1e-5)
+
+
+# ─── DarkMatterDecaySpectralModel — nuisance ─────────────────────────────────
+
+
+@requires_data()
+def test_decay_no_sigma_frozen():
+    """Without sigmas, log10_jfactor must stay frozen."""
+    jfactor = 3.41e19 * u.Unit("GeV cm-2")
+    model = DarkMatterDecaySpectralModel(mass=5 * u.TeV, channel="b", jfactor=jfactor)
+    assert model.log10_jfactor.frozen is True
+    assert model.log10_jfactor.prior is None
+
+
+@requires_data()
+def test_decay_with_sigma_stat_unfreezes():
+    jfactor = 3.41e19 * u.Unit("GeV cm-2")
+    model = DarkMatterDecaySpectralModel(
+        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma_stat=0.2
+    )
+    assert model.log10_jfactor.frozen is False
+    assert model.log10_jfactor.prior is not None
+    assert_allclose(model.log10_jfactor.value, np.log10(3.41e19), rtol=1e-6)
+
+
+@requires_data()
+def test_decay_evaluate_uses_log10_jfactor():
+    """evaluate() must scale correctly when log10_jfactor is shifted by 1 dex."""
+    jfactor = 3.41e19 * u.Unit("GeV cm-2")
+    model = DarkMatterDecaySpectralModel(
+        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma_stat=0.5
+    )
+    log10_j = np.log10(3.41e19)
+    flux_nominal = model.evaluate(energy=1 * u.TeV, scale=1, log10_jfactor=log10_j)
+    flux_10x = model.evaluate(energy=1 * u.TeV, scale=1, log10_jfactor=log10_j + 1)
+    assert_allclose(flux_10x.value / flux_nominal.value, 10.0, rtol=1e-5)
+
+
+@requires_data()
+def test_decay_prior_bounds():
+    jfactor = 3.41e19 * u.Unit("GeV cm-2")
+    sigma_stat = 0.2
+    log10_j_obs = np.log10(3.41e19)
+    model = DarkMatterDecaySpectralModel(
+        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma_stat=sigma_stat
+    )
+    assert_allclose(model.log10_jfactor.min, log10_j_obs - 5 * sigma_stat, rtol=1e-6)
+    assert_allclose(model.log10_jfactor.max, log10_j_obs + 5 * sigma_stat, rtol=1e-6)
