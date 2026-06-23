@@ -106,7 +106,7 @@ class LogNormalNuisancePrior(
     ):
         self.sigma_stat = sigma_stat
         self.sigma_syst = sigma_syst
-        _sigma_total = np.sqrt(sigma_stat**2 + sigma_syst**2)
+        _sigma_total = np.sqrt(self._sigma_stat**2 + self._sigma_syst**2)
         super().__init__(log10_obs=log10_obs, sigma_total=_sigma_total, weight=1)
 
     @staticmethod

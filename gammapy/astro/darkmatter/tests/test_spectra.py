@@ -214,6 +214,19 @@ def test_annihilation_evaluate_uses_log10_jfactor():
     assert_allclose(flux_10x.value / flux_nominal.value, 10.0, rtol=1e-5)
 
 
+@requires_data()
+def test_annihilation_jfactor_array_raises():
+    """Passing a map (array) as jfactor must raise ValueError."""
+    import numpy as np
+
+    jfactor_map = np.array([3.41e19, 3.41e18]) * u.Unit("GeV2 cm-5")
+
+    with pytest.raises(ValueError, match="scalar Quantity"):
+        DarkMatterAnnihilationSpectralModel(
+            mass=5 * u.TeV, channel="b", jfactor=jfactor_map
+        )
+
+
 # ─── DarkMatterDecaySpectralModel — nuisance ─────────────────────────────────
 
 
@@ -260,3 +273,14 @@ def test_decay_prior_bounds():
     )
     assert_allclose(model.log10_jfactor.min, log10_j_obs - 5 * sigma_stat, rtol=1e-6)
     assert_allclose(model.log10_jfactor.max, log10_j_obs + 5 * sigma_stat, rtol=1e-6)
+
+
+@requires_data()
+def test_decay_jfactor_array_raises():
+    """Passing a map (array) as jfactor must raise ValueError."""
+    import numpy as np
+
+    jfactor_map = np.array([3.41e19, 3.41e18]) * u.Unit("GeV cm-2")
+
+    with pytest.raises(ValueError, match="scalar Quantity"):
+        DarkMatterDecaySpectralModel(mass=5 * u.TeV, channel="b", jfactor=jfactor_map)
