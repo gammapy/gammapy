@@ -51,14 +51,21 @@ def test_dmfluxmap_annihilation(jfact_annihilation):
     massDM = 1 * u.TeV
     channel = "W"
 
-    diff_flux = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel)
+    total_jfact = u.Quantity(
+        float(jfact_annihilation.mean().value), unit=jfact_annihilation.unit
+    )
+
+    diff_flux = DarkMatterAnnihilationSpectralModel(
+        mass=massDM, channel=channel, jfactor=total_jfact
+    )
     int_flux = (
-        jfact_annihilation
-        * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
-        / diff_flux.jfactor
+        diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
+        * jfact_annihilation
+        / total_jfact
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
     desired = 5.96827647e-12 / u.cm**2 / u.s
+
     assert_quantity_allclose(actual, desired, rtol=1e-3)
 
 
@@ -134,3 +141,15 @@ def test_lognormal_prior_invalid_sigma_syst():
 
     with pytest.raises((TypeError, ValueError)):
         LogNormalNuisancePrior(log10_obs=19.3, sigma_syst=-0.1)
+
+
+def test_validate_sigma_none_returns_zero():
+    from gammapy.astro.darkmatter.utils import _validate_sigma
+
+    assert_allclose(_validate_sigma("test", None), 0.0)
+
+
+def test_lognormal_prior_sigma_none_converts_to_zero():
+    prior = LogNormalNuisancePrior(log10_obs=19.3, sigma_stat=None, sigma_syst=None)
+    assert_allclose(prior.sigma_stat, 0.0)
+    assert_allclose(prior.sigma_syst, 0.0)

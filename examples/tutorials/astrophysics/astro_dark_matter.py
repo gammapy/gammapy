@@ -15,7 +15,8 @@ channels. They are presented in this notebook.
 The basic concepts of indirect dark matter searches, however, are not
 explained. So this is aimed at people who already know what the want to
 do. A good introduction to indirect dark matter searches is given for
-example `here <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C/abstract>`__ (Chapter 1 and 5).
+example `here <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C/abstract>`__\
+      (Chapter 1 and 5).
 
 """
 
@@ -26,14 +27,15 @@ example `here <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C/abstract>`_
 # As always, we start with some setup for the notebook, and with imports.
 #
 
-import numpy as np
 import astropy.units as u
-from astropy.coordinates import SkyCoord
-from regions import CircleSkyRegion, RectangleSkyRegion
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+import numpy as np
+from astropy.coordinates import SkyCoord
 from matplotlib.colors import LogNorm
+from regions import CircleSkyRegion, RectangleSkyRegion
+
 from gammapy.astro.darkmatter import (
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
@@ -42,7 +44,6 @@ from gammapy.astro.darkmatter import (
     profiles,
 )
 from gammapy.maps import WcsGeom, WcsNDMap
-
 
 ######################################################################
 # Profiles
@@ -106,7 +107,8 @@ plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
-# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band around the plane
+# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg
+#  band around the plane
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")
@@ -134,6 +136,8 @@ print(
     "J-factor in 1 deg circle without the +/- 0.3 deg band around GC assuming a "
     f"{profile.__class__.__name__} is {total_jfact:.3g}"
 )
+total_jfact = u.Quantity(float(total_jfact.value), unit=total_jfact.unit)
+
 
 ######################################################################
 # The J-Factor can also be computed for dark matter decay
@@ -154,7 +158,8 @@ plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
-# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band around the plane
+# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg
+# band around the plane
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")
@@ -178,6 +183,10 @@ total_jfact_decay = (
 print(
     "J-factor in 1 deg circle without the +/- 0.3 deg band around GC assuming a "
     f"{profile.__class__.__name__} is {total_jfact_decay:.3g}"
+)
+
+total_jfact_decay = u.Quantity(
+    float(total_jfact_decay.value), unit=total_jfact_decay.unit
 )
 
 ######################################################################
@@ -216,7 +225,6 @@ axes[0].legend()
 fig.tight_layout()
 plt.show()
 
-
 ######################################################################
 # Flux maps for annihilation
 # --------------------------
@@ -226,18 +234,28 @@ plt.show()
 
 channel = "Z"
 massDM = 10 * u.TeV
-diff_flux = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel)
-int_flux = (
-    jfact * diff_flux.integral(energy_min=0.1 * u.TeV, energy_max=10 * u.TeV)
-).to("cm-2 s-1")
 
-flux_map = WcsNDMap(geom=geom, data=int_flux.value, unit="cm-2 s-1")
+# el modelo lleva el jfactor integrado
+diff_flux = DarkMatterAnnihilationSpectralModel(
+    mass=massDM, channel=channel, jfactor=total_jfact
+)
+# flujo integrado en energía (escalar)
+int_flux = diff_flux.integral(energy_min=0.1 * u.TeV, energy_max=10 * u.TeV).to(
+    "cm-2 s-1"
+)
+
+# mapa espacial = flujo × mapa de jfactors normalizado
+flux_map = WcsNDMap(
+    geom=geom,
+    data=(int_flux * jfact / total_jfact).value,
+    unit="cm-2 s-1",
+)
 plt.figure()
 ax = flux_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(
-    f"Flux [{int_flux.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')}, channel={fluxes.channel}"
+    f"Flux [{flux_map.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')}, \
+        channel={fluxes.channel}"
 )
-
 plt.show()
 
 
@@ -245,21 +263,28 @@ plt.show()
 # Flux maps for decay
 # -------------------
 #
-# Finally flux maps for decay can be produced like this:
+# Same approach for decay, using the D-factor instead of the J-factor.
 #
 
 channel = "Z"
 massDM = 10 * u.TeV
-diff_flux = DarkMatterDecaySpectralModel(mass=massDM, channel=channel)
-int_flux = (
-    jfact_decay * diff_flux.integral(energy_min=0.1 * u.TeV, energy_max=10 * u.TeV)
+
+diff_flux_decay = DarkMatterDecaySpectralModel(
+    mass=massDM, channel=channel, jfactor=total_jfact_decay
+)
+int_flux_decay = diff_flux_decay.integral(
+    energy_min=0.1 * u.TeV, energy_max=10 * u.TeV
 ).to("cm-2 s-1")
 
-flux_map = WcsNDMap(geom=geom, data=int_flux.value, unit="cm-2 s-1")
-plt.figure()
-ax = flux_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
-plt.title(
-    f"Flux [{int_flux.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')}, channel={fluxes.channel}"
+flux_map_decay = WcsNDMap(
+    geom=geom,
+    data=(int_flux_decay * jfact_decay / total_jfact_decay).value,
+    unit="cm-2 s-1",
 )
-
+plt.figure()
+ax = flux_map_decay.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
+plt.title(
+    f"Flux [{flux_map_decay.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')},\
+          channel={channel}"
+)
 plt.show()
