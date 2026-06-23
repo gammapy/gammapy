@@ -477,8 +477,7 @@ class DarkMatterDecaySpectralModel(
     scale : float
         Scale parameter for model fitting
     jfactor : `~astropy.units.Quantity`
-        Integrated D-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
-        is used.
+        Integrated D-Factor
     sigma_stat : float or None, optional
         Statistical uncertainty on log10(J), represented in dex. Default is None.
     sigma_syst : float or None, optional
