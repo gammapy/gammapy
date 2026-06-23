@@ -50,7 +50,7 @@ jobs:
             tox_env: 'py314-test-alldeps'
             gammapy_data: true
             allowed_fail: false
-          - os: macos-26
+          - os: macos-26-intel
             python: '3.13'
             tox_env: 'py313-test'
             gammapy_data: true
