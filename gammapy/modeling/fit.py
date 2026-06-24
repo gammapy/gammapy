@@ -157,7 +157,6 @@ class Fit:
         fit_result : `FitResult`
             Fit result.
         """
-
         datasets, parameters = _parse_datasets(datasets=datasets)
 
         optimize_result = self.optimize(datasets=datasets)
@@ -391,7 +390,7 @@ class Fit:
         >>> datasets.models = model
         >>> fit = Fit()
         >>> result = fit.run(datasets)
-        >>> parameter = datasets.models.parameters['amplitude']
+        >>> parameter = datasets.models.parameters["amplitude"]
         >>> stat_profile = fit.stat_profile(datasets=datasets, parameter=parameter)
         """
         datasets, parameters = _parse_datasets(datasets=datasets)
@@ -563,7 +562,7 @@ class Fit:
         >>> datasets = datasets.stack_reduce(name="HESS")
         >>> model = SkyModel(spectral_model=LogParabolaSpectralModel(), name="crab")
         >>> datasets.models = model
-        >>> fit = Fit(backend='minuit')
+        >>> fit = Fit(backend="minuit")
         >>> optimize = fit.optimize(datasets)
         >>> stat_contour = fit.stat_contour(
         ...     datasets=datasets,

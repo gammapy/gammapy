@@ -29,7 +29,6 @@ from regions import (
 
 from regions.core.pixcoord import PixCoord
 from regions.core.metadata import RegionMeta, RegionVisual
-from regions._utils.wcs_helpers import pixel_scale_angle_at_skycoord
 
 __all__ = [
     "compound_region_to_regions",
@@ -38,6 +37,64 @@ __all__ = [
     "regions_to_compound_region",
     "region_to_frame",
 ]
+
+
+# TODO: This is legacy code from astropy regions. Remove when using regions.SkyPolygonRegion.
+def pixel_scale_angle_at_skycoord(skycoord, wcs, offset=1 * u.arcsec):
+    """Calculate the pixel coordinate and scale and WCS rotation angle at
+    the position of a SkyCoord coordinate.
+
+    Parameters
+    ----------
+    skycoord : `~astropy.coordinates.SkyCoord`
+        The SkyCoord coordinate.
+
+    wcs : WCS object
+        A world coordinate system (WCS) transformation that
+        supports the `astropy shared interface for WCS
+        <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`_ (e.g.,
+        `astropy.wcs.WCS`, `gwcs.wcs.WCS`).
+
+    offset : `~astropy.units.Quantity`
+        A small angular offset to use to compute the pixel scale and
+        position angle.
+
+    Returns
+    -------
+    pixcoord : `~regions.core.PixCoord`
+        The pixel coordinate.
+
+    scale : `~astropy.units.Quantity`
+        The pixel scale in arcsec/pixel.
+
+    angle : `~astropy.units.Quantity`
+        The angle (in degrees) measured counterclockwise from the
+        positive x axis to the "North" axis of the celestial coordinate
+        system.
+
+    Notes
+    -----
+    If distortions are present in the image, the x and y pixel scales
+    likely differ.  This function computes a single pixel scale along
+    the North/South axis.
+    """
+    # Convert to pixel coordinates
+    x, y = wcs.world_to_pixel(skycoord)
+    pixcoord = PixCoord(x=x, y=y)
+
+    # We take a point directly North (i.e., latitude offset) the
+    # input sky coordinate and convert it to pixel coordinates,
+    # then we use the pixel deltas between the input and offset sky
+    # coordinate to calculate the pixel scale and angle.
+    skycoord_offset = skycoord.directional_offset_by(0.0, offset)
+    x_offset, y_offset = wcs.world_to_pixel(skycoord_offset)
+
+    dx = x_offset - x
+    dy = y_offset - y
+    scale = offset.to(u.arcsec) / (np.hypot(dx, dy) * u.pixel)
+    angle = (np.arctan2(dy, dx) * u.radian).to(u.deg)
+
+    return pixcoord, scale, angle
 
 
 def compound_region_center(compound_region):
@@ -200,6 +257,7 @@ class SphericalCircleSkyRegion(CircleSkyRegion):
         return separation < self.radius
 
 
+# TODO: can we rely on regions.PolygonSkyRegion instead?
 class PolygonPointsSkyRegion(PolygonSkyRegion):
     """Polygon sky region defined by a list of points."""
 
@@ -253,7 +311,6 @@ class PolygonPointsPixelRegion(PolygonPixelRegion):
         origin : `~regions.PixCoord`, optional
             Origin of the region. Default is `PixCoord(0, 0)`
         """
-
         if origin is None:
             origin = PixCoord(0, 0)
 
@@ -359,11 +416,11 @@ def make_concentric_annulus_sky_regions(
     radius_min : `~astropy.units.Quantity`, optional
         Minimum radius. Default is 1e-5 deg.
     nbin : int, optional
-        Number of boxes along the line. Default is 11.
+        Number of annulus regions. Default is 11.
 
     Returns
     -------
-    regions : list of `~regions.RectangleSkyRegion`
+    regions : list of `~regions.CircleAnnulusSkyRegion`
         Regions in which the profiles are made.
     """
     regions = []

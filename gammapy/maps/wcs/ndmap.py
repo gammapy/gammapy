@@ -764,7 +764,9 @@ class WcsNDMap(WcsMap):
 
             data = Map.create(axes=[energy_axis], width=10, unit="cm2 s-1", binsz=0.02)
             data.data = random_state.normal(
-                size=data.data.shape, loc=0, scale=np.array([1.0, 2.0, 3.0]).reshape((-1, 1, 1))
+                size=data.data.shape,
+                loc=0,
+                scale=np.array([1.0, 2.0, 3.0]).reshape((-1, 1, 1)),
             )
 
             hist = data.to_region_nd_map_histogram()

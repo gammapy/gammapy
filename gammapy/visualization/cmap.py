@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions and functions for plotting gamma-ray images."""
+
 from matplotlib.colors import LinearSegmentedColormap
 
 __all__ = ["colormap_hess", "colormap_milagro"]
