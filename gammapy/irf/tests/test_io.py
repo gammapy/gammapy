@@ -152,7 +152,8 @@ class TestIRFWrite:
 
     def test_aeff_to_hdulist(self):
         with pytest.raises(ValueError, match="Not a valid supported format: 'gadf'"):
-            hdulist = self.aeff.to_hdulist(format="gadf")
+            self.aeff.to_hdulist(format="gadf")
+            
         hdulist = self.aeff.to_hdulist()
         assert hdulist[0].name == "PRIMARY"
         assert hdulist[1].name == "EFFECTIVE AREA"
@@ -253,7 +254,8 @@ class TestIRFWrite:
         filename = "$GAMMAPY_DATA/tests/unbundled/irfs/psf.fits"
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
         with pytest.raises(ValueError, match="Not a valid supported format: 'gadf'"):
-            table = psf.to_table(format="gadf")
+            psf.to_table(format="gadf")
+            
         table = psf.to_table()
         assert table.colnames == [
             "ENERG_LO",
