@@ -11,7 +11,7 @@ from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import SpectralModel, TemplateNDSpectralModel
 from gammapy.modeling.models.prior import (
-    LogNormalNuisancePrior,
+    LogNormalPrior,
     _SigmaStatisticValidator,
     _SigmaSystematicsValidator,
     _validate_sigma,
@@ -406,7 +406,7 @@ class DarkMatterAnnihilationSpectralModel(
     def _create_prior(self):
         """Create and attach the log-normal prior on ``log10_jfactor``."""
         self.log10_jfactor.frozen = False
-        prior = LogNormalNuisancePrior(
+        prior = LogNormalPrior(
             log10_obs=self._log10_j_obs,
             sigma_stat=self._sigma_stat,
             sigma_syst=self._sigma_syst,
@@ -593,7 +593,7 @@ class DarkMatterDecaySpectralModel(
     def _create_prior(self):
         """Create and attach the log-normal prior on ``log10_jfactor``."""
         self.log10_jfactor.frozen = False
-        prior = LogNormalNuisancePrior(
+        prior = LogNormalPrior(
             log10_obs=self._log10_j_obs,
             sigma_stat=self._sigma_stat,
             sigma_syst=self._sigma_syst,
