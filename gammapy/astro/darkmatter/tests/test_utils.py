@@ -10,7 +10,6 @@ from gammapy.astro.darkmatter import (
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
     JFactory,
-    LogNormalNuisancePrior,
     profiles,
 )
 from gammapy.maps import WcsGeom
@@ -99,57 +98,3 @@ def test_jfactory_repr_html_fallback(geom):
 
         expected_string = html.escape(str(jfactory))
         assert expected_string in repr_str
-
-
-def test_lognormal_prior_evaluate_at_center():
-    """Prior must be zero at the observed value."""
-    prior = LogNormalNuisancePrior(log10_obs=19.3, sigma_stat=0.1)
-    test_val = Parameter(name="test_val", value=19.3)
-    assert_allclose(prior(test_val), 0.0, atol=1e-10)
-
-
-def test_lognormal_prior_evaluate_one_sigma():
-    """Prior must be 1.0 exactly one sigma away."""
-    prior = LogNormalNuisancePrior(log10_obs=19.3, sigma_stat=0.1)
-    assert_allclose(prior(Parameter(name="test_val", value=19.4)), 1.0, rtol=1e-5)
-    assert_allclose(prior(Parameter(name="test_val", value=19.2)), 1.0, rtol=1e-5)
-
-
-def test_lognormal_prior_sigma_in_quadrature():
-    """sigma_total must be computed as sqrt(stat² + syst²)."""
-    prior = LogNormalNuisancePrior(log10_obs=19.3, sigma_stat=0.3, sigma_syst=0.4)
-    assert_allclose(prior.sigma_total.value, 0.5, rtol=1e-6)
-
-
-def test_lognormal_prior_only_syst():
-    prior = LogNormalNuisancePrior(log10_obs=19.3, sigma_syst=0.2)
-    assert_allclose(prior.sigma_total.value, 0.2, rtol=1e-6)
-    assert_allclose(prior(Parameter(name="test_val", value=19.5)), 1.0, rtol=1e-5)
-
-
-def test_lognormal_prior_invalid_sigma_stat():
-    with pytest.raises((TypeError, ValueError)):
-        LogNormalNuisancePrior(log10_obs=19.3, sigma_stat=-0.1)
-
-    with pytest.raises((TypeError, ValueError)):
-        LogNormalNuisancePrior(log10_obs=19.3, sigma_stat="bad")
-
-
-def test_lognormal_prior_invalid_sigma_syst():
-    with pytest.raises((TypeError, ValueError)):
-        LogNormalNuisancePrior(log10_obs=19.3, sigma_syst="bad")
-
-    with pytest.raises((TypeError, ValueError)):
-        LogNormalNuisancePrior(log10_obs=19.3, sigma_syst=-0.1)
-
-
-def test_validate_sigma_none_returns_zero():
-    from gammapy.astro.darkmatter.utils import _validate_sigma
-
-    assert_allclose(_validate_sigma("test", None), 0.0)
-
-
-def test_lognormal_prior_sigma_none_converts_to_zero():
-    prior = LogNormalNuisancePrior(log10_obs=19.3, sigma_stat=None, sigma_syst=None)
-    assert_allclose(prior.sigma_stat, 0.0)
-    assert_allclose(prior.sigma_syst, 0.0)

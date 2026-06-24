@@ -17,7 +17,7 @@ from .spectra import (
     DarkMatterDecaySpectralModel,
     PrimaryFlux,
 )
-from .utils import JFactory, LogNormalNuisancePrior
+from .utils import JFactory
 
 __all__ = [
     "DarkMatterAnnihilationSpectralModel",
@@ -28,7 +28,6 @@ __all__ = [
     "DMProfile",
     "EinastoProfile",
     "IsothermalProfile",
-    "LogNormalNuisancePrior",
     "MooreProfile",
     "NFWProfile",
     "ZhaoProfile",

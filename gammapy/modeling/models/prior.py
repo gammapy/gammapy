@@ -2,10 +2,13 @@
 """Priors for Gammapy."""
 
 import logging
-import numpy as np
+
 import astropy.units as u
-from scipy.stats import norm, uniform, loguniform, gennorm
+import numpy as np
+from scipy.stats import gennorm, loguniform, norm, uniform
+
 from gammapy.modeling import PriorParameter, PriorParameters
+
 from .core import ModelBase
 
 __all__ = [
@@ -13,6 +16,7 @@ __all__ = [
     "GeneralizedGaussianPrior",
     "UniformPrior",
     "LogUniformPrior",
+    "LogNormalNuisancePrior",
     "Prior",
 ]
 
@@ -20,7 +24,8 @@ log = logging.getLogger(__name__)
 
 
 def _build_priorparameters_from_dict(data, default_parameters):
-    """Build a `~gammapy.modeling.PriorParameters` object from input dictionary and default prior parameter values."""
+    """Build a `~gammapy.modeling.PriorParameters` object from input dictionary \
+        and default prior parameter values."""
     par_data = []
 
     input_names = [_["name"] for _ in data]
@@ -234,8 +239,10 @@ class LogUniformPrior(Prior):
     def evaluate(value, min, max):
         """
         Evaluate the likelihood penalization term (hence -2*).
-        Note that this is currently a different scaling that the Uniform or Gaussian priors.
-        With current implementation the TS of a source with/without LogUniform prior would be different... TBD
+        Note that this is currently a different scaling that the Uniform or \
+            Gaussian priors.
+        With current implementation the TS of a source with/without LogUniform \
+            prior would be different... TBD
         """
         rv = loguniform(min, max)
         return -2 * rv.logpdf(value)
@@ -284,3 +291,113 @@ class GeneralizedGaussianPrior(Prior):
             loc=self.mu.value,
             scale=self.sigma.value * np.sqrt(2),
         )
+
+
+def _validate_sigma(name, value):
+    """Validate and normalise a sigma (stat or syst) value.
+
+    Parameters
+    ----------
+    name : str
+        Human-readable label used in error messages (e.g. ``"statistical"``).
+    value : float or None
+        Value to validate.
+
+    Returns
+    -------
+    float
+        Validated value, or ``0.0`` if *value* is ``None``.
+
+    Raises
+    ------
+    TypeError
+        If *value* is not a number.
+    ValueError
+        If *value* is negative.
+    """
+    if value is None:
+        return 0.0
+    if not isinstance(value, (int, float, np.number)):
+        raise TypeError(f"The {name} sigma must be a number or None, got {type(value)}")
+    if value < 0:
+        raise ValueError(f"The {name} sigma must be non-negative, got {value}")
+    return float(value)
+
+
+class _SigmaSystematicsValidator:
+    """Mixin that validates and stores the systematic uncertainty ``sigma_syst``."""
+
+    @property
+    def sigma_syst(self):
+        """Systematic uncertainty on log10(factor) [dex]."""
+        return self._sigma_syst
+
+    @sigma_syst.setter
+    def sigma_syst(self, value):
+        self._sigma_syst = _validate_sigma("systematic", value)
+
+
+class _SigmaStatisticValidator:
+    """Mixin that validates and stores the statistical uncertainty ``sigma_stat``."""
+
+    @property
+    def sigma_stat(self):
+        """Statistical uncertainty on log10(factor) [dex]."""
+        return self._sigma_stat
+
+    @sigma_stat.setter
+    def sigma_stat(self, value):
+        self._sigma_stat = _validate_sigma("statistical", value)
+
+
+class LogNormalNuisancePrior(
+    Prior, _SigmaSystematicsValidator, _SigmaStatisticValidator
+):
+    """
+    Log-normal prior for any astrophysical factor (J, D, or derived).
+
+        -2 ln L_prior = ((log10(X) - log10(X_obs)) / sigma_total)²
+
+    Parameters
+    ----------
+    log10_obs : float
+        Central value of the factor in log10 (from literature or own MCMC).
+    sigma_stat : float
+        Statistical uncertainty in log10 (from kinematics, profile fitting...).
+    sigma_syst : float, optional
+        Additional systematic uncertainty in log10 (triaxiality, boost...).
+        Combined in quadrature with sigma_stat.
+
+    References
+    ----------
+    .. [1] `Ackermann et al. (2015), "Searching for Dark Matter \
+        Annihilation from Milky Way
+    Dwarf Spheroidal Galaxies with Six Years of Fermi-LAT Data"
+    <https://doi.org/10.1103/PhysRevLett.115.231301>`_
+    """
+
+    tag = ["LogNormalNuisancePrior", "log-norm-nuisance-prior"]
+    _type = "prior"
+
+    log10_obs = PriorParameter(name="log10_obs", value=0.0)
+    sigma_total = PriorParameter(name="sigma_total", value=1.0)
+
+    def __init__(
+        self, log10_obs: float, sigma_stat: float = 0.0, sigma_syst: float = 0.0
+    ):
+        self.sigma_stat = sigma_stat
+        self.sigma_syst = sigma_syst
+        _sigma_total = np.sqrt(self._sigma_stat**2 + self._sigma_syst**2)
+        super().__init__(log10_obs=log10_obs, sigma_total=_sigma_total, weight=1)
+
+    @staticmethod
+    def evaluate(value, log10_obs, sigma_total):
+        r"""
+        Evaluate -2 ln(L_prior)  for a current value
+
+        Parameters
+        ----------
+        log10_current : float
+            Current value of the factor in log10.
+        """
+        return ((value - log10_obs) / sigma_total) ** 2
