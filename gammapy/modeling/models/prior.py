@@ -4,9 +4,9 @@
 import logging
 
 import astropy.units as u
-import numpy as np
-from scipy.stats import gennorm, loguniform, norm, uniform
-
+from scipy.stats import norm, uniform, loguniform, gennorm, gaussian_kde
+from scipy.interpolate import interp1d
+from scipy.special import ndtr
 from gammapy.modeling import PriorParameter, PriorParameters
 
 from .core import ModelBase
@@ -18,6 +18,7 @@ __all__ = [
     "LogUniformPrior",
     "LogNormalNuisancePrior",
     "Prior",
+    "SamplesKDEPrior",
 ]
 
 log = logging.getLogger(__name__)
@@ -237,12 +238,10 @@ class LogUniformPrior(Prior):
 
     @staticmethod
     def evaluate(value, min, max):
-        """
-        Evaluate the likelihood penalization term (hence -2*).
-        Note that this is currently a different scaling that the Uniform or \
-            Gaussian priors.
-        With current implementation the TS of a source with/without LogUniform \
-            prior would be different... TBD
+        """Evaluate the likelihood penalization term (hence -2*).
+
+        Note that this is currently a different scaling that the Uniform or Gaussian priors.
+        With current implementation the TS of a source with/without LogUniform prior would be different... TBD
         """
         rv = loguniform(min, max)
         return -2 * rv.logpdf(value)
@@ -293,111 +292,90 @@ class GeneralizedGaussianPrior(Prior):
         )
 
 
-def _validate_sigma(name, value):
-    """Validate and normalise a sigma (stat or syst) value.
+class SamplesKDEPrior(Prior):
+    """Prior based on a Gaussian kernel density estimate (KDE)
+    constructed from (optionally weighted) samples.
 
     Parameters
     ----------
-    name : str
-        Human-readable label used in error messages (e.g. ``"statistical"``).
-    value : float or None
-        Value to validate.
-
-    Returns
-    -------
-    float
-        Validated value, or ``0.0`` if *value* is ``None``.
-
-    Raises
-    ------
-    TypeError
-        If *value* is not a number.
-    ValueError
-        If *value* is negative.
-    """
-    if value is None:
-        return 0.0
-    if not isinstance(value, (int, float, np.number)):
-        raise TypeError(f"The {name} sigma must be a number or None, got {type(value)}")
-    if value < 0:
-        raise ValueError(f"The {name} sigma must be non-negative, got {value}")
-    return float(value)
-
-
-class _SigmaSystematicsValidator:
-    """Mixin that validates and stores the systematic uncertainty ``sigma_syst``."""
-
-    @property
-    def sigma_syst(self):
-        """Systematic uncertainty on log10(factor) [dex]."""
-        return self._sigma_syst
-
-    @sigma_syst.setter
-    def sigma_syst(self, value):
-        self._sigma_syst = _validate_sigma("systematic", value)
-
-
-class _SigmaStatisticValidator:
-    """Mixin that validates and stores the statistical uncertainty ``sigma_stat``."""
-
-    @property
-    def sigma_stat(self):
-        """Statistical uncertainty on log10(factor) [dex]."""
-        return self._sigma_stat
-
-    @sigma_stat.setter
-    def sigma_stat(self, value):
-        self._sigma_stat = _validate_sigma("statistical", value)
-
-
-class LogNormalNuisancePrior(
-    Prior, _SigmaSystematicsValidator, _SigmaStatisticValidator
-):
-    """
-    Log-normal prior for any astrophysical factor (J, D, or derived).
-
-        -2 ln L_prior = ((log10(X) - log10(X_obs)) / sigma_total)²
-
-    Parameters
-    ----------
-    log10_obs : float
-        Central value of the factor in log10 (from literature or own MCMC).
-    sigma_stat : float
-        Statistical uncertainty in log10 (from kinematics, profile fitting...).
-    sigma_syst : float, optional
-        Additional systematic uncertainty in log10 (triaxiality, boost...).
-        Combined in quadrature with sigma_stat.
-
-    References
-    ----------
-    .. [1] `Ackermann et al. (2015), "Searching for Dark Matter \
-        Annihilation from Milky Way
-    Dwarf Spheroidal Galaxies with Six Years of Fermi-LAT Data"
-    <https://doi.org/10.1103/PhysRevLett.115.231301>`_
+    samples : `~numpy.ndarray`
+        One-dimensional samples used to build the KDE. Shape ``(n_samples,)``
+        or any array that can be flattened to this shape.
+    weights : `~numpy.ndarray`, optional
+        Weights associated with the samples. Must have the same length as
+        ``samples``. If not given, all samples are assigned equal weight.
+        Weights are normalised internally to sum to 1.
     """
 
-    tag = ["LogNormalNuisancePrior", "log-norm-nuisance-prior"]
+    tag = ["SamplesKDEPrior"]
     _type = "prior"
 
-    log10_obs = PriorParameter(name="log10_obs", value=0.0)
-    sigma_total = PriorParameter(name="sigma_total", value=1.0)
+    def __init__(self, samples, weights=None):
+        self.samples = np.asarray(samples, dtype=float).ravel()
+        n_samples = self.samples.size
 
-    def __init__(
-        self, log10_obs: float, sigma_stat: float = 0.0, sigma_syst: float = 0.0
-    ):
-        self.sigma_stat = sigma_stat
-        self.sigma_syst = sigma_syst
-        _sigma_total = np.sqrt(self._sigma_stat**2 + self._sigma_syst**2)
-        super().__init__(log10_obs=log10_obs, sigma_total=_sigma_total, weight=1)
+        if n_samples == 0:
+            raise ValueError("SamplesKDEPrior requires at least one sample.")
 
-    @staticmethod
-    def evaluate(value, log10_obs, sigma_total):
-        r"""
-        Evaluate -2 ln(L_prior)  for a current value
+        if weights is None:
+            weights = np.ones(n_samples, dtype=float)
+        else:
+            weights = np.asarray(weights, dtype=float)
+            if weights.size != n_samples:
+                raise ValueError("weights and samples must have the same length.")
 
-        Parameters
-        ----------
-        log10_current : float
-            Current value of the factor in log10.
+        self.weights = weights / weights.sum()
+
+        self._kde = gaussian_kde(self.samples, weights=self.weights)
+
+        # inverse cdf : https://stackoverflow.com/a/71993662
+        x_sorted = np.sort(self.samples)
+        cdf_values = []
+        for x_i in x_sorted:
+            z = (x_i - self.samples) / self._kde.factor
+            cdf_values.append(np.average(ndtr(z), weights=self.weights))
+
+        cdf_values = np.asarray(cdf_values, dtype=float)
+
+        self._inv_cdf = interp1d(
+            cdf_values,
+            x_sorted,
+            kind="cubic",
+            bounds_error=False,
+            fill_value=(x_sorted[0], x_sorted[-1]),
+        )
+
+        super().__init__()
+
+    def evaluate(self, value):
+        """Evaluate the prior contribution to the fit statistic.
+
+        This returns ``-2 log p(value)`` where ``p`` is given by the KDE.
         """
-        return ((value - log10_obs) / sigma_total) ** 2
+        value = np.asarray(value, dtype=float)
+        logp = np.squeeze(self._kde.logpdf(value))
+        return -2.0 * logp
+
+    def _inverse_cdf(self, value):
+        """Inverse cumulative distribution function."""
+        value = np.asarray(value, dtype=float)
+        return self._inv_cdf(value)
+
+    def to_dict(self):
+        """Convert prior to dictionary for YAML serialization."""
+        data = {
+            "type": self.tag[0],
+            "samples": self.samples.tolist(),
+        }
+        # always store weights explicitly so round-trip is exact
+        data["weights"] = self.weights.tolist()
+        return data
+
+    @classmethod
+    def from_dict(cls, data):
+        """Create prior from dictionary."""
+        samples = np.array(data["samples"], dtype=float)
+        weights = data.get("weights", None)
+        if weights is not None:
+            weights = np.array(weights, dtype=float)
+        return cls(samples=samples, weights=weights)

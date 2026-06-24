@@ -1055,6 +1055,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
 
     @property
     def is_pointlike(self):
+        """Whether the source is pointlike."""
         return self.data["Source_Name"].strip()[-1] != "e"
 
     def spatial_model(self):
@@ -2073,6 +2074,7 @@ class SourceCatalog2PC(SourceCatalog):
         self.spectral_table = table_spectral
 
     def to_models(self, **kwargs):
+        """Create Models object from catalog."""
         models = Models()
         for m in self:
             sky_model = m.sky_model()
@@ -2121,6 +2123,7 @@ class SourceCatalog3PC(SourceCatalog):
         self.off_bigfile_config = table_bigfile_config
 
     def to_models(self, **kwargs):
+        """Create Models object from catalog."""
         models = Models()
         for m in self:
             sky_model = m.sky_model()

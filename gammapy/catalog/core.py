@@ -304,7 +304,6 @@ class SourceCatalog(abc.ABC):
         return name_spectral
 
     def _lookup_additional_table(self, selected_table):
-        """"""
         names = [_.strip() for _ in selected_table]
         idx = range(len(names))
         return dict(zip(names, idx))

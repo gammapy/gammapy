@@ -17,6 +17,8 @@ from .prior import (
     LogUniformPrior,
     Prior,
     UniformPrior,
+    LogUniformPrior,
+    SamplesKDEPrior,
 )
 from .spatial import (
     ConstantFluxSpatialModel,
@@ -124,7 +126,7 @@ __all__ = [
     "GeneralizedGaussianPrior",
     "UniformPrior",
     "LogUniformPrior",
-    "LogNormalNuisancePrior",
+    "SamplesKDEPrior",
     "read_hermes_cube",
     "scale_plot_flux",
     "ScaleSpectralModel",
