@@ -7,15 +7,15 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
-from gammapy.astro.darkmatter.utils import (
+from gammapy.maps import Map, MapAxis, RegionGeom
+from gammapy.modeling import Parameter
+from gammapy.modeling.models import SpectralModel, TemplateNDSpectralModel
+from gammapy.modeling.models.prior import (
     LogNormalNuisancePrior,
     _SigmaStatisticValidator,
     _SigmaSystematicsValidator,
     _validate_sigma,
 )
-from gammapy.maps import Map, MapAxis, RegionGeom
-from gammapy.modeling import Parameter
-from gammapy.modeling.models import SpectralModel, TemplateNDSpectralModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_map_columns
 

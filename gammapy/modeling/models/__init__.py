@@ -2,6 +2,7 @@
 """Built-in models in Gammapy."""
 
 from gammapy.utils.registry import Registry
+
 from .core import DatasetModels, Model, ModelBase, Models
 from .cube import (
     FoVBackgroundModel,
@@ -12,9 +13,10 @@ from .cube import (
 from .prior import (
     GaussianPrior,
     GeneralizedGaussianPrior,
+    LogNormalNuisancePrior,
+    LogUniformPrior,
     Prior,
     UniformPrior,
-    LogUniformPrior,
 )
 from .spatial import (
     ConstantFluxSpatialModel,
@@ -40,9 +42,9 @@ from .spectral import (
     ExpCutoffPowerLawNormSpectralModel,
     ExpCutoffPowerLawSpectralModel,
     GaussianSpectralModel,
+    LogParabola2SpectralModel,
     LogParabolaNormSpectralModel,
     LogParabolaSpectralModel,
-    LogParabola2SpectralModel,
     NaimaSpectralModel,
     PiecewiseNormSpectralModel,
     PowerLaw2SpectralModel,
@@ -122,6 +124,7 @@ __all__ = [
     "GeneralizedGaussianPrior",
     "UniformPrior",
     "LogUniformPrior",
+    "LogNormalNuisancePrior",
     "read_hermes_cube",
     "scale_plot_flux",
     "ScaleSpectralModel",

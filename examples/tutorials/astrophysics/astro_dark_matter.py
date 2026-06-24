@@ -235,16 +235,13 @@ plt.show()
 channel = "Z"
 massDM = 10 * u.TeV
 
-# el modelo lleva el jfactor integrado
 diff_flux = DarkMatterAnnihilationSpectralModel(
     mass=massDM, channel=channel, jfactor=total_jfact
 )
-# flujo integrado en energía (escalar)
 int_flux = diff_flux.integral(energy_min=0.1 * u.TeV, energy_max=10 * u.TeV).to(
     "cm-2 s-1"
 )
 
-# mapa espacial = flujo × mapa de jfactors normalizado
 flux_map = WcsNDMap(
     geom=geom,
     data=(int_flux * jfact / total_jfact).value,
