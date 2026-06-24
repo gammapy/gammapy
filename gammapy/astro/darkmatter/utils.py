@@ -26,7 +26,9 @@ class JFactory:
     profile : `~gammapy.astro.darkmatter.profiles.DMProfile`
         Dark matter profile.
     distance : `~astropy.units.Quantity`
-        Distance to convert angular scale of the map.
+        Distance from the observer to the dark matter halo center,
+        used to compute the line-of-sight integration geometry.
+        Defaults to the Galactic Center distance (8.33 kpc).
     annihilation : `~astropy.units.Quantity`, optional
         Decay or annihilation. Default is True.
     rmax : `~astropy.units.Quantity`, optional
