@@ -1,0 +1,46 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id : "asdf://gammapy.org/gammapy/schemas/maps/mapaxis-1.0.0"
+
+title : |
+  Represents MapAxis.
+
+description: |
+   Support the serialization of MapAxis which represents an axis of a map built into gammapy.
+
+type: object
+properties:
+  name:
+    type: string
+    description: |
+     Axis name.
+  nodes:
+    tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
+    description: |
+      Array of node values.
+  unit:
+    type: string
+    description: |
+      Unit of the node values.
+  interp:
+    type: string
+    description: |
+      Interpolation method used to transform between
+      axis and pixel coordinates.
+    enum: [lin, log, sqrt]
+  node_type:
+    type: string
+    description: |
+      Flag indicating whether coordinate nodes correspond to
+      pixel edges ('edges') or pixel centers ('center').
+    enum: [edges,center]
+  boundary_type:
+    type: string
+    description: |
+      Flag indicating boundary condition for the axis.
+    enum: [monotonic, periodic]
+
+required: [nodes]
+additionalProperties: false
+...
