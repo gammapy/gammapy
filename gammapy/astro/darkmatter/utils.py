@@ -2,11 +2,12 @@
 """Utilities to compute J-factor maps."""
 
 import html
-import numpy as np
+
 import astropy.units as u
 from gammapy.modeling.models.prior import (
     GaussianPrior,
 )
+import numpy as np
 
 __all__ = ["JFactory", "add_factor_prior"]
 
@@ -26,15 +27,22 @@ class JFactory:
         Dark matter profile.
     distance : `~astropy.units.Quantity`
         Distance to convert angular scale of the map.
-    annihilation : bool, optional
+    annihilation : `~astropy.units.Quantity`, optional
         Decay or annihilation. Default is True.
+    rmax : `~astropy.units.Quantity`, optional
+        Physical size of the dark matter halo (upper limit of the
+        line-of-sight integral). For extragalactic sources, this should
+        be set to the halo radius (~kpc), **not** the distance to the
+        source. Defaults to ``distance`` for backward compatibility,
+        which is only appropriate for Galactic sources.
     """
 
-    def __init__(self, geom, profile, distance, annihilation=True):
+    def __init__(self, geom, profile, distance, annihilation=True, rmax=None):
         self.geom = geom
         self.profile = profile
         self.distance = distance
         self.annihilation = annihilation
+        self.rmax = rmax if rmax is not None else self.distance
 
     def _repr_html_(self):
         try:
