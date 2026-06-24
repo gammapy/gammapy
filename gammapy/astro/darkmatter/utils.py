@@ -2,8 +2,9 @@
 """Utilities to compute J-factor maps."""
 
 import html
-import numpy as np
+
 import astropy.units as u
+import numpy as np
 
 __all__ = ["JFactory"]
 
@@ -23,15 +24,22 @@ class JFactory:
         Dark matter profile.
     distance : `~astropy.units.Quantity`
         Distance to convert angular scale of the map.
-    annihilation : bool, optional
+    annihilation : `~astropy.units.Quantity`, optional
         Decay or annihilation. Default is True.
+    rmax : `~astropy.units.Quantity`, optional
+        Physical size of the dark matter halo (upper limit of the
+        line-of-sight integral). For extragalactic sources, this should
+        be set to the halo radius (~kpc), **not** the distance to the
+        source. Defaults to ``distance`` for backward compatibility,
+        which is only appropriate for Galactic sources.
     """
 
-    def __init__(self, geom, profile, distance, annihilation=True):
+    def __init__(self, geom, profile, distance, annihilation=True, rmax=None):
         self.geom = geom
         self.profile = profile
         self.distance = distance
         self.annihilation = annihilation
+        self.rmax = rmax if rmax is not None else self.distance
 
     def _repr_html_(self):
         try:
@@ -93,30 +101,31 @@ class JFactory:
 
         .. math::
             \int_0^{l_\mathrm{max}} \rho^2(r(l, \theta)) \, \mathrm dl
-            = 2 \int_{r_{\min}}^{r_{\max}} \frac{r \, \rho^2(r)}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr
-              + \int_{r_{\max}}^{4 r_{\max}} \frac{r \, \rho^2(r)}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr.
+            = 2 \int_{r_{\min}}^{r_{\max}} \frac{r \,\
+                  \rho^2(r)}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr
+              + \int_{r_{\max}}^{4 r_{\max}} \frac{r \,\
+                  \rho^2(r)}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr.
         """
         separation = self.geom.separation(self.geom.center_skydir).rad
-        rmin = u.Quantity(
-            value=np.tan(separation) * self.distance, unit=self.distance.unit
-        )
-        rmax = self.distance
+        rmin = np.tan(separation) * self.distance
         val = [
             (
                 2
                 * self.profile.integral(
-                    _.value * u.kpc,
-                    rmax,
-                    np.arctan(_.value / self.distance.value),
+                    _,
+                    self.rmax,
+                    np.arctan((_.to(self.distance.unit) / self.distance).value),
                     ndecade,
                     self.annihilation,
+                    self.distance,
                 )
                 + self.profile.integral(
-                    self.distance,
-                    4 * rmax,
-                    np.arctan(_.value / self.distance.value),
+                    self.rmax,
+                    4 * self.rmax,
+                    np.arctan((_.to(self.distance.unit) / self.distance).value),
                     ndecade,
                     self.annihilation,
+                    self.distance,
                 )
             )
             for _ in rmin.ravel()
