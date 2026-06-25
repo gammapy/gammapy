@@ -185,16 +185,19 @@ temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
 
 ######################################################################
 # We note that an interpolation scheme is also provided when loading
-# a map: for an energy-dependent temporal model, the ``method`` and
-# ``values_scale`` arguments by default are set to ``linear`` and ``log``.
-# We warn the reader to carefully check the interpolation method used
-# for the time axis while creating the template model, as different
-# methods provide different results.
+# a map: for an energy-dependent temporal model, the interpolator keyword
+# dictionary is by default set to ``{"method":"linear",
+# "values_scale":"log"}``. We warn the reader to carefully check the
+# interpolation method used for the time axis while creating the template
+# model, as different methods provide different results.
 # By default, we assume ``linear`` interpolation for the time, ``log``
 # for the energies and values.
-# Users can modify the ``method`` and ``values_scale`` arguments but we
-# warn that this should be done only when the user knows the consequences
-# of the changes. Here, we show how to set them explicitly:
+# The use of  the ``method`` and ``values_scale`` arguments has been
+# deprecated.
+# The user can change the settings using the `ìnter_kwd`` argument
+# dictionary but we warn that this should be done only when the user
+# knows the consequences of the changes. Here, we show how to set them
+# explicitly:
 #
 
 temporal_model.method = "linear"  # default
