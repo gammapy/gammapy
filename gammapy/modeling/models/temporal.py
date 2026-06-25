@@ -491,8 +491,9 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     When the temporal model is energy-dependent, the default interpolation scheme is
     linear with a log scale for the values. The interpolation method and scale values
-    were changed with the deprecater ``method`` and ``values_scale`` arguments.
-    In these settings can be now changed with the ``interp_kwargs`` argument.
+    can be changed with the ``interp_kwargs`` argument which expects a dictionary with
+    (any of) the keys ``method``, ``fill_value`` and ``values_scale``.
+    The ``method`` and ``values_scale`` arguments have been deprecated.
 
     For more information see :ref:`LightCurve-temporal-model`.
 
