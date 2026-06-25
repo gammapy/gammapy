@@ -80,19 +80,6 @@ class MonochromaticPrimaryFlux(_DarkMatterMassValidator, SpectralModel):
         expressed as a fraction of the line energy E₀ (i.e.
         ``sigma = sigma_rel * E_0``). Default is 0.01 (1%).
 
-    Raises
-    ------
-    ValueError
-        If ``n_gamma_photons`` is not 1 or 2.
-    ValueError
-        If ``n_gamma_photons=1`` and ``counterpart`` is ``None``.
-    ValueError
-        If the counterpart mass is such that the process is kinematically
-        forbidden (i.e. ``2 * mDM <= counterpart_mass``).
-    ValueError
-        If ``counterpart`` is not in the internal registry and
-        ``counterpart_mass`` is not provided.
-
     Warns
     -----
     UserWarning
@@ -471,16 +458,6 @@ class BoxPrimaryFlux(_DarkMatterMassValidator, SpectralModel):
         - a two-element array (e.g. ``[100, 50] * u.GeV``), to model two
           distinct intermediate states (χχ → φ₁φ₂), producing two
           (possibly overlapping) boxes.
-
-    Raises
-    ------
-    ValueError
-        If ``mPhi`` does not contain exactly 1 or 2 values.
-    ValueError
-        If any element of ``mPhi`` is not strictly positive.
-    ValueError
-        If the process is kinematically forbidden, i.e.
-        ``mPhi1 + mPhi2 >= 2 * mDM``.
 
     Warns
     -----
