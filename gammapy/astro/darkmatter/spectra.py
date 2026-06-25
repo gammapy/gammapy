@@ -12,6 +12,7 @@ from astropy.table import Table
 from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import SpectralModel, TemplateNDSpectralModel
+from gammapy.utils.deprecation import deprecated, deprecated_renamed_argument
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_map_columns
 
@@ -19,6 +20,7 @@ __all__ = [
     "ContinuumPrimaryFlux",
     "DarkMatterAnnihilationSpectralModel",
     "DarkMatterDecaySpectralModel",
+    "PrimaryFlux",
 ]
 
 
@@ -609,6 +611,11 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
 PRIMARY_FLUX_REGISTRY = {cls.tag[0]: cls for cls in (ContinuumPrimaryFlux,)}
 
 
+@deprecated("2.2", alternative="ContinuumPrimaryFlux")
+class PrimaryFlux(ContinuumPrimaryFlux):
+    pass
+
+
 # ---------------------------------------------------------------------------
 # Spectral models
 # ---------------------------------------------------------------------------
@@ -719,6 +726,7 @@ class DarkMatterAnnihilationSpectralModel(
     scale = Parameter("scale", 1, unit="", interp="log")
     tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
 
+    @deprecated_renamed_argument("mass", "mDM", "2.2")
     def __init__(
         self,
         mDM,
