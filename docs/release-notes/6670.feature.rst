@@ -1,1 +1,0 @@
-Implementation of the corresponding features regarding the Dark Matter spectra line analysis based on `arXiv:2403.04857 <https://arxiv.org/abs/2403.04857>`_
