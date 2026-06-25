@@ -2,7 +2,7 @@
 import pytest
 import logging
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
@@ -20,9 +20,11 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplatePhaseCurveTemporalModel,
 )
+from gammapy.maps import MapAxis
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.utils.time import time_ref_to_dict
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 # TODO: add light-curve test case from scratch
@@ -56,6 +58,10 @@ def test_light_curve_evaluate(light_curve):
     t = Time(59500, format="mjd")
     val = light_curve(t)
     assert_allclose(val, 0.015512, rtol=1e-5)
+    assert_equal(
+        light_curve._interp_kwargs,
+        {"method": "linear", "values_scale": "lin", "fill_value": 0},
+    )
 
     val = light_curve(past_t_min)
     assert_allclose(val, 0.0, rtol=1e-7)
@@ -70,6 +76,25 @@ def test_light_curve_evaluate(light_curve):
     light_curve._interp_kwargs["fill_value"] = np.nan
     val = light_curve(past_t_max)
     assert_allclose(val, np.nan)
+
+    new_map = light_curve.map.to_cube(
+        [MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", 1)]
+    )
+    new_curve = LightCurveTemplateTemporalModel(new_map, filename="_")
+    assert_equal(
+        new_curve._interp_kwargs,
+        {"method": "linear", "values_scale": "log", "fill_value": -np.inf},
+    )
+
+    with pytest.warns(GammapyDeprecationWarning):
+        new_curve = LightCurveTemplateTemporalModel(new_map, filename="_", method="log")
+    new_curve = LightCurveTemplateTemporalModel(
+        new_map, filename="_", interp_kwargs={"method": "log"}
+    )
+    assert_equal(
+        new_curve._interp_kwargs,
+        {"method": "log", "values_scale": "log", "fill_value": -np.inf},
+    )
 
 
 @requires_data()

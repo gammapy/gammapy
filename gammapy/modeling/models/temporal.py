@@ -510,7 +510,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         For energy independent models the default arguments are
             {'method': 'linear', 'values_scale':'lin', 'fill_value': 0}.
         For energy-dependent models the default arguments are
-            {'method': 'linear', 'values_scale':'log', 'fill_value': 0}.
+            {'method': 'linear', 'values_scale':'log', 'fill_value': -np.inf}.
     method : string, optional, deprecated
         Method to use for interpolation. Default is "linear".
     values_scale : string, optional, deprecated
