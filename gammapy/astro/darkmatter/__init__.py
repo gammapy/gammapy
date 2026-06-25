@@ -12,9 +12,12 @@ from .profiles import (
     ZhaoProfile,
 )
 from .spectra import (
+    BoxPrimaryFlux,
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
     PrimaryFlux,
+    MonochromaticPrimaryFlux,
+    VIBPrimaryFlux,
 )
 from .utils import JFactory
 
@@ -23,6 +26,10 @@ __all__ = [
     "DarkMatterDecaySpectralModel",
     "JFactory",
     "PrimaryFlux",
+    "ContinuumPrimaryFlux",
+    "MonochromaticPrimaryFlux",
+    "VIBPrimaryFlux",
+    "BoxPrimaryFlux",
     "BurkertProfile",
     "DMProfile",
     "EinastoProfile",

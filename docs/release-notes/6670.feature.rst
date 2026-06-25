@@ -1,0 +1,1 @@
+Implementation of the corresponding features regarding the Dark Matter spectral line analysis (monochromatic, VIB and Box) based on `arXiv:2403.04857 <https://arxiv.org/abs/2403.04857>`_
