@@ -2,6 +2,7 @@
 import astropy.units as u
 import numpy as np
 import pytest
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from astropy.table import Table
 from numpy.testing import assert_allclose
 
@@ -9,6 +10,7 @@ from gammapy.astro.darkmatter import (
     ContinuumPrimaryFlux,
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
+    PrimaryFlux,
 )
 from gammapy.astro.darkmatter.spectra import _PrimaryFluxValidator
 from gammapy.modeling.models import Models, SkyModel, SpectralModel
@@ -28,6 +30,21 @@ def test_continuum_primary_flux():
     actual = primflux(500 * u.GeV)
     desired = 9.3319318e-05 / u.GeV
     assert_quantity_allclose(actual, desired)
+
+
+@requires_data()
+def test_primary_flux_deprecated():
+    with pytest.warns(GammapyDeprecationWarning, match="PrimaryFlux"):
+        PrimaryFlux(channel="b", mDM=1 * u.TeV)
+
+
+@requires_data()
+def test_mass_argument_deprecated():
+    with pytest.warns(GammapyDeprecationWarning, match="mass"):
+        DarkMatterAnnihilationSpectralModel(channel="W", mass=1 * u.TeV)
+
+    with pytest.warns(GammapyDeprecationWarning, match="mass"):
+        DarkMatterDecaySpectralModel(channel="W", mass=1 * u.TeV)
 
 
 @pytest.mark.parametrize(
