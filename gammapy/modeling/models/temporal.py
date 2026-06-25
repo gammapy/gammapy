@@ -558,7 +558,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
 
     @deprecated_renamed_argument(
-        ["method", "values_scale"], [None, None], ["2.1.1", "2.1.1"]
+        ["method", "values_scale"], [None, None], ["2.1", "2.1"]
     )
     def __init__(
         self,
@@ -581,21 +581,19 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         if filename is None:
             log.warning(
                 "The filename is not defined. Therefore, the model will not be serialised correctly. "
-                'To set the filename, the "template_model.filename" attribute can be used.'
+                'To set the filename, the "template_model.filename" attribute can be set.'
             )
         self.filename = filename
 
-        if self.is_energy_dependent:
-            values_scale = "log"
-            fill_value = -np.inf
-        else:
-            values_scale = "lin"
-            fill_value = 0
-
         interp_kwargs = interp_kwargs or {}
-        interp_kwargs.setdefault("values_scale", values_scale)
         interp_kwargs.setdefault("method", "linear")
-        interp_kwargs.setdefault("fill_value", fill_value)
+
+        if self.is_energy_dependent:
+            interp_kwargs["values_scale"] = "log"
+            interp_kwargs["fill_value"] = -np.inf
+        else:
+            interp_kwargs["values_scale"] = "lin"
+            interp_kwargs["fill_value"] = 0
 
         # TODO: remove these two if tests with deprecation
         if method:

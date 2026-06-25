@@ -194,14 +194,16 @@ temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
 # for the energies and values.
 # The use of  the ``method`` and ``values_scale`` arguments has been
 # deprecated.
-# The user can change the settings using the `ìnter_kwd`` argument
-# dictionary but we warn that this should be done only when the user
-# knows the consequences of the changes. Here, we show how to set them
+# The user can change the settings using the `ìnterp_kwargs`` argument
+# but we warn that this should be done only when the user knows the
+# consequences of the changes. Here, we show how to set them
 # explicitly:
 #
 
-temporal_model.method = "linear"  # default
-temporal_model.values_scale = "log"  # default
+temporal_model._interp_kwargs = {
+    "method": "linear",  # default
+    "values_scale": "log",
+}  # default for energy-dependent models
 
 ######################################################################
 # We can have a visual inspection of the temporal model at different energies:
