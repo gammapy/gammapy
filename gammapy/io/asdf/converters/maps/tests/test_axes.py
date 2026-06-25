@@ -323,6 +323,7 @@ tested_map_axes = [
             MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=4),
         ]
     ),
+    MapAxes([]),
 ]
 
 
