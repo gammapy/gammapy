@@ -175,35 +175,6 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
         ``{actual_column_name: expected_column_name}``, and must cover the
         mandatory columns ``"mDM"`` and ``"Log[10,x]"``.
 
-    Raises
-    ------
-    ValueError
-        If ``source`` is not ``"pppc4"``, ``"cosmixs"``, or a valid
-        existing file path.
-    KeyError
-        If a custom ``source`` file has an unsupported extension.
-    ValueError
-        If a custom ``source`` file is empty.
-    ValueError
-        If ``channel`` is not one of `allowed_channels`.
-    ValueError
-        If ``channel`` is listed as unavailable for the selected
-        ``source``.
-    KeyError
-        If ``mapping_dict`` is provided for a custom file but does not
-        contain the mandatory columns ``"mDM"`` and ``"Log[10,x]"``.
-    ValueError
-        If the requested channel's translated column name is not present
-        in ``mapping_dict`` (when provided) or in the custom file's
-        columns.
-    FileNotFoundError
-        If the resolved table file for the chosen ``source`` does not
-        exist on disk (with a suggestion to run
-        ``gammapy download datasets --src dark_matter_spectra``).
-    ValueError
-        If ``mDM`` (set via the `mDM` property) lies outside the mass
-        range tabulated for the chosen ``source`` and ``channel``.
-
     Warns
     -----
     UserWarning
@@ -222,15 +193,12 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
 
     References
     ----------
-    .. [1] `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist
-       cookbook for dark matter indirect detection"
-       <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
-    .. [2] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
+    .. [1] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
        Cookbook for Dark Matter Indirect Detection"
        <http://www.marcocirelli.net/PPPC4DMID.html>`_
-    .. [3] `Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for
+    .. [2] `Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for
        indirect dark matter searches" <https://arxiv.org/abs/2312.01153>`_
-    .. [4] `Di Mauro et al. (2025), "Nailing down the theoretical
+    .. [3] `Di Mauro et al. (2025), "Nailing down the theoretical
        uncertainties of Dbar spectrum produced from dark matter"
        <https://arxiv.org/abs/2411.04815>`_
     """
@@ -678,18 +646,6 @@ class DarkMatterAnnihilationSpectralModel(
         instance of `ContinuumPrimaryFlux`. If not provided, a default
         `ContinuumPrimaryFlux` is constructed using ``mDM`` and ``channel``.
 
-    Raises
-    ------
-    ValueError
-        If ``k`` is not 2 or 4.
-    ValueError
-        If ``z`` is negative or not a dimensionless scalar.
-    ValueError
-        If ``factor`` is not strictly positive.
-    TypeError
-        If ``primary_flux`` is provided but is not one of the supported
-        primary flux types.
-
     Warns
     -----
     UserWarning
@@ -827,12 +783,6 @@ class DarkMatterAnnihilationSpectralModel(
         -------
         model : `DarkMatterAnnihilationSpectralModel`
             New instance reconstructed from ``data``.
-
-        Raises
-        ------
-        ValueError
-            If the ``primary_flux`` type recorded in ``data`` is not found
-            in the primary flux registry.
         """
         data = copy.deepcopy(data["spectral"])
         data.pop("type")
@@ -934,16 +884,6 @@ class DarkMatterDecaySpectralModel(
         `ContinuumPrimaryFlux` is constructed using ``mDM / 2`` (the energy
         scale relevant for two-body decay products) and ``channel``.
 
-    Raises
-    ------
-    ValueError
-        If ``z`` is negative or not a dimensionless scalar.
-    ValueError
-        If ``factor`` is not strictly positive.
-    TypeError
-        If ``primary_flux`` is provided but is not one of the supported
-        primary flux types.
-
     Warns
     -----
     UserWarning
@@ -980,6 +920,7 @@ class DarkMatterDecaySpectralModel(
 
     tag = ["DarkMatterDecaySpectralModel", "dm-decay"]
 
+    @deprecated_renamed_argument("mass", "mDM", "2.2")
     def __init__(
         self,
         mDM,
@@ -1080,12 +1021,6 @@ class DarkMatterDecaySpectralModel(
         -------
         model : `DarkMatterDecaySpectralModel`
             New instance reconstructed from ``data``.
-
-        Raises
-        ------
-        ValueError
-            If the ``primary_flux`` type recorded in ``data`` is not found
-            in the primary flux registry.
         """
         data = copy.deepcopy(data["spectral"])
         data.pop("type")
