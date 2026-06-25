@@ -16,10 +16,13 @@ from .spectra import (
     ContinuumPrimaryFlux,
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
+    PrimaryFlux,
 )
 from .utils import JFactory
 
 __all__ = [
+    "ContinuumPrimaryFlux",
+    "PrimaryFlux",
     "DarkMatterAnnihilationSpectralModel",
     "DarkMatterDecaySpectralModel",
     "JFactory",

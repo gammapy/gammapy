@@ -335,6 +335,7 @@ def test_primary_flux_invalid_type():
         )
 
 
+@requires_data()
 def test_decay_expected_primary_flux_mass_is_half():
     import warnings
 
