@@ -15,7 +15,648 @@ __all__ = [
     "PrimaryFlux",
     "DarkMatterAnnihilationSpectralModel",
     "DarkMatterDecaySpectralModel",
+    "MonochromaticPrimaryFlux",
+    "VIBPrimaryFlux",
+    "BoxPrimaryFlux",
 ]
+
+
+class _DarkMatterMassValidator:
+    """DM mass validator for primary flux models."""
+
+    @property
+    def mDM(self):
+        """Dark matter particle mass."""
+        return self._mDM
+
+    @mDM.setter
+    def mDM(self, value):
+        try:
+            val = u.Quantity(value).to_value("GeV")
+        except u.UnitConversionError:
+            raise u.UnitConversionError(
+                f"mDM must have energy units (e.g. GeV, TeV), "
+                f"got: {u.Quantity(value).unit}"
+            )
+        if val <= 0:
+            raise ValueError("mDM must be strictly positive.")
+        self._mDM = u.Quantity(value)
+
+
+class MonochromaticPrimaryFlux(_DarkMatterMassValidator, SpectralModel):
+    tag = ["MonochromaticPrimaryFlux", "dm-mono"]
+
+    """Monochromatic gamma-ray line from dark matter annihilation.
+
+    Implements the spectral shape for χχ → γγ (two-photon final state) and
+    χχ → γX (one photon plus a massive counterpart X, e.g. χχ → γZ or
+    χχ → γh). The line is approximated as a narrow Gaussian centered at the
+    kinematic line energy, to provide a smooth, differentiable spectral
+    shape suitable for likelihood-based fitting.
+
+    Parameters
+    ----------
+    mDM : `~astropy.units.Quantity`
+        Dark matter particle mass. Must be convertible to GeV and strictly
+        positive.
+    n_gamma_photons : {1, 2}
+        Number of monochromatic gamma-ray photons produced per annihilation
+        event. Use ``2`` for the two-photon channel (χχ → γγ) and ``1`` for
+        the one-photon-plus-counterpart channel (χχ → γX).
+    counterpart : str or None, optional
+        Label identifying the massive counterpart particle X for the
+        one-photon channel (e.g. ``"z"`` for the γZ channel, ``"h"`` for the
+        γh channel). Required and validated when ``n_gamma_photons=1``.
+        Must be ``None`` (or will be reset to ``None`` with a warning) when
+        ``n_gamma_photons=2``, since no counterpart is involved.
+    counterpart_mass : float or `~astropy.units.Quantity` or None, optional
+        Mass of the counterpart particle, in GeV if given as a bare number.
+        If ``counterpart`` is ``"z"`` or ``"h"``, the standard Z or Higgs
+        boson mass is used automatically when this is ``None``. For any
+        other counterpart label not present in the internal registry, this
+        value must be provided explicitly.
+    sigma_rel : float, optional
+        Relative width of the Gaussian approximation to the spectral line,
+        expressed as a fraction of the line energy E₀ (i.e.
+        ``sigma = sigma_rel * E_0``). Default is 0.01 (1%).
+
+    Raises
+    ------
+    ValueError
+        If ``n_gamma_photons`` is not 1 or 2.
+    ValueError
+        If ``n_gamma_photons=1`` and ``counterpart`` is ``None``.
+    ValueError
+        If the counterpart mass is such that the process is kinematically
+        forbidden (i.e. ``2 * mDM <= counterpart_mass``).
+    ValueError
+        If ``counterpart`` is not in the internal registry and
+        ``counterpart_mass`` is not provided.
+
+    Warns
+    -----
+    UserWarning
+        If ``counterpart`` is set while ``n_gamma_photons=2``; the
+        counterpart is ignored and reset to ``None``.
+    UserWarning
+        If the line energy E₀ falls outside the energy range passed to
+        `evaluate`, in which case the returned spectrum is effectively zero
+        everywhere.
+
+    Examples
+    --------
+    Two-photon line at mDM = 1 TeV::
+
+        >>> import astropy.units as u
+        >>> flux = MonochromaticPrimaryFlux(mDM=1*u.TeV, n_gamma_photons=2)
+
+    One-photon line with a Z-boson counterpart::
+
+        >>> flux = MonochromaticPrimaryFlux(
+        ...     mDM=1*u.TeV, n_gamma_photons=1, counterpart="z"
+        ... )
+    References
+    ----------
+    `Bergström & Snellman (1988), "Observable monochromatic photons from cosmic photino
+    annihilation"
+    DOI:10.1103/PhysRevD.37.3737 <https://journals.aps.org/prd/abstract/10.1103/PhysRevD.37.3737>_
+    """
+    counterparts_particles = {
+        "z": {"mass": 91.2},  # Channel Z-gamma
+        "h": {"mass": 125.1},  # Channel Higgs-gamma
+    }
+
+    DEFAULT_SIGMA_REL = 0.01
+
+    def __init__(
+        self,
+        mDM,
+        n_gamma_photons,
+        counterpart=None,
+        counterpart_mass=None,
+        sigma_rel=None,
+    ):
+        self.mDM = mDM
+        self.n_gamma_photons = n_gamma_photons
+        self.counterpart = counterpart
+        self.counterpart_mass = counterpart_mass
+        self.sigma_rel = sigma_rel if sigma_rel is not None else self.DEFAULT_SIGMA_REL
+        super().__init__()
+
+    def get_line_energy(self):
+        """Compute the gamma-ray line energy E₀.
+
+        For the two-photon channel (``n_gamma_photons=2``), the line
+        energy equals the dark matter mass, ``E_0 = mDM``. For the
+        one-photon channel (``n_gamma_photons=1``), the line energy is
+        reduced by the kinematics of producing the massive counterpart X,
+        ``E_0 = mDM * (1 - counterpart_mass**2 / (4 * mDM**2))``.
+
+        Returns
+        -------
+        E_0 : `~astropy.units.Quantity`
+            Energy of the monochromatic gamma-ray line.
+        """
+
+        if self.n_gamma_photons == 2:
+            return self.mDM
+        else:
+            return self.mDM * (1 - (self.counterpart_mass**2) / (4 * self.mDM**2))
+
+    def evaluate(self, energy):
+        """Evaluate the monochromatic primary flux spectrum dN/dE.
+
+        The spectral line is represented as a Gaussian of relative width
+        ``sigma_rel`` centered on the line energy E₀ (as returned by
+        `get_line_energy`), normalized so that its integral equals
+        ``n_gamma_photons`` (i.e. the total photon yield per annihilation).
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            Energy values (array-like) at which to evaluate the spectrum.
+
+        Returns
+        -------
+        dN_dE : `~astropy.units.Quantity`
+            Differential photon yield per unit energy, in units of GeV⁻¹.
+
+        Warns
+        -----
+        UserWarning
+            If the line energy E₀ lies outside the range spanned by
+            ``energy``, meaning the returned spectrum will be effectively
+            zero over the requested energy range.
+        """
+        E_0 = self.get_line_energy()
+        sigma = self.sigma_rel * E_0
+
+        x = (energy - E_0) / sigma
+        dN_dE = (self.n_gamma_photons / (np.sqrt(2 * np.pi) * sigma)) * np.exp(
+            -0.5 * x**2
+        )
+
+        E_0_gev = E_0.to_value("GeV")
+        e_min = energy.to_value("GeV").min()
+        e_max = energy.to_value("GeV").max()
+        if E_0_gev < e_min or E_0_gev > e_max:
+            warnings.warn(
+                f"The energy line E₀ = {E_0_gev:.3f} GeV is outside the "
+                f"energy range [{e_min:.3f}, {e_max:.3f}] GeV. "
+                "The returned spectrum will be effectively zero.",
+                UserWarning,
+                stacklevel=2,
+            )
+
+        return dN_dE.to("GeV-1")
+
+    @property
+    def n_gamma_photons(self):
+        """Number of gamma photons produced."""
+        return self._n_gamma_photons
+
+    @n_gamma_photons.setter
+    def n_gamma_photons(self, value):
+        if value is None or value not in (1, 2):
+            raise ValueError(
+                "Number of produced photons must be 1 or 2 for this "
+                "monochromatic line spectrum."
+            )
+        self._n_gamma_photons = value
+
+    @property
+    def counterpart(self):
+        """Counterpart particle for the monochromatic line."""
+        return self._counterpart
+
+    @counterpart.setter
+    def counterpart(self, value):
+        if self.n_gamma_photons == 1 and value is None:
+            raise ValueError(
+                "Counterpart particle must be indicated for a "
+                "monochromatic line with 1 photon."
+            )
+
+        self._counterpart = value
+
+        if self.n_gamma_photons == 2 and value is not None:
+            warnings.warn(
+                "The counterpart parameter is ignored since you are "
+                "studying a 2-photon channel.",
+                UserWarning,
+                stacklevel=2,
+            )
+            self._counterpart = None
+
+    @property
+    def counterpart_mass(self):
+        """Counterpart particle mass."""
+        return self._counterpart_mass
+
+    @counterpart_mass.setter
+    def counterpart_mass(self, value):
+        if self.counterpart is not None:
+            if self.counterpart not in self.counterparts_particles:
+                if value is None:
+                    raise ValueError(
+                        f"Since the indicated counterpart particle "
+                        f"'{self.counterpart}' is not in the registry, "
+                        "its mass must be provided by the user."
+                    )
+                self._counterpart_mass = value * u.GeV
+            else:
+                mass_val = (
+                    value
+                    if value is not None
+                    else self.counterparts_particles[self.counterpart]["mass"]
+                )
+                self._counterpart_mass = u.Quantity(mass_val, u.GeV).to(u.GeV)
+
+            if 2 * self.mDM <= self._counterpart_mass:
+                raise ValueError(
+                    f"Kinematically forbidden: the available energy "
+                    f"is not enough to produce the counterpart particle "
+                    f"(mass = {self._counterpart_mass})."
+                )
+        else:
+            self._counterpart_mass = None
+
+    def to_dict(self, full_output=False):
+        """Serialize the model to a dictionary.
+
+        Parameters
+        ----------
+        full_output : bool, optional
+            Unused; present for interface compatibility. Default is False.
+
+        Returns
+        -------
+        data : dict
+            Dictionary representation containing the model type, ``mDM``,
+            ``n_gamma_photons``, ``counterpart``, ``counterpart_mass``, and
+            ``sigma_rel``, suitable for round-tripping via `from_dict`.
+        """
+        return {
+            "type": "MonochromaticPrimaryFlux",
+            "mDM": self.mDM.to_string(),
+            "n_gamma_photons": self.n_gamma_photons,
+            "counterpart": self.counterpart,
+            "counterpart_mass": (
+                self.counterpart_mass.to_string()
+                if self.counterpart_mass is not None
+                else None
+            ),
+            "sigma_rel": self.sigma_rel,
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        """Construct a `MonochromaticPrimaryFlux` from a dictionary.
+
+        Parameters
+        ----------
+        data : dict
+            Dictionary as produced by `to_dict`, containing ``mDM``,
+            ``n_gamma_photons``, and optionally ``counterpart``,
+            ``counterpart_mass``, and ``sigma_rel``.
+
+        Returns
+        -------
+        flux : `MonochromaticPrimaryFlux`
+            New instance reconstructed from ``data``.
+        """
+        return cls(
+            mDM=u.Quantity(data["mDM"]),
+            n_gamma_photons=data["n_gamma_photons"],
+            counterpart=data.get("counterpart"),
+            counterpart_mass=(
+                u.Quantity(data["counterpart_mass"])
+                if data.get("counterpart_mass")
+                else None
+            ),
+            sigma_rel=data.get("sigma_rel"),
+        )
+
+
+class VIBPrimaryFlux(_DarkMatterMassValidator, SpectralModel):
+    """Virtual Internal Bremsstrahlung (VIB) spectral shape.
+
+    Describes the gamma-ray spectrum from internal bremsstrahlung in dark
+    matter annihilation, valid for Majorana dark matter annihilating to
+    Standard Model fermion pairs in the limit of large dark matter mass and
+    nearly degenerate mediating sfermions.
+
+    Parameters
+    ----------
+    mDM : `~astropy.units.Quantity`
+        Dark matter particle mass. Must be convertible to GeV and strictly
+        positive.
+
+    Notes
+    -----
+    The spectral shape is defined in terms of ``x = E / mDM`` and is only
+    non-zero for ``0 < x < 1``; outside this range the returned flux is
+    zero. The overall normalization constant ``A_VIB`` follows from the
+    standard VIB spectral formula.
+
+
+    References
+    ----------
+    `Bringmann et al. (2007), "New Gamma-Ray Contributions to Supersymmetric \n
+      Dark Matter Annihilation"
+    DOI:10.1088/1126-6708/2008/01/049 <https://arxiv.org/abs/0710.3169>`_
+    """
+
+    tag = ["VIBPrimaryFlux", "dm-vib"]
+
+    A_VIB = 6.0 / (21.0 - 2.0 * np.pi**2)
+
+    def __init__(self, mDM):
+        self.mDM = mDM
+        super().__init__()
+
+    def evaluate(self, energy):
+        """Evaluate the VIB primary flux spectrum dN/dE.
+
+        Computes the VIB spectral shape as a function of
+        ``x = energy / mDM``, restricting the evaluation to the physically
+        valid range ``0 < x < 1`` (the spectrum is zero outside this range)
+        and clipping any small negative numerical artifacts to zero.
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            Energy values (array-like) at which to evaluate the spectrum.
+
+        Returns
+        -------
+        dN_dE : `~astropy.units.Quantity`
+            Differential photon yield per unit energy, in units of GeV⁻¹.
+        """
+        x = energy / self.mDM
+
+        # Mask: only defined for 0 < x < 1
+        valid = (x > 0) & (x < 1)
+        dN_dx = np.zeros_like(x)
+
+        xv = x[valid]
+        numerator = xv * (xv**3 - 4 * xv**2 + 6 * xv - 4) - 4 * (xv - 1) ** 2 * np.log(
+            1 - xv
+        )
+        denominator = (xv - 2) ** 3
+
+        result = self.A_VIB * numerator / denominator
+        dN_dx[valid] = np.clip(result, 0, None)
+
+        return (dN_dx / self.mDM).to("GeV-1")
+
+    def to_dict(self, full_output=False):
+        """Serialize the model to a dictionary.
+
+        Parameters
+        ----------
+        full_output : bool, optional
+            Unused; present for interface compatibility. Default is False.
+
+        Returns
+        -------
+        data : dict
+            Dictionary representation containing the model type and
+            ``mDM``, suitable for round-tripping via `from_dict`.
+        """
+        return {
+            "type": "VIBPrimaryFlux",
+            "mDM": self.mDM.to_string(),
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        """Construct a `VIBPrimaryFlux` from a dictionary.
+
+        Parameters
+        ----------
+        data : dict
+            Dictionary as produced by `to_dict`, containing ``mDM``.
+
+        Returns
+        -------
+        flux : `VIBPrimaryFlux`
+            New instance reconstructed from ``data``.
+        """
+        return cls(mDM=u.Quantity(data["mDM"]))
+
+
+class BoxPrimaryFlux(_DarkMatterMassValidator, SpectralModel):
+    """Box-shaped spectral signal from χχ → φφ → γγγγ.
+
+    Describes the gamma-ray spectrum resulting from dark matter
+    annihilation into a pair of long-lived neutral intermediate states φ,
+    each of which subsequently decays into a pair of photons (φ → γγ). In
+    the rest frame of each φ, the photons are monochromatic; boosting to
+    the dark matter rest frame produces a flat ("box-shaped") spectrum
+    between two energy edges for each intermediate state.
+
+    Parameters
+    ----------
+    mDM : `~astropy.units.Quantity`
+        Dark matter particle mass. Must be convertible to GeV and strictly
+        positive.
+    mPhi : array_like
+        Mass(es) of the intermediate state(s) φ, in units convertible to
+        GeV. May be:
+
+        - a single value or a one-element array (e.g. ``[100] * u.GeV``),
+          in which case both intermediate states are assumed identical
+          (χχ → φφ), producing a single box; or
+        - a two-element array (e.g. ``[100, 50] * u.GeV``), to model two
+          distinct intermediate states (χχ → φ₁φ₂), producing two
+          (possibly overlapping) boxes.
+
+    Raises
+    ------
+    ValueError
+        If ``mPhi`` does not contain exactly 1 or 2 values.
+    ValueError
+        If any element of ``mPhi`` is not strictly positive.
+    ValueError
+        If the process is kinematically forbidden, i.e.
+        ``mPhi1 + mPhi2 >= 2 * mDM``.
+
+    Warns
+    -----
+    UserWarning
+        If the two spectral boxes (for ``mPhi1`` and ``mPhi2``) overlap in
+        energy, in which case the spectrum in the overlap region is
+        double-counted.
+
+    References
+    ----------
+    `Ibarra et al. (2018), "Dark matter constraints from box-shaped gamma-ray features"
+    DOI:10.1088/1475-7516/2012/07/043 <https://arxiv.org/abs/1205.0007>`_
+    """
+
+    tag = ["BoxPrimaryFlux", "dm-box"]
+
+    def __init__(self, mDM, mPhi):
+        self.mDM = u.Quantity(mDM)
+        self.mPhi = mPhi
+        super().__init__()
+
+    def evaluate(self, energy):
+        """Evaluate the box-shaped primary flux spectrum dN/dE.
+
+        For each intermediate state φᵢ, computes the energy range
+        ``[E_min_i, E_max_i]`` (centered on the boosted photon energy
+        ``E_phi_i`` with half-width ``delta_E``) and adds a constant
+        contribution ``2 / delta_E`` to ``dN/dE`` for energies falling
+        inside that range, reflecting the two photons produced per φᵢ
+        decay.
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            Energy values (array-like) at which to evaluate the spectrum.
+
+        Returns
+        -------
+        dN_dE : `~astropy.units.Quantity`
+            Differential photon yield per unit energy, in units of GeV⁻¹.
+
+        Warns
+        -----
+        UserWarning
+            If the energy ranges of the two boxes overlap.
+        """
+
+        E_phi1, E_phi2 = self.energies_phi
+        delta_E = self.delta_E
+
+        dN_dE = np.zeros(len(energy)) / u.GeV
+
+        E_min1 = (E_phi1 - delta_E) / 2
+        E_max1 = (E_phi1 + delta_E) / 2
+        in_box1 = (energy >= E_min1) & (energy <= E_max1)
+
+        E_min2 = (E_phi2 - delta_E) / 2
+        E_max2 = (E_phi2 + delta_E) / 2
+        in_box2 = (energy >= E_min2) & (energy <= E_max2)
+
+        two_distinct_boxes = not u.allclose(E_phi1, E_phi2)
+        if two_distinct_boxes and E_min2 < E_max1:
+            warnings.warn(
+                "The two spectral boxes overlap in energy. This can happen "
+                "when the two intermediate-particle masses are very close. "
+                "The spectrum in the overlap region will be double-counted.",
+                UserWarning,
+                stacklevel=2,
+            )
+
+        if two_distinct_boxes:
+            dN_dE[in_box1] += 2.0 / delta_E
+            dN_dE[in_box2] += 2.0 / delta_E
+        else:
+            # single box: avoid double-adding the same contribution twice
+            dN_dE[in_box1] += 2.0 / delta_E
+
+        return dN_dE.to("GeV-1")
+
+    @property
+    def energies_phi(self):
+        """Energy of each intermediate particle in the centre-of-mass frame."""
+        E_phi1 = self.mDM + (self.mPhi1**2 - self.mPhi2**2) / (4 * self.mDM)
+        E_phi2 = self.mDM + (self.mPhi2**2 - self.mPhi1**2) / (4 * self.mDM)
+        return E_phi1, E_phi2
+
+    @property
+    def delta_E(self):
+        """Width of the boxes (momentum magnitude). Both boxes share this width."""
+        E_phi1, _ = self.energies_phi
+        return np.sqrt(E_phi1**2 - self.mPhi1**2)
+
+    @property
+    def mPhi(self):
+        """Intermediate particle masses."""
+        return self._mPhi
+
+    @mPhi.setter
+    def mPhi(self, value):
+        if value is not None:
+            if getattr(value, "ndim", 1) == 0 or not isinstance(
+                value, (list, tuple, np.ndarray)
+            ):
+                mPhi_list = [value]
+            else:
+                mPhi_list = value
+
+            if len(mPhi_list) == 1:
+                self.mPhi1 = u.Quantity(mPhi_list[0])
+                self.mPhi2 = self.mPhi1
+            elif len(mPhi_list) == 2:
+                self.mPhi1 = u.Quantity(mPhi_list[0])
+                self.mPhi2 = u.Quantity(mPhi_list[1])
+            else:
+                raise ValueError(
+                    f"The intermediate mass array must contain exactly 1 or 2 values. "
+                    f"Received {len(mPhi_list)}."
+                )
+
+            for label, m in [("mPhi1", self.mPhi1), ("mPhi2", self.mPhi2)]:
+                if u.Quantity(m).to_value("GeV") <= 0:
+                    raise ValueError(f"{label} must be strictly positive.")
+
+            if self.mPhi1 + self.mPhi2 >= 2 * self.mDM:
+                raise ValueError(
+                    f"Kinematically forbidden: the sum of intermediate masses "
+                    f"({self.mPhi1 + self.mPhi2}) must be "
+                    f"less than 2 * mDM ({2 * self.mDM})."
+                )
+
+            self._mPhi = value
+        else:
+            self._mPhi = None
+            self.mPhi1 = None
+            self.mPhi2 = None
+
+    def to_dict(self, full_output=False):
+        """Serialize the model to a dictionary.
+
+        Parameters
+        ----------
+        full_output : bool, optional
+            Unused; present for interface compatibility. Default is False.
+
+        Returns
+        -------
+        data : dict
+            Dictionary representation containing the model type, ``mDM``,
+            and ``mPhi`` (as a two-element list ``[mPhi1, mPhi2]``),
+            suitable for round-tripping via `from_dict`.
+        """
+        return {
+            "type": "BoxPrimaryFlux",
+            "mDM": self.mDM.to_string(),
+            "mPhi": [self.mPhi1.to_string(), self.mPhi2.to_string()],
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        """Construct a `BoxPrimaryFlux` from a dictionary.
+
+        Parameters
+        ----------
+        data : dict
+            Dictionary as produced by `to_dict`, containing ``mDM`` and
+            ``mPhi``.
+
+        Returns
+        -------
+        flux : `BoxPrimaryFlux`
+            New instance reconstructed from ``data``.
+        """
+        return cls(
+            mDM=u.Quantity(data["mDM"]),
+            mPhi=[u.Quantity(m) for m in data["mPhi"]],
+        )
 
 
 class PrimaryFlux(TemplateNDSpectralModel):
