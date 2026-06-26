@@ -228,10 +228,19 @@ def test_star_exclusion_known_field():
 
 
 def test_make_grid_rectangle_sky_regions():
-    geom = WcsGeom.create(skydir=(0, 0), width=(20, 10), binsz=0.05, frame="galactic")
-    regions = make_grid_rectangle_sky_regions(geom, 5, 6)
+    center = SkyCoord(0, 0, unit="deg", frame="galactic")
+    geom = WcsGeom.create(skydir=center, frame="galactic")
+    regions = make_grid_rectangle_sky_regions(
+        center=center,
+        width=20 * u.deg,
+        height=12 * u.deg,
+        wcs=geom.wcs,
+        nbinx=5,
+        nbiny=6,
+        angle=30 * u.deg,
+    )
     assert len(regions) == 30
-    assert_allclose(regions[0].center.l, 8.0 * u.deg, rtol=1e-3)
-    assert_allclose(regions[0].center.b, -4.16667 * u.deg, rtol=1e-3)
+    assert_allclose(regions[0].center.l, 350.547 * u.deg, atol=1e-2)
+    assert_allclose(regions[0].center.b, -0.343 * u.deg, atol=1e-2)
     assert_allclose(regions[0].width, 4.0 * u.deg, rtol=1e-3)
-    assert_allclose(regions[0].height, 1.66667 * u.deg, rtol=1e-3)
+    assert_allclose(regions[0].height, 2.0 * u.deg, rtol=1e-3)

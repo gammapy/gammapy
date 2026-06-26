@@ -13,7 +13,7 @@ import operator
 import numpy as np
 from scipy.optimize import Bounds, minimize
 from astropy import units as u
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from gammapy.utils.scripts import make_path
 from regions import (
@@ -403,45 +403,69 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
     return regions
 
 
-def make_grid_rectangle_sky_regions(geom, nbinx, nbiny):
-    """Utility function to create a list of grid of rectangular
-    spatial regions within a given geometry
+def make_grid_rectangle_sky_regions(
+    center, width, height, wcs, nbinx=1, nbiny=1, angle=0 * u.deg
+):
+    """Utility function to creates a 2D grid of
+    `~regions.RectangleSkyRegion` tiles centered on
+    a given sky coordinate. This is similar to
+    `make_orthogonal_rectangle_sky_regions` but covers a 2-D field
+    instead of a 1-D profile
 
     Parameters
     ----------
-    geom : `~gammapy.maps.WcsGeom`
-        Geometry to split into smaller regions
+    center : `~astropy.coordinates.SkyCoord`
+        Center coordinate of the full grid.
+    width : `~astropy.units.Quantity`
+        Total angular width of the grid (longitude direction).
+    height : `~astropy.units.Quantity`
+        Total angular height of the grid (latitude direction).
+    wcs : `~astropy.wcs.WCS`
+        WCS projection object used to convert between sky and pixel
+        coordinates.
     nbinx : int
         Number of boxes along x-axis (RA/longitude)
     nbiny : int
         Number of boxes along y-axis (Dec/latitude)
+    angle : `~astropy.units.Quantity`, optional
+        Rotation angle (in deg) of the grid, anti-clockwise.
+        Default is 0 deg.
 
     Returns
     -------
     regions : list of `~regions.RectangleSkyRegion`
-        Regions inside the geom
+
     """
-    geom = geom.to_image()
-    sky_start = geom.pix_to_coord([-0.5, -0.5])
-    sky_end = geom.pix_to_coord([geom.npix[0][0] - 0.5, geom.npix[1][0] - 0.5])
+    pix_center = center.to_pixel(wcs)
 
-    lon_max, lat_min = sky_start
-    lon_min, lat_max = sky_end
+    dx = center.directional_offset_by(angle + 90 * u.deg, width / 2)
+    dy = center.directional_offset_by(angle, height / 2)
 
-    width = Angle((lon_max - lon_min)).wrap_at(360 * u.deg) / nbinx
-    height = (lat_max - lat_min) / nbiny
+    pix_dx = dx.to_pixel(wcs)
+    pix_dy = dy.to_pixel(wcs)
+
+    ux = np.array([pix_dx[0] - pix_center[0], pix_dx[1] - pix_center[1]])
+    uy = np.array([pix_dy[0] - pix_center[0], pix_dy[1] - pix_center[1]])
+    xe = np.linspace(-1, 1, nbinx + 1)
+    ye = np.linspace(-1, 1, nbiny + 1)
+    xc = 0.5 * (xe[:-1] + xe[1:])
+    yc = 0.5 * (ye[:-1] + ye[1:])
 
     regions = []
+    for x in xc:
+        for y in yc:
+            pix_x = pix_center[0] + x * ux[0] + y * uy[0]
+            pix_y = pix_center[1] + x * ux[1] + y * uy[1]
 
-    for iy in range(nbiny):
-        for ix in range(nbinx):
-            lon = lon_max - (ix + 0.5) * width
-            lat = lat_min + (iy + 0.5) * height
-            center = SkyCoord(lon, lat, unit="deg", frame=geom.frame)
-            region = RectangleSkyRegion(center=center, width=width, height=height)
-            regions.append(region)
-
-    return regions
+            sky_center = SkyCoord.from_pixel(pix_x, pix_y, wcs)
+            reg = RectangleSkyRegion(
+                center=sky_center,
+                width=width / nbinx,
+                height=height / nbiny,
+                angle=angle,
+            )
+            regions.append(reg)
+    return Regions(regions)
 
 
 def make_concentric_annulus_sky_regions(
