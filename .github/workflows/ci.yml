@@ -71,6 +71,7 @@ jobs:
           - os: ubuntu-latest
             python: '3.13'
             tox_env: 'devdeps'
+            gammapy_data: true
             allowed_fail: true
 
     steps:
