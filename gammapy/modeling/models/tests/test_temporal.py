@@ -88,6 +88,10 @@ def test_light_curve_evaluate(light_curve):
 
     with pytest.warns(GammapyDeprecationWarning):
         new_curve = LightCurveTemplateTemporalModel(new_map, filename="_", method="log")
+        assert_equal(
+            new_curve._interp_kwargs,
+            {"method": "log", "values_scale": "log", "fill_value": -np.inf},
+        )
     new_curve = LightCurveTemplateTemporalModel(
         new_map, filename="_", interp_kwargs={"method": "log"}
     )
