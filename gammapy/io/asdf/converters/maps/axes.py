@@ -3,7 +3,7 @@ from asdf.extension import Converter
 
 
 class MapAxisConverter(Converter):
-    """ASDF converter for the MapAxis class."""
+    """ASDF converter for the `~gammapy.maps.MapAxis` class."""
 
     tags = ["asdf://gammapy.org/gammapy/tags/maps/mapaxis-1.0.0"]
     types = ["gammapy.maps.axes.MapAxis"]
@@ -34,7 +34,7 @@ class MapAxisConverter(Converter):
 
 
 class TimeMapAxisConverter(Converter):
-    """ASDF converter for the TimeMapAxis class."""
+    """ASDF converter for the `~gammapy.maps.TimeMapAxis` class."""
 
     tags = ["asdf://gammapy.org/gammapy/tags/maps/timemapaxis-1.0.0"]
     types = ["gammapy.maps.axes.TimeMapAxis"]
@@ -63,7 +63,7 @@ class TimeMapAxisConverter(Converter):
 
 
 class LabelMapAxisConverter(Converter):
-    """ASDF converter for the LabelMapAxis class."""
+    """ASDF converter for the `~gammapy.maps.LabelMapAxis` class."""
 
     tags = ["asdf://gammapy.org/gammapy/tags/maps/labelmapaxis-1.0.0"]
     types = ["gammapy.maps.axes.LabelMapAxis"]
@@ -86,7 +86,7 @@ class LabelMapAxisConverter(Converter):
 
 
 class MapAxesConverter(Converter):
-    """ASDF converter for the MapAxes class."""
+    """ASDF converter for the `~gammapy.maps.MapAxes` class."""
 
     tags = ["asdf://gammapy.org/gammapy/tags/maps/mapaxes-1.0.0"]
     types = ["gammapy.maps.axes.MapAxes"]
