@@ -1,0 +1,44 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id : "asdf://gammapy.org/gammapy/schemas/maps/wcsgeom-1.0.0"
+
+title: |
+  Represents WcsGeom.
+
+description: |
+  Support the serialization of WcsGeom which is a geometry class for WCS maps.
+
+
+type: object
+properties:
+  wcs:
+    tag: "tag:astropy.org:astropy/wcs/wcs-1.*"
+    description: |
+      WCS projection object.
+  npix:
+    type: array
+    items:
+      tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
+    description: |
+      Number of pixels in each spatial dimension.
+  cdelt:
+    type: array
+    items:
+      tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
+    description: |
+      Pixel size in each image plane.
+  crpix:
+    type: array
+    items:
+      tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
+    description: |
+      Reference pixel coordinate in each image plane.
+  axes:
+    tag: "asdf://gammapy.org/gammapy/tags/maps/mapaxes-1.0.0"
+    description: |
+      Axes for non-spatial dimensions.
+
+required: [wcs]
+additionalProperties: false
+...
