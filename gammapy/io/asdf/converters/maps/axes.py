@@ -3,7 +3,7 @@ from asdf.extension import Converter
 
 
 class MapAxisConverter(Converter):
-    """ASDF converter for the MapAxis class."""
+    """ASDF converter for the `~gammapy.maps.MapAxis` class."""
 
     tags = ["asdf://gammapy.org/gammapy/tags/maps/mapaxis-1.0.0"]
     types = ["gammapy.maps.axes.MapAxis"]
@@ -34,7 +34,7 @@ class MapAxisConverter(Converter):
 
 
 class TimeMapAxisConverter(Converter):
-    """ASDF converter for the TimeMapAxis class."""
+    """ASDF converter for the `~gammapy.maps.TimeMapAxis` class."""
 
     tags = ["asdf://gammapy.org/gammapy/tags/maps/timemapaxis-1.0.0"]
     types = ["gammapy.maps.axes.TimeMapAxis"]
@@ -63,7 +63,7 @@ class TimeMapAxisConverter(Converter):
 
 
 class LabelMapAxisConverter(Converter):
-    """ASDF converter for the LabelMapAxis class."""
+    """ASDF converter for the `~gammapy.maps.LabelMapAxis` class."""
 
     tags = ["asdf://gammapy.org/gammapy/tags/maps/labelmapaxis-1.0.0"]
     types = ["gammapy.maps.axes.LabelMapAxis"]
@@ -82,4 +82,25 @@ class LabelMapAxisConverter(Converter):
         return LabelMapAxis(
             labels=node["labels"],
             name=node.get("name", ""),
+        )
+
+
+class MapAxesConverter(Converter):
+    """ASDF converter for the `~gammapy.maps.MapAxes` class."""
+
+    tags = ["asdf://gammapy.org/gammapy/tags/maps/mapaxes-1.0.0"]
+    types = ["gammapy.maps.axes.MapAxes"]
+
+    def to_yaml_tree(self, obj, tag, ctx):
+        """Convert a MapAxes object into a node suitable for YAML serialization."""
+        return {
+            "axes": list(obj),
+        }
+
+    def from_yaml_tree(self, node, tag, ctx):
+        """Reconstruct a MapAxes object from a YAML node."""
+        from gammapy.maps import MapAxes
+
+        return MapAxes(
+            axes=node["axes"],
         )
