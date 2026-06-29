@@ -2,7 +2,6 @@
 """Dark matter spatial and spectral models."""
 
 from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
-
 from .profiles import (
     BurkertProfile,
     DMProfile,

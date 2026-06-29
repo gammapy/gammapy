@@ -2,9 +2,8 @@
 """Utilities to compute J-factor maps."""
 
 import html
-
-import astropy.units as u
 import numpy as np
+import astropy.units as u
 
 __all__ = ["JFactory"]
 
@@ -94,10 +93,8 @@ class JFactory:
 
         .. math::
             \int_0^{l_\mathrm{max}} \rho^2(r(l, \theta)) \, \mathrm dl
-            = 2 \int_{r_{\min}}^{r_{\max}} \frac{r \,\
-                  \rho^2(r)}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr
-              + \int_{r_{\max}}^{4 r_{\max}} \frac{r \,\
-                  \rho^2(r)}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr.
+            = 2 \int_{r_{\min}}^{r_{\max}} \frac{r \, \rho^2(r)}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr
+              + \int_{r_{\max}}^{4 r_{\max}} \frac{r \, \rho^2(r)}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr.
         """
         separation = self.geom.separation(self.geom.center_skydir).rad
         rmin = u.Quantity(
