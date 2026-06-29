@@ -2,7 +2,6 @@
 """Built-in models in Gammapy."""
 
 from gammapy.utils.registry import Registry
-
 from .core import DatasetModels, Model, ModelBase, Models
 from .cube import (
     FoVBackgroundModel,
@@ -42,9 +41,9 @@ from .spectral import (
     ExpCutoffPowerLawNormSpectralModel,
     ExpCutoffPowerLawSpectralModel,
     GaussianSpectralModel,
-    LogParabola2SpectralModel,
     LogParabolaNormSpectralModel,
     LogParabolaSpectralModel,
+    LogParabola2SpectralModel,
     NaimaSpectralModel,
     PiecewiseNormSpectralModel,
     PowerLaw2SpectralModel,
