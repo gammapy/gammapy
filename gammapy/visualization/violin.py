@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import astropy.units as u
 from scipy.stats import gaussian_kde, norm
+from astropy.visualization import quantity_support
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 
 
 def plot_samples_violin_vs_energy(
@@ -88,139 +90,159 @@ def plot_samples_violin_vs_energy(
       at the 98% percentile. For a gaussian distribution these values corresponds to
       1σ errors and 2σ upper limit plotted by default by the `~gammapy.estimators.FluxPoints.plot` method.
     """
-    if ax is None:
-        ax = plt.gca()
+    with quantity_support():
+        if ax is None:
+            ax = plt.gca()
 
-    ax.set_xscale("log")
-    ax.set_yscale("log")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
 
-    # Energy edges
-    energy_edges = u.Quantity(energy_edges)
-    unit_x = f"{energy_edges.unit}"
-    edges = np.asarray(energy_edges.to_value())
-    _validate_energy_edges(edges)
+        # Energy edges
+        energy_edges = u.Quantity(energy_edges)
+        unit_x = f"{energy_edges.unit}"
+        edges = np.asarray(energy_edges.to_value())
+        _validate_energy_edges(edges)
+        nbins = len(edges) - 1
 
-    unit_y = f"{samples_per_band[0].unit}"
-    nbins = len(edges) - 1
-
-    samples_per_band, weights_per_band = _validate_inputs(
-        samples_per_band, weights_per_band, nbins
-    )
-
-    # clip defaults
-    if violin_clip is None:
-        violin_clip = (norm.cdf(-4), norm.cdf(4))
-    lc, uc = violin_clip
-    if not (0 <= lc < uc <= 1):
-        raise ValueError("violin_clip must satisfy 0 <= low < high <= 1.")
-
-    # Errorbar styles
-    errorbar_kwargs = errorbar_kwargs or {}
-    errorbar_kwargs_defaults = dict(
-        marker="o",
-        ms=4.5,
-        mec="black",
-        mfc="white",
-        color="black",
-        capsize=2.5,
-        elinewidth=1.2,
-        lw=1.2,
-    )
-    for key in errorbar_kwargs_defaults.keys():
-        errorbar_kwargs.setdefault(key, errorbar_kwargs_defaults[key])
-
-    errorbar_ul_kwargs = errorbar_ul_kwargs or {}
-    errorbar_ul_kwargs_defaults = dict(
-        marker="v",
-        ms=7,
-        mec="black",
-        mfc="white",
-        color="black",
-        capsize=2.5,
-        elinewidth=1.2,
-        lw=1.2,
-    )
-    for key in errorbar_ul_kwargs_defaults.keys():
-        errorbar_ul_kwargs.setdefault(key, errorbar_ul_kwargs_defaults[key])
-
-    if violin_kwargs is None:
-        violin_kwargs = dict()
-    violin_kwargs_defaults = dict(
-        alpha=0.45,
-        color="C0",
-        edgecolor="black",
-        lw=0.8,
-    )
-    for key in violin_kwargs_defaults.keys():
-        violin_kwargs.setdefault(key, violin_kwargs_defaults[key])
-
-    quantiles = [100 * norm.cdf(-1), 50, 100 * norm.cdf(1), 100 * norm.cdf(2)]
-
-    # Precompute bin geometry
-    emins = edges[:-1]
-    emaxs = edges[1:]
-    xlog_min = np.log10(emins)
-    xlog_max = np.log10(emaxs)
-
-    centers = 0.5 * (xlog_min + xlog_max)
-    halfwidths = 0.5 * (xlog_max - xlog_min) * 0.99
-
-    for samples, weights, xlog_c, hwlog, emin, emax in zip(
-        samples_per_band, weights_per_band, centers, halfwidths, emins, emaxs
-    ):
-        samples = samples.to_value(unit_y)
-        s, smin_pos = _sanitize_samples(samples)
-        w = _sanitize_weights(weights, len(s))
-        if w is None or s.size == 0:
-            continue
-
-        # transform
-        ylog, scale = _compute_log_transformed(s, xlog_c, energy_power)
-
-        # KDE
-        grid_full, dens_full = _kde_evaluate(ylog, w, grid_size, bw_method)
-
-        # clipping interval
-        y_high = np.percentile(s, uc * 100, weights=w, method="inverted_cdf") * scale
-        y_low = np.percentile(s, lc * 100, weights=w, method="inverted_cdf") * scale
-        y_low = max(smin_pos * scale, y_low)
-
-        if y_high > y_low > 0:
-            ymin = max(grid_full.min(), np.log10(y_low))
-            ymax = min(grid_full.max(), np.log10(y_high))
-            mask = (grid_full >= ymin) & (grid_full <= ymax)
-            ygrid_log, dens = grid_full[mask], dens_full[mask]
+        # Units
+        if ax.yaxis.units is None:
+            unit_y_final = (
+                f"{samples_per_band[0].unit * energy_edges.unit**energy_power}"
+            )
         else:
-            ygrid_log, dens = grid_full, dens_full
+            unit_y_final = ax.yaxis.units
 
-        # violin polygon
-        _draw_violin(ax, xlog_c, hwlog, ygrid_log, dens, violin_kwargs)
+        if ax.xaxis.units is None:
+            unit_x_final = unit_x
+        else:
+            unit_x_final = ax.xaxis.units
 
-        # quantile bars
-        _draw_errorbar(
-            ax,
-            xlog_c,
-            emin,
-            emax,
-            samples,
-            weights,
-            quantiles,
-            scale,
-            errorbar_kwargs,
-            errorbar_ul_kwargs,
+        unit_y = f"{samples_per_band[0].unit}"
+
+        samples_per_band, weights_per_band = _validate_inputs(
+            samples_per_band, weights_per_band, nbins
         )
 
-    # Labels
-    ax.set_xlabel(f"Energy [{unit_x}]")
+        # clip defaults
+        if violin_clip is None:
+            violin_clip = (norm.cdf(-4), norm.cdf(4))
+        lc, uc = violin_clip
+        if not (0 <= lc < uc <= 1):
+            raise ValueError("violin_clip must satisfy 0 <= low < high <= 1.")
 
-    if energy_power:
-        p = f"{energy_power:g}"
-        unit_str = rf"[{unit_x}$^{p}$ × {unit_y}]"
-        ax.set_ylabel(rf"$E^{p}\,\times$ {y_label} {unit_str}")
-    else:
-        ax.set_ylabel(f"{y_label} [{unit_y}]")
+        # Errorbar styles
+        errorbar_kwargs = errorbar_kwargs or {}
+        errorbar_kwargs_defaults = dict(
+            marker="o",
+            ms=4.5,
+            mec="black",
+            mfc="white",
+            color="black",
+            capsize=2.5,
+            elinewidth=1.2,
+            lw=1.2,
+        )
+        for key in errorbar_kwargs_defaults.keys():
+            errorbar_kwargs.setdefault(key, errorbar_kwargs_defaults[key])
 
-    return ax
+        errorbar_ul_kwargs = errorbar_ul_kwargs or {}
+        errorbar_ul_kwargs_defaults = dict(
+            marker="v",
+            ms=7,
+            mec="black",
+            mfc="white",
+            color="black",
+            capsize=2.5,
+            elinewidth=1.2,
+            lw=1.2,
+        )
+        for key in errorbar_ul_kwargs_defaults.keys():
+            errorbar_ul_kwargs.setdefault(key, errorbar_ul_kwargs_defaults[key])
+
+        if violin_kwargs is None:
+            violin_kwargs = dict()
+        violin_kwargs_defaults = dict(
+            alpha=0.45,
+            color="C0",
+            edgecolor="black",
+            lw=0.8,
+        )
+        for key in violin_kwargs_defaults.keys():
+            violin_kwargs.setdefault(key, violin_kwargs_defaults[key])
+
+        quantiles = [100 * norm.cdf(-1), 50, 100 * norm.cdf(1), 100 * norm.cdf(2)]
+
+        # Precompute bin geometry
+        emins = edges[:-1]
+        emaxs = edges[1:]
+        xlog_min = np.log10(emins)
+        xlog_max = np.log10(emaxs)
+
+        centers = 0.5 * (xlog_min + xlog_max)
+        halfwidths = 0.5 * (xlog_max - xlog_min) * 0.99
+
+        for samples, weights, xlog_c, hwlog, emin, emax in zip(
+            samples_per_band, weights_per_band, centers, halfwidths, emins, emaxs
+        ):
+            samples = samples.to_value(unit_y)
+            s, smin_pos = _sanitize_samples(samples)
+            w = _sanitize_weights(weights, len(s))
+            if w is None or s.size == 0:
+                continue
+
+            # transform
+            ylog, scale = _compute_log_transformed(s, xlog_c, energy_power)
+
+            # KDE
+            grid_full, dens_full = _kde_evaluate(ylog, w, grid_size, bw_method)
+
+            # clipping interval
+            y_high = (
+                np.percentile(s, uc * 100, weights=w, method="inverted_cdf") * scale
+            )
+            y_low = np.percentile(s, lc * 100, weights=w, method="inverted_cdf") * scale
+            y_low = max(smin_pos * scale, y_low)
+
+            if y_high > y_low > 0:
+                ymin = max(grid_full.min(), np.log10(y_low))
+                ymax = min(grid_full.max(), np.log10(y_high))
+                mask = (grid_full >= ymin) & (grid_full <= ymax)
+                ygrid_log, dens = grid_full[mask], dens_full[mask]
+            else:
+                ygrid_log, dens = grid_full, dens_full
+
+            # violin polygon
+            _draw_violin(
+                ax, xlog_c, hwlog, ygrid_log, dens, violin_kwargs, unit_y_final, unit_x
+            )
+
+            # quantile bars
+            _draw_errorbar(
+                ax,
+                xlog_c,
+                emin,
+                emax,
+                samples,
+                weights,
+                quantiles,
+                scale,
+                errorbar_kwargs,
+                errorbar_ul_kwargs,
+                unit_y_final,
+                unit_x,
+            )
+
+        # Labels
+        ax.set_xlabel(f"Energy [{u.Unit(unit_x_final).to_string(UNIT_STRING_FORMAT)}]")
+        unit_str = rf"[{u.Unit(unit_y_final).to_string(UNIT_STRING_FORMAT)}]"
+
+        if energy_power:
+            p = f"{energy_power:g}"
+            ax.set_ylabel(rf"$E^{p}\,\times$ {y_label} {unit_str}")
+        else:
+            ax.set_ylabel(f"{y_label} {unit_str}")
+
+        return ax
 
 
 def _validate_inputs(samples_per_band, weights_per_band, nbins):
@@ -294,8 +316,12 @@ def _kde_evaluate(ylog, w, grid_size, bw_method):
     return grid, dens / peak if peak > 0 else dens
 
 
-def _draw_violin(ax, x_center, hwlog, ygrid_log, dens, violin_kwargs):
+def _draw_violin(
+    ax, x_center, hwlog, ygrid_log, dens, violin_kwargs, unit_y_power, unit_x
+):
     """Draw a symmetric violin polygon in log-space."""
+    unit_y = u.Unit(unit_y_power)
+    unit_x = u.Unit(unit_x)
     xlog_left = x_center - hwlog * dens
     xlog_right = x_center + hwlog * dens
 
@@ -306,18 +332,34 @@ def _draw_violin(ax, x_center, hwlog, ygrid_log, dens, violin_kwargs):
     x_poly = np.concatenate([x_left, x_right[::-1]])
     y_poly = np.concatenate([y_lin, y_lin[::-1]])
 
-    return ax.fill(x_poly, y_poly, zorder=2, **violin_kwargs)
+    return ax.fill(x_poly * unit_x, y_poly * unit_y, zorder=2, **violin_kwargs)
 
 
-def _draw_errorbar(ax, xlog_c, emin, emax, s, w, quantiles, scale, err_kw, err_ul_kw):
+def _draw_errorbar(
+    ax,
+    xlog_c,
+    emin,
+    emax,
+    s,
+    w,
+    quantiles,
+    scale,
+    err_kw,
+    err_ul_kw,
+    unit_y_power,
+    unit_x,
+):
     """Draw Gammapy-style flux-point error bars or upper limits."""
+    unit_y = u.Unit(unit_y_power)
+    unit_x = u.Unit(unit_x)
+
     y_qs = [
         np.percentile(s, q, weights=w, method="inverted_cdf") * scale for q in quantiles
     ]
 
     y_lo, y_med, y_hi, y_ul = y_qs[0], y_qs[1], y_qs[2], y_qs[3]
     if y_med > 0:
-        yerr = np.array([[max(0.0, y_med - y_lo)], [max(0.0, y_hi - y_med)]])
+        yerr = np.array([[max(0.0, y_med - y_lo)], [max(0.0, y_hi - y_med)]]) * unit_y
         kwargs = err_kw
     else:
         yerr = None
@@ -325,4 +367,11 @@ def _draw_errorbar(ax, xlog_c, emin, emax, s, w, quantiles, scale, err_kw, err_u
         kwargs = err_ul_kw
     x_c = 10 ** (xlog_c)
     xerr = np.array([[x_c - emin], [emax - x_c]])
-    return ax.errorbar(x_c, y_med, xerr=xerr, yerr=yerr, **(kwargs or {}), zorder=5)
+    return ax.errorbar(
+        x_c * unit_x,
+        y_med * unit_y,
+        xerr=xerr * unit_x,
+        yerr=yerr,
+        **(kwargs or {}),
+        zorder=5,
+    )
