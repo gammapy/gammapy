@@ -56,16 +56,14 @@ from gammapy.maps import WcsGeom, WcsNDMap
 #
 
 profiles.DMProfile.__subclasses__()
-radii = np.logspace(-3, 2, 100) * u.kpc
+profiles.DMProfile.DISTANCE_GC = 8.5 * u.kpc
+profiles.DMProfile.LOCAL_DENSITY = 0.39 * u.Unit("GeV / cm3")
 
 for profile in profiles.DMProfile.__subclasses__():
     p = profile()
-    p.scale_to_local_density()
-    plt.plot(
-        radii.to("kpc"),
-        p(radii).to("GeV cm-3"),
-        label=p.__class__.__name__,
-    )
+    p.scale_to_local_density(distance=profiles.DMProfile.DISTANCE_GC)
+    radii = np.logspace(-3, 2, 100) * u.kpc
+    plt.plot(radii, p(radii), label=p.__class__.__name__)
 
 plt.loglog()
 plt.xlabel("Radius [kpc]")
@@ -92,15 +90,14 @@ profile = profiles.NFWProfile(r_s=20 * u.kpc)
 ######################################################################
 # Adopt standard values used in H.E.S.S.
 
-profiles.DMProfile.DISTANCE_GC = 8.5 * u.kpc
-profiles.DMProfile.LOCAL_DENSITY = 0.39 * u.Unit("GeV / cm3")
-
-profile.scale_to_local_density()
+profile.scale_to_local_density(distance=profiles.DMProfile.DISTANCE_GC)
 
 position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
 geom = WcsGeom.create(binsz=0.05, skydir=position, width=3.0, frame="galactic")
 
-jfactory = JFactory(geom=geom, profile=profile, distance=profiles.DMProfile.DISTANCE_GC)
+jfactory = JFactory(
+    geom=geom, profile=profile, distance=profiles.DMProfile.DISTANCE_GC, rmax=4 * u.kpc
+)
 jfact = jfactory.compute_jfactor()
 
 jfact_map = WcsNDMap(geom=geom, data=jfact.value, unit=jfact.unit)
@@ -113,8 +110,8 @@ plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
-# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg
-#  band around the plane
+# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band
+# around the plane
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")
@@ -153,6 +150,7 @@ jfactory = JFactory(
     profile=profile,
     distance=profiles.DMProfile.DISTANCE_GC,
     annihilation=False,
+    rmax=4 * u.kpc,
 )
 jfact_decay = jfactory.compute_jfactor()
 
@@ -164,8 +162,8 @@ plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
-# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg
-# band around the plane
+# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band
+# around the plane
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")
@@ -256,8 +254,8 @@ flux_map = WcsNDMap(
 plt.figure()
 ax = flux_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(
-    f"Flux [{flux_map.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')}, \
-        channel={fluxes.channel}"
+    f"Flux [{int_flux.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')}, \
+          channel={fluxes.channel}"
 )
 plt.show()
 
