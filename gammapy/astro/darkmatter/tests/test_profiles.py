@@ -19,6 +19,11 @@ dm_profiles = [
     profiles.MooreProfile,
 ]
 
+# Reference distance (solar neighborhood to GC) for tests requiring a normalization distance
+DISTANCE_REF = 8.33 * u.kpc
+# Reference distance for integral tests
+DISTANCE_INTEGRAL = 8.5 * u.kpc
+
 
 # ============================================================================
 # Basic Instantiation Tests
@@ -38,7 +43,6 @@ def test_profile_instantiation(profile):
 def test_profile_has_required_constants(profile):
     """Test that all profiles have required class constants."""
     assert hasattr(profile, "LOCAL_DENSITY")
-    assert hasattr(profile, "DISTANCE_GC")
     assert hasattr(profile, "DEFAULT_SCALE_RADIUS")
 
 
@@ -49,12 +53,34 @@ def test_profile_has_required_constants(profile):
 
 @pytest.mark.parametrize("profile", dm_profiles)
 def test_profiles_scale_to_local_density(profile):
-    """Test scaling to local density."""
+    """Test scaling to local density with default local_density."""
     p = profile()
-    p.scale_to_local_density()
-    actual = p(p.DISTANCE_GC)
+    p.scale_to_local_density(distance=DISTANCE_REF)
+    actual = p(DISTANCE_REF)
     desired = p.LOCAL_DENSITY
     assert_quantity_allclose(actual, desired)
+
+
+@pytest.mark.parametrize("profile", dm_profiles)
+def test_profiles_scale_to_local_density_custom(profile):
+    """Test scaling to local density with custom distance and local_density."""
+    p = profile()
+    custom_distance = 50 * u.kpc
+    custom_density = 0.1 * u.GeV / u.cm**3
+    p.scale_to_local_density(distance=custom_distance, local_density=custom_density)
+    actual = p(custom_distance)
+    assert_quantity_allclose(actual, custom_density)
+
+
+@pytest.mark.parametrize("profile", dm_profiles)
+def test_profiles_scale_to_local_density_dsph(profile):
+    """Test scaling for a typical dSph use case."""
+    p = profile()
+    dsph_distance = 80 * u.kpc  # e.g. Sculptor dSph
+    dsph_density = 0.5 * u.GeV / u.cm**3
+    p.scale_to_local_density(distance=dsph_distance, local_density=dsph_density)
+    actual = p(dsph_distance)
+    assert_quantity_allclose(actual, dsph_density)
 
 
 # ============================================================================
@@ -262,11 +288,15 @@ def test_nfw_profile_integral():
     separation = 0.0
     ndecade = 100
 
-    result_squared = p.integral(rmin, rmax, separation, ndecade, squared=True)
+    result_squared = p.integral(
+        rmin, rmax, separation, ndecade, distance=DISTANCE_INTEGRAL, squared=True
+    )
     assert result_squared.unit.is_equivalent(u.GeV**2 / u.cm**5)
     assert result_squared.value > 0
 
-    result_unsquared = p.integral(rmin, rmax, separation, ndecade, squared=False)
+    result_unsquared = p.integral(
+        rmin, rmax, separation, ndecade, distance=DISTANCE_INTEGRAL, squared=False
+    )
     assert result_unsquared.unit.is_equivalent(u.GeV / u.cm**2)
     assert result_unsquared.value > 0
 
@@ -282,7 +312,9 @@ def test_einasto_profile_integral():
     separation = 0.0
     ndecade = 100
 
-    result = p.integral(rmin, rmax, separation, ndecade, squared=True)
+    result = p.integral(
+        rmin, rmax, separation, ndecade, distance=DISTANCE_INTEGRAL, squared=True
+    )
     assert result.unit.is_equivalent(u.GeV**2 / u.cm**5)
     assert result.value > 0
 
@@ -297,7 +329,9 @@ def test_profile_integral_basic(profile):
     separation = 0.0
     ndecade = 50
 
-    result = p.integral(rmin, rmax, separation, ndecade, squared=True)
+    result = p.integral(
+        rmin, rmax, separation, ndecade, distance=DISTANCE_INTEGRAL, squared=True
+    )
 
     assert result.unit.is_equivalent(u.GeV**2 / u.cm**5)
     assert result.value > 0
@@ -399,17 +433,21 @@ def test_integral_separation_constraints():
     ndecade = 50
 
     separation_valid = 0.0
-    result = p.integral(rmin, rmax, separation_valid, ndecade, squared=True)
+    result = p.integral(
+        rmin, rmax, separation_valid, ndecade, distance=DISTANCE_INTEGRAL, squared=True
+    )
     assert np.isfinite(result.value)
     assert result.value > 0
 
     separation_small = 1e-6
-    result_small = p.integral(rmin, rmax, separation_small, ndecade, squared=True)
+    result_small = p.integral(
+        rmin, rmax, separation_small, ndecade, distance=DISTANCE_INTEGRAL, squared=True
+    )
     assert np.isfinite(result_small.value)
 
 
 def test_nfw_integral_with_custom_distance():
-    """Test NFW integration with custom distance to target."""
+    """Test NFW integration with two different distances to target."""
     p = profiles.NFWProfile()
 
     rmin = 0.01 * u.kpc
@@ -417,14 +455,17 @@ def test_nfw_integral_with_custom_distance():
     separation = 0.5
     ndecade = 50
 
-    result_default = p.integral(rmin, rmax, separation, ndecade, squared=True)
-
-    custom_distance = 10 * u.kpc
-    result_custom = p.integral(
-        rmin, rmax, separation, ndecade, squared=True, distance=custom_distance
+    distance_1 = DISTANCE_INTEGRAL
+    result_1 = p.integral(
+        rmin, rmax, separation, ndecade, distance=distance_1, squared=True
     )
 
-    assert result_default.value != result_custom.value
+    distance_2 = 10 * u.kpc
+    result_2 = p.integral(
+        rmin, rmax, separation, ndecade, distance=distance_2, squared=True
+    )
+
+    assert result_1.value != result_2.value
 
 
 # ============================================================================

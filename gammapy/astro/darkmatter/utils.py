@@ -25,10 +25,9 @@ class JFactory:
     distance : `~astropy.units.Quantity`
         Distance from the observer to the dark matter halo center,
         used to compute the line-of-sight integration geometry.
-        Defaults to the Galactic Center distance (8.33 kpc).
     annihilation : `~astropy.units.Quantity`, optional
         Decay or annihilation. Default is True.
-    rmax : `~astropy.units.Quantity`, optional
+    rmax : `~astropy.units.Quantity`
         Physical size of the dark matter halo (upper limit of the
         line-of-sight integral). For extragalactic sources, this should
         be set to the halo radius (~kpc), **not** the distance to the
@@ -36,12 +35,12 @@ class JFactory:
         which is only appropriate for Galactic sources.
     """
 
-    def __init__(self, geom, profile, distance, annihilation=True, rmax=None):
+    def __init__(self, geom, profile, distance, rmax, annihilation=True):
         self.geom = geom
         self.profile = profile
         self.distance = distance
         self.annihilation = annihilation
-        self.rmax = rmax if rmax is not None else self.distance
+        self.rmax = rmax
 
     def _repr_html_(self):
         try:
@@ -114,20 +113,24 @@ class JFactory:
             (
                 2
                 * self.profile.integral(
-                    _,
-                    self.rmax,
-                    np.arctan((_.to(self.distance.unit) / self.distance).value),
-                    ndecade,
-                    self.annihilation,
-                    self.distance,
+                    rmin=_,
+                    rmax=self.rmax,
+                    separation=np.arctan(
+                        (_.to(self.distance.unit) / self.distance).value
+                    ),
+                    ndecade=ndecade,
+                    squared=self.annihilation,
+                    distance=self.distance,
                 )
                 + self.profile.integral(
-                    self.rmax,
-                    4 * self.rmax,
-                    np.arctan((_.to(self.distance.unit) / self.distance).value),
-                    ndecade,
-                    self.annihilation,
-                    self.distance,
+                    rmin=self.rmax,
+                    rmax=4 * self.rmax,
+                    separation=np.arctan(
+                        (_.to(self.distance.unit) / self.distance).value
+                    ),
+                    ndecade=ndecade,
+                    squared=self.annihilation,
+                    distance=self.distance,
                 )
             )
             for _ in rmin.ravel()
