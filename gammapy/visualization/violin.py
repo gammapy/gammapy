@@ -105,10 +105,9 @@ def plot_samples_violin_vs_energy(
         nbins = len(edges) - 1
 
         # Units
+        unit_y_power = f"{samples_per_band[0].unit * energy_edges.unit**energy_power}"
         if ax.yaxis.units is None:
-            unit_y_final = (
-                f"{samples_per_band[0].unit * energy_edges.unit**energy_power}"
-            )
+            unit_y_final = unit_y_power
         else:
             unit_y_final = ax.yaxis.units
 
@@ -213,7 +212,7 @@ def plot_samples_violin_vs_energy(
 
             # violin polygon
             _draw_violin(
-                ax, xlog_c, hwlog, ygrid_log, dens, violin_kwargs, unit_y_final, unit_x
+                ax, xlog_c, hwlog, ygrid_log, dens, violin_kwargs, unit_y_power, unit_x
             )
 
             # quantile bars
@@ -228,7 +227,7 @@ def plot_samples_violin_vs_energy(
                 scale,
                 errorbar_kwargs,
                 errorbar_ul_kwargs,
-                unit_y_final,
+                unit_y_power,
                 unit_x,
             )
 
