@@ -1,6 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
+import html
+from unittest.mock import patch
+
 import astropy.units as u
+import pytest
+from numpy.testing import assert_allclose
+
 from gammapy.astro.darkmatter import (
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
@@ -8,6 +13,7 @@ from gammapy.astro.darkmatter import (
     profiles,
 )
 from gammapy.maps import WcsGeom
+from gammapy.modeling import Parameter
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
@@ -44,13 +50,21 @@ def test_dmfluxmap_annihilation(jfact_annihilation):
     massDM = 1 * u.TeV
     channel = "W"
 
-    diff_flux = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel)
+    total_jfact = u.Quantity(
+        float(jfact_annihilation.mean().value), unit=jfact_annihilation.unit
+    )
+
+    diff_flux = DarkMatterAnnihilationSpectralModel(
+        mass=massDM, channel=channel, jfactor=total_jfact
+    )
     int_flux = (
-        jfact_annihilation
-        * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
+        diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
+        * jfact_annihilation
+        / total_jfact
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
     desired = 5.96827647e-12 / u.cm**2 / u.s
+
     assert_quantity_allclose(actual, desired, rtol=1e-3)
 
 
@@ -63,8 +77,24 @@ def test_dmfluxmap_decay(jfact_decay):
 
     diff_flux = DarkMatterDecaySpectralModel(mass=massDM, channel=channel)
     int_flux = (
-        jfact_decay * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
+        jfact_decay
+        * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
+        / diff_flux.jfactor
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
     desired = 1.6796e-3 / u.cm**2 / u.s
     assert_quantity_allclose(actual, desired, rtol=1e-3)
+
+
+def test_jfactory_repr_html_fallback(geom):
+    jfactory = JFactory(geom=geom, profile=profiles.NFWProfile(), distance=8.5 * u.kpc)
+
+    with patch.object(jfactory, "to_html", side_effect=AttributeError, create=True):
+        repr_str = jfactory._repr_html_()
+
+        # Check that it went through the except block returning the <pre> tags
+        assert repr_str.startswith("<pre>")
+        assert repr_str.endswith("</pre>")
+
+        expected_string = html.escape(str(jfactory))
+        assert expected_string in repr_str
