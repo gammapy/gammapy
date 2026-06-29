@@ -52,7 +52,7 @@ class LightCurveEstimator(FluxPointsEstimator):
         Default is 2.
     n_sigma_sensitivity : float, optional
         Sigma to use for sensitivity computation. Must be a positive value.
-        Default is same as `n_sigma_ul.
+        Default is same as `n_sigma_ul`.
     selection_optional : list of str, optional
         Which steps to execute. Available options are:
 

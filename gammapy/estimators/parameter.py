@@ -34,7 +34,7 @@ class ParameterEstimator(Estimator):
         Default is 2.
     n_sigma_sensitivity : float, optional
         Sigma to use for sensitivity computation. Must be a positive value.
-        Default is same as `n_sigma_ul.
+        Default is same as `n_sigma_ul`.
     null_value : float, optional
         Which null value to use for the parameter. Default is 1e-150.
     selection_optional : list of str, optional
