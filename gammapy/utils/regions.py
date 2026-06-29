@@ -444,18 +444,18 @@ def make_grid_rectangle_sky_regions(
     pix_dx = dx.to_pixel(wcs)
     pix_dy = dy.to_pixel(wcs)
 
-    ux = np.array([pix_dx[0] - pix_center[0], pix_dx[1] - pix_center[1]])
-    uy = np.array([pix_dy[0] - pix_center[0], pix_dy[1] - pix_center[1]])
-    xe = np.linspace(-1, 1, nbinx + 1)
-    ye = np.linspace(-1, 1, nbiny + 1)
-    xc = 0.5 * (xe[:-1] + xe[1:])
-    yc = 0.5 * (ye[:-1] + ye[1:])
+    dir_x = np.array([pix_dx[0] - pix_center[0], pix_dx[1] - pix_center[1]])
+    dir_y = np.array([pix_dy[0] - pix_center[0], pix_dy[1] - pix_center[1]])
+    x_edges = np.linspace(-1, 1, nbinx + 1)
+    y_edges = np.linspace(-1, 1, nbiny + 1)
+    x_center = 0.5 * (x_edges[:-1] + x_edges[1:])
+    y_center = 0.5 * (y_edges[:-1] + y_edges[1:])
 
     regions = []
-    for x in xc:
-        for y in yc:
-            pix_x = pix_center[0] + x * ux[0] + y * uy[0]
-            pix_y = pix_center[1] + x * ux[1] + y * uy[1]
+    for x in x_center:
+        for y in y_center:
+            pix_x = pix_center[0] + x * dir_x[0] + y * dir_y[0]
+            pix_y = pix_center[1] + x * dir_x[1] + y * dir_y[1]
 
             sky_center = SkyCoord.from_pixel(pix_x, pix_y, wcs)
             reg = RectangleSkyRegion(
