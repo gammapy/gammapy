@@ -13,7 +13,6 @@ from .cube import (
 from .prior import (
     GaussianPrior,
     GeneralizedGaussianPrior,
-    LogNormalPrior,
     Prior,
     UniformPrior,
     LogUniformPrior,
@@ -124,7 +123,6 @@ __all__ = [
     "GaussianPrior",
     "GeneralizedGaussianPrior",
     "UniformPrior",
-    "LogNormalPrior",
     "LogUniformPrior",
     "SamplesKDEPrior",
     "read_hermes_cube",

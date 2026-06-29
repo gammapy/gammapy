@@ -11,10 +11,7 @@ from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import SpectralModel, TemplateNDSpectralModel
 from gammapy.modeling.models.prior import (
-    LogNormalPrior,
-    _SigmaStatisticValidator,
-    _SigmaSystematicsValidator,
-    _validate_sigma,
+    GaussianPrior,
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_map_columns
@@ -24,6 +21,26 @@ __all__ = [
     "DarkMatterAnnihilationSpectralModel",
     "DarkMatterDecaySpectralModel",
 ]
+
+
+class _SigmaValidator:
+    """Mixin that validates and stores the uncertainty ``sigma``."""
+
+    @property
+    def sigma(self):
+        """Uncertainty on log10(factor) [dex]."""
+        return self._sigma
+
+    @sigma.setter
+    def sigma(self, value):
+        if value is None:
+            self._sigma = 0.0
+            return
+        if not isinstance(value, (int, float, np.number)):
+            raise TypeError(f"The sigma must be a number or None, got {type(value)}")
+        if value < 0:
+            raise ValueError(f"The sigma must be non-negative, got {value}")
+        self._sigma = float(value)
 
 
 class PrimaryFlux(TemplateNDSpectralModel):
@@ -280,9 +297,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
         return dN_dE
 
 
-class DarkMatterAnnihilationSpectralModel(
-    SpectralModel, _SigmaStatisticValidator, _SigmaSystematicsValidator
-):
+class DarkMatterAnnihilationSpectralModel(SpectralModel, _SigmaValidator):
     r"""Dark matter annihilation spectral model.
 
     The gamma-ray flux is computed as follows:
@@ -316,13 +331,10 @@ class DarkMatterAnnihilationSpectralModel(
             Passing a map-like array raises ``ValueError``. Only scalar
             Quantities are accepted.
 
-    sigma_stat : float or None, optional
-        Statistical uncertainty on log10(J) in dex. Default is None (no prior).
-    sigma_syst : float or None, optional
-        Systematic uncertainty on log10(J) in dex. Default is None (no prior).
-
+    sigma : float or None, optional
+        Statistical and systematic uncertainty on log10(J) in dex. Default is None (no prior).
         .. note::
-            Passing ``sigma_stat=0.0`` and ``sigma_syst=0.0`` (or ``None``) is
+            Passing ``sigma=0.0`` (or ``None``) is
             equivalent: no nuisance prior is attached and ``log10_jfactor``
             remains frozen at the observed value. A prior is only created when
             at least one sigma is strictly positive.
@@ -371,8 +383,7 @@ class DarkMatterAnnihilationSpectralModel(
         channel,
         scale=scale.quantity,
         jfactor=1 * u.Unit("GeV2 cm-5"),
-        sigma_stat=None,
-        sigma_syst=None,
+        sigma=None,
         z=0,
         k=2,
         source="pppc4",
@@ -398,22 +409,23 @@ class DarkMatterAnnihilationSpectralModel(
 
         super().__init__(scale=scale, log10_jfactor=self._log10_j_obs)
 
-        self.sigma_stat = sigma_stat
-        self.sigma_syst = sigma_syst
-        if self._sigma_stat > 0.0 or self._sigma_syst > 0.0:
+        self.sigma = sigma
+        if self._sigma > 0.0:
             self._create_prior()
 
     def _create_prior(self):
-        """Create and attach the log-normal prior on ``log10_jfactor``."""
+        """Create and attach a Gaussian prior on ``log10_jfactor``.
+
+        Equivalent to a log-normal prior on the J-factor in linear space.
+        The Jacobian of the log10(J) -> J transformation is absorbed into
+        the parametrisation, so a Gaussian in log10 space is the correct
+        implementation.
+        """
         self.log10_jfactor.frozen = False
-        prior = LogNormalPrior(
-            log10_obs=self._log10_j_obs,
-            sigma_stat=self._sigma_stat,
-            sigma_syst=self._sigma_syst,
-        )
+        prior = GaussianPrior(mu=self._log10_j_obs, sigma=self._sigma)
         self.log10_jfactor.prior = prior
-        self.log10_jfactor.min = self._log10_j_obs - 5 * prior.sigma_total.value
-        self.log10_jfactor.max = self._log10_j_obs + 5 * prior.sigma_total.value
+        self.log10_jfactor.min = self._log10_j_obs - 5 * self._sigma
+        self.log10_jfactor.max = self._log10_j_obs + 5 * self._sigma
 
     def evaluate(self, energy, scale, log10_jfactor=None):
         """Evaluate dark matter annihilation model."""
@@ -442,8 +454,7 @@ class DarkMatterAnnihilationSpectralModel(
         data["spectral"]["z"] = self.z
         data["spectral"]["k"] = self.k
         data["spectral"]["source"] = self.source
-        data["spectral"]["sigma_stat"] = self._sigma_stat
-        data["spectral"]["sigma_syst"] = self._sigma_syst
+        data["spectral"]["sigma"] = self._sigma
         return data
 
     @classmethod
@@ -464,14 +475,11 @@ class DarkMatterAnnihilationSpectralModel(
         data.pop("type")
         parameters = data.pop("parameters")
         scale = [p["value"] for p in parameters if p["name"] == "scale"][0]
-        data.setdefault("sigma_stat", 0.0)
-        data.setdefault("sigma_syst", 0.0)
+        data.setdefault("sigma", 0.0)
         return cls(scale=scale, **data)
 
 
-class DarkMatterDecaySpectralModel(
-    SpectralModel, _SigmaStatisticValidator, _SigmaSystematicsValidator
-):
+class DarkMatterDecaySpectralModel(SpectralModel, _SigmaValidator):
     r"""Dark matter decay spectral model.
 
     The gamma-ray flux is computed as follows:
@@ -505,13 +513,10 @@ class DarkMatterDecaySpectralModel(
             Passing a map-like array raises ``ValueError``. Only scalar
             Quantities are accepted.
 
-    sigma_stat : float or None, optional
-        Statistical uncertainty on log10(D) in dex. Default is None (no prior).
-    sigma_syst : float or None, optional
-        Systematic uncertainty on log10(D) in dex. Default is None (no prior).
-
+    sigma : float or None, optional
+        Statistical and systematic uncertainty on log10(D) in dex. Default is None (no prior).
         .. note::
-            Passing ``sigma_stat=0.0`` and ``sigma_syst=0.0`` (or ``None``) is
+            Passing ``sigma=0.0`` (or ``None``) is
             equivalent: no nuisance prior is attached and ``log10_jfactor``
             remains frozen at the observed value. A prior is only created when
             at least one sigma is strictly positive.
@@ -558,8 +563,7 @@ class DarkMatterDecaySpectralModel(
         channel,
         scale=scale.quantity,
         jfactor=1 * u.Unit("GeV cm-2"),
-        sigma_stat=None,
-        sigma_syst=None,
+        sigma=None,
         z=0,
         source="pppc4",
     ):
@@ -585,22 +589,23 @@ class DarkMatterDecaySpectralModel(
 
         super().__init__(scale=scale, log10_jfactor=self._log10_j_obs)
 
-        self.sigma_stat = sigma_stat
-        self.sigma_syst = sigma_syst
-        if self._sigma_stat > 0.0 or self._sigma_syst > 0.0:
+        self.sigma = sigma
+        if self._sigma > 0.0:
             self._create_prior()
 
     def _create_prior(self):
-        """Create and attach the log-normal prior on ``log10_jfactor``."""
+        """Create and attach a Gaussian prior on ``log10_jfactor``.
+
+        Equivalent to a log-normal prior on the J-factor in linear space.
+        The Jacobian of the log10(J) -> J transformation is absorbed into
+        the parametrisation, so a Gaussian in log10 space is the correct
+        implementation.
+        """
         self.log10_jfactor.frozen = False
-        prior = LogNormalPrior(
-            log10_obs=self._log10_j_obs,
-            sigma_stat=self._sigma_stat,
-            sigma_syst=self._sigma_syst,
-        )
+        prior = GaussianPrior(mu=self._log10_j_obs, sigma=self._sigma)
         self.log10_jfactor.prior = prior
-        self.log10_jfactor.min = self._log10_j_obs - 5 * prior.sigma_total.value
-        self.log10_jfactor.max = self._log10_j_obs + 5 * prior.sigma_total.value
+        self.log10_jfactor.min = self._log10_j_obs - 5 * self._sigma
+        self.log10_jfactor.max = self._log10_j_obs + 5 * self._sigma
 
     def evaluate(self, energy, scale, log10_jfactor=None):
         """Evaluate dark matter decay model."""
@@ -626,8 +631,7 @@ class DarkMatterDecaySpectralModel(
         data["spectral"]["jfactor"] = self.jfactor.to_string()
         data["spectral"]["z"] = self.z
         data["spectral"]["source"] = self.source
-        data["spectral"]["sigma_stat"] = self._sigma_stat
-        data["spectral"]["sigma_syst"] = self._sigma_syst
+        data["spectral"]["sigma"] = self._sigma
         return data
 
     @classmethod
@@ -648,6 +652,5 @@ class DarkMatterDecaySpectralModel(
         data.pop("type")
         parameters = data.pop("parameters")
         scale = [p["value"] for p in parameters if p["name"] == "scale"][0]
-        data.setdefault("sigma_stat", 0.0)
-        data.setdefault("sigma_syst", 0.0)
+        data.setdefault("sigma", 0.0)
         return cls(scale=scale, **data)
