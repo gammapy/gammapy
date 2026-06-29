@@ -1,0 +1,1 @@
+Implementation of the corresponding features regarding the Dark Matter spectral line analysis (monochromatic, VIB and Box) based on Abe, S., et al. (2024) - "Dark matter line searches with the Cherenkov Telescope Array». Journal of Cosmology and Astroparticle Physics", 2024, 07, p. 047. - https://doi.org/10.1088/1475-7516/2024/07/047.
