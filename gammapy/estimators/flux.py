@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import warnings
 import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.datasets.actors import DatasetsActor
@@ -7,6 +8,8 @@ from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.estimators.utils import _get_default_norm
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import ScaleSpectralModel
+from gammapy.utils.deprecation import GammapyDeprecationWarning
+
 
 log = logging.getLogger(__name__)
 
@@ -20,6 +23,9 @@ class FluxEstimator(ParameterEstimator):
     fitted within the energy range. The amplitude is re-normalized using the "norm" parameter,
     which specifies the deviation of the flux from the reference model in this
     energy range.
+
+    By default, points below 2-sigma detection will be considered as upper limits. This can be configured
+    on-the-fly on the resultant `FluxPoints` object by setting the `sqrt_ts_threshold_ul`
 
     Note that there should be only one free norm or amplitude parameter for the estimator to run.
 
@@ -35,7 +41,7 @@ class FluxEstimator(ParameterEstimator):
         Default is 2.
     n_sigma_sensitivity : float, optional
         Sigma to use for sensitivity computation. Must be a positive value.
-        Default is 5.
+        Default is same as `n_sigma_ul.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
@@ -72,14 +78,18 @@ class FluxEstimator(ParameterEstimator):
         source=0,
         n_sigma=1,
         n_sigma_ul=2,
-        n_sigma_sensitivity=5,
+        n_sigma_sensitivity=None,
         selection_optional=None,
         fit=None,
         reoptimize=False,
         norm=None,
     ):
         self.source = source
-
+        if n_sigma_sensitivity is None:
+            n_sigma_sensitivity = n_sigma_ul
+            log.info(
+                f"The default value for n_sigma_sensitivity is same that of n_sigma_ul, ie, {n_sigma_ul}"
+            )
         scan_n_sigma = np.maximum(n_sigma_ul, n_sigma_sensitivity) + 1
         self.norm = _get_default_norm(norm, scan_n_sigma=scan_n_sigma, interp="log")
 

@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import pytest
+import logging
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
@@ -229,6 +230,7 @@ def test_run_pwl(fpe_pwl, tmpdir):
     datasets, fpe = fpe_pwl
 
     fp = fpe.run(datasets)
+    assert fp.meta["n_sigma_sensitivity"] == 2
     table = fp.to_table()
 
     actual = table["e_min"].data
@@ -271,7 +273,7 @@ def test_run_pwl(fpe_pwl, tmpdir):
     assert_allclose(actual, [1.216227, 1.035472, 1.316878], rtol=1e-2)
 
     actual = table["norm_sensitivity"].data
-    assert_allclose(actual, [0.15901235, 0.13117017, 0.55880332], rtol=1e-2)
+    assert_allclose(actual, [0.02882, 0.022487, 0.11383], rtol=1e-2)
 
     actual = table["sqrt_ts"].data
     assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-2)
@@ -525,6 +527,7 @@ def test_no_likelihood_contribution():
     dataset.mask_safe = RegionNDMap.from_geom(dataset.counts.geom, dtype=bool)
 
     fpe = FluxPointsEstimator(energy_edges=[1.0, 3.0, 10.0] * u.TeV, source="source")
+
     table = fpe.run([dataset, dataset_2]).to_table()
 
     assert np.isnan(table["norm"]).all()
@@ -900,3 +903,17 @@ def test_warning_for_bad_model(caplog):
         "Reference source model predicts negative flux. Results of estimator should be interpreted with caution"
         in [_.message for _ in caplog.records]
     )
+
+
+def test_sensitivity_limit(caplog):
+    caplog.set_level(logging.INFO)
+    fpe = FluxPointsEstimator(energy_edges=[1, 2, 4, 10] * u.TeV)
+    assert "INFO" in [record.levelname for record in caplog.records]
+    message = (
+        "The default value for n_sigma_sensitivity is same that of n_sigma_ul, ie, 2"
+    )
+    assert message in [record.message for record in caplog.records]
+    assert fpe.n_sigma_sensitivity == fpe.n_sigma_ul
+
+    fpe = FluxPointsEstimator(energy_edges=[1, 2, 4, 10] * u.TeV, n_sigma_sensitivity=4)
+    assert fpe.n_sigma_sensitivity == 4
