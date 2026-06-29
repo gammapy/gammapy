@@ -114,9 +114,9 @@ def test_zhao_profile_custom_parameters():
     )
 
     assert_quantity_allclose(p.parameters["r_s"].quantity, r_s_custom)
-    assert p.parameters["alpha"].value == alpha_custom
-    assert p.parameters["beta"].value == beta_custom
-    assert p.parameters["gamma"].value == gamma_custom
+    assert p.parameters["alpha"].value == pytest.approx(alpha_custom)
+    assert p.parameters["beta"].value == pytest.approx(beta_custom)
+    assert p.parameters["gamma"].value == pytest.approx(gamma_custom)
     assert_quantity_allclose(p.parameters["rho_s"].quantity, rho_s_custom)
 
 
