@@ -1,0 +1,1 @@
+Correct `gammapy.datasets.FluxPointsDataset.plot_residuals()` x-axis unit, remove ``ax_spectrum`` and ``ax_residuals`` parameter in `gammapy.datasets.FluxPointsDataset.plot_fit()` and adjust documentation.

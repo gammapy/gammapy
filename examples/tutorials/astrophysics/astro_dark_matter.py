@@ -66,6 +66,8 @@ for profile in profiles.DMProfile.__subclasses__():
     plt.plot(radii, p(radii), label=p.__class__.__name__)
 
 plt.loglog()
+plt.xlabel("Radius [kpc]")
+plt.ylabel(r"Density [GeV cm$^{-3}$]")
 plt.axvline(8.5, linestyle="dashed", color="black", label="local density")
 plt.legend()
 plt.show()

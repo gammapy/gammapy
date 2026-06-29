@@ -53,6 +53,14 @@ def test_apply_edisp(region_map_true):
     assert m.geom.axes[0].name == "energy"
     assert_allclose(e_reco[[0, -1]].value, [1, 10])
 
+    m = apply_edisp(region_map_true, None)
+    assert m.geom.data_shape == (6, 1, 1)
+
+    e_reco = m.geom.axes[0].edges
+    assert e_reco.unit == "TeV"
+    assert m.geom.axes[0].name == "energy"
+    assert_allclose(e_reco[[0, -1]].value, [1, 10])
+
 
 @requires_data()
 def test_dataset_split():
