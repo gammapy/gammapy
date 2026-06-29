@@ -3,8 +3,10 @@
 
 import abc
 import html
-import numpy as np
+
 import astropy.units as u
+import numpy as np
+
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
 
@@ -24,8 +26,6 @@ class DMProfile(abc.ABC):
 
     LOCAL_DENSITY = 0.3 * u.GeV / (u.cm**3)
     """Local dark matter density as given in reference 2"""
-    DISTANCE_GC = 8.33 * u.kpc
-    """Distance to the Galactic Center as given in reference 2"""
 
     def __call__(self, radius):
         """Call evaluate method of derived classes."""
@@ -38,21 +38,34 @@ class DMProfile(abc.ABC):
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
 
-    def scale_to_local_density(self):
-        """Scale to local density."""
-        scale = (self.LOCAL_DENSITY / self(self.DISTANCE_GC)).to_value("")
+    def scale_to_local_density(self, distance, local_density=None):
+        """Scale to local density.
+
+        Parameters
+        ----------
+        distance : `~astropy.units.Quantity`
+            Distance at which the profile is normalized to ``local_density``.
+        local_density : `~astropy.units.Quantity`, optional
+            Local dark matter density. Default is the solar neighborhood
+            value (0.3 GeV/cm³).
+        """
+
+        if local_density is None:
+            local_density = self.LOCAL_DENSITY
+
+        scale = (local_density / self(distance)).to_value("")
         self.parameters["rho_s"].value *= scale
 
-    def _eval_substitution(self, radius, separation, squared):
+    def _eval_substitution(self, radius, separation, squared, distance):
         """Density at given radius together with the substitution part."""
         exponent = 2 if squared else 1
         return (
             self(radius) ** exponent
             * radius
-            / np.sqrt(radius**2 - (self.DISTANCE_GC * np.sin(separation)) ** 2)
+            / np.sqrt(radius**2 - (distance * np.sin(separation)) ** 2)
         )
 
-    def integral(self, rmin, rmax, separation, ndecade, squared=True):
+    def integral(self, rmin, rmax, separation, ndecade, distance, squared=True):
         r"""Integrate dark matter profile numerically.
 
         .. math::
@@ -72,15 +85,18 @@ class DMProfile(abc.ABC):
         squared : bool, optional
             Square the profile before integration.
             Default is True.
+        distance : `~astropy.units.Quantity`
+            Distance from the observer to the center of the dark matter halo,
+            used to compute the line-of-sight integration geometry.
         """
         integral = self.integrate_spectrum_separation(
-            self._eval_substitution, rmin, rmax, separation, ndecade, squared
+            self._eval_substitution, rmin, rmax, separation, ndecade, distance, squared
         )
         inegral_unit = u.Unit("GeV2 cm-5") if squared else u.Unit("GeV cm-2")
         return integral.to(inegral_unit)
 
     def integrate_spectrum_separation(
-        self, func, xmin, xmax, separation, ndecade, squared=True
+        self, func, xmin, xmax, separation, ndecade, distance, squared=True
     ):
         """Squared dark matter profile integral.
 
@@ -95,6 +111,9 @@ class DMProfile(abc.ABC):
         squared : bool
             Square the profile before integration.
             Default is True.
+        distance : `~astropy.units.Quantity`
+            Distance from the observer to the center of the dark matter halo,
+            used to compute the line-of-sight integration geometry.
         """
         unit = xmin.unit
         xmin = xmin.value
@@ -103,7 +122,7 @@ class DMProfile(abc.ABC):
         logmax = np.log10(xmax)
         n = np.int32((logmax - logmin) * ndecade)
         x = np.logspace(logmin, logmax, n) * unit
-        y = func(x, separation, squared)
+        y = func(x, separation, squared, distance)
         val = trapz_loglog(y, x)
         return val.sum()
 
@@ -112,12 +131,15 @@ class ZhaoProfile(DMProfile):
     r"""Zhao Profile.
 
     It is a generalization of the NFW profile. The volume density
-    is parametrized with a double power-law. Scale radii smaller than the scale radius are described with a slope of
-    :math:`-\gamma` and scale radii larger than the scale radius are described with a slope of :math:`-\beta`.
+    is parametrized with a double power-law. Scale radii smaller than the scale radius \
+          are described with a slope of
+    :math:`-\gamma` and scale radii larger than the scale radius are described with a \
+          slope of :math:`-\beta`.
     :math:`\alpha` is a measure for the width of the transition region.
 
     .. math::
-        \rho(r) = \rho_s \left(\frac{r_s}{r}\right)^\gamma \left(1 + \left(\frac{r}{r_s}\right)^\frac{1}{\alpha} \right)^{(\gamma - \beta) \alpha}
+        \rho(r) = \rho_s \left(\frac{r_s}{r}\right)^\gamma \left(1 \
+        + \left(\frac{r}{r_s}\right)^\frac{1}{\alpha} \right)^{(\gamma - \beta) \alpha}
 
     Equation (1) from [1]_.
 
@@ -138,9 +160,9 @@ class ZhaoProfile(DMProfile):
     ----------
     .. [1] `Zhao (1996), "Analytical models for galactic nuclei"
       <https://ui.adsabs.harvard.edu/abs/1996MNRAS.278..488Z>`_
-
-    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
-      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    .. [2] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
+        Cookbook for Dark Matter Indirect Detection"
+        <http://www.marcocirelli.net/PPPC4DMID.html>`_
     """
 
     DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
@@ -191,10 +213,12 @@ class NFWProfile(DMProfile):
 
     References
     ----------
-    * `Navarro et al. (1997), "A Universal Density Profile from Hierarchical Clustering"
-      <https://ui.adsabs.harvard.edu/abs/1997ApJ...490..493N>`_
-    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
-      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    .. [1] `Navarro et al. (1997), "A Universal Density Profile
+        from Hierarchical Clustering"
+        <https://ui.adsabs.harvard.edu/abs/1997ApJ...490..493N>`_
+    .. [2] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
+        Cookbook for Dark Matter Indirect Detection"
+        <http://www.marcocirelli.net/PPPC4DMID.html>`_
     """
 
     DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
@@ -232,10 +256,12 @@ class EinastoProfile(DMProfile):
 
     References
     ----------
-    * `Einasto (1965), "On the Construction of a Composite Model for the Galaxy and on the Determination of the System
+    .. [1] `Einasto (1965), "On the Construction of a Composite Model
+        for the Galaxy and on the Determination of the System
       of Galactic Parameters" <https://ui.adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
-    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
-      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    .. [2] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
+        Cookbook for Dark Matter Indirect Detection"
+        <http://www.marcocirelli.net/PPPC4DMID.html>`_
     """
 
     DEFAULT_SCALE_RADIUS = 28.44 * u.kpc
@@ -275,10 +301,12 @@ class IsothermalProfile(DMProfile):
 
     References
     ----------
-    * `Begeman et al. (1991), "Extended rotation curves of spiral galaxies : dark haloes and modified dynamics"
+    .. [1] `Begeman et al. (1991), "Extended rotation curves of spiral galaxies : dark \
+        haloes and modified dynamics"
       <https://ui.adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
-    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
-      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    .. [2] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
+        Cookbook for Dark Matter Indirect Detection"
+        <http://www.marcocirelli.net/PPPC4DMID.html>`_
     """
 
     DEFAULT_SCALE_RADIUS = 4.38 * u.kpc
@@ -310,10 +338,11 @@ class BurkertProfile(DMProfile):
 
     References
     ----------
-    * `Burkert (1995), "The Structure of Dark Matter Halos in Dwarf Galaxies"
+    .. [1] `Burkert (1995), "The Structure of Dark Matter Halos in Dwarf Galaxies"
       <https://ui.adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
-    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
-      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    .. [2] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
+        Cookbook for Dark Matter Indirect Detection"
+        <http://www.marcocirelli.net/PPPC4DMID.html>`_
     """
 
     DEFAULT_SCALE_RADIUS = 12.67 * u.kpc
@@ -347,10 +376,11 @@ class MooreProfile(DMProfile):
 
     References
     ----------
-    * `Diemand et al. (2004), "Convergence and scatter of cluster density profiles"
+    .. [1] `Diemand et al. (2004), "Convergence and scatter of cluster density profiles"
       <https://ui.adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
-    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
-      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    .. [2] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
+        Cookbook for Dark Matter Indirect Detection"
+        <http://www.marcocirelli.net/PPPC4DMID.html>`_
     """
 
     DEFAULT_SCALE_RADIUS = 30.28 * u.kpc
