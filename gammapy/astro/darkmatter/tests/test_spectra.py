@@ -528,3 +528,74 @@ def test_unknown_primary_flux_type_in_decay_from_dict():
 
     with pytest.raises(ValueError, match="Unknown primary_flux type"):
         DarkMatterDecaySpectralModel.from_dict(data)
+
+
+@requires_data()
+def test_dm_annihilation_evaluation_on_dataset():
+    """Model can be set on a MapDataset and produces finite positive flux."""
+    from gammapy.datasets import MapDataset
+    from gammapy.maps import MapAxis, WcsGeom
+    from gammapy.modeling.models import PointSpatialModel
+
+    energy_axis = MapAxis.from_edges(
+        [0.01, 0.1, 1.0], unit="TeV", name="energy", interp="log"
+    )
+    geom = WcsGeom.create(
+        skydir=(0, 0), binsz=0.1, width=(1, 1), frame="galactic", axes=[energy_axis]
+    )
+    pf = ContinuumPrimaryFlux(1 * u.TeV, "b")
+    spectral_model = DarkMatterAnnihilationSpectralModel(
+        mDM=1 * u.TeV,
+        channel="b",
+        factor=3.41e19 * u.Unit("GeV2 cm-5"),
+        primary_flux=pf,
+    )
+    sky_model = SkyModel(
+        spectral_model=spectral_model,
+        spatial_model=PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic"),
+        name="dm_anni",
+    )
+    dataset = MapDataset.create(geom, name="test_anni")
+    dataset.models = [sky_model]
+
+    # npred is zero without exposure, but must not raise
+    assert np.all(np.isfinite(dataset.npred().data))
+
+    # energies well below DM mass must give finite positive flux
+    flux = spectral_model([0.01, 0.1, 0.5] * u.TeV)
+    assert np.all(np.isfinite(flux.value))
+    assert np.all(flux.value > 0)
+
+
+@requires_data()
+def test_dm_decay_evaluation_on_dataset():
+    """Decay model can be set on a MapDataset and produces finite positive flux."""
+    from gammapy.datasets import MapDataset
+    from gammapy.maps import MapAxis, WcsGeom
+    from gammapy.modeling.models import PointSpatialModel
+
+    energy_axis = MapAxis.from_edges(
+        [0.01, 0.1, 1.0], unit="TeV", name="energy", interp="log"
+    )
+    geom = WcsGeom.create(
+        skydir=(0, 0), binsz=0.1, width=(1, 1), frame="galactic", axes=[energy_axis]
+    )
+    pf = ContinuumPrimaryFlux(0.5 * u.TeV, "b")
+    spectral_model = DarkMatterDecaySpectralModel(
+        mDM=1 * u.TeV, channel="b", factor=3.41e19 * u.Unit("GeV cm-2"), primary_flux=pf
+    )
+    sky_model = SkyModel(
+        spectral_model=spectral_model,
+        spatial_model=PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic"),
+        name="dm_decay",
+    )
+    dataset = MapDataset.create(geom, name="test_decay")
+    dataset.models = [sky_model]
+
+    # npred is zero without exposure, but must not raise
+    assert np.all(np.isfinite(dataset.npred().data))
+
+    # energies well below DM mass must give finite positive flux
+    flux = spectral_model([0.01, 0.1, 0.4] * u.TeV)
+    assert np.all(np.isfinite(flux.value))
+    assert np.all(flux.value > 0)
