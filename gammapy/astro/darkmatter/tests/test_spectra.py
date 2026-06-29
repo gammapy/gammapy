@@ -445,3 +445,113 @@ def test_mDM_wrong_units_raises():
 def test_mDM_zero_or_negative_raises():
     with pytest.raises(ValueError, match="strictly positive"):
         VIBPrimaryFlux(mDM=0 * u.GeV)
+
+
+@requires_data()
+def test_dm_annihilation_monochromatic_evaluation_on_dataset():
+    """MonochromaticPrimaryFlux set on a MapDataset must produce finite positive flux."""
+    from gammapy.datasets import MapDataset
+    from gammapy.maps import MapAxis, WcsGeom
+    from gammapy.modeling.models import PointSpatialModel
+
+    energy_axis = MapAxis.from_edges(
+        [0.01, 0.1, 1.0], unit="TeV", name="energy", interp="log"
+    )
+    geom = WcsGeom.create(
+        skydir=(0, 0), binsz=0.1, width=(1, 1), frame="galactic", axes=[energy_axis]
+    )
+    mDM = 1 * u.TeV
+    mono_flux = MonochromaticPrimaryFlux(mDM=mDM, n_gamma_photons=2)
+    spectral_model = DarkMatterAnnihilationSpectralModel(
+        mDM=mDM,
+        channel="b",
+        factor=3.41e19 * u.Unit("GeV2 cm-5"),
+        primary_flux=mono_flux,
+    )
+    sky_model = SkyModel(
+        spectral_model=spectral_model,
+        spatial_model=PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic"),
+        name="dm_mono",
+    )
+    dataset = MapDataset.create(geom, name="test_mono")
+    dataset.models = [sky_model]
+
+    assert np.all(np.isfinite(dataset.npred().data))
+
+    # energies around the line energy (= mDM for two-photon)
+    flux = spectral_model([0.9, 1.0, 1.1] * u.TeV)
+    assert np.all(np.isfinite(flux.value))
+    assert np.any(flux.value > 0)
+
+
+def test_dm_annihilation_vib_evaluation_on_dataset():
+    """VIBPrimaryFlux set on a MapDataset must produce finite positive flux."""
+    from gammapy.datasets import MapDataset
+    from gammapy.maps import MapAxis, WcsGeom
+    from gammapy.modeling.models import PointSpatialModel
+
+    energy_axis = MapAxis.from_edges(
+        [0.01, 0.1, 1.0], unit="TeV", name="energy", interp="log"
+    )
+    geom = WcsGeom.create(
+        skydir=(0, 0), binsz=0.1, width=(1, 1), frame="galactic", axes=[energy_axis]
+    )
+    mDM = 1 * u.TeV
+    vib_flux = VIBPrimaryFlux(mDM=mDM)
+    spectral_model = DarkMatterAnnihilationSpectralModel(
+        mDM=mDM,
+        channel="b",
+        factor=3.41e19 * u.Unit("GeV2 cm-5"),
+        primary_flux=vib_flux,
+    )
+    sky_model = SkyModel(
+        spectral_model=spectral_model,
+        spatial_model=PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic"),
+        name="dm_vib",
+    )
+    dataset = MapDataset.create(geom, name="test_vib")
+    dataset.models = [sky_model]
+
+    assert np.all(np.isfinite(dataset.npred().data))
+
+    # VIB is only non-zero for 0 < E < mDM
+    flux = spectral_model([0.1, 0.5, 0.9] * u.TeV)
+    assert np.all(np.isfinite(flux.value))
+    assert np.all(flux.value > 0)
+
+
+def test_dm_annihilation_box_evaluation_on_dataset():
+    """BoxPrimaryFlux set on a MapDataset must produce finite positive flux."""
+    from gammapy.datasets import MapDataset
+    from gammapy.maps import MapAxis, WcsGeom
+    from gammapy.modeling.models import PointSpatialModel
+
+    energy_axis = MapAxis.from_edges(
+        [0.01, 0.1, 1.0], unit="TeV", name="energy", interp="log"
+    )
+    geom = WcsGeom.create(
+        skydir=(0, 0), binsz=0.1, width=(1, 1), frame="galactic", axes=[energy_axis]
+    )
+    mDM = 1 * u.TeV
+    box_flux = BoxPrimaryFlux(mDM=mDM, mPhi=[100] * u.GeV)
+    spectral_model = DarkMatterAnnihilationSpectralModel(
+        mDM=mDM,
+        channel="b",
+        factor=3.41e19 * u.Unit("GeV2 cm-5"),
+        primary_flux=box_flux,
+    )
+    sky_model = SkyModel(
+        spectral_model=spectral_model,
+        spatial_model=PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic"),
+        name="dm_box",
+    )
+    dataset = MapDataset.create(geom, name="test_box")
+    dataset.models = [sky_model]
+
+    assert np.all(np.isfinite(dataset.npred().data))
+
+    # box is non-zero around the boosted photon energy
+    E_phi = (mDM + (100 * u.GeV) ** 2 / (4 * mDM)).to("TeV").value
+    flux = spectral_model([E_phi * 0.99, E_phi, E_phi * 1.01] * u.TeV)
+    assert np.all(np.isfinite(flux.value))
+    assert np.any(flux.value > 0)
