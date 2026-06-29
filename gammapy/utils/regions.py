@@ -362,7 +362,7 @@ class PolygonPointsPixelRegion(PolygonPixelRegion):
 
 
 def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=1):
-    """Utility returning an array of regions to make orthogonal projections.
+    """Utility returning an array of regions to make orthogonal projections for a 1D profile.
 
     Parameters
     ----------
@@ -379,7 +379,7 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
 
     Returns
     -------
-    regions : list of `~regions.RectangleSkyRegion`
+    regions : `~regions.Regions`
         Regions in which the profiles are made.
     """
     pix_start = start_pos.to_pixel(wcs)
@@ -433,7 +433,8 @@ def make_grid_rectangle_sky_regions(
 
     Returns
     -------
-    regions : list of `~regions.RectangleSkyRegion`
+    regions : `~regions.Regions`
+         list of `~regions.RectangleSkyRegion`
 
     """
     pix_center = center.to_pixel(wcs)
@@ -486,8 +487,8 @@ def make_concentric_annulus_sky_regions(
 
     Returns
     -------
-    regions : list of `~regions.CircleAnnulusSkyRegion`
-        Regions in which the profiles are made.
+    regions : `~regions.Regions`
+        list of `~regions.CircleAnnulusSkyRegion` in which the profiles are made.
     """
     regions = []
 
@@ -501,7 +502,7 @@ def make_concentric_annulus_sky_regions(
         )
         regions.append(region)
 
-    return regions
+    return Regions(regions)
 
 
 def region_to_frame(region, frame):
@@ -568,8 +569,8 @@ def extract_bright_star_regions(
 
     Returns
     -------
-    regions : list of `~regions.CircleSkyRegion`
-        Star exclusion regions.
+    regions : `~regions.Regions`
+        Star exclusion regions as list of `~regions.CircleSkyRegion`
     """
     regions = []
 
@@ -597,4 +598,4 @@ def extract_bright_star_regions(
             )
         )
 
-    return regions
+    return Regions(regions)
