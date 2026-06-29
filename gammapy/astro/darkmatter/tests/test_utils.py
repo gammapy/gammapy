@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 import astropy.units as u
+import pytest
+
 from gammapy.astro.darkmatter import (
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
@@ -44,7 +45,7 @@ def test_dmfluxmap_annihilation(jfact_annihilation):
     massDM = 1 * u.TeV
     channel = "W"
 
-    diff_flux = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel)
+    diff_flux = DarkMatterAnnihilationSpectralModel(mDM=massDM, channel=channel)
     int_flux = (
         jfact_annihilation
         * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
@@ -61,7 +62,7 @@ def test_dmfluxmap_decay(jfact_decay):
     massDM = 1 * u.TeV
     channel = "W"
 
-    diff_flux = DarkMatterDecaySpectralModel(mass=massDM, channel=channel)
+    diff_flux = DarkMatterDecaySpectralModel(mDM=massDM, channel=channel)
     int_flux = (
         jfact_decay * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
     ).to("cm-2 s-1")
