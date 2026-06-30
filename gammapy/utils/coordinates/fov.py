@@ -24,6 +24,37 @@ __all__ = ["FoVAltAzFrame", "FoVICRSFrame", "fov_to_sky", "sky_to_fov"]
 reflect_lon_matrix = np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
 
 
+def _validate_obstime_consistency(obstime, origin):
+    """Check that obstime is consistent with origin.obstime and return obstime."""
+    if obstime is None:
+        return origin.obstime
+    if origin.obstime is None:
+        return obstime
+    if obstime.shape != origin.obstime.shape:
+        raise ValueError(
+            f"origin and obstime have inconsistent shapes: "
+            f"{origin.obstime.shape} vs {obstime.shape}."
+        )
+    if not np.all(obstime == origin.obstime):
+        raise ValueError(
+            "obstime mismatch: frame obstime and origin.obstime must be equal."
+        )
+    return obstime
+
+
+def _validate_location_consistency(location, origin):
+    """Check that location is consistent with origin.location and return location."""
+    if location is None:
+        return origin.location
+
+    if origin.location is not None and not np.all(location == origin.location):
+        raise ValueError(
+            "location mismatch: frame location and origin.location must be equal."
+        )
+    else:
+        return location
+
+
 class FoVAltAzFrame(BaseCoordinateFrame):
     """
     FoV coordinate frame. Centered on `origin` and aligned on AltAz frame at `location` and `obstime`.
@@ -73,7 +104,19 @@ class FoVAltAzFrame(BaseCoordinateFrame):
     obstime = TimeAttribute(default=None)
     location = EarthLocationAttribute(default=None)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, origin=None, obstime=None, location=None, **kwargs):
+        if not isinstance(origin, (AltAz, SkyCoord)):
+            raise TypeError(
+                f"origin must be AltAz SkyCoord , got {type(origin).__name__} instead."
+            )
+        if isinstance(origin, SkyCoord) and not isinstance(origin.frame, AltAz):
+            raise TypeError("origin must be AltAz.")
+
+        kwargs["origin"] = origin
+        if origin is not None:
+            kwargs["location"] = _validate_location_consistency(location, origin)
+            kwargs["obstime"] = _validate_obstime_consistency(obstime, origin)
+
         super().__init__(*args, **kwargs)
 
         # make sure telescope coordinate is in range [-180°, 180°]
