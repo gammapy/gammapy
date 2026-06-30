@@ -52,7 +52,7 @@ def test_compute_differential_jfactor_large_separation():
 
     assert jfactor.shape == geom.data_shape
     assert np.all(np.isfinite(jfactor.value))
-    
+
 
 @requires_data()
 def test_dmfluxmap_annihilation(jfact_annihilation):
