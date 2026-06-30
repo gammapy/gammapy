@@ -178,14 +178,13 @@ def test_joint_estimator():
         source="source",
         energy_edges=dataset1._geom.axes["energy"].edges,
         n_jobs=4,
-        n_sigma_sensitivity=5,
     )
 
     res = est.run(datasets)
 
-    assert_allclose(res["dnde"][9], 7.44969158e-12, rtol=1e-3)
-    assert_allclose(res["e2dnde"][9], 8.08961662e-12, rtol=1e-3)
-    assert_allclose(res["norm_sensitivity"][9], 0.1104, rtol=1e-3)
+    assert_allclose(res["dnde"][9], 3.837294e-14, rtol=1e-3)
+    assert_allclose(res["e2dnde"][9], 4.77578124e-12, rtol=1e-3)
+    assert_allclose(res["norm_sensitivity"][9], 2.9808, rtol=1e-3)
 
     # test with SpectrumDatasetOnOff
     d1 = SpectrumDatasetOnOff.read(
@@ -194,8 +193,8 @@ def test_joint_estimator():
     d1.models = [SkyModel(spectral_model=spectral_model, name="source")]
     energy_axis = d1._geom.axes["energy"]
     est = JointSensitivityEstimator(
-        energy_edges=energy_axis.edges, source="crab", n_jobs=4, n_sigma_sensitivity=3
+        energy_edges=energy_axis.edges, source="source", n_jobs=4, n_sigma_sensitivity=3
     )
 
     res = est.run(d1)
-    assert_allclose(res["dnde"][7], 6.86442218e-14, rtol=1e-3)
+    assert_allclose(res["dnde"][7], 1.339e-10, rtol=1e-3)
