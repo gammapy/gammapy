@@ -1,0 +1,1 @@
+Fixes a bug in the `~gammapy.estimators.EnergyDependentMorphologyEstimator` to allow for multiple datasets to be handled correctly.
