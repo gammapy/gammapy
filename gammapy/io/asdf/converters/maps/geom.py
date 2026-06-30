@@ -29,3 +29,43 @@ class WcsGeomConverter(Converter):
             crpix=crpix,
             axes=node.get("axes"),
         )
+
+
+class HpxGeomConverter(Converter):
+    tags = ["asdf://gammapy.org/gammapy/tags/maps/hpxgeom-1.0.0"]
+    types = ["gammapy.maps.hpx.geom.HpxGeom"]
+
+    def to_yaml_tree(self, obj, tag, ctx):
+        node = {
+            "nside": obj.nside,
+            "nest": obj.nest,
+            "frame": obj.frame,
+            "axes": obj.axes,
+        }
+        if obj.region is not None:
+            node["region"] = obj.region
+        if obj.region == "explicit":
+            node["ipix"] = obj._ipix
+
+        return node
+
+    def from_yaml_tree(self, node, tag, ctx):
+        from gammapy.maps import HpxGeom
+
+        nside = node["nside"]
+        region = node.get("region")
+        if region == "explicit":
+            import numpy as np
+            from gammapy.maps.hpx.utils import unravel_hpx_index
+
+            ipix = np.array(node["ipix"])
+            npix_max = 12 * np.max(nside) ** 2
+            region = unravel_hpx_index(ipix, np.array([npix_max]))
+
+        return HpxGeom(
+            nside=nside,
+            nest=node.get("nest", True),
+            frame=node.get("frame", "icrs"),
+            region=region,
+            axes=node.get("axes"),
+        )
