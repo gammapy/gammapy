@@ -18,7 +18,7 @@ execute the following commands in the terminal:
     currently isn't available on Windows.
 
 .. note::
-    To avoid some installation issues, ``sherpa`` is not part of the environment file provided. If required, you can install ``sherpa`` in your environment using ``python -m pip install sherpa``.
+    ``sherpa`` is not part of the environment file provided because it is built from source via pip and needs extra build tools. If required, install it with ``python -m pip install sherpa`` after making the build tools available, e.g. ``conda install -c conda-forge bison flex make``.
 
 **The best way to get started and learn Gammapy is to understand the** :ref:`package_structure`.
 You can download the Gammapy tutorial notebooks and the example
