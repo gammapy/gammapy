@@ -61,18 +61,22 @@ class MapDatasetMaker(Maker):
 
     >>> # Prepare the geometry
     >>> energy_axis = MapAxis.from_energy_bounds(1.0, 10.0, 4, unit="TeV")
-    >>> energy_axis_true = MapAxis.from_energy_bounds( 0.5, 20, 10, unit="TeV", name="energy_true")
+    >>> energy_axis_true = MapAxis.from_energy_bounds(
+    ...     0.5, 20, 10, unit="TeV", name="energy_true"
+    ... )
     >>> geom = WcsGeom.create(
-    ...        skydir=(83.633, 22.014),
-    ...        binsz=0.02,
-    ...        width=(2, 2),
-    ...        frame="icrs",
-    ...        proj="CAR",
-    ...        axes=[energy_axis],
-    ...    )
+    ...     skydir=(83.633, 22.014),
+    ...     binsz=0.02,
+    ...     width=(2, 2),
+    ...     frame="icrs",
+    ...     proj="CAR",
+    ...     axes=[energy_axis],
+    ... )
 
     >>> # Run the maker
-    >>> empty = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name="empty")
+    >>> empty = MapDataset.create(
+    ...     geom=geom, energy_axis_true=energy_axis_true, name="empty"
+    ... )
     >>> maker = MapDatasetMaker()
     >>> dataset = maker.run(empty, obs)
     >>> print(dataset)

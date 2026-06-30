@@ -22,9 +22,9 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=2.0",
-    "scipy>=1.13",
-    "astropy>=6.1.5",  # AnchoredEllipse fix
-    "regions>=0.9.0",
+    "scipy>=1.13,<1.18",
+    "astropy>=6.1.5,<8.0",  # AnchoredEllipse fix
+    "regions>=0.9.0,<0.12",
     "pyyaml>=5.3",
     "click>=8.0",
     "pydantic>=2.8.0",
@@ -51,41 +51,31 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project.optional-dependencies]
-all = [
-    "naima",
-    "sherpa; platform_system != 'Windows'",
-    "healpy; platform_system != 'Windows'",
-    "ipywidgets",
+bayesian = [
+   "ultranest",
+    "arviz>=1",
+    "xarray",
+    "nautilus-sampler",
+]
+asdf = ["asdf", "asdf-astropy"]
+distributed = [
     "ray[default]>=2.9,<2.55; python_version < '3.14'",
     "ray[default]>=2.55; python_version >= '3.14'",
-    "ultranest",
-    "numba",
-    "arviz>=1",
-    "xarray",
-    "nautilus-sampler",
 ]
-all_no_ray = [
+extra = [
     "naima",
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
     "ipywidgets",
-    "ultranest",
     "numba",
-    "arviz>=1",
-    "xarray",
-    "nautilus-sampler",
 ]
-cov = [
-    "naima",
-    "sherpa; platform_system != 'Windows'",
-    "healpy; platform_system != 'Windows'",
-    "ipywidgets",
-    "ultranest",
-    "numba",
-    "arviz>=1",
-    "xarray",
-    "nautilus-sampler",
-]
+
+all = ["gammapy[extra, bayesian, distributed, asdf]"]
+
+all_no_ray = ["gammapy[extra, bayesian, asdf]"]
+
+cov =  ["gammapy[extra, bayesian]"]
+
 test = [
     "pytest-astropy",
     "pytest-xdist",
@@ -125,6 +115,8 @@ include = ["gammapy*"]
 "gammapy.irf.psf.tests" = ["data/*"]
 "gammapy.modeling.models.tests" = ["data/*"]
 "gammapy.catalog.tests" = ["data/*"]
+"gammapy.io.asdf.resources.schemas" = ["**/*.yaml"]
+"gammapy.io.asdf.resources.manifests" = ["*.yaml"]
 
 
 [tool.pytest.ini_options]
@@ -157,7 +149,7 @@ select = [
   "E",   # pycodestyle errors
   "F",   # pyflakes
   "B",   # flake8-bugbear
-  "I",   # isort
+  #"I",   # isort # uncomment before v3.0
   "PLE", # pylint errors
   "D",   # pydocstyle
   # "UP",   # pyUpgrade
@@ -178,7 +170,7 @@ ignore = [
     "B006","B007", "B008", "B009", "B017", "B018", "B024", "B028",
     "D101", "D103", "D200", "D202", "D208", "D209", "D214", "D215", "D301", "D404", "D409", "D410", "D411", "D419",
     "DTZ011",
-    "E741",
+    "E741", "E501",
     "F401",
     "N801", "N805", "N815", "N816", "N818",
     "S113", "S202", "S301", "S307", "S324",  "S603",
@@ -192,7 +184,7 @@ max-doc-length = 100
 
 [tool.ruff.lint.per-file-ignores]
 "examples/*" = ["E402"]
-"test_*.py" = ["D", "E501"]
+"test_*.py" = ["D"]
 "docs/conf.py" = ["I"]
 
 [tool.ruff.format]
@@ -207,6 +199,9 @@ skip-magic-trailing-comma = false
 
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
+
+# formatting of code example in docstring.
+docstring-code-format = true
 
 # Including towncrier to create the changelog
 [tool.towncrier]
@@ -254,3 +249,12 @@ showcontent = true
 
 [project.scripts]
 gammapy = "gammapy.scripts.main:cli"
+
+# The following are ASDF entry points: register gammapy's converters,
+# schemas and manifests, allow asdf to automatically discover
+# and use gammapy's serialization support.
+[project.entry-points."asdf.extensions"]
+gammapy = "gammapy.io.asdf.integration:get_extensions"
+
+[project.entry-points."asdf.resource_mappings"]
+gammapy = "gammapy.io.asdf.integration:get_resource_mappings"

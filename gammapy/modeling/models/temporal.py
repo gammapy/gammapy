@@ -138,8 +138,7 @@ class TemporalModel(ModelBase):
         return np.sum(diff).to(u.day)
 
     def plot(self, time_range, ax=None, n_points=100, **kwargs):
-        """
-        Plot the temporal model.
+        """Plot the temporal model.
 
         Parameters
         ----------
@@ -500,7 +499,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     Read an example light curve object:
 
     >>> from gammapy.modeling.models import LightCurveTemplateTemporalModel
-    >>> path = '$GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits'
+    >>> path = "$GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits"
     >>> light_curve = LightCurveTemplateTemporalModel.read(path)
 
     Show basic information about the lightcurve:
@@ -525,7 +524,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     Compute mean ``norm`` in a given time interval:
 
     >>> import astropy.units as u
-    >>> t_r = Time(59000.5, format='mjd')
+    >>> t_r = Time(59000.5, format="mjd")
     >>> t_min = t_r + [1, 4, 8] * u.d
     >>> t_max = t_r + [1.5, 6, 9] * u.d
     >>> light_curve.integral(t_min, t_max)
@@ -780,8 +779,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         return data
 
     def plot(self, time_range, ax=None, n_points=100, energy=None, **kwargs):
-        """
-        Plot the temporal model.
+        """Plot the temporal model.
 
         Parameters
         ----------
@@ -795,6 +793,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             Energies to compute the model at for energy dependent models. Default is None.
         **kwargs : dict
             Keywords forwarded to `~matplotlib.pyplot.errorbar`.
+
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional

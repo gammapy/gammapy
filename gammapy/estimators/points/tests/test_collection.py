@@ -7,7 +7,6 @@ import numpy as np
 import astropy.units as u
 import pytest
 
-
 from gammapy.maps import Map, WcsGeom, MapAxis
 from gammapy.modeling import Fit, Sampler
 from gammapy.modeling.models import (
@@ -17,7 +16,6 @@ from gammapy.modeling.models import (
     FoVBackgroundModel,
 )
 from gammapy.datasets import MapDataset, Datasets
-
 from gammapy.estimators.points.sed import FluxCollectionEstimator
 
 
@@ -230,6 +228,36 @@ def test_run_multi_source(simple_dataset, energy_edges, mock_fit, mock_sampler_m
     assert "test-source-2" in samples
     assert len(samples["test-source"]) == nbin
     assert samples["test-source"][0].shape[0] == 200
+
+    # Also test two sources that are applied to the dataset, but only one is used in the FCP
+    fit_est = FluxCollectionEstimator(
+        energy_edges=energy_edges,
+        models=[m1],
+        solver=mock_fit,
+        selection_optional=["errn-errp"],
+    )
+
+    sampler_est = FluxCollectionEstimator(
+        energy_edges=energy_edges,
+        models=[m1],
+        solver=mock_sampler_multi,
+    )
+
+    for est in [fit_est, sampler_est]:
+        result = est.run(Datasets([simple_dataset]))
+        flux_points = result["flux_points"]
+        nbin = len(energy_edges) - 1
+
+        fp = flux_points["test-source"]
+        assert len(fp["dnde"].data) == nbin
+        assert np.all(np.isfinite(fp["dnde"]))
+        assert np.all(np.isfinite(fp["dnde_errn"]))
+        assert np.all(np.isfinite(fp["dnde_errp"]))
+        assert np.all(np.isfinite(fp["dnde_ul"]))
+        assert np.all(np.isfinite(fp["ts"]))
+        assert np.all(fp["ts"] >= 0)
+
+    assert result["solver_results"].shape == (nbin,)
 
 
 def test_run_multi_dataset(simple_dataset, energy_edges, mock_fit):

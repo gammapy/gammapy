@@ -57,7 +57,9 @@ class ASmoothMapEstimator(Estimator):
     >>> from gammapy.datasets import MapDataset
     >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
     >>> scales = u.Quantity(np.arange(0.1, 1, 0.1), unit="deg")
-    >>> smooth = ASmoothMapEstimator(threshold=3, scales=scales, energy_edges=[1, 10] * u.TeV)
+    >>> smooth = ASmoothMapEstimator(
+    ...     threshold=3, scales=scales, energy_edges=[1, 10] * u.TeV
+    ... )
     >>> images = smooth.run(dataset)
 
     References

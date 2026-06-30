@@ -1,0 +1,14 @@
+id: asdf://gammapy.org/gammapy/manifests/gammapy-1.0.0
+extension_uri: asdf://gammapy.org/gammapy/extensions/gammapy-1.0.0
+title: Gammapy extension 1.0.0
+description: |-
+  A set of tags for serializing gammapy map and model objects.
+tags:
+- tag_uri: asdf://gammapy.org/gammapy/tags/maps/mapaxis-1.0.0
+  schema_uri: asdf://gammapy.org/gammapy/schemas/maps/mapaxis-1.0.0
+- tag_uri: asdf://gammapy.org/gammapy/tags/maps/timemapaxis-1.0.0
+  schema_uri: asdf://gammapy.org/gammapy/schemas/maps/timemapaxis-1.0.0
+- tag_uri: asdf://gammapy.org/gammapy/tags/maps/labelmapaxis-1.0.0
+  schema_uri: asdf://gammapy.org/gammapy/schemas/maps/labelmapaxis-1.0.0
+- tag_uri: asdf://gammapy.org/gammapy/tags/maps/mapaxes-1.0.0
+  schema_uri: asdf://gammapy.org/gammapy/schemas/maps/mapaxes-1.0.0

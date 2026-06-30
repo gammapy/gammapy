@@ -184,11 +184,11 @@ def find_peaks_in_flux_map(maps, threshold, min_distance=1):
     >>>
     >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
     >>> estimator = ExcessMapEstimator(
-    ...     correlation_radius="0.1 deg", energy_edges=[0.1, 10]*u.TeV
+    ...     correlation_radius="0.1 deg", energy_edges=[0.1, 10] * u.TeV
     ... )
     >>> maps = estimator.run(dataset)
     >>> # Find the peaks which are above 5 sigma
-    >>> sources = find_peaks_in_flux_map(maps, threshold=5, min_distance=0.1*u.deg)
+    >>> sources = find_peaks_in_flux_map(maps, threshold=5, min_distance=0.1 * u.deg)
 
     """
     quantity_for_peaks = maps["sqrt_ts"]
@@ -357,8 +357,7 @@ def resample_energy_edges(dataset, conditions={}):
     >>> spectrum_dataset = Datasets(datasets).stack_reduce()
     >>> # Resample the energy edges so the minimum sqrt_ts is 2
     >>> resampled_energy_edges = resample_energy_edges(
-    ...     spectrum_dataset,
-    ...     conditions={"sqrt_ts_min": 2}
+    ...     spectrum_dataset, conditions={"sqrt_ts_min": 2}
     ... )
     """
     if not isinstance(dataset, (SpectrumDataset, SpectrumDatasetOnOff)):
@@ -801,21 +800,19 @@ def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
     >>>
     >>> # Rebin lightcurve axis
     >>> lc_1d = FluxPoints.read(
-    ...         "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
-    ...         format="lightcurve",
-    ...     )
+    ...     "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
+    ...     format="lightcurve",
+    ... )
     >>> # Rebin axis by combining adjacent bins as per the group_size
     >>> new_axis = get_rebinned_axis(
     ...     lc_1d, method="fixed-bins", group_size=2, axis_name="time"
     ... )
     >>>
     >>> # Rebin HESS flux points axis
-    >>> fp = FluxPoints.read(
-    ...         "$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits"
-    ... )
+    >>> fp = FluxPoints.read("$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits")
     >>> # Rebin according to a minimum significance
     >>> axis_new = get_rebinned_axis(
-    ...     fp, method='min-ts', ts_threshold=4, axis_name='energy'
+    ...     fp, method="min-ts", ts_threshold=4, axis_name="energy"
     ... )
     """
     # TODO: Make fixed_bins and fixed_edges work for multidimensions
@@ -1240,8 +1237,10 @@ def interpolate_profile_map(flux_map, dnde_scan_axis=None):
 def approximate_profile_map(
     flux_map, dnde_scan_axis=None, sqrt_ts_threshold_ul="ignore"
 ):
-    """Likelihood profile approximation assuming that probabilities distributions for
-    flux points correspond to asymmetric gaussians and for upper limits to complementary error functions.
+    """Likelihood profile approximation.
+
+    This assumes that probabilities distributions for flux points correspond to
+    asymmetric gaussians and for upper limits to complementary error functions.
     Use available quantities among dnde, dnde_err, dnde_errp, dnde_errn, dnde_ul and ts.
 
     Parameters
@@ -1328,12 +1327,14 @@ def approximate_profile_map(
 def get_flux_map_from_profile(
     flux_map, n_sigma=1, n_sigma_ul=2, reference_model=None, meta=None, gti=None
 ):
-    """Create a new flux map using the likelihood profile (stat_scan)
-    to get ts, dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul.
+    """Create a new flux map using the likelihood profile (stat_scan).
+
+    This provides the computation of the quantities:
+    ts, dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul.
 
     Parameters
     ----------
-    flux_maps : `~gammapy.estimators.FluxMaps` or dict of `~gammapy.maps.WcsNDMap`
+    flux_map : `~gammapy.estimators.FluxMaps` or dict of `~gammapy.maps.WcsNDMap`
         Flux map or dict containing  a `stat_scan` entry
     n_sigma : float, optional
         Number of sigma for flux error. Must be a positive value. Default is 1.
@@ -1344,7 +1345,7 @@ def get_flux_map_from_profile(
         of a point source with a power law spectrum of index 2 is assumed.
         Default is None and the one of `flux_map` will be used if available
     meta : dict, optional
-        Dict of metadata.
+        Dictionary of metadata.
         Default is None and the one of `flux_map` will be used if available
     gti : `~gammapy.data.GTI`, optional
         Maps GTI information.
@@ -1416,9 +1417,10 @@ def get_flux_map_from_profile(
 
 
 def _generate_scan_values(power_min=-6, power_max=2, relative_error=1e-2):
-    """Values sampled such as we can probe a given `relative_error` on the norm
-    between 10**`power_min` and 10**`power_max`.
+    """Generate the scan values sampled.
 
+    This is such as we can probe a given ``relative_error`` on the norm
+    between 10**``power_min`` and 10**``power_max``.
     """
     arrays = []
     for power in range(power_min, power_max):

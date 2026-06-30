@@ -334,12 +334,12 @@ def logic_parser(table, expression):
     Given a table with columns 'OBS_ID' and 'EVENT_TYPE':
 
     >>> from astropy.table import Table
-    >>> data = {'OBS_ID': [1, 2, 3, 4], 'EVENT_TYPE': ['1', '3', '4', '2']}
+    >>> data = {"OBS_ID": [1, 2, 3, 4], "EVENT_TYPE": ["1", "3", "4", "2"]}
     >>> table = Table(data)
 
     Standard logical expression:
 
-    >>> expression = '(OBS_ID < 3) and (OBS_ID > 1)'
+    >>> expression = "(OBS_ID < 3) and (OBS_ID > 1)"
     >>> logic_parser(table, expression)
     <Table length=1>
     OBS_ID EVENT_TYPE
@@ -350,7 +350,7 @@ def logic_parser(table, expression):
 
     Using chained comparisons:
 
-    >>> expression = '1 < OBS_ID < 3'
+    >>> expression = "1 < OBS_ID < 3"
     >>> logic_parser(table, expression)
     <Table length=1>
     OBS_ID EVENT_TYPE
