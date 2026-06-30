@@ -80,6 +80,7 @@ jobs:
           - os: ubuntu-latest
             python: '3.12'
             tox_env: 'devdeps'
+            gammapy_data: true
             allowed_fail: true
 
     steps:
