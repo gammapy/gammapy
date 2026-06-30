@@ -1,0 +1,1 @@
+Add support for creating a `~gammapy.data.DataStore` from the results of a ivoa TapQuery.
