@@ -34,7 +34,7 @@ class ParameterEstimator(Estimator):
         Default is 2.
     n_sigma_sensitivity : float, optional
         Sigma to use for sensitivity computation. Must be a positive value.
-        Default is same as `n_sigma_ul`.
+        Default is same as 'n_sigma_ul'.
     null_value : float, optional
         Which null value to use for the parameter. Default is 1e-150.
     selection_optional : list of str, optional
@@ -93,7 +93,7 @@ class ParameterEstimator(Estimator):
         if n_sigma_sensitivity is None:
             n_sigma_sensitivity = n_sigma_ul
             log.info(
-                f"The default value for n_sigma_sensitivity is same that of n_sigma_ul, ie, {n_sigma_ul}"
+                f"By default, 'n_sigma_sensitivity' is set to the same value as 'n_sigma_ul', i.e., {n_sigma_ul}."
             )
         self.n_sigma_sensitivity = n_sigma_sensitivity
         self.null_value = null_value

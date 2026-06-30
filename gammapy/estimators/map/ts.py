@@ -106,7 +106,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Default is 2.
     n_sigma_sensitivity : float, optional
         Number of sigma for flux sensitivity. Must be a positive value.
-        Default is same as `n_sigma_ul`.
+        Default is same as 'n_sigma_ul'.
     threshold : float, optional
         If the test statistic value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time. Default is None.
@@ -242,7 +242,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         if n_sigma_sensitivity is None:
             n_sigma_sensitivity = n_sigma_ul
             log.info(
-                f"The default value for n_sigma_sensitivity is same that of n_sigma_ul, ie, {n_sigma_ul}"
+                f"By default, 'n_sigma_sensitivity' is set to the same value as 'n_sigma_ul', i.e., {n_sigma_ul}."
             )
         self.n_sigma_sensitivity = n_sigma_sensitivity
         self.threshold = threshold
@@ -807,7 +807,7 @@ class BrentqFluxEstimator(Estimator):
         if n_sigma_sensitivity is None:
             n_sigma_sensitivity = n_sigma_ul
             log.info(
-                f"The default value for n_sigma_sensitivity is same that of n_sigma_ul, ie, {n_sigma_ul}"
+                f"By default, 'n_sigma_sensitivity' is set to the same value as 'n_sigma_ul', i.e., {n_sigma_ul}."
             )
 
         self.n_sigma_sensitivity = n_sigma_sensitivity

@@ -1,1 +1,1 @@
-# Made default `n_sigma_sensitivity` same as `n_sigma_ul`
+Adapt default value for ``n_sigma_sensitivity`` to default to ``n_sigma_ul``.

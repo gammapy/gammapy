@@ -25,7 +25,7 @@ class FluxEstimator(ParameterEstimator):
     energy range.
 
     By default, points below 2-sigma detection will be considered as upper limits. This can be configured
-    on-the-fly on the resultant `FluxPoints` object by setting the `sqrt_ts_threshold_ul`
+    on-the-fly on the resultant `FluxPoints` object by setting the ``sqrt_ts_threshold_ul``.
 
     Note that there should be only one free norm or amplitude parameter for the estimator to run.
 
@@ -41,7 +41,7 @@ class FluxEstimator(ParameterEstimator):
         Default is 2.
     n_sigma_sensitivity : float, optional
         Sigma to use for sensitivity computation. Must be a positive value.
-        Default is same as `n_sigma_ul`.
+        Default is same as 'n_sigma_ul'.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
@@ -88,7 +88,7 @@ class FluxEstimator(ParameterEstimator):
         if n_sigma_sensitivity is None:
             n_sigma_sensitivity = n_sigma_ul
             log.info(
-                f"The default value for n_sigma_sensitivity is same that of n_sigma_ul, ie, {n_sigma_ul}"
+                f"By default, 'n_sigma_sensitivity' is set to the same value as 'n_sigma_ul', i.e., {n_sigma_ul}."
             )
         scan_n_sigma = np.maximum(n_sigma_ul, n_sigma_sensitivity) + 1
         self.norm = _get_default_norm(norm, scan_n_sigma=scan_n_sigma, interp="log")

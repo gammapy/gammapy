@@ -54,7 +54,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     or the `H.E.S.S. Galactic Plane Survey paper <https://ui.adsabs.harvard.edu/abs/2018A%26A...612A...1H>`__
 
     By default, points below 2-sigma detection will be considered as upper limits. This can be configured
-    on-the-fly on the resultant `FluxPoints` object by setting the `sqrt_ts_threshold_ul`
+    on-the-fly on the resultant `FluxPoints` object by setting the ``sqrt_ts_threshold_ul``.
 
     Parameters
     ----------
@@ -68,7 +68,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Default is 2.
     n_sigma_sensitivity : float, optional
         Sigma to use for sensitivity computation. Must be a positive value.
-        Default is same as `n_sigma_ul`.
+        Default is same as 'n_sigma_ul'.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
