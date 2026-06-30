@@ -1,15 +1,24 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
-from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff, Datasets
+
+import astropy.units as u
+from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff, Datasets, MapDataset
+from gammapy.modeling.models import (
+    PowerLawSpectralModel,
+    SkyModel,
+    Models,
+    FoVBackgroundModel,
+    PointSpatialModel,
+)
 from gammapy.estimators import (
     FluxPoints,
     SensitivityEstimator,
     ParameterSensitivityEstimator,
+    JointSensitivityEstimator,
 )
 from gammapy.irf import EDispKernelMap
 from gammapy.maps import MapAxis, RegionNDMap
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 
 
 @pytest.fixture()
@@ -138,3 +147,54 @@ def test_warning_for_bad_model(caplog, spectrum_dataset):
         "Spectral model predicts negative flux. Results of estimator should be interpreted with caution"
         in [_.message for _ in caplog.records]
     )
+
+
+def test_joint_estimator():
+    # test for multiple MapDataset
+    dataset1 = MapDataset.read("$GAMMAPY_DATA/datasets/empty-dl4/empty-dl4.fits.gz")
+    dataset2 = dataset1.copy()
+    datasets = Datasets([dataset1, dataset2])
+    spectral_model = PowerLawSpectralModel()
+    spatial_model = PointSpatialModel(
+        lon_0=187 * u.deg, lat_0=2.6 * u.deg, frame="icrs"
+    )
+    spatial_model.lat_0.frozen = True
+    spatial_model.lon_0.frozen = True
+
+    sky_model = SkyModel(
+        spatial_model=spatial_model, spectral_model=spectral_model, name="source"
+    )
+
+    bkg1 = FoVBackgroundModel(dataset_name=dataset1.name)
+    bkg2 = FoVBackgroundModel(dataset_name=dataset2.name)
+
+    models = Models([sky_model, bkg1, bkg2])
+    datasets.models = models
+
+    dataset1.counts = None
+    dataset2.counts = None
+
+    est = JointSensitivityEstimator(
+        source="source",
+        energy_edges=dataset1._geom.axes["energy"].edges,
+        n_jobs=4,
+    )
+
+    res = est.run(datasets)
+
+    assert_allclose(res["dnde"][9], 3.837294e-14, rtol=1e-3)
+    assert_allclose(res["e2dnde"][9], 4.77578124e-12, rtol=1e-3)
+    assert_allclose(res["norm_sensitivity"][9], 2.9808, rtol=1e-3)
+
+    # test with SpectrumDatasetOnOff
+    d1 = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/PKS2155-steady/pks2155-304_steady.fits.gz"
+    )
+    d1.models = [SkyModel(spectral_model=spectral_model, name="source")]
+    energy_axis = d1._geom.axes["energy"]
+    est = JointSensitivityEstimator(
+        energy_edges=energy_axis.edges, source="source", n_jobs=4, n_sigma_sensitivity=3
+    )
+
+    res = est.run(d1)
+    assert_allclose(res["dnde"][7], 1.339e-10, rtol=1e-3)
