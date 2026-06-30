@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 import astropy.units as u
 from gammapy.astro.darkmatter import (
     DarkMatterAnnihilationSpectralModel,
@@ -36,6 +37,22 @@ def jfact_decay(geom):
     )
     return jfactory.compute_jfactor()
 
+
+def test_compute_differential_jfactor_large_separation():
+    geom = WcsGeom.create(skydir=(0, 0), width=(120, 2), binsz=1, frame="galactic")
+    assert geom.separation(geom.center_skydir).deg.max() > 45
+
+    jfactory = JFactory(
+        geom=geom,
+        profile=profiles.NFWProfile(),
+        distance=profiles.DMProfile.DISTANCE_GC,
+    )
+
+    jfactor = jfactory.compute_differential_jfactor(ndecade=100)
+
+    assert jfactor.shape == geom.data_shape
+    assert np.all(np.isfinite(jfactor.value))
+    
 
 @requires_data()
 def test_dmfluxmap_annihilation(jfact_annihilation):
