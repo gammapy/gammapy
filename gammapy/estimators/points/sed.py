@@ -156,7 +156,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
           ref. model             : pl
           n_sigma                : 1
           n_sigma_ul             : 2
-          sqrt_ts_threshold_ul   : 2
+          sqrt_ts_threshold_ul   : 3
           sed type init          : likelihood
     """
 
