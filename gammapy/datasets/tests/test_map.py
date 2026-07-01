@@ -1503,7 +1503,7 @@ def test_map_dataset_on_off_to_asimov(images):
     asimov_dataset1 = dataset._to_asimov_dataset()
     counts_asimov1 = asimov_dataset1.counts.data.sum()
     assert_allclose(npred_sum, counts_asimov1, rtol=1e-3)
-    assert asimov_dataset1.counts_off is not None
+    assert asimov_dataset1.counts_off == dataset.counts_off
 
 
 @requires_data()
