@@ -54,6 +54,26 @@ def test_compute_differential_jfactor_large_separation():
     assert np.all(np.isfinite(jfactor.value))
 
 
+def test_integrate_los_branch_zero_impact_positive_radius():
+    geom = WcsGeom.create(binsz=1, npix=2)
+    profile = profiles.NFWProfile()
+    jfactory = JFactory(
+        geom=geom,
+        profile=profile,
+        distance=profiles.DMProfile.DISTANCE_GC,
+    )
+
+    radius_min = 1 * u.kpc
+    radius_max = 4 * u.kpc
+
+    actual = jfactory._integrate_los_branch(
+        0 * u.kpc, radius_min, radius_max, ndecade=100
+    )
+    desired = profile.integral(radius_min, radius_max, 0, 100, True)
+
+    assert_quantity_allclose(actual, desired)
+
+
 @requires_data()
 def test_dmfluxmap_annihilation(jfact_annihilation):
     energy_min = 0.1 * u.TeV

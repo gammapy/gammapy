@@ -94,7 +94,7 @@ class JFactory:
         sides of the halo. To account for this, the integration is split into
         two regions:
 
-        1. :math:`[b, r_{\max}]` - from the observer to the source,
+        1. :math:`[r_\perp, r_{\max}]` - from the observer to the source,
            counted twice to include contributions from both near and far sides.
         2. :math:`[r_{\max}, 4 r_{\max}]` - from the source to infinity.
            The upper limit is truncated at :math:`4 r_{\max}` because
@@ -103,21 +103,21 @@ class JFactory:
         Hence, the effective integration domain is:
 
         .. math::
-            2 \times [b, r_{\max}] \;+\; [r_{\max}, 4 r_{\max}].
+            2 \times [r_\perp, r_{\max}] \;+\; [r_{\max}, 4 r_{\max}].
 
         The impact parameter is given by:
 
         .. math::
-            b = r_{\max} \sin \theta.
+            r_\perp = r_{\max} \sin \theta.
 
         The LoS integral is converted into radial branches with:
 
         .. math::
-            \mathrm dl = \frac{r}{\sqrt{r^2 - b^2}} \, \mathrm dr.
+            \mathrm dl = \frac{r}{\sqrt{r^2 - r_\perp^2}} \, \mathrm dr.
 
-        The apparent singularity at :math:`r = b` is integrable. To avoid
+        The apparent singularity at :math:`r = r_\perp` is integrable. To avoid
         evaluating it directly, each radial branch is integrated with the
-        substitution :math:`r = b \cosh t`.
+        substitution :math:`r = r_\perp \cosh t`.
         """
         separation = self.geom.separation(self.geom.center_skydir).rad
         impact = u.Quantity(
