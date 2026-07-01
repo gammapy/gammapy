@@ -15,7 +15,7 @@ jobs:
       GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
