@@ -450,16 +450,20 @@ def test_lightcurve_estimator_spectrum_datasets_default():
     # Test default time interval: each time interval is equal to the gti of each
     # dataset, here one hour
     datasets = get_spectrum_datasets()
-    selection = ["scan"]
+    selection = ["scan", "sensitivity"]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV, selection_optional=selection
     )
+    assert estimator.n_sigma_sensitivity == estimator.n_sigma_ul
     estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
+    assert lightcurve.meta["n_sigma_ul"] == 2
+    assert lightcurve.meta["n_sigma_sensitivity"] == 2
     table = lightcurve.to_table()
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["norm"], [[0.911963], [0.906931]], rtol=1e-3)
+    assert_allclose(table["norm_sensitivity"], [[0.018549], [0.019388]], rtol=1e-3)
 
 
 @requires_data()
