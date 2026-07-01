@@ -1,0 +1,1 @@
+# Fix Asimov dataset computation for MapDatasetOff when no counts are present
