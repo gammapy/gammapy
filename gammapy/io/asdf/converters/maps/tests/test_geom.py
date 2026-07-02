@@ -1,9 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
+import astropy.units as u
 import numpy as np
+import pytest
 from astropy.coordinates import SkyCoord
+from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom
 from numpy.testing import assert_allclose
-from gammapy.maps import MapAxis, WcsGeom, HpxGeom
+from regions import (
+    CircleSkyRegion,
+    EllipseSkyRegion,
+    PointSkyRegion,
+    RectangleSkyRegion,
+)
 
 asdf = pytest.importorskip("asdf")
 pytest.importorskip("asdf.testing")
@@ -288,3 +295,77 @@ def test_hpx_geom_read_examples(example):
     else:
         with pytest.raises(asdf.exceptions.ValidationError):
             asdf.open(buff)
+
+
+energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+center1 = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
+center2 = SkyCoord(110.0, 75.0, unit="deg", frame="galactic")
+tested_region_geom = [
+    RegionGeom.create(CircleSkyRegion(center=center1, radius=1 * u.deg)),
+    RegionGeom.create(
+        CircleSkyRegion(center=center1, radius=1 * u.deg), axes=[energy_axis]
+    ),
+    RegionGeom.create(
+        RectangleSkyRegion(center=center1, width=1 * u.deg, height=5 * u.deg),
+    ),
+    RegionGeom.create(PointSkyRegion(center=center1)),
+    RegionGeom.from_regions(
+        [
+            CircleSkyRegion(center=center1, radius=1 * u.deg),
+            CircleSkyRegion(
+                center=SkyCoord(84.50, 23.00, unit="deg", frame="icrs"),
+                radius=5 * u.deg,
+            ),
+        ]
+    ),
+    RegionGeom.create(
+        EllipseSkyRegion(
+            center=center1, width=1 * u.deg, height=1 * u.deg, angle=20 * u.deg
+        )
+    ),
+    RegionGeom.create(
+        CircleSkyRegion(center=center2, radius=1 * u.deg),
+        axes=[energy_axis],
+        wcs=WcsGeom.create(
+            skydir=(0, 0), frame="galactic", width="1.5deg", binsz="0.1deg"
+        ).wcs,
+        binsz_wcs=0.01,
+    ),
+]
+
+
+@pytest.mark.parametrize("geom", tested_region_geom)
+def test_regiongeom_roundtrip(geom, tmp_path):
+    file_path = tmp_path / "test.asdf"
+    with asdf.AsdfFile() as af:
+        af["geom"] = geom
+        af.write_to(file_path)
+
+    with asdf.open(file_path) as af:
+        result = af["geom"]
+        assert result == geom
+        assert result.region == geom.region
+
+
+tested_read_regiongeom_invalid_examples = [
+    {
+        "example": """!<asdf://gammapy.org/gammapy/tags/maps/regiongeom-1.0.0>
+         axes: !<asdf://gammapy.org/gammapy/tags/maps/mapaxes-1.0.0>
+           axes: []
+         binsz_wcs: 0.1 deg
+         """,
+    },
+    {
+        "example": """!<asdf://gammapy.org/gammapy/tags/maps/regiongeom-1.0.0>
+         region: 42
+         binsz_wcs: 0.1 deg
+         """,
+    },
+]
+
+
+@pytest.mark.parametrize("example", tested_read_regiongeom_invalid_examples)
+def test_regiongeom_read_examples(example):
+    buff = yaml_to_asdf(f"example: {example['example'].strip()}")
+    with pytest.raises(asdf.exceptions.ValidationError):
+        asdf.open(buff)

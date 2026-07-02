@@ -12,7 +12,11 @@ from .converters.maps.axes import (
     MapAxisConverter,
     TimeMapAxisConverter,
 )
-from .converters.maps.geom import HpxGeomConverter, WcsGeomConverter
+from .converters.maps.geom import (
+    HpxGeomConverter,
+    RegionGeomConverter,
+    WcsGeomConverter,
+)
 
 GAMMAPY_CONVERTERS = [
     MapAxisConverter(),
@@ -20,6 +24,7 @@ GAMMAPY_CONVERTERS = [
     TimeMapAxisConverter(),
     LabelMapAxisConverter(),
     HpxGeomConverter(),
+    RegionGeomConverter(),
     WcsGeomConverter(),
 ]
 

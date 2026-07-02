@@ -1,0 +1,36 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://gammapy.org/gammapy/schemas/maps/regiongeom-1.0.0"
+
+title: |
+  Represents RegionGeom.
+
+description: |
+  Support the serialization of RegionGeom which is a map geometry representing a region on the sky.
+
+
+type: object
+properties:
+  region:
+    type: array
+    items:
+      type: string
+    description: |
+      The sky region object, defines what part of the sky it covers.
+  axes:
+    tag: "asdf://gammapy.org/gammapy/tags/maps/mapaxes-1.0.0"
+    description: |
+      Axes for non-spatial dimensions.
+  wcs:
+    tag: "tag:astropy.org:astropy/wcs/wcs-1.*"
+    description: |
+       Optional WCS object to project the region if needed.
+  binsz_wcs:
+    tag: "tag:astropy.org:astropy/coordinates/angle-*"
+    description: |
+      Angular bin size of the underlying WCS used to evaluate quantities inside the region.
+
+required: [region]
+additionalProperties: false
+...
