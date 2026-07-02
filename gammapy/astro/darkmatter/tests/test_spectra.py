@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import astropy.units as u
+import numpy as np
 import pytest
 from astropy.table import Table
 from numpy.testing import assert_allclose
@@ -115,10 +116,10 @@ def test_primary_flux_cosmixs():
         PrimaryFlux(channel="Spam", mDM=1 * u.TeV)
 
     primflux = PrimaryFlux(
-        channel="W", mDM=1 * u.TeV, source="cosmixs", mapping_dict={"mDM": "mDM"}
+        channel="b", mDM=1 * u.TeV, source="cosmixs", mapping_dict={"mDM": "mDM"}
     )
     actual = primflux(500 * u.GeV)
-    desired = 0.00013085 / u.GeV
+    desired = 1.842842e-05 / u.GeV
     assert_quantity_allclose(actual, desired, rtol=1e-4)
 
     with pytest.raises(ValueError):
@@ -138,6 +139,13 @@ def test_primary_flux_cosmixs():
         PrimaryFlux(channel="s", mDM=1 * u.TeV, source="pppc4")
 
 
+@requires_data()
+def test_primary_flux_cosmixs_channel_q_error():
+    """Covers the branch raising ValueError for channel='q' with source='cosmixs'."""
+    with pytest.raises(ValueError, match="The channel q is not available in cosmixs"):
+        PrimaryFlux(channel="q", mDM=1 * u.TeV, source="cosmixs")
+
+
 def test_custom_source_file_empty(tmp_path):
     """Test that an empty custom source file raises the correct error."""
     empty_file = tmp_path / "empty_spectra.dat"
@@ -149,14 +157,100 @@ def test_custom_source_file_empty(tmp_path):
         )
 
 
-def test_custom_source_file_bad_extension(tmp_path):
-    """Test that a custom file has a bad extension raises the correct error."""
-    empty_file = tmp_path / "empty_spectra.dl2"
-    empty_file.touch()
+def test_custom_source_file_unrecognized_format(tmp_path):
+    """A file with content that Table.read cannot parse should raise a
+    clear error, regardless of its extension (extensions are no longer
+    whitelisted; Table.read decides what is readable)."""
+    bad_file = tmp_path / "unreadable_spectra.dl2"
+    bad_file.write_text("this is not a valid table format §§§ %%% ???")
 
-    with pytest.raises(KeyError, match="Source file extension "):
+    with pytest.raises(Exception):
         DarkMatterAnnihilationSpectralModel(
-            mass=5 * u.TeV, channel="b", source=str(empty_file)
+            mass=5 * u.TeV, channel="b", source=str(bad_file)
+        )
+
+
+def test_custom_source_fits_extension_supported(tmp_path):
+    """A .fits file should be readable as a custom source (previously
+    excluded by the removed extension whitelist)."""
+    fits_file = tmp_path / "custom_spectra.fits"
+    t = Table(
+        {
+            "mDM": [500.0, 500.0, 1000.0, 1000.0] * u.GeV,
+            "Log[10,x]": [-3.0, -2.0, -3.0, -2.0],
+            "b": [1e-15, 1e-16, 1e-15, 1e-16],
+        }
+    )
+    t.write(fits_file, format="fits")
+
+    model = DarkMatterAnnihilationSpectralModel(
+        mass=500 * u.GeV, channel="b", source=str(fits_file)
+    )
+    assert model.channel == "b"
+
+
+def test_dm_source_as_table():
+    """Test that a source can be passed directly as an astropy.table.Table."""
+    t = Table(
+        {
+            "mDM": [500.0, 500.0, 1000.0, 1000.0] * u.GeV,
+            "Log[10,x]": [-3.0, -2.0, -3.0, -2.0],
+            "b": [1e-15, 1e-16, 1e-15, 1e-16],
+        }
+    )
+
+    model = DarkMatterAnnihilationSpectralModel(mass=500 * u.GeV, channel="b", source=t)
+    assert model.channel == "b"
+    assert isinstance(model.source, Table)
+
+    dnde = model.evaluate(energy=200 * u.GeV, scale=1)
+    assert dnde.value >= 0
+    assert np.isfinite(dnde.value)
+
+
+def test_dm_source_as_table_with_mapping():
+    """Test that a source Table works together with a mapping_dict, exactly
+    like a custom file source does."""
+    t = Table(
+        {
+            "mass": [500.0, 500.0, 1000.0, 1000.0] * u.GeV,
+            "energy": [-3.0, -2.0, -3.0, -2.0],
+            "bbar": [1e-15, 1e-16, 1e-15, 1e-16] / u.GeV,
+        }
+    )
+    mapping = {"energy": "Log[10,x]", "mass": "mDM", "bbar": "b"}
+
+    model = DarkMatterAnnihilationSpectralModel(
+        mass=500 * u.GeV, channel="b", source=t, mapping_dict=mapping
+    )
+    assert model.channel == "b"
+    assert model.mapping_dict == mapping
+
+
+def test_dm_source_as_table_missing_channel():
+    """A Table source missing the requested channel column should raise,
+    just like a custom file source does."""
+    t = Table(
+        {
+            "mDM": [500.0, 500.0] * u.GeV,
+            "Log[10,x]": [-3.0, -2.0],
+            "b": [1e-15, 1e-16],
+        }
+    )
+
+    with pytest.raises(ValueError, match="The channel eL is not available"):
+        DarkMatterAnnihilationSpectralModel(mass=500 * u.GeV, channel="eL", source=t)
+
+
+def test_dm_source_invalid_type():
+    """source must be None, a string, or a Table -- anything else should
+    raise a clear TypeError."""
+    with pytest.raises(TypeError, match="source must be"):
+        DarkMatterAnnihilationSpectralModel(mass=500 * u.GeV, channel="b", source=12345)
+
+    with pytest.raises(TypeError, match="source must be"):
+        DarkMatterAnnihilationSpectralModel(
+            mass=500 * u.GeV, channel="b", source=["not", "a", "table"]
         )
 
 

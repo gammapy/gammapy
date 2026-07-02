@@ -1,14 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Dark matter spectra."""
 
-import warnings
+import logging
 from pathlib import Path
 
 import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
-from gammapy.irf.psf import table
 from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import SpectralModel, TemplateNDSpectralModel
@@ -20,6 +19,7 @@ __all__ = [
     "DarkMatterAnnihilationSpectralModel",
     "DarkMatterDecaySpectralModel",
 ]
+log = logging.getLogger(__name__)
 
 
 class PrimaryFlux(TemplateNDSpectralModel):
@@ -38,13 +38,14 @@ class PrimaryFlux(TemplateNDSpectralModel):
         Dark matter particle mass as rest mass energy.
     channel : str
         Annihilation channel. List available channels with `~gammapy.astro.darkmatter.PrimaryFlux.allowed_channels`.
-    source : str, optional
+    source : str or Table, optional
         Data source for the spectra. Options are:
 
         * ``"pppc4"`` (default): Cirelli et al. 2011.
         * ``"cosmixs"``: Cirelli et al. 2024.
         * A path to a custom file: Any format readable by `astropy.table.Table.read`
         (e.g., .ecsv, .fits, .csv, .dat).
+        * An Astropy Table that read the desired path
 
         If a custom file path is provided, it must contain 'mDM' (mass of dark
         matter particle) and 'Log[10,x]' (energy) columns, plus columns named after
@@ -149,26 +150,38 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
         if self._source_type == "custom_file":
             self.mapping_dict = mapping_dict
-            table_filename = self.source
-        elif self._source_type == "predefined":
+
+            if isinstance(self.source, Table):
+                self.table = self.source
+            else:
+                table_filename = self.source
+                self.table_path = make_path(table_filename)
+
+                if self.table_path is None or not self.table_path.exists():
+                    raise FileNotFoundError(  # pragma: no cover
+                        f"\n\nFile not found: {table_filename}\n"
+                        "You may download the dataset needed with the \
+                            following command:\n"
+                        "gammapy download datasets --src dark_matter_spectra"
+                    )
+                self.table = Table.read(self.table_path)
+
+        else:
             base_data_path = "$GAMMAPY_DATA/dark_matter_spectra"
             if self.source == "pppc4":
                 table_filename = f"{base_data_path}/PPPC4DMID/AtProduction_gammas.dat"
             elif self.source == "cosmixs":
                 table_filename = f"{base_data_path}/cosmixs/AtProduction-Gamma.dat"
 
-        self.table_path = make_path(table_filename)
+            self.table_path = make_path(table_filename)
 
-        if self.table_path is None or not self.table_path.exists():
-            raise FileNotFoundError(
-                f"\n\nFile not found: {table_filename}\n"
-                "You may download the dataset needed with the following command:\n"
-                "gammapy download datasets --src dark_matter_spectra"
-            )
+            if self.table_path is None or not self.table_path.exists():
+                raise FileNotFoundError(
+                    f"\n\nFile not found: {table_filename}\n"
+                    "You may download the dataset needed with the following command:\n"
+                    "gammapy download datasets --src dark_matter_spectra"
+                )
 
-        if self._source_type == "custom_file":
-            self.table = Table.read(self.table_path, guess=True)
-        else:
             ascii_format = (
                 "ascii.commented_header"
                 if self.source == "cosmixs"
@@ -242,39 +255,38 @@ class PrimaryFlux(TemplateNDSpectralModel):
     def source(self, source):
         if source is None:
             self._source = "pppc4"
-            self._source_type = "predefined"
 
-            warnings.warn(
+            log.info(
                 "\nSince no spectra source has been chosen, PPPC4 will be \
                     used by default.\n",
-                UserWarning,
             )
-        else:
-            if isinstance(source, str):
-                if source.lower() in ("pppc4", "cosmixs"):
-                    self._source = source.lower()
-                    self._source_type = "predefined"
+        elif isinstance(source, Table):
+            self._source = source
+        elif isinstance(source, str):
+            if source.lower() in ("pppc4", "cosmixs"):
+                self._source = source.lower()
+            else:
+                path = Path(make_path(source))
+                if path.exists() and path.is_file():
+                    if path.stat().st_size == 0:
+                        raise KeyError("Source file is empty.")
+                    self._source = source
+
                 else:
-                    path = Path(make_path(source))
-                    if path.exists() and path.is_file():
-                        valid_extensions = [".dat", ".txt", ".csv", ".ecsv"]
-                        if path.suffix.lower() not in valid_extensions:
-                            raise KeyError(
-                                f"Source file extension {path.suffix} is \
-                                        not supported."
-                            )
+                    raise ValueError(
+                        f"Invalid source: {source}\nAvailable options: 'pppc4', \
+                        'cosmixs' or a valid file path.\n"
+                    )
+        else:
+            raise TypeError(
+                f"source must be None, a string ('pppc4', 'cosmixs', or a file "
+                f"path), or an astropy.table.Table instance, got {type(source)}"
+            )
 
-                        if path.stat().st_size == 0:
-                            raise KeyError("Source file is empty.")
-
-                        self._source = source
-                        self._source_type = "custom_file"
-
-                    else:
-                        raise ValueError(
-                            f"Invalid source: {source}\nAvailable options: 'pppc4', \
-                            'cosmixs' or a valid file path.\n"
-                        )
+    @property
+    def _source_type(self):
+        """Return source type (predefined or custom)."""
+        return "predefined" if self.source in ("pppc4", "cosmixs") else "custom_file"
 
     @property
     def channel(self):
@@ -393,13 +405,15 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         Redshift value. Default is 0.
     k : int, optional
         Type of dark matter particle (k:2 Majorana, k:4 Dirac). Default is 2.
-    source : str, optional
+    source : str or Table, optional
         Data source for the spectra. Options are:
 
         * ``"pppc4"`` (default): Cirelli et al. 2011.
         * ``"cosmixs"``: Cirelli et al. 2024.
         * A path to a custom file: Any format readable by `astropy.table.Table.read`
         (e.g., .ecsv, .fits, .csv, .dat).
+        * An Astropy Table that read the desired path
+
 
         If a custom file path is provided, it must contain 'mDM' (mass of dark
         matter particle) and 'Log[10,x]' (energy) columns, plus columns named after
@@ -539,13 +553,15 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         is used. Default is 1.
     z : float, optional
         Redshift value. Default is 0.
-    source : str, optional
+    source : str or Table, optional
         Data source for the spectra. Options are:
 
         * ``"pppc4"`` (default): Cirelli et al. 2011.
         * ``"cosmixs"``: Cirelli et al. 2024.
         * A path to a custom file: Any format readable by `astropy.table.Table.read`
         (e.g., .ecsv, .fits, .csv, .dat).
+        * An Astropy Table that read the desired path
+
 
         If a custom file path is provided, it must contain 'mDM' (mass of dark
         matter particle) and 'Log[10,x]' (energy) columns, plus columns named after
