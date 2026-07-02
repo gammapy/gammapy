@@ -326,19 +326,9 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel, _SigmaValidator):
 
         Pass a scalar J-factor to include it directly in the model,
         e.g. for spectral fitting with nuisance parameters.
-
-        .. note::
-            Passing a map-like array raises ``ValueError``. Only scalar
-            Quantities are accepted.
-
     sigma : float or None, optional
         Statistical and systematic uncertainty on log10(J) in dex. Default is None (no prior).
-        .. note::
-            Passing ``sigma=0.0`` (or ``None``) is
-            equivalent: no nuisance prior is attached and ``log10_jfactor``
-            remains frozen at the observed value. A prior is only created when
-            at least one sigma is strictly positive.
-
+        Passing ``sigma=0.0`` (or ``None``) is equivalent: no nuisance prior is attached and ``log10_jfactor`` remains frozen at the observed value. A prior is only created when at least one sigma is strictly positive.
     z : float, optional
         Redshift value. Default is 0.
     k : int, optional
@@ -508,19 +498,9 @@ class DarkMatterDecaySpectralModel(SpectralModel, _SigmaValidator):
 
         Pass a scalar D-factor to include it directly in the model,
         e.g. for spectral fitting with nuisance parameters.
-
-        .. note::
-            Passing a map-like array raises ``ValueError``. Only scalar
-            Quantities are accepted.
-
     sigma : float or None, optional
         Statistical and systematic uncertainty on log10(D) in dex. Default is None (no prior).
-        .. note::
-            Passing ``sigma=0.0`` (or ``None``) is
-            equivalent: no nuisance prior is attached and ``log10_jfactor``
-            remains frozen at the observed value. A prior is only created when
-            at least one sigma is strictly positive.
-
+        Passing ``sigma=0.0`` (or ``None``) is equivalent: no nuisance prior is attached and ``log10_jfactor`` remains frozen at the observed value. A prior is only created when at least one sigma is strictly positive.
     z : float, optional
         Redshift value. Default is 0.
     source : {"cosmixs", "pppc4"}, optional
