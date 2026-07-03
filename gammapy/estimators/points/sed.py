@@ -142,22 +142,24 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
 
         #change the limit for calling a point a ul
         fp.sqrt_ts_threshold_ul = 3
+
         print(fp)
 
     .. testoutput::
 
         FluxPoints
         ----------
-
+        <BLANKLINE>
           geom                   : RegionGeom
           axes                   : ['lon', 'lat', 'energy']
           shape                  : (1, 1, 6)
-          quantities             : ['norm', 'norm_err', 'ts', 'npred', 'npred_excess', 'stat', 'stat_null', 'counts', 'success']
+          quantities             : ['norm', 'norm_err', 'ts', 'npred', 'npred_excess', 'stat', 'stat_null', 'counts', 'success', 'is_ul']
           ref. model             : pl
           n_sigma                : 1
-          n_sigma_ul             : 2
-          sqrt_ts_threshold_ul   : 2
+          ...
+          sqrt_ts_threshold_ul   : 3
           sed type init          : likelihood
+        <BLANKLINE>
     """
 
     tag = "FluxPointsEstimator"

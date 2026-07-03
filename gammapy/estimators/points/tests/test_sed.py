@@ -909,9 +909,7 @@ def test_sensitivity_limit(caplog):
     caplog.set_level(logging.INFO)
     fpe = FluxPointsEstimator(energy_edges=[1, 2, 4, 10] * u.TeV)
     assert "INFO" in [record.levelname for record in caplog.records]
-    message = (
-        "The default value for n_sigma_sensitivity is same that of n_sigma_ul, ie, 2"
-    )
+    message = "By default, 'n_sigma_sensitivity' is set to the same value as 'n_sigma_ul', i.e., 2."
     assert message in [record.message for record in caplog.records]
     assert fpe.n_sigma_sensitivity == fpe.n_sigma_ul
 
