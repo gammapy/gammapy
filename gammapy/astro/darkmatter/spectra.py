@@ -12,7 +12,11 @@ from astropy.table import Table
 from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import SpectralModel, TemplateNDSpectralModel
-from gammapy.utils.deprecation import deprecated, deprecated_renamed_argument
+from gammapy.utils.deprecation import (
+    GammapyDeprecationWarning,
+    deprecated,
+    deprecated_renamed_argument,
+)
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_map_columns
 
@@ -576,13 +580,13 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
         )
 
 
-PRIMARY_FLUX_REGISTRY = {cls.tag[0]: cls for cls in (ContinuumPrimaryFlux,)}
-
-
 @deprecated("2.2", alternative="ContinuumPrimaryFlux")
 class PrimaryFlux(ContinuumPrimaryFlux):
+    tag = ["PrimaryFlux", "dm-pf"]
     pass
 
+
+PRIMARY_FLUX_REGISTRY = {cls.tag[0]: cls for cls in (ContinuumPrimaryFlux, PrimaryFlux)}
 
 # ---------------------------------------------------------------------------
 # Spectral models
@@ -683,6 +687,7 @@ class DarkMatterAnnihilationSpectralModel(
     tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
 
     @deprecated_renamed_argument("mass", "mDM", "2.2")
+    @deprecated_renamed_argument("jfactor", "factor", "2.2")
     def __init__(
         self,
         mDM,
@@ -786,6 +791,17 @@ class DarkMatterAnnihilationSpectralModel(
         """
         data = copy.deepcopy(data["spectral"])
         data.pop("type")
+
+        _RENAMED_FIELDS = {"mass": "mDM", "jfactor": "factor"}
+        for old_name, new_name in _RENAMED_FIELDS.items():
+            if old_name in data:
+                warnings.warn(
+                    f"The '{old_name}' field is deprecated since v2.2 and will "
+                    f"be removed in a future version. Use '{new_name}' instead. "
+                    f"This serialized model appears to use the old format.",
+                    GammapyDeprecationWarning,
+                )
+                data[new_name] = data.pop(old_name)
 
         pf_data = data.pop("primary_flux")
         pf_cls = PRIMARY_FLUX_REGISTRY.get(pf_data["type"])
@@ -921,6 +937,7 @@ class DarkMatterDecaySpectralModel(
     tag = ["DarkMatterDecaySpectralModel", "dm-decay"]
 
     @deprecated_renamed_argument("mass", "mDM", "2.2")
+    @deprecated_renamed_argument("jfactor", "factor", "2.2")
     def __init__(
         self,
         mDM,
@@ -1024,6 +1041,17 @@ class DarkMatterDecaySpectralModel(
         """
         data = copy.deepcopy(data["spectral"])
         data.pop("type")
+
+        _RENAMED_FIELDS = {"mass": "mDM", "jfactor": "factor"}
+        for old_name, new_name in _RENAMED_FIELDS.items():
+            if old_name in data:
+                warnings.warn(
+                    f"The '{old_name}' field is deprecated since v2.2 and will "
+                    f"be removed in a future version. Use '{new_name}' instead. "
+                    f"This serialized model appears to use the old format.",
+                    GammapyDeprecationWarning,
+                )
+                data[new_name] = data.pop(old_name)
 
         pf_data = data.pop("primary_flux")
         pf_cls = PRIMARY_FLUX_REGISTRY.get(pf_data["type"])

@@ -599,3 +599,55 @@ def test_dm_decay_evaluation_on_dataset():
     flux = spectral_model([0.01, 0.1, 0.4] * u.TeV)
     assert np.all(np.isfinite(flux.value))
     assert np.all(flux.value > 0)
+
+
+# Backpor compatibility tests for old field names in serialized dicts
+@requires_data()
+def test_dm_decay_from_dict_old_field_names_warns_and_maps():
+    """A dict serialized with the old field names ('mass', 'jfactor') must
+    still be loadable via from_dict, emitting a deprecation warning and
+    correctly mapping to the new names ('mDM', 'factor')."""
+    model = DarkMatterDecaySpectralModel(mDM=1 * u.TeV, channel="b")
+    data = model.to_dict()
+
+    # Simulate an old-format serialized dict
+    data["spectral"]["jfactor"] = data["spectral"].pop("factor")
+
+    with pytest.warns(GammapyDeprecationWarning, match="'jfactor'"):
+        new_model = DarkMatterDecaySpectralModel.from_dict(data)
+
+    assert_quantity_allclose(new_model.mDM, model.mDM)
+    assert_allclose(new_model.factor.value, model.factor.value, rtol=1e-2)
+    assert new_model.channel == model.channel
+
+
+@requires_data()
+def test_dm_annihilation_from_dict_old_field_names_warns_and_maps():
+    """Same backward-compatibility check for DarkMatterAnnihilationSpectralModel."""
+    model = DarkMatterAnnihilationSpectralModel(mDM=1 * u.TeV, channel="b")
+    data = model.to_dict()
+
+    data["spectral"]["mass"] = data["spectral"].pop("mDM")
+
+    with pytest.warns(GammapyDeprecationWarning, match="'mass'"):
+        new_model = DarkMatterAnnihilationSpectralModel.from_dict(data)
+
+    assert_quantity_allclose(new_model.mDM, model.mDM)
+    assert_allclose(new_model.factor.value, model.factor.value, rtol=1e-2)
+    assert new_model.channel == model.channel
+
+
+@requires_data()
+def test_dm_decay_from_dict_new_field_names_no_warning():
+    """Loading a dict already using the new field names ('mDM', 'factor')
+    must NOT emit the backward-compatibility deprecation warning."""
+    import warnings
+
+    model = DarkMatterDecaySpectralModel(mDM=1 * u.TeV, channel="b")
+    data = model.to_dict()
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", GammapyDeprecationWarning)
+        new_model = DarkMatterDecaySpectralModel.from_dict(data)
+
+    assert_quantity_allclose(new_model.mDM, model.mDM)
