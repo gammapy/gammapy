@@ -90,15 +90,9 @@ class DMProfile(abc.ABC):
             used to compute the line-of-sight integration geometry.
         """
 
-        # Order change error
         if distance is None:
             raise TypeError(
                 "integrate_spectrum_separation() missing required argument: 'distance'"
-            )
-        if isinstance(distance, bool):
-            raise TypeError(
-                "Invalid call to 'integral': 'distance' was added before 'squared' since v2.2. "
-                "Use keyword arguments: integral(..., distance=..., squared=...)."
             )
 
         integral = self.integrate_spectrum_separation(
@@ -127,15 +121,9 @@ class DMProfile(abc.ABC):
             Distance from the observer to the center of the dark matter halo,
             used to compute the line-of-sight integration geometry.
         """
-        # Order change error
         if distance is None:
             raise TypeError(
                 "integrate_spectrum_separation() missing required argument: 'distance'"
-            )
-        if isinstance(distance, bool):
-            raise TypeError(
-                "Invalid call to 'integral': 'distance' was added before 'squared' since v2.2. "
-                "Use keyword arguments: integral(..., distance=..., squared=...)."
             )
 
         unit = xmin.unit
