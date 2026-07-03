@@ -65,7 +65,7 @@ class DMProfile(abc.ABC):
             / np.sqrt(radius**2 - (distance * np.sin(separation)) ** 2)
         )
 
-    def integral(self, rmin, rmax, separation, ndecade, distance, squared=True):
+    def integral(self, rmin, rmax, separation, ndecade, squared=True, distance=None):
         r"""Integrate dark matter profile numerically.
 
         .. math::
@@ -89,14 +89,26 @@ class DMProfile(abc.ABC):
             Distance from the observer to the center of the dark matter halo,
             used to compute the line-of-sight integration geometry.
         """
+
+        # Order change error
+        if distance is None:
+            raise TypeError(
+                "integrate_spectrum_separation() missing required argument: 'distance'"
+            )
+        if isinstance(distance, bool):
+            raise TypeError(
+                "Invalid call to 'integral': 'distance' was added before 'squared' since v2.2. "
+                "Use keyword arguments: integral(..., distance=..., squared=...)."
+            )
+
         integral = self.integrate_spectrum_separation(
-            self._eval_substitution, rmin, rmax, separation, ndecade, distance, squared
+            self._eval_substitution, rmin, rmax, separation, ndecade, squared, distance
         )
         inegral_unit = u.Unit("GeV2 cm-5") if squared else u.Unit("GeV cm-2")
         return integral.to(inegral_unit)
 
     def integrate_spectrum_separation(
-        self, func, xmin, xmax, separation, ndecade, distance, squared=True
+        self, func, xmin, xmax, separation, ndecade, squared=True, distance=None
     ):
         """Squared dark matter profile integral.
 
@@ -115,6 +127,17 @@ class DMProfile(abc.ABC):
             Distance from the observer to the center of the dark matter halo,
             used to compute the line-of-sight integration geometry.
         """
+        # Order change error
+        if distance is None:
+            raise TypeError(
+                "integrate_spectrum_separation() missing required argument: 'distance'"
+            )
+        if isinstance(distance, bool):
+            raise TypeError(
+                "Invalid call to 'integral': 'distance' was added before 'squared' since v2.2. "
+                "Use keyword arguments: integral(..., distance=..., squared=...)."
+            )
+
         unit = xmin.unit
         xmin = xmin.value
         xmax = xmax.to_value(unit)

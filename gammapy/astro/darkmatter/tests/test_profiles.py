@@ -24,10 +24,7 @@ DISTANCE_REF = 8.33 * u.kpc
 # Reference distance for integral tests
 DISTANCE_INTEGRAL = 8.5 * u.kpc
 
-
-# ============================================================================
 # Basic Instantiation Tests
-# ============================================================================
 
 
 @pytest.mark.parametrize("profile", dm_profiles)
@@ -46,9 +43,90 @@ def test_profile_has_required_constants(profile):
     assert hasattr(profile, "DEFAULT_SCALE_RADIUS")
 
 
-# ============================================================================
+# Distance Validation Tests (integral / integrate_spectrum_separation)
+
+
+@pytest.mark.parametrize("profile", dm_profiles)
+def test_integral_distance_none_raises(profile):
+    """Test that integral() raises TypeError when distance is not provided."""
+    p = profile()
+
+    rmin = 0.1 * u.kpc
+    rmax = 50 * u.kpc
+    separation = 0.0
+    ndecade = 50
+
+    with pytest.raises(TypeError, match="missing required argument: 'distance'"):
+        p.integral(rmin, rmax, separation, ndecade)
+
+
+@pytest.mark.parametrize("profile", dm_profiles)
+def test_integral_distance_as_bool_raises(profile):
+    """Test that integral() raises TypeError when a bool is passed in the
+    position of distance (old positional argument order, pre-v2.2)."""
+    p = profile()
+
+    rmin = 0.1 * u.kpc
+    rmax = 50 * u.kpc
+    separation = 0.0
+    ndecade = 50
+
+    with pytest.raises(TypeError, match="was added before 'squared'"):
+        p.integral(rmin, rmax, separation, ndecade, 10, True)
+
+
+def test_integrate_spectrum_separation_distance_none_raises():
+    """Test that integrate_spectrum_separation() raises TypeError when
+    distance is not provided."""
+    p = profiles.NFWProfile()
+
+    rmin = 0.1 * u.kpc
+    rmax = 50 * u.kpc
+    separation = 0.0
+    ndecade = 50
+
+    with pytest.raises(TypeError, match="missing required argument: 'distance'"):
+        p.integrate_spectrum_separation(
+            p._eval_substitution, rmin, rmax, separation, ndecade
+        )
+
+
+def test_integrate_spectrum_separation_distance_as_bool_raises():
+    """Test that integrate_spectrum_separation() raises TypeError when a
+    bool is passed in the position of distance."""
+    p = profiles.NFWProfile()
+
+    rmin = 0.1 * u.kpc
+    rmax = 50 * u.kpc
+    separation = 0.0
+    ndecade = 50
+
+    with pytest.raises(TypeError, match="was added before 'squared'"):
+        p.integrate_spectrum_separation(
+            p._eval_substitution, rmin, rmax, separation, ndecade, 10, True
+        )
+
+
+@pytest.mark.parametrize("profile", dm_profiles)
+def test_integral_distance_valid_still_works(profile):
+    """Sanity check: passing distance correctly should not raise and
+    should return a finite, positive result."""
+    p = profile()
+
+    rmin = 0.1 * u.kpc
+    rmax = 50 * u.kpc
+    separation = 0.0
+    ndecade = 50
+
+    result = p.integral(
+        rmin, rmax, separation, ndecade, distance=DISTANCE_INTEGRAL, squared=True
+    )
+
+    assert np.isfinite(result.value)
+    assert result.value > 0
+
+
 # Scale to Local Density Tests
-# ============================================================================
 
 
 @pytest.mark.parametrize("profile", dm_profiles)
@@ -83,9 +161,7 @@ def test_profiles_scale_to_local_density_dsph(profile):
     assert_quantity_allclose(actual, dsph_density)
 
 
-# ============================================================================
 # Parameter Tests
-# ============================================================================
 
 
 def test_zhao_profile_parameters():
@@ -172,9 +248,7 @@ def test_moore_profile_parameters():
     )
 
 
-# ============================================================================
 # Evaluation Tests
-# ============================================================================
 
 
 def test_zhao_profile_evaluate():
@@ -258,9 +332,7 @@ def test_moore_profile_evaluate():
     assert result.value > 0
 
 
-# ============================================================================
 # Monotonic Behavior Tests
-# ============================================================================
 
 
 @pytest.mark.parametrize("profile", dm_profiles)
@@ -274,9 +346,7 @@ def test_profile_monotonic_decreasing(profile):
     assert np.all(np.diff(densities) < 0), "Density should decrease with radius"
 
 
-# ============================================================================
 # Integration Tests
-# ============================================================================
 
 
 def test_nfw_profile_integral():
@@ -337,9 +407,7 @@ def test_profile_integral_basic(profile):
     assert result.value > 0
 
 
-# ============================================================================
 # Call Method Tests
-# ============================================================================
 
 
 @pytest.mark.parametrize("profile", dm_profiles)
@@ -368,9 +436,7 @@ def test_profile_call_with_array(profile):
     assert np.all(results.value > 0)
 
 
-# ============================================================================
 # Special Cases and Edge Cases
-# ============================================================================
 
 
 def test_zhao_is_nfw_special_case():
@@ -413,9 +479,7 @@ def test_profile_parameter_modification(profile):
     assert np.isclose(result_modified.value / result_initial.value, 2.0, rtol=1e-10)
 
 
-# ============================================================================
 # Distance Parameter Tests
-# ============================================================================
 
 
 def test_integral_separation_constraints():
@@ -468,9 +532,7 @@ def test_nfw_integral_with_custom_distance():
     assert result_1.value != result_2.value
 
 
-# ============================================================================
 # HTML Representation Tests
-# ============================================================================
 
 
 @pytest.mark.parametrize("profile", dm_profiles)
@@ -483,9 +545,7 @@ def test_profile_html_repr(profile):
     assert len(html_repr) > 0
 
 
-# ============================================================================
 # Numerical Consistency Tests
-# ============================================================================
 
 
 def test_nfw_vs_evaluate_method():
@@ -503,9 +563,7 @@ def test_nfw_vs_evaluate_method():
     assert_quantity_allclose(result_call, result_evaluate)
 
 
-# ============================================================================
 # Dimensionality Tests
-# ============================================================================
 
 
 @pytest.mark.parametrize("profile", dm_profiles)
