@@ -195,9 +195,9 @@ class PrimaryFlux(TemplateNDSpectralModel):
             if source is None:
                 source = "pppc4"
                 warnings.warn(
-                  "Since no spectra source has been chosen, PPPC4 will be used by "
-                  "default.",
-                  UserWarning,
+                    "Since no spectra source has been chosen, PPPC4 will be used by "
+                    "default.",
+                    UserWarning,
                 )
             self.source = source.lower()
 
@@ -207,9 +207,9 @@ class PrimaryFlux(TemplateNDSpectralModel):
             elif self.source == "cosmixs":
                 table_filename = f"{base_data_path}/cosmixs/AtProduction-Gamma.dat"
             else:
-              raise ValueError(
-                  "\n\nData source is not valid, please choose between PPPC4 or cosmixs\n"
-              )
+                raise ValueError(
+                    "\n\nData source is not valid, please choose between PPPC4 or cosmixs\n"
+                )
             self.table_path = make_path(table_filename)
 
             if self.table_path is None or not self.table_path.exists():
@@ -707,7 +707,7 @@ class DarkMatterDecaySpectralModel(SpectralModel, _SigmaValidator):
         scale=scale.quantity,
         jfactor=1 * u.Unit("GeV cm-2"),
         z=0,
-        source=None,
+        source="pppc4",
         mapping_dict=None,
         sigma=None,
     ):

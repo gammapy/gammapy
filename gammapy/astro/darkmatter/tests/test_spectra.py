@@ -363,6 +363,8 @@ def test_decay_serialization_with_sigma(tmpdir):
     assert_allclose(new_model._sigma, 0.3, rtol=1e-6)
     assert new_model.log10_jfactor.frozen is False
     assert new_model.log10_jfactor.prior is not None
+
+
 @requires_data()
 def test_primary_flux_cosmixs_channel_q_error():
     """Covers the branch raising ValueError for channel='q' with source='cosmixs'."""
