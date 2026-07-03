@@ -216,6 +216,7 @@ def test_plot_samples_violin_vs_energy_preserves_axis_units():
     assert ax.xaxis.units == u.GeV
     assert ax.yaxis.units == u.Unit("cm-2 s-1 erg-1")
 
+    ax.set_xlim(9e2, 2e5)
     xticks = ax.get_xticks()
     xlim = ax.get_xlim()
     assert_allclose(
@@ -228,6 +229,7 @@ def test_plot_samples_violin_vs_energy_preserves_axis_units():
     assert_allclose(
         yticks[(yticks >= ylim[0]) & (yticks <= ylim[1])], [1e-13, 1e-12], rtol=1e-3
     )
+    plt.close(fig)
 
     fig, ax = plt.subplots()
 
@@ -244,6 +246,7 @@ def test_plot_samples_violin_vs_energy_preserves_axis_units():
     assert ax.xaxis.units == u.eV
     assert ax.yaxis.units == u.Unit("cm-2 s-1 erg")
 
+    ax.set_xlim(9e11, 2e14)
     xticks = ax.get_xticks()
     xlim = ax.get_xlim()
     assert_allclose(
@@ -253,12 +256,13 @@ def test_plot_samples_violin_vs_energy_preserves_axis_units():
     ax.set_ylim(9e-12, 2e-9)
     yticks = ax.get_yticks()
     ylim = ax.get_ylim()
-    print(yticks)
+
     assert_allclose(
         yticks[(yticks >= ylim[0]) & (yticks <= ylim[1])],
         [1e-11, 1e-10, 1e-9],
         rtol=1e-3,
     )
+    plt.close(fig)
 
 
 def test_plot_samples_violin_vs_energy_energy_power_units():
@@ -283,6 +287,7 @@ def test_plot_samples_violin_vs_energy_energy_power_units():
         ax.yaxis.get_label().get_text()
         == r"$E^-1\,\times$ dN/dE [$\mathrm{s^{-1}\,TeV^{-2}\,cm^{-2}}$]"
     )
+    plt.close(fig)
 
     fig, ax = plt.subplots()
     ax = plot_samples_violin_vs_energy(
@@ -298,6 +303,7 @@ def test_plot_samples_violin_vs_energy_energy_power_units():
         ax.yaxis.get_label().get_text()
         == r"dN/dE [$\mathrm{TeV^{-1}\,s^{-1}\,cm^{-2}}$]"
     )
+    plt.close(fig)
 
     fig, ax = plt.subplots()
     ax = plot_samples_violin_vs_energy(
@@ -313,3 +319,4 @@ def test_plot_samples_violin_vs_energy_energy_power_units():
         ax.yaxis.get_label().get_text()
         == r"$E^2\,\times$ dN/dE [$\mathrm{TeV\,s^{-1}\,cm^{-2}}$]"
     )
+    plt.close(fig)
