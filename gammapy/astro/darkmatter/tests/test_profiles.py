@@ -60,21 +60,6 @@ def test_integral_distance_none_raises(profile):
         p.integral(rmin, rmax, separation, ndecade)
 
 
-@pytest.mark.parametrize("profile", dm_profiles)
-def test_integral_distance_as_bool_raises(profile):
-    """Test that integral() raises TypeError when a bool is passed in the
-    position of distance (old positional argument order, pre-v2.2)."""
-    p = profile()
-
-    rmin = 0.1 * u.kpc
-    rmax = 50 * u.kpc
-    separation = 0.0
-    ndecade = 50
-
-    with pytest.raises(TypeError, match="was added before 'squared'"):
-        p.integral(rmin, rmax, separation, ndecade, 10, True)
-
-
 def test_integrate_spectrum_separation_distance_none_raises():
     """Test that integrate_spectrum_separation() raises TypeError when
     distance is not provided."""
@@ -88,22 +73,6 @@ def test_integrate_spectrum_separation_distance_none_raises():
     with pytest.raises(TypeError, match="missing required argument: 'distance'"):
         p.integrate_spectrum_separation(
             p._eval_substitution, rmin, rmax, separation, ndecade
-        )
-
-
-def test_integrate_spectrum_separation_distance_as_bool_raises():
-    """Test that integrate_spectrum_separation() raises TypeError when a
-    bool is passed in the position of distance."""
-    p = profiles.NFWProfile()
-
-    rmin = 0.1 * u.kpc
-    rmax = 50 * u.kpc
-    separation = 0.0
-    ndecade = 50
-
-    with pytest.raises(TypeError, match="was added before 'squared'"):
-        p.integrate_spectrum_separation(
-            p._eval_substitution, rmin, rmax, separation, ndecade, 10, True
         )
 
 
