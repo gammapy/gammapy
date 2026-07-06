@@ -18,13 +18,13 @@ skydir = SkyCoord(110.0, 75.0, unit="deg", frame="icrs")
 
 tested_wcs_geom = [
     (None, 10.0, "galactic", "AIT", skydir, None),
-    (None, 10.0, "galactic", "AIT", skydir, axes1),
+    (None, 10.0, "icrs", "AIT", skydir, axes1),
     (None, [10.0, 20.0], "galactic", "AIT", skydir, axes1),
-    (None, 10.0, "galactic", "AIT", skydir, axes2),
+    (None, 10.0, "icrs", "AIT", skydir, axes2),
     (None, [[10.0, 20.0, 30.0], [10.0, 20.0, 30.0]], "galactic", "AIT", skydir, axes2),
-    (10, 0.1, "galactic", "AIT", skydir, None),
+    (10, 0.1, "icrs", "AIT", skydir, None),
     (10, 0.1, "galactic", "AIT", skydir, axes1),
-    (10, [0.1, 0.2], "galactic", "AIT", skydir, axes1),
+    (10, [0.1, 0.2], "icrs", "AIT", skydir, axes1),
 ]
 
 
@@ -52,6 +52,26 @@ def test_wcsgeom_roundtrip(npix, binsz, frame, proj, skydir, axes, tmp_path):
             assert_allclose(result._cdelt[1], geom._cdelt[1])
             assert_allclose(result._crpix[0], geom._crpix[0])
             assert_allclose(result._crpix[1], geom._crpix[1])
+
+
+def test_wcs_geom_roundtrip_offcenter(tmp_path):
+    from astropy.wcs import WCS
+
+    file_path = tmp_path / "test.asdf"
+    w = WCS(naxis=2)
+    w.wcs.ctype = ["RA---CAR", "DEC--CAR"]
+    w.wcs.crval = [83.63, 22.01]
+    w.wcs.cdelt = [-0.02, 0.02]
+    w.wcs.crpix = [30.0, 45.0]
+    w.array_shape = (100, 80)
+    geom = WcsGeom(wcs=w)
+    with asdf.AsdfFile() as af:
+        af["geom"] = geom
+        af.write_to(file_path)
+    with asdf.open(file_path) as af:
+        result = af["geom"]
+        assert result.is_allclose(geom)
+        assert_allclose(result.wcs.wcs.crpix, [30.0, 45.0])
 
 
 def test_wcs_geom_invalid():
