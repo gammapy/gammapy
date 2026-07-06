@@ -86,9 +86,9 @@ def test_integrate_los_branch_zero_impact_positive_radius():
     actual = jfactory._integrate_los_branch(
         0 * u.kpc, radius_min, radius_max, ndecade=100
     )
-    desired = profile.integral(radius_min, radius_max, 0, 100, True)
 
     assert_quantity_allclose(actual, desired)
+
 
 @requires_data()
 def test_dmfluxmap_annihilation(jfact_annihilation):
