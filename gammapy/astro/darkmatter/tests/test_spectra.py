@@ -16,9 +16,8 @@ from gammapy.astro.darkmatter.spectra import _PrimaryFluxValidator
 from gammapy.modeling.models import Models, SkyModel, SpectralModel
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
-# ---------------------------------------------------------------------------
+
 # ContinuumPrimaryFlux
-# ---------------------------------------------------------------------------
 
 
 @requires_data()
@@ -105,8 +104,7 @@ def test_primary_flux_cosmixs():
 def test_resolve_table_path_unknown_source(monkeypatch):
     flux = ContinuumPrimaryFlux(mDM=1 * u.TeV, channel="b", source="pppc4")
     flux._source = "unknown_predefined"
-    flux._source_type = "predefined"
-    with pytest.raises(ValueError, match="Unknown source"):
+    with pytest.raises(FileNotFoundError, match="File not found"):
         flux._resolve_table_path()
 
 
@@ -125,16 +123,8 @@ def test_custom_source_file_empty(tmp_path):
     empty_file = tmp_path / "empty_spectra.dat"
     empty_file.touch()
 
-    with pytest.raises(ValueError, match="Source file is empty"):
+    with pytest.raises(KeyError, match="Source file is empty"):
         ContinuumPrimaryFlux(mDM=5 * u.TeV, channel="b", source=str(empty_file))
-
-
-def test_custom_source_file_bad_extension(tmp_path):
-    bad_file = tmp_path / "spectra.dl2"
-    bad_file.write_text("mDM Log[10,x] b\n1000 -3 1e-5\n")
-
-    with pytest.raises(KeyError, match="Source file extension"):
-        ContinuumPrimaryFlux(mDM=5 * u.TeV, channel="b", source=str(bad_file))
 
 
 def test_custom_source_invalid_path():
@@ -145,23 +135,8 @@ def test_custom_source_invalid_path():
 
 
 def test_source_non_string_raises_typeerror():
-    with pytest.raises(TypeError, match="source must be a string"):
+    with pytest.raises(TypeError, match="source must be"):
         ContinuumPrimaryFlux(mDM=1 * u.TeV, channel="b", source=123)
-
-
-@requires_data()
-def test_continuum_source_none_branch():
-    with pytest.warns(UserWarning, match="PPPC4 will be used by default"):
-        flux = ContinuumPrimaryFlux(mDM=1 * u.TeV, channel="b", source=None)
-    assert flux.source == "pppc4"
-    assert flux._source_type == "predefined"
-
-
-@requires_data()
-def test_source_none_warns_and_defaults_to_pppc4():
-    with pytest.warns(UserWarning, match="PPPC4 will be used by default"):
-        flux = ContinuumPrimaryFlux(mDM=1 * u.TeV, channel="b", source=None)
-    assert flux.source == "pppc4"
 
 
 def test_dm_spectral_model_custom_io(tmp_path):
@@ -230,7 +205,7 @@ def test_dm_annihilation_custom_errors(tmp_path):
         )
 
     wrong_mapping = {"mDM": "mDM", "Log[10,x]": "Log[10,x]", "wrong_col": "tau"}
-    with pytest.raises(ValueError, match="is not present in the provided mapping_dict"):
+    with pytest.raises(ValueError, match="is not available"):
         ContinuumPrimaryFlux(
             mDM=mass, channel="b", source=str(file_path), mapping_dict=wrong_mapping
         )
@@ -251,7 +226,7 @@ def test_custom_source_file_without_mapping_and_missing_channel(tmp_path):
     flux = ContinuumPrimaryFlux(mDM=500 * u.GeV, channel="b", source=str(custom_file))
     assert flux.channel == "b"
 
-    with pytest.raises(ValueError, match="is not present in the provided source file"):
+    with pytest.raises(ValueError, match="is not available"):
         ContinuumPrimaryFlux(mDM=500 * u.GeV, channel="eL", source=str(custom_file))
 
 
@@ -263,8 +238,8 @@ def test_missing_data_file(monkeypatch):
 
 @requires_data()
 def test_mDM_out_of_bounds():
-    with pytest.raises(ValueError, match="is out of bounds"):
-        ContinuumPrimaryFlux(mDM=1 * u.eV, channel="b")
+    with pytest.raises(ValueError, match="is out of the bounds"):
+        ContinuumPrimaryFlux(mDM=500 * u.TeV, channel="b")
 
 
 def test_custom_source_no_mapping_dict(tmp_path):
@@ -279,9 +254,7 @@ def test_custom_source_no_mapping_dict(tmp_path):
     assert flux.mapping_dict is None
 
 
-# ---------------------------------------------------------------------------
 # _AstrophysicalFactorValidator / _RedshiftValidator
-# ---------------------------------------------------------------------------
 
 
 def test_factor_must_be_positive():
@@ -301,9 +274,9 @@ def test_redshift_must_be_scalar():
         DarkMatterAnnihilationSpectralModel(mDM=1 * u.TeV, channel="b", z="bad")
 
 
-# ---------------------------------------------------------------------------
 # _PrimaryFluxValidator (mismatch warnings / type checks)
-# ---------------------------------------------------------------------------
+
+
 @requires_data()
 def test_primary_flux_setter_skips_channel_check_for_non_continuum():
     from unittest.mock import patch
@@ -383,9 +356,7 @@ def warnings_should_not_warn(category):
     return _cm()
 
 
-# ---------------------------------------------------------------------------
 # k parameter (DarkMatterAnnihilationSpectralModel)
-# ---------------------------------------------------------------------------
 
 
 def test_invalid_k_value():
@@ -402,9 +373,7 @@ def test_k_value_roundtrip(k):
     assert new_model.k == k
 
 
-# ---------------------------------------------------------------------------
 # Full spectral models (annihilation / decay) with default ContinuumPrimaryFlux
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -450,9 +419,7 @@ def test_dm_spectral_model(
     flux = model.integral(energy_min=energy_min, energy_max=energy_max).to("cm-2 s-1")
 
     if model_class is DarkMatterDecaySpectralModel:
-        dnde = model.evaluate(
-            energy=1 * u.TeV, scale=1, lifetime=model.lifetime.quantity
-        ).to("cm-2 s-1 TeV-1")
+        dnde = model.evaluate(energy=1 * u.TeV, scale=1).to("cm-2 s-1 TeV-1")
     else:
         dnde = model.evaluate(energy=1 * u.TeV, scale=1).to("cm-2 s-1 TeV-1")
 
@@ -485,22 +452,6 @@ def test_dm_annihilation_to_dict_structure():
     new_model = DarkMatterAnnihilationSpectralModel.from_dict(data)
     assert new_model.channel == model.channel
     assert new_model.k == model.k
-
-
-@requires_data()
-def test_dm_decay_default_lifetime():
-    model = DarkMatterDecaySpectralModel(mDM=1 * u.TeV, channel="b")
-    assert_quantity_allclose(model.lifetime.quantity, 4.3e17 * u.s)
-
-
-@requires_data()
-def test_dm_decay_to_from_dict_roundtrip_lifetime():
-    model = DarkMatterDecaySpectralModel(
-        mDM=1 * u.TeV, channel="b", lifetime=1e20 * u.s
-    )
-    data = model.to_dict()
-    new_model = DarkMatterDecaySpectralModel.from_dict(data)
-    assert_quantity_allclose(new_model.lifetime.quantity, model.lifetime.quantity)
 
 
 @requires_data()

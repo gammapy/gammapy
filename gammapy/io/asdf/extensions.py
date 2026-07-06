@@ -8,14 +8,18 @@ from asdf.extension import ManifestExtension
 
 from .converters.maps.axes import (
     LabelMapAxisConverter,
+    MapAxesConverter,
     MapAxisConverter,
     TimeMapAxisConverter,
 )
+from .converters.maps.geom import WcsGeomConverter
 
 GAMMAPY_CONVERTERS = [
     MapAxisConverter(),
+    MapAxesConverter(),
     TimeMapAxisConverter(),
     LabelMapAxisConverter(),
+    WcsGeomConverter(),
 ]
 
 GAMMAPY_EXTENSIONS = [

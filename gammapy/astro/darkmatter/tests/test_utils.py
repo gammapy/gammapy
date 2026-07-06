@@ -1,6 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import astropy.units as u
 import pytest
+import numpy as np
+import astropy.units as u
+import html
+from unittest.mock import patch
 
 from gammapy.astro.darkmatter import (
     DarkMatterAnnihilationSpectralModel,
@@ -38,6 +41,42 @@ def jfact_decay(geom):
     return jfactory.compute_jfactor()
 
 
+def test_compute_differential_jfactor_large_separation():
+    geom = WcsGeom.create(skydir=(0, 0), width=(120, 2), binsz=1, frame="galactic")
+    assert geom.separation(geom.center_skydir).deg.max() > 45
+
+    jfactory = JFactory(
+        geom=geom,
+        profile=profiles.NFWProfile(),
+        distance=profiles.DMProfile.DISTANCE_GC,
+    )
+
+    jfactor = jfactory.compute_differential_jfactor(ndecade=100)
+
+    assert jfactor.shape == geom.data_shape
+    assert np.all(np.isfinite(jfactor.value))
+
+
+def test_integrate_los_branch_zero_impact_positive_radius():
+    geom = WcsGeom.create(binsz=1, npix=2)
+    profile = profiles.NFWProfile()
+    jfactory = JFactory(
+        geom=geom,
+        profile=profile,
+        distance=profiles.DMProfile.DISTANCE_GC,
+    )
+
+    radius_min = 1 * u.kpc
+    radius_max = 4 * u.kpc
+
+    actual = jfactory._integrate_los_branch(
+        0 * u.kpc, radius_min, radius_max, ndecade=100
+    )
+    desired = profile.integral(radius_min, radius_max, 0, 100, True)
+
+    assert_quantity_allclose(actual, desired)
+
+
 @requires_data()
 def test_dmfluxmap_annihilation(jfact_annihilation):
     energy_min = 0.1 * u.TeV
@@ -69,3 +108,18 @@ def test_dmfluxmap_decay(jfact_decay):
     actual = int_flux[5, 5]
     desired = 1.6796e-3 / u.cm**2 / u.s
     assert_quantity_allclose(actual, desired, rtol=1e-3)
+
+
+def test_jfactory_repr_html_fallback(geom):
+    """Test that _repr_html_ falls back to <pre> block when to_html is missing."""
+    jfactory = JFactory(
+        geom=geom,
+        profile=profiles.NFWProfile(),
+        distance=profiles.DMProfile.DISTANCE_GC,
+    )
+    with patch.object(jfactory, "to_html", side_effect=AttributeError, create=True):
+        repr_str = jfactory._repr_html_()
+    assert repr_str.startswith("<pre>")
+    assert repr_str.endswith("</pre>")
+    expected_string = html.escape(str(jfactory))
+    assert expected_string in repr_str
