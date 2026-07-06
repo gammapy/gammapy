@@ -1,7 +1,7 @@
 %YAML 1.1
 ---
 $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-id : "asdf://gammapy.org/gammapy/schemas/maps/wcsgeom-1.0.0"
+id: "asdf://gammapy.org/gammapy/schemas/maps/wcsgeom-1.0.0"
 
 title: |
   Represents WcsGeom.
@@ -39,6 +39,6 @@ properties:
     description: |
       Axes for non-spatial dimensions.
 
-required: [wcs]
+required: [wcs, npix, cdelt, crpix]
 additionalProperties: false
 ...
