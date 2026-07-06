@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 import astropy.units as u
 from gammapy.astro.darkmatter import (
     DarkMatterAnnihilationSpectralModel,
@@ -35,6 +36,42 @@ def jfact_decay(geom):
         annihilation=False,
     )
     return jfactory.compute_jfactor()
+
+
+def test_compute_differential_jfactor_large_separation():
+    geom = WcsGeom.create(skydir=(0, 0), width=(120, 2), binsz=1, frame="galactic")
+    assert geom.separation(geom.center_skydir).deg.max() > 45
+
+    jfactory = JFactory(
+        geom=geom,
+        profile=profiles.NFWProfile(),
+        distance=profiles.DMProfile.DISTANCE_GC,
+    )
+
+    jfactor = jfactory.compute_differential_jfactor(ndecade=100)
+
+    assert jfactor.shape == geom.data_shape
+    assert np.all(np.isfinite(jfactor.value))
+
+
+def test_integrate_los_branch_zero_impact_positive_radius():
+    geom = WcsGeom.create(binsz=1, npix=2)
+    profile = profiles.NFWProfile()
+    jfactory = JFactory(
+        geom=geom,
+        profile=profile,
+        distance=profiles.DMProfile.DISTANCE_GC,
+    )
+
+    radius_min = 1 * u.kpc
+    radius_max = 4 * u.kpc
+
+    actual = jfactory._integrate_los_branch(
+        0 * u.kpc, radius_min, radius_max, ndecade=100
+    )
+    desired = profile.integral(radius_min, radius_max, 0, 100, True)
+
+    assert_quantity_allclose(actual, desired)
 
 
 @requires_data()
