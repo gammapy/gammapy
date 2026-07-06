@@ -1,6 +1,6 @@
 name: Check changelog fragments
 
-on:
+on: 
   pull_request:
     types: [opened, reopened, labeled, unlabeled, synchronize]
 

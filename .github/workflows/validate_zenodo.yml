@@ -8,6 +8,6 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Validate Zenodo Metadata
-        uses: vsoch/zenodo-validator@main
+        uses: vsoch/zenodo-validator@main 
         with:
           path: '.zenodo.json'
