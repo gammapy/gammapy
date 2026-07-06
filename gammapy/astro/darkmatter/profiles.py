@@ -91,9 +91,7 @@ class DMProfile(abc.ABC):
         """
 
         if distance is None:
-            raise TypeError(
-                "integrate_spectrum_separation() missing required argument: 'distance'"
-            )
+            raise TypeError("integral() missing required argument: 'distance'")
 
         integral = self.integrate_spectrum_separation(
             self._eval_substitution, rmin, rmax, separation, ndecade, squared, distance

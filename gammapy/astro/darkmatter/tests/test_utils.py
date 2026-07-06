@@ -60,7 +60,8 @@ def test_compute_differential_jfactor_large_separation():
     jfactory = JFactory(
         geom=geom,
         profile=profiles.NFWProfile(),
-        distance=profiles.DMProfile.DISTANCE_GC,
+        distance=DISTANCE_GC,
+        rmax=RMAX_GC,
     )
 
     jfactor = jfactory.compute_differential_jfactor(ndecade=100)
@@ -75,7 +76,8 @@ def test_integrate_los_branch_zero_impact_positive_radius():
     jfactory = JFactory(
         geom=geom,
         profile=profile,
-        distance=profiles.DMProfile.DISTANCE_GC,
+        distance=DISTANCE_GC,
+        rmax=RMAX_GC,
     )
 
     radius_min = 1 * u.kpc
@@ -87,7 +89,6 @@ def test_integrate_los_branch_zero_impact_positive_radius():
     desired = profile.integral(radius_min, radius_max, 0, 100, True)
 
     assert_quantity_allclose(actual, desired)
-
 
 @requires_data()
 def test_dmfluxmap_annihilation(jfact_annihilation):

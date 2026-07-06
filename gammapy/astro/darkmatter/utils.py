@@ -62,7 +62,7 @@ class JFactory:
 
         if impact.value == 0:
             return self.profile.integral(
-                radius_min, radius_max, 0, ndecade, self.annihilation
+                radius_min, radius_max, 0, ndecade, self.annihilation, self.distance
             )
 
         logmin = np.log10(radius_min.value)
@@ -135,7 +135,7 @@ class JFactory:
         impact = u.Quantity(
             value=np.sin(separation) * self.distance, unit=self.distance.unit
         )
-        rmax = self.distance
+        rmax = self.rmax
         val = [
             (
                 2 * self._integrate_los_branch(impact_i, impact_i, rmax, ndecade)
