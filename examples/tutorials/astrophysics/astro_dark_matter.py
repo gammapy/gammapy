@@ -51,29 +51,32 @@ from gammapy.maps import WcsGeom, WcsNDMap
 #
 # The following dark matter profiles are currently implemented. Each model
 # can be scaled to a given density at a certain distance. These parameters
-# are controlled by `~gammapy.astro.darkmatter.profiles.DMProfile.LOCAL_DENSITY` and
-# `~gammapy.astro.darkmatter.profiles.DMProfile.DISTANCE_GC`
+# are controlled by `~gammapy.astro.darkmatter.profiles.DMProfile.LOCAL_DENSITY`
 #
 
-profiles.DMProfile.__subclasses__()
-profiles.DMProfile.DISTANCE_GC = 8.5 * u.kpc
-profiles.DMProfile.LOCAL_DENSITY = 0.39 * u.Unit("GeV / cm3")
+profile_classes = [
+    profiles.NFWProfile,
+    profiles.EinastoProfile,
+    profiles.IsothermalProfile,
+    profiles.BurkertProfile,
+    profiles.MooreProfile,
+]
 
-for profile in profiles.DMProfile.__subclasses__():
-    p = profile()
-    p.scale_to_local_density(distance=profiles.DMProfile.DISTANCE_GC)
+for profile_class in profile_classes:
+    p = profile_class()
+    p.scale_to_local_density(10 * u.kpc)
     radii = np.logspace(-3, 2, 100) * u.kpc
     plt.plot(radii, p(radii), label=p.__class__.__name__)
+
 
 plt.loglog()
 plt.xlabel("Radius [kpc]")
 plt.ylabel(r"Density [GeV cm$^{-3}$]")
-plt.axvline(8.5, linestyle="dashed", color="black", label="local density")
+plt.axvline(8.33, linestyle="dashed", color="black", label="local density")
 plt.legend()
 plt.show()
 
 print("LOCAL_DENSITY:", profiles.DMProfile.LOCAL_DENSITY)
-print("DISTANCE_GC:", profiles.DMProfile.DISTANCE_GC)
 
 
 ######################################################################
@@ -90,14 +93,10 @@ profile = profiles.NFWProfile(r_s=20 * u.kpc)
 ######################################################################
 # Adopt standard values used in H.E.S.S.
 
-profile.scale_to_local_density(distance=profiles.DMProfile.DISTANCE_GC)
-
 position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
 geom = WcsGeom.create(binsz=0.05, skydir=position, width=3.0, frame="galactic")
 
-jfactory = JFactory(
-    geom=geom, profile=profile, distance=profiles.DMProfile.DISTANCE_GC, rmax=4 * u.kpc
-)
+jfactory = JFactory(geom=geom, profile=profile, distance=10 * u.kpc, rmax=4 * u.kpc)
 jfact = jfactory.compute_jfactor()
 
 jfact_map = WcsNDMap(geom=geom, data=jfact.value, unit=jfact.unit)
@@ -148,7 +147,7 @@ total_jfact = u.Quantity(float(total_jfact.value), unit=total_jfact.unit)
 jfactory = JFactory(
     geom=geom,
     profile=profile,
-    distance=profiles.DMProfile.DISTANCE_GC,
+    distance=10 * u.kpc,
     annihilation=False,
     rmax=4 * u.kpc,
 )
