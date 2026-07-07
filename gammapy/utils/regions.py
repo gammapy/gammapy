@@ -416,11 +416,11 @@ def make_concentric_annulus_sky_regions(
     radius_min : `~astropy.units.Quantity`, optional
         Minimum radius. Default is 1e-5 deg.
     nbin : int, optional
-        Number of boxes along the line. Default is 11.
+        Number of annulus regions. Default is 11.
 
     Returns
     -------
-    regions : list of `~regions.RectangleSkyRegion`
+    regions : list of `~regions.CircleAnnulusSkyRegion`
         Regions in which the profiles are made.
     """
     regions = []

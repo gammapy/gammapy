@@ -22,9 +22,9 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=2.0",
-    "scipy>=1.13",
-    "astropy>=6.1.5",  # AnchoredEllipse fix
-    "regions>=0.9.0",
+    "scipy>=1.13,<1.18",
+    "astropy>=6.1.5,<8.0",  # AnchoredEllipse fix
+    "regions>=0.9.0,<0.12",
     "pyyaml>=5.3",
     "click>=8.0",
     "pydantic>=2.8.0",
@@ -57,6 +57,7 @@ bayesian = [
     "xarray",
     "nautilus-sampler",
 ]
+asdf = ["asdf", "asdf-astropy"]
 distributed = [
     "ray[default]>=2.9,<2.55; python_version < '3.14'",
     "ray[default]>=2.55; python_version >= '3.14'",
@@ -69,9 +70,9 @@ extra = [
     "numba",
 ]
 
-all = ["gammapy[extra, bayesian, distributed]"]
+all = ["gammapy[extra, bayesian, distributed, asdf]"]
 
-all_no_ray = ["gammapy[extra, bayesian]"]
+all_no_ray = ["gammapy[extra, bayesian, asdf]"]
 
 cov =  ["gammapy[extra, bayesian]"]
 
@@ -113,6 +114,8 @@ include = ["gammapy*"]
 "gammapy.irf.psf.tests" = ["data/*"]
 "gammapy.modeling.models.tests" = ["data/*"]
 "gammapy.catalog.tests" = ["data/*"]
+"gammapy.io.asdf.resources.schemas" = ["**/*.yaml"]
+"gammapy.io.asdf.resources.manifests" = ["*.yaml"]
 
 
 [tool.pytest.ini_options]
@@ -245,3 +248,12 @@ showcontent = true
 
 [project.scripts]
 gammapy = "gammapy.scripts.main:cli"
+
+# The following are ASDF entry points: register gammapy's converters,
+# schemas and manifests, allow asdf to automatically discover
+# and use gammapy's serialization support.
+[project.entry-points."asdf.extensions"]
+gammapy = "gammapy.io.asdf.integration:get_extensions"
+
+[project.entry-points."asdf.resource_mappings"]
+gammapy = "gammapy.io.asdf.integration:get_resource_mappings"
