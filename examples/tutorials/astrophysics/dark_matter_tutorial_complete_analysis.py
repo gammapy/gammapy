@@ -1,68 +1,123 @@
-#!/usr/bin/env python
-# coding: utf-8
+"""
+Dark Matter indirect search analysis with Gammapy
+=================================================
 
-# # Dark Matter indirect search analysis with Gammapy
+"""
 
-# This tutorial covers a full analysis pipeline for the indirect search of dark matter using Gammapy. We assume basic familiarity with Gammapy's data structures and the Dark Matter module. If you are new to Gammapy, we recommend first working through the introductory and the Dark Matter Basics and Data handling tutorials.
+
+######################################################################
+# This tutorial covers a full analysis pipeline for the indirect search of
+# dark matter using Gammapy. We assume basic familiarity with Gammapy’s
+# data structures and the Dark Matter module. If you are new to Gammapy,
+# we recommend first working through the introductory and the Dark Matter
+# Basics and Data handling tutorials.
 #
-# In this example we simulate observations of the **Draco dwarf spheroidal galaxy** and perform a **3D analysis** — using both spatial and spectral information, as opposed to a 1D (spectral-only) analysis (heck the 'Dark Matter Data Handling with Gammapy' tutorial for further details about these approaches).
+# In this example we simulate observations of the **Draco dwarf spheroidal
+# galaxy** and perform a **3D analysis** — using both spatial and spectral
+# information, as opposed to a 1D (spectral-only) analysis (heck the ‘Dark
+# Matter Data Handling with Gammapy’ tutorial for further details about
+# these approaches).
 #
-# To perform a dark matter analysis, we need to fit the data with a model that includes both the background and the dark matter signal component. Rather than fitting the physical parameters (e.g. the annihilation cross-section $\langle\sigma v\rangle$ or the decay lifetime $\tau$) directly, it is common practice to introduce a **scale parameter**, that rescales the predicted dark matter signal. Depending on the DM model assumed, the constrained quantity is different.
+# To perform a dark matter analysis, we need to fit the data with a model
+# that includes both the background and the dark matter signal component.
+# Rather than fitting the physical parameters (e.g. the annihilation
+# cross-section :math:`\langle\sigma v\rangle` or the decay lifetime
+# :math:`\tau`) directly, it is common practice to introduce a **scale
+# parameter**, that rescales the predicted dark matter signal. Depending
+# on the DM model assumed, the constrained quantity is different.
 #
-# ---
+# --------------
 #
 # **Dark matter annihilation**
 #
 # The expected gamma-ray flux from DM annihilation is:
 #
-# $$\Phi_{\rm ann}(>E_{\rm min}) = \frac{\langle\sigma v\rangle}{8\pi m_\chi^2}
-# \cdot J \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE$$
+# .. math::
 #
-# The physical quantity of interest is the **velocity-averaged annihilation cross section** ⟨σv⟩. A larger ⟨σv⟩ means a brighter signal. A non-detection gives an **upper limit** on ⟨σv⟩: the DM particles annihilate *at most* this efficiently.
+#    \Phi_{\rm ann}(>E_{\rm min}) = \frac{\langle\sigma v\rangle}{8\pi m_\chi^2}
+#    \cdot J \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
 #
-# In Gammapy's `DarkMatterAnnihilationSpectralModel`, ⟨σv⟩ is encoded through a dimensionless **`scale`** parameter:
+# The physical quantity of interest is the **velocity-averaged
+# annihilation cross section** ⟨σv⟩. A larger ⟨σv⟩ means a brighter
+# signal. A non-detection gives an **upper limit** on ⟨σv⟩: the DM
+# particles annihilate *at most* this efficiently.
 #
-# $$\text{scale} = \frac{\langle\sigma v\rangle}{\langle\sigma v\rangle_{\rm ref}}$$
+# In Gammapy’s `DarkMatterAnnihilationSpectralModel`, ⟨σv⟩ is encoded
+# through a dimensionless **`scale`** parameter:
 #
-# where $\langle\sigma v\rangle_{\rm ref} \approx 3\times10^{-26}$ cm³ s⁻¹ is the thermal relic value. An upper limit on `scale` translates directly into an upper limit on ⟨σv⟩:
+# .. math:: \text{scale} = \frac{\langle\sigma v\rangle}{\langle\sigma v\rangle_{\rm ref}}
 #
-# $$\langle\sigma v\rangle < \text{scale}_{\rm UL} \times \langle\sigma v\rangle_{\rm ref}$$
+# where :math:`\langle\sigma v\rangle_{\rm ref} \approx 3\times10^{-26}`
+# cm³ s⁻¹ is the thermal relic value. An upper limit on `scale`
+# translates directly into an upper limit on ⟨σv⟩:
 #
-# ---
+# .. math:: \langle\sigma v\rangle < \text{scale}_{\rm UL} \times \langle\sigma v\rangle_{\rm ref}
+#
+# --------------
 #
 # **Dark matter decay**
 #
 # The expected gamma-ray flux from DM decay is:
 #
-# $$\Phi_{\rm dec}(>E_{\rm min}) = \frac{1}{4\pi \tau_\chi m_\chi}
-# \cdot D \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE$$
-# The physical quantity of interest is the **DM lifetime** τ_χ. Note that it appears in the **denominator**: a *longer* lifetime means a *fainter* signal — the opposite behaviour from the annihilation case. A non-detection gives a **lower limit** on τ_χ: the DM particle must live *at least* this long.
+# .. math::
 #
-# In Gammapy's `DarkMatterDecaySpectralModel`, the lifetime is encoded through the same **`scale`** parameter, but now it multiplies the **decay rate** (inverse lifetime):
+#    \Phi_{\rm dec}(>E_{\rm min}) = \frac{1}{4\pi \tau_\chi m_\chi}
+#    \cdot D \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
 #
-# $$\text{scale} = \frac{1/\tau_\chi}{1/\tau_{\rm ref}} = \frac{\tau_{\rm ref}}{\tau_\chi}$$
+# The physical quantity of interest is the **DM lifetime** τ_χ. Note that
+# it appears in the **denominator**: a *longer* lifetime means a *fainter*
+# signal — the opposite behaviour from the annihilation case. A
+# non-detection gives a **lower limit** on τ_χ: the DM particle must live
+# *at least* this long.
 #
-# where $\tau_{\rm ref}$ is an internal reference value (`LIFETIME_AGE_OF_UNIVERSE` ≈ 4.3 × 10¹⁷ s). Because of the inverse relationship, an **upper** limit on `scale` becomes a **lower** limit on τ_χ:
+# In Gammapy’s `DarkMatterDecaySpectralModel`, the lifetime is encoded
+# through the same **`scale`** parameter, but now it multiplies the
+# **decay rate** (inverse lifetime):
 #
-# $$\tau_\chi > \frac{\tau_{\rm ref}}{\text{scale}_{\rm UL}}$$
+# .. math:: \text{scale} = \frac{1/\tau_\chi}{1/\tau_{\rm ref}} = \frac{\tau_{\rm ref}}{\tau_\chi}
 #
-# This approach decouples the statistical treatment from the specific physical model: once we obtain the best-fit value of the scale and its uncertainty, we can translate it directly into a constraint on $\langle\sigma v\rangle$ or $\tau$ through the linear relation above.
+# where :math:`\tau_{\rm ref}` is an internal reference value
+# (`LIFETIME_AGE_OF_UNIVERSE` ≈ 4.3 × 10¹⁷ s). Because of the inverse
+# relationship, an **upper** limit on `scale` becomes a **lower** limit
+# on τ_χ:
 #
+# .. math:: \tau_\chi > \frac{\tau_{\rm ref}}{\text{scale}_{\rm UL}}
+#
+# This approach decouples the statistical treatment from the specific
+# physical model: once we obtain the best-fit value of the scale and its
+# uncertainty, we can translate it directly into a constraint on
+# :math:`\langle\sigma v\rangle` or :math:`\tau` through the linear
+# relation above.
 #
 # In this way, the steps/sections followed in this tutorial are:
 #
-# 1. **Data.** We obtain and manage the data to be analyzed. In this case, this corresponds to a 3D dataset (spatial + spectral information).
-# 2. **Analysis of signal detection.** We perform a statistical test to determine whether the dataset contains a genuine signal or is compatible with background only, and outline the procedure to follow in each case.
+# 1. **Data.** We obtain and manage the data to be analyzed. In this case,
+#    this corresponds to a 3D dataset (spatial + spectral information).
+# 2. **Analysis of signal detection.** We perform a statistical test to
+#    determine whether the dataset contains a genuine signal or is
+#    compatible with background only, and outline the procedure to follow
+#    in each case.
 # 3. **Obtaining limits.**
-#    - *No signal detected*: we derive upper limits on the dark matter cross-section (or decay lifetime).
-#    - *Signal detected*: we derive confidence intervals on the signal parameters.
-# 4. **Exclusion curve: scanning over masses.** We repeat the limit-setting procedure over a grid of dark matter masses to build the exclusion curve.
-# 5. **Brazilian plot: uncertainty bands on the exclusion curve.** We compute the expected sensitivity and its uncertainty bands (1σ/2σ) around the exclusion curve, following the standard "Brazilian plot" convention.
+#
+#    - *No signal detected*: we derive upper limits on the dark matter
+#      cross-section (or decay lifetime).
+#    - *Signal detected*: we derive confidence intervals on the signal
+#      parameters.
+#
+# 4. **Exclusion curve: scanning over masses.** We repeat the
+#    limit-setting procedure over a grid of dark matter masses to build
+#    the exclusion curve.
+# 5. **Brazilian plot: uncertainty bands on the exclusion curve.** We
+#    compute the expected sensitivity and its uncertainty bands (1σ/2σ)
+#    around the exclusion curve, following the standard “Brazilian plot”
+#    convention.
+#
 
-# ## Setup
 
-# In[ ]:
-
+######################################################################
+# Setup
+# -----
+#
 
 from gammapy.data import Observation, FixedPointingInfo
 from gammapy.datasets import MapDataset
@@ -92,18 +147,37 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-# ## Analysis of a Dark Matter source
-
-# In this section we simulate a dataset containing only background, mimicking the realistic scenario where no dark matter signal is present in the data. First we will do the analysis for one point (mass), obtaining its scale upper limits, and at the end we will make the implementation of a range mass.
-
-# ### 1. Data
-
-# For this tutorial we will simulate observations of 500 hours of the **Draco dwarf spheroidal galaxy** using CTA-North IRFs (prod5 configuration), obtaining the counts with a Monte Carlo approach. Additionally, we are going to consider that the data follows an Einasto profile and we are going to study the case of Decay with channel b.
+######################################################################
+# Analysis of a Dark Matter source
+# --------------------------------
 #
-# **For further detail in this step or if you want to use Real Data please check the tutorial 'Dark Matter Data Handling with Gammapy'.**
 
-# In[72]:
 
+######################################################################
+# In this section we simulate a dataset containing only background,
+# mimicking the realistic scenario where no dark matter signal is present
+# in the data. First we will do the analysis for one point (mass),
+# obtaining its scale upper limits, and at the end we will make the
+# implementation of a range mass.
+#
+
+
+######################################################################
+# 1. Data
+# ~~~~~~~
+#
+
+
+######################################################################
+# For this tutorial we will simulate observations of 500 hours of the
+# **Draco dwarf spheroidal galaxy** using CTA-North IRFs (prod5
+# configuration), obtaining the counts with a Monte Carlo approach.
+# Additionally, we are going to consider that the data follows an Einasto
+# profile and we are going to study the case of Decay with channel b.
+#
+# **For further detail in this step or if you want to use Real Data please
+# check the tutorial ‘Dark Matter Data Handling with Gammapy’.**
+#
 
 # Source coordinates
 draco_pos = SkyCoord(ra=260.05167 * u.deg, dec=57.915 * u.deg, frame="icrs")
@@ -125,10 +199,6 @@ zenith_angle = 90 - altitude
 print(f"Altitude: {altitude:.2f}°")
 print(f"Zenith angle: {zenith_angle:.2f}°")
 
-
-# In[73]:
-
-
 # Set energy bounds
 energy_edges = np.logspace(-1, 2, 15)
 # The reconstructed energy axis, used for the final map and counts (i.e. what the telescope measures).
@@ -148,29 +218,20 @@ geom_draco = WcsGeom.create(
     axes=[energy_reco],
 )
 
-
-# In[74]:
-
-
 # DM Spatial distribution
 spatial_model = PointSpatialModel(lon_0=draco_pos.ra, lat_0=draco_pos.dec, frame="icrs")
 
 
-# > **Note:** Computing these spectra requires the Gammapy datasets to be
-# > downloaded and the `GAMMAPY_DATA` environment variable to be set.
-# > Please follow the instructions at
-# > https://docs.gammapy.org/dev/getting-started/index.html#recommended-setup
-# > before running the cells below.
-
-# In[75]:
-
+######################################################################
+#    **Note:** Computing these spectra requires the Gammapy datasets to be
+#    downloaded and the `GAMMAPY_DATA` environment variable to be set.
+#    Please follow the instructions at
+#    https://docs.gammapy.org/dev/getting-started/index.html#recommended-setup
+#    before running the cells below.
+#
 
 # import os
 # os.environ["GAMMAPY_DATA"] = "PATH/gammapy-data"
-
-
-# In[76]:
-
 
 # DM spectral distribution
 
@@ -210,25 +271,13 @@ spectral_model = DarkMatterDecaySpectralModel(
     scale=0,  # Example so we do NOT get a signal
 )
 
-
-# In[77]:
-
-
 # Combined model
 model_simu = SkyModel(
     spatial_model=spatial_model, spectral_model=spectral_model, name="draco-dm"
 )
 
-
-# In[78]:
-
-
 # Background model
 bkg_model = FoVBackgroundModel(dataset_name="dataset-simu-draco")
-
-
-# In[79]:
-
 
 # Load IRFs
 irf_path = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
@@ -242,10 +291,6 @@ obs = Observation.create(
     irfs=irfs,
     reference_time=obs_time,
 )
-
-
-# In[80]:
-
 
 # Dataset creation
 # Create an empty MapDataset
@@ -266,10 +311,6 @@ dataset = maker_safe_mask.run(dataset, obs)
 # Attach the DM model and a Field-of-View background model
 dataset.models = Models([model_simu, bkg_model])
 
-
-# In[81]:
-
-
 # Counts simulation
 aux_dataset = dataset
 dataset_mc = aux_dataset
@@ -284,43 +325,72 @@ print(f"Predicted counts : {dataset_mc.npred().data.sum():.2f}")
 print(f"Simulated counts : {dataset_mc.counts.data.sum()}")
 
 
-# ### 2. Analysis of signal detection
-# To verify that our simulated dataset contains no dark matter signal, we perform a **likelihood ratio test** between two hypotheses:
+######################################################################
+# 2. Analysis of signal detection
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# - **H₀ (background-only):** the dataset is described by the background model alone
-# - **H₁ (signal + background):** a dark matter spectral component is included
+# To verify that our simulated dataset contains no dark matter signal, we
+# perform a **likelihood ratio test** between two hypotheses:
 #
-# We fit both models to the dataset and compute the Test Statistic - the fitting technical details will be explained in the next sections:
+# - **H₀ (background-only):** the dataset is described by the background
+#   model alone
+# - **H₁ (signal + background):** a dark matter spectral component is
+#   included
 #
-# $$\text{TS} = -2\ln\frac{\mathcal{L}(\text{H}_0)}{\mathcal{L}(\text{H}_1)} = \text{stat}_{H_0} - \text{stat}_{H_1}$$
+# We fit both models to the dataset and compute the Test Statistic - the
+# fitting technical details will be explained in the next sections:
 #
-# As a rule of thumb, $\sqrt{\text{TS}}$ approximates the detection significance in Gaussian sigmas — a value of TS = 25 corresponds to a $5\sigma$ detection. The brighter the injected signal, the larger the TS. Under the background-only hypothesis, we expect **TS ≈ 0**, meaning the fitter finds no evidence for a dark matter signal in the data.
+# .. math:: \text{TS} = -2\ln\frac{\mathcal{L}(\text{H}_0)}{\mathcal{L}(\text{H}_1)} = \text{stat}_{H_0} - \text{stat}_{H_1}
 #
-# Gammapy's `Fit` class provides a unified interface to several optimization backends; by default it uses [iminuit](https://iminuit.readthedocs.io/), a Python wrapper around the MINUIT2 C++ library originally developed at CERN, the de facto standard optimizer in high-energy and astroparticle physics. MINUIT performs a maximum-likelihood fit and additionally provides robust parameter errors and covariance estimates via the Hesse and Minos algorithms.
+# As a rule of thumb, :math:`\sqrt{\text{TS}}` approximates the detection
+# significance in Gaussian sigmas — a value of TS = 25 corresponds to a
+# :math:`5\sigma` detection. The brighter the injected signal, the larger
+# the TS. Under the background-only hypothesis, we expect **TS ≈ 0**,
+# meaning the fitter finds no evidence for a dark matter signal in the
+# data.
 #
-# During the fit, the optimizer adjusts all **free** parameters of the model — the background normalization parameters (or `scale` (related to ⟨σv⟩ or 1/τ_χ, depending on whether we are studying annihilation or decay) if you are making a signal study) — to maximize the Poisson likelihood between the observed (or simulated) counts and the model prediction. All other parameters remain fixed at their assumed values.
+# Gammapy’s `Fit` class provides a unified interface to several
+# optimization backends; by default it uses
+# `iminuit <https://iminuit.readthedocs.io/>`__, a Python wrapper around
+# the MINUIT2 C++ library originally developed at CERN, the de facto
+# standard optimizer in high-energy and astroparticle physics. MINUIT
+# performs a maximum-likelihood fit and additionally provides robust
+# parameter errors and covariance estimates via the Hesse and Minos
+# algorithms.
 #
-# Not all model parameters are varied during the fit: each parameter can be set as **free** or **frozen**, and free parameters can further be given **bounds** (min/max values) to keep the fit within a physically meaningful range. Typically, the background normalization is left free to absorb residual mismatches between the assumed and true background level, while the spectral shape parameters (e.g. the DM mass or the spectral channel) are kept fixed to the values under study, leaving only the **`scale`** parameter (related to ⟨σv⟩ or 1/τ_χ, depending on whether we are studying annihilation or decay) free to vary. During the fit, the optimizer adjusts all free parameters of the model to maximize the Poisson likelihood between the observed (or simulated) counts and the model prediction, while all fixed parameters remain at their assumed values.
+# During the fit, the optimizer adjusts all **free** parameters of the
+# model — the background normalization parameters (or `scale` (related
+# to ⟨σv⟩ or 1/τ_χ, depending on whether we are studying annihilation or
+# decay) if you are making a signal study) — to maximize the Poisson
+# likelihood between the observed (or simulated) counts and the model
+# prediction. All other parameters remain fixed at their assumed values.
 #
-
-# In[ ]:
-
+# Not all model parameters are varied during the fit: each parameter can
+# be set as **free** or **frozen**, and free parameters can further be
+# given **bounds** (min/max values) to keep the fit within a physically
+# meaningful range. Typically, the background normalization is left free
+# to absorb residual mismatches between the assumed and true background
+# level, while the spectral shape parameters (e.g. the DM mass or the
+# spectral channel) are kept fixed to the values under study, leaving only
+# the **`scale`** parameter (related to ⟨σv⟩ or 1/τ_χ, depending on
+# whether we are studying annihilation or decay) free to vary. During the
+# fit, the optimizer adjusts all free parameters of the model to maximize
+# the Poisson likelihood between the observed (or simulated) counts and
+# the model prediction, while all fixed parameters remain at their assumed
+# values.
+#
 
 # First check the parameters of the model
 print(dataset_mc.models.parameters.to_table())
 
 
-# We see that the coordinates are free parameters, we should freeze them so we make sure we study the target we want.
-
-# In[83]:
-
+######################################################################
+# We see that the coordinates are free parameters, we should freeze them
+# so we make sure we study the target we want.
+#
 
 dataset_mc.models["draco-dm"].parameters["lon_0"].frozen = True
 dataset_mc.models["draco-dm"].parameters["lat_0"].frozen = True
-
-
-# In[84]:
-
 
 # Fit with background only (no DM signal)
 # Freeze the DM model parameters and free the background model parameters
@@ -346,10 +416,11 @@ else:
 # result_nosrc = fit.run(datasets=[dataset_mc])
 
 
-# If fit does not converge, you can try to adjust the initial parameters setting a starting value, minimum or maximum, but make sure it converges before getting to the next step. Here we leave an example.
-
-# In[85]:
-
+######################################################################
+# If fit does not converge, you can try to adjust the initial parameters
+# setting a starting value, minimum or maximum, but make sure it converges
+# before getting to the next step. Here we leave an example.
+#
 
 # Example of how to set the background normalization parameter for a specific dataset. This is useful when you want to adjust the background model's normalization before fitting or analyzing the data.
 dataset_mc.models["dataset-simu-draco-bkg"].parameters[
@@ -369,10 +440,9 @@ else:
     print(f"         stat_H0 = {stat_H0:.4f}")
 
 
+######################################################################
 # Once it has converged, we can proceed with the H1 fit.
-
-# In[86]:
-
+#
 
 # Full fit — all parameters free
 dataset_mc.models["dataset-simu-draco-bkg"].parameters["norm"].frozen = False
@@ -397,21 +467,28 @@ else:
 # result_src = fit.run(datasets=[dataset_mc])
 
 
-# finally, when both fits are successful, we can proceed with he calculation of the TS.
-
-# In[87]:
-
+######################################################################
+# finally, when both fits are successful, we can proceed with he
+# calculation of the TS.
+#
 
 TS = stat_H0 - stat_H1
 print(f"TS = {TS:.2f}")  # Expected ~ 0 for background-only dataset
 
 
-# As aforementioned, the TS value is expected to be around 0 for a background-only dataset, indicating that the addition of the DM signal does not significantly improve the fit. This is consistent with our simulation where we set the scale of the DM signal to 0, effectively simulating a scenario with no dark matter contribution.
+######################################################################
+# As aforementioned, the TS value is expected to be around 0 for a
+# background-only dataset, indicating that the addition of the DM signal
+# does not significantly improve the fit. This is consistent with our
+# simulation where we set the scale of the DM signal to 0, effectively
+# simulating a scenario with no dark matter contribution.
+#
 
-# Additionally, we can make a visual check of our data to verify this result.
 
-# In[88]:
-
+######################################################################
+# Additionally, we can make a visual check of our data to verify this
+# result.
+#
 
 fig_peek, axs = plt.subplots(2, 2, figsize=(7, 7))
 
@@ -465,10 +542,6 @@ fig_peek.subplots_adjust(wspace=0.45, hspace=0.2)
 
 plt.plot()
 
-
-# In[89]:
-
-
 # Let's check the spectrum and the different contributions
 spec, axs = plt.subplots(1, 1, figsize=(6, 4))
 dataset_mc.counts.get_spectrum().plot(label="Total counts")
@@ -478,29 +551,34 @@ axs.set_ylabel("Counts", fontsize=12)
 axs.legend()
 plt.plot()
 
-
-# In[90]:
-
-
 dataset_mc.peek()
 
 
-# #### Residuals
+######################################################################
+# Residuals
+# ^^^^^^^^^
 #
-# After fitting the model, it is important to check the residuals to assess how well the model (source + background) describes the data. The residuals are computed as the difference between the observed counts and the predicted counts (`npred`), optionally normalized by the Poisson uncertainty:
+# After fitting the model, it is important to check the residuals to
+# assess how well the model (source + background) describes the data. The
+# residuals are computed as the difference between the observed counts and
+# the predicted counts (`npred`), optionally normalized by the Poisson
+# uncertainty:
 #
 # - `diff`: simple residual, `counts - npred`
-# - `diff/sqrt(model)`: significance-like residual, `(counts - npred) / sqrt(npred)`
+# - `diff/sqrt(model)`: significance-like residual,
+#   `(counts - npred) / sqrt(npred)`
 # - `diff/model`: fractional residual, `(counts - npred) / npred`
 #
-# The **spatial residuals map** shows whether there is any remaining structure in the field of view not captured by the model (e.g. an unmodeled source or background mismatch). The **spectral residuals** show whether the model reproduces the energy
-# distribution of the counts correctly, or if there are systematic deviations in specific energy bins.
+# The **spatial residuals map** shows whether there is any remaining
+# structure in the field of view not captured by the model (e.g. an
+# unmodeled source or background mismatch). The **spectral residuals**
+# show whether the model reproduces the energy distribution of the counts
+# correctly, or if there are systematic deviations in specific energy
+# bins.
 #
-# A well-fitted model should show residuals fluctuating around zero, without significant structure or trends, both spatially and in energy.
+# A well-fitted model should show residuals fluctuating around zero,
+# without significant structure or trends, both spatially and in energy.
 #
-
-# In[91]:
-
 
 # Spatial residuals map
 dataset_mc.plot_residuals_spatial(
@@ -513,56 +591,95 @@ dataset_mc.plot_residuals_spatial(
     add_cbar=True,
 )
 
-
-# In[92]:
-
-
 # Spectral residuals (residual counts vs energy)
 dataset_mc.plot_residuals_spectral(
     method="diff/sqrt(model)",
 )
 
 
-# ### 3. Obtaining limits
+######################################################################
+# 3. Obtaining limits
+# ~~~~~~~~~~~~~~~~~~~
 #
-# #### The Profile Likelihood
+# The Profile Likelihood
+# ^^^^^^^^^^^^^^^^^^^^^^
 #
-# We use the **profile likelihood** to derive both upper limits and confidence intervals. The idea is simple: we scan `scale` over a grid of values and ask how much the likelihood degrades at each point, relative to its best-fit value:
+# We use the **profile likelihood** to derive both upper limits and
+# confidence intervals. The idea is simple: we scan `scale` over a grid
+# of values and ask how much the likelihood degrades at each point,
+# relative to its best-fit value:
 #
-# $$\Delta \text{TS}(\text{scale}) = \text{stat}(\text{scale}) - \text{stat}(\hat{\text{scale}})$$
+# .. math:: \Delta \text{TS}(\text{scale}) = \text{stat}(\text{scale}) - \text{stat}(\hat{\text{scale}})
 #
-# where $\hat{\text{scale}}$ is the best-fit value. By construction, $\Delta\text{TS} = 0$ at $\text{scale} = \hat{\text{scale}}$, and it increases as `scale` moves away from the best fit in either direction.
+# where :math:`\hat{\text{scale}}` is the best-fit value. By construction,
+# :math:`\Delta\text{TS} = 0` at
+# :math:`\text{scale} = \hat{\text{scale}}`, and it increases as `scale`
+# moves away from the best fit in either direction.
 #
-# By Wilks' theorem, $\Delta\text{TS}$ asymptotically follows a $\chi^2$ distribution, and the critical value used to define a confidence region depends on **how many sides** of the distribution we constrain — this is where the two scenarios from the previous section come in:
+# By Wilks’ theorem, :math:`\Delta\text{TS}` asymptotically follows a
+# :math:`\chi^2` distribution, and the critical value used to define a
+# confidence region depends on **how many sides** of the distribution we
+# constrain — this is where the two scenarios from the previous section
+# come in:
 #
-# - **No signal detected → one-sided upper limit.** Since a non-detection only constrains `scale` from above (there is no physical lower bound below `scale = 0`), we use a **one-sided** test. The 95% CL upper limit corresponds to the value of `scale` where:
+# - **No signal detected → one-sided upper limit.** Since a non-detection
+#   only constrains `scale` from above (there is no physical lower bound
+#   below `scale = 0`), we use a **one-sided** test. The 95% CL upper
+#   limit corresponds to the value of `scale` where:
 #
-#   $$\boxed{\Delta \text{TS} = 2.71}$$
+#   .. math:: \boxed{\Delta \text{TS} = 2.71}
 #
-#   (equivalent to a one-tailed Gaussian significance of $1.645\sigma$).
+#   (equivalent to a one-tailed Gaussian significance of
+#   :math:`1.645\sigma`).
 #
-# - **Signal detected → two-sided confidence interval.** Since we now have a non-zero best-fit value, we bracket it symmetrically from both sides, using a **two-sided** test. The 95% CL interval is defined by the two values of `scale` (one below $\hat{\text{scale}}$, one above) where:
+# - **Signal detected → two-sided confidence interval.** Since we now have
+#   a non-zero best-fit value, we bracket it symmetrically from both
+#   sides, using a **two-sided** test. The 95% CL interval is defined by
+#   the two values of `scale` (one below :math:`\hat{\text{scale}}`, one
+#   above) where:
 #
-#   $$\boxed{\Delta \text{TS} = 3.84}$$
+#   .. math:: \boxed{\Delta \text{TS} = 3.84}
 #
-#   (equivalent to a two-tailed Gaussian significance of $1.96\sigma$).
+#   (equivalent to a two-tailed Gaussian significance of
+#   :math:`1.96\sigma`).
 #
-# In both cases, the procedure is the same — scan `scale`, compute $\Delta\text{TS}$, and find where it crosses the relevant threshold — only the threshold value and whether we search one or both directions changes, depending on the outcome of the signal-detection test.
+# In both cases, the procedure is the same — scan `scale`, compute
+# :math:`\Delta\text{TS}`, and find where it crosses the relevant
+# threshold — only the threshold value and whether we search one or both
+# directions changes, depending on the outcome of the signal-detection
+# test.
 #
-# The decision of which quantity to report is not a stylistic choice: reporting a one-sided upper limit when TS indicates a clear detection would hide the fact that a signal was found, while reporting a two-sided interval when TS ≈ 0 would misleadingly suggest a measurement where there is only background fluctuation (see e.g. Feldman & Cousins 1998; Rolke et al. 2005). A simple decision rule based on the value of TS is typically used to choose between the two regimes automatically.
+# The decision of which quantity to report is not a stylistic choice:
+# reporting a one-sided upper limit when TS indicates a clear detection
+# would hide the fact that a signal was found, while reporting a two-sided
+# interval when TS ≈ 0 would misleadingly suggest a measurement where
+# there is only background fluctuation (see e.g. Feldman & Cousins 1998;
+# Rolke et al. 2005). A simple decision rule based on the value of TS is
+# typically used to choose between the two regimes automatically.
 #
-# While the 95% confidence level is the standard choice in indirect dark matter searches (and the convention we adopt throughout this tutorial), the same profile likelihood procedure can be used to derive limits or intervals at any other confidence level, simply by using the corresponding $\Delta\text{TS}$ threshold (e.g. $\Delta\text{TS} = 1$ for 68% CL, one-sided).
+# While the 95% confidence level is the standard choice in indirect dark
+# matter searches (and the convention we adopt throughout this tutorial),
+# the same profile likelihood procedure can be used to derive limits or
+# intervals at any other confidence level, simply by using the
+# corresponding :math:`\Delta\text{TS}` threshold
+# (e.g. :math:`\Delta\text{TS} = 1` for 68% CL, one-sided).
 #
+# In Gammapy, the profile likelihood is computed with the
+# `Fit.stat_profile()` method: given a dataset with the model already
+# fitted, `stat_profile` fixes its internal `scale` parameter (not our
+# goal parameter, they are called the same but they differ) to each value
+# in a user-defined grid, re-optimizes all other free parameters at each
+# point, and returns the corresponding `stat` (and hence
+# :math:`\Delta\text{TS}`) values, from which the desired confidence limit
+# or interval can be read off.
 #
-# In Gammapy, the profile likelihood is computed with the `Fit.stat_profile()` method: given a dataset with the model already fitted, `stat_profile` fixes its internal `scale` parameter (not our goal parameter, they are called the same but they differ) to each value in a user-defined grid, re-optimizes all other free parameters at each point, and returns the corresponding `stat` (and hence $\Delta\text{TS}$) values, from which the desired confidence limit or interval can be read off.
+# 3.1. No signal detected
+# ^^^^^^^^^^^^^^^^^^^^^^^
 #
-# #### 3.1. No signal detected
+# We did not detect a signal, but we can still place a **constraint** on
+# the DM parameter of interest — we can exclude signal amplitudes large
+# enough to be inconsistent with what we observed.
 #
-# We did not detect a signal, but we can still place a **constraint** on the DM parameter of interest — we can exclude signal amplitudes large enough to be inconsistent with what we observed.
-#
-
-# In[93]:
-
 
 # Reset scale to a clean starting point
 spectral_model.scale.value = 1e-6
@@ -595,10 +712,6 @@ profile = fit.stat_profile(
 
 print("Profile scan completed ✓")
 
-
-# In[94]:
-
-
 # Extract arrays──
 scale_scan = profile["draco-dm.spectral.scale_scan"]
 delta_ts = profile["stat_scan"] - profile["stat_scan"].min()
@@ -608,10 +721,12 @@ print(f"Minimum ΔTS: {delta_ts.min():.4f}  (should be ≈ 0)")
 print(f"Maximum ΔTS: {delta_ts.max():.2f}   (must be > 2.71 to find UL)")
 
 
-# We see that the maximum ΔTS is bigger than 2.71, so we can compute the upper limit of the scale and convert it into a physical value for our study case. If this wasn't the case, we must reconsiderer the configuration for the scan (i.e. scan_max...) and run again.
-
-# In[95]:
-
+######################################################################
+# We see that the maximum ΔTS is bigger than 2.71, so we can compute the
+# upper limit of the scale and convert it into a physical value for our
+# study case. If this wasn’t the case, we must reconsiderer the
+# configuration for the scan (i.e. scan_max…) and run again.
+#
 
 # Find scale_ul: crossing at ΔTS = 2.71 on the right branch ────────────────
 # We interpolate only on the right side of the minimum (upper limit side)
@@ -636,10 +751,10 @@ print(f"  scale UL (95% CL):          {scale_ul:.3e}")
 print(f"  Lifetime lower limit (95% CL): {tau_lower_limit:.3e} s")
 
 
-# Here we can see that we have our limit con the decya lifetime computed and translated into physical units. Now we plot the profile likelihood.
-
-# In[96]:
-
+######################################################################
+# Here we can see that we have our limit con the decya lifetime computed
+# and translated into physical units. Now we plot the profile likelihood.
+#
 
 fig, ax = plt.subplots(figsize=(7, 5))
 
@@ -680,20 +795,44 @@ plt.tight_layout()
 plt.show()
 
 
-# The minimum sits at `scale ≈ 0`, as expected for a background-only dataset: the data show no preference for a nonzero DM signal. The curve rises monotonically from there — more signal means more predicted counts than observed, so the fit degrades and ΔTS grows.
+######################################################################
+# The minimum sits at `scale ≈ 0`, as expected for a background-only
+# dataset: the data show no preference for a nonzero DM signal. The curve
+# rises monotonically from there — more signal means more predicted counts
+# than observed, so the fit degrades and ΔTS grows.
 #
-# The **95% CL upper limit** is where the curve crosses ΔTS = 2.71 (Wilks' theorem, one-sided test on a boundary parameter). Everything to the right is excluded; everything to the left remains compatible with the data.
+# The **95% CL upper limit** is where the curve crosses ΔTS = 2.71 (Wilks’
+# theorem, one-sided test on a boundary parameter). Everything to the
+# right is excluded; everything to the left remains compatible with the
+# data.
 #
-# Because the minimum sits at the boundary with ΔTS ≈ 0 throughout (no hint of detection), a **one-sided limit** is the correct quantity to report here — not a two-sided interval (see the aside below on what would change if TS were large instead). Converting `scale_ul` to a lower limit on $\tau_\chi$ is just a change of variable on this same statement: *decay lifetimes shorter than this value are excluded at 95% CL*.
+# Because the minimum sits at the boundary with ΔTS ≈ 0 throughout (no
+# hint of detection), a **one-sided limit** is the correct quantity to
+# report here — not a two-sided interval (see the aside below on what
+# would change if TS were large instead). Converting `scale_ul` to a
+# lower limit on :math:`\tau_\chi` is just a change of variable on this
+# same statement: *decay lifetimes shorter than this value are excluded at
+# 95% CL*.
 #
-# For the decay case, this translates into a **lower limit on the DM lifetime**: the DM particle must live at least as long as $\tau_\chi > \tau_{\rm ref} / \text{scale}_{\rm UL}$. For the annihilation case, it gives an **upper limit on the annihilation cross section**: $\langle\sigma v\rangle < \text{scale}_{\rm UL} \times \langle\sigma v\rangle_{\rm ref}$.
+# For the decay case, this translates into a **lower limit on the DM
+# lifetime**: the DM particle must live at least as long as
+# :math:`\tau_\chi > \tau_{\rm ref} / \text{scale}_{\rm UL}`. For the
+# annihilation case, it gives an **upper limit on the annihilation cross
+# section**:
+# :math:`\langle\sigma v\rangle < \text{scale}_{\rm UL} \times \langle\sigma v\rangle_{\rm ref}`.
+#
 
-# ### Another method: `ParameterEstimator`
+
+######################################################################
+# Another method: `ParameterEstimator`
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# `ParameterEstimator` can give you the best fit, symmetric error, TS, and (optionally) upper limit in one call. It doesn't return a two-sided profile-likelihood interval directly (that's what the manual scan above is for), but it's a fast sanity check on the significance and the Hessian error.
-
-# In[97]:
-
+# `ParameterEstimator` can give you the best fit, symmetric error, TS,
+# and (optionally) upper limit in one call. It doesn’t return a two-sided
+# profile-likelihood interval directly (that’s what the manual scan above
+# is for), but it’s a fast sanity check on the significance and the
+# Hessian error.
+#
 
 estimator = ParameterEstimator(
     n_sigma=1,  # level for symmetric error (1σ = 68%)
@@ -708,22 +847,32 @@ print(f"TS                    : {result_par['ts']:.2f}")
 print(f"sqrt(TS)              : {np.sqrt(max(result_par['ts'], 0)):.2f} sigma")
 
 
+######################################################################
+# 3.2. Signal detected
+# ^^^^^^^^^^^^^^^^^^^^
 #
-# #### 3.2. Signal detected
+# If the fit above had returned **TS ≫ 0** (instead of TS ≈ 0), the
+# interpretation — and the quantity we report — would change. A one-sided
+# upper limit is only meaningful when the best-fit value sits at or near
+# the physical boundary (`scale = 0`), i.e. when there is **no evidence
+# for a signal**.
 #
-# If the fit above had returned **TS ≫ 0** (instead of TS ≈ 0), the interpretation — and the quantity we report — would change. A one-sided upper limit is only meaningful when the best-fit value sits at or near the physical boundary (`scale = 0`), i.e. when there is **no evidence for a signal**.
+# If a real signal were present, we would **stop here** and instead report
+# a **best-fit value with a two-sided confidence interval**, using the
+# *same* profiled likelihood but reading it differently:
 #
-# If a real signal were present, we would **stop here** and instead report a **best-fit value with a two-sided confidence interval**, using the *same* profiled likelihood but reading it differently:
+# .. math:: \Delta \text{TS} = 1.0 \;\Rightarrow\; \text{68\% CL interval}
 #
-# $$\Delta \text{TS} = 1.0 \;\Rightarrow\; \text{68\% CL interval}$$
-# $$\Delta \text{TS} = 3.84 \;\Rightarrow\; \text{95\% CL interval}$$
+# .. math:: \Delta \text{TS} = 3.84 \;\Rightarrow\; \text{95\% CL interval}
 #
-# read on **both branches** of the minimum, around the best-fit $\hat{\text{scale}}$ — not just the upper branch from zero as in the one-sided limit above.
+# read on **both branches** of the minimum, around the best-fit
+# :math:`\hat{\text{scale}}` — not just the upper branch from zero as in
+# the one-sided limit above.
 #
-# The code below illustrates how this would look — **it is not executed in this tutorial**, since our dataset has TS ≈ 0 and the one-sided limit above is the correct result to report.
-
-# In[27]:
-
+# The code below illustrates how this would look — **it is not executed in
+# this tutorial**, since our dataset has TS ≈ 0 and the one-sided limit
+# above is the correct result to report.
+#
 
 # EXAMPLE ONLY — not executed in this tutorial (TS ≈ 0 here) ──────────────
 # This is what you would run instead of the one-sided UL block above,
@@ -752,21 +901,21 @@ for cl_label, delta_ts_threshold in [("68%", 1.0), ("95%", 3.84)]:
     print(f"{cl_label} CL interval on tau   : [{tau_lo:.3e}, {tau_hi:.3e}]")
 
 
-# ### 4. Exclusion Curve: Scanning Over Masses
+######################################################################
+# 4. Exclusion Curve: Scanning Over Masses
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# So far we have derived an upper limit for a single DM mass. To build the full **exclusion curve** — the standard output of a DM indirect detection analysis — we repeat the same procedure over a grid of masses.
+# So far we have derived an upper limit for a single DM mass. To build the
+# full **exclusion curve** — the standard output of a DM indirect
+# detection analysis — we repeat the same procedure over a grid of masses.
 #
-# For each mass we:
-# 1. Update the spectral model to the new mass
-# 2. Simulate a background-only dataset
-# 3. Fit the background
-# 4. Run the profile scan → `scale_ul`
-# 5. Convert to a physical limit (τ_χ or ⟨σv⟩)
+# For each mass we: 1. Update the spectral model to the new mass 2.
+# Simulate a background-only dataset 3. Fit the background 4. Run the
+# profile scan → `scale_ul` 5. Convert to a physical limit (τ_χ or ⟨σv⟩)
 #
-# The result is a curve of lower limits on τ_χ (or upper limits on ⟨σv⟩) as a function of DM mass.
-
-# In[ ]:
-
+# The result is a curve of lower limits on τ_χ (or upper limits on ⟨σv⟩)
+# as a function of DM mass.
+#
 
 # Mass range we want to scan. In this case we scan 40 masses, for instance.
 masses = np.logspace(2, 4, 40) * u.GeV
@@ -850,10 +999,6 @@ for mass in masses:
 
     print(f"scale_ul = {scale_ul:.3e}  |  τ_χ > {tau_ll:.3e}")
 
-
-# In[65]:
-
-
 fig, ax = plt.subplots(1, figsize=(12, 5))
 
 mass_arr = np.array(results["mass"])
@@ -873,45 +1018,88 @@ plt.tight_layout()
 plt.show()
 
 
-# ### Interpreting the Exclusion Curve
+######################################################################
+# Interpreting the Exclusion Curve
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The plot above shows the **expected lower limit on the DM lifetime**, $\tau_\chi$, as a function of DM mass, for a single background-only Monte
-# Carlo realization.
+# The plot above shows the **expected lower limit on the DM lifetime**,
+# :math:`\tau_\chi`, as a function of DM mass, for a single
+# background-only Monte Carlo realization.
 #
 # A few things to note when reading this curve:
 #
-# - **The curve sets a floor, not a measurement.** Every point says "given this dataset, we can exclude $\tau_\chi$ shorter than this value at 95% CL" — it is *not* a best-fit lifetime, since no signal was detected (recall $\mathrm{TS} \approx 0$ throughout).
-# - **Higher on the plot is a stronger (more constraining) limit.** A larger lower bound on $\tau_\chi$ means the analysis is more sensitive to that particular DM mass — i.e. it can rule out shorter (and therefore brighter) lifetimes more effectively.
-# - **The overall shape reflects a combination of two effects**: the instrument's effective area and angular resolution as a function of energy (peaking in the CTA core energy range), and the shape of the DM decay spectrum $dN/dE$ for the chosen channel, which shifts and broadens with mass. This is why sensitivity is typically *not* monotonic across the full mass range — it usually improves, plateaus, and can degrade again outside the instrument's best-covered energies.
-# - **Points that could not be constrained are simply absent.** If a given mass's profile scan never reaches $\Delta\mathrm{TS} = 2.71$ within the scanned `scale` range, that mass is skipped rather than
+# - **The curve sets a floor, not a measurement.** Every point says “given
+#   this dataset, we can exclude :math:`\tau_\chi` shorter than this value
+#   at 95% CL” — it is *not* a best-fit lifetime, since no signal was
+#   detected (recall :math:`\mathrm{TS} \approx 0` throughout).
+# - **Higher on the plot is a stronger (more constraining) limit.** A
+#   larger lower bound on :math:`\tau_\chi` means the analysis is more
+#   sensitive to that particular DM mass — i.e. it can rule out shorter
+#   (and therefore brighter) lifetimes more effectively.
+# - **The overall shape reflects a combination of two effects**: the
+#   instrument’s effective area and angular resolution as a function of
+#   energy (peaking in the CTA core energy range), and the shape of the DM
+#   decay spectrum :math:`dN/dE` for the chosen channel, which shifts and
+#   broadens with mass. This is why sensitivity is typically *not*
+#   monotonic across the full mass range — it usually improves, plateaus,
+#   and can degrade again outside the instrument’s best-covered energies.
+# - **Points that could not be constrained are simply absent.** If a given
+#   mass’s profile scan never reaches :math:`\Delta\mathrm{TS} = 2.71`
+#   within the scanned `scale` range, that mass is skipped rather than
 #   plotted with a misleading extrapolated value.
 #
-# Keep in mind this single curve is subject to the specific Poisson fluctuation of the one background realization it was built from — a different simulated dataset (same true background model, different noise) would trace a slightly different curve. That variability is exactly what the Brazilian plot in the next section quantifies.
+# Keep in mind this single curve is subject to the specific Poisson
+# fluctuation of the one background realization it was built from — a
+# different simulated dataset (same true background model, different
+# noise) would trace a slightly different curve. That variability is
+# exactly what the Brazilian plot in the next section quantifies.
+#
 
-# ### 5. Brazilian Plot: Uncertainty Bands on the Exclusion Curve
-#
-# The exclusion curve derived in the previous section is based on a **single background realization**: a different Poisson fluctuation would give a slightly different curve. To quantify this uncertainty, we now repeat the profile scan over many background-only realizations per mass and take the percentiles of the resulting distribution of limits.
-#
-# For each mass we generate `n_realizations` datasets with different Poisson noise, compute one `scale_ul` per realization, and convert to τ_χ. The percentiles give the **1σ** (green) and **2σ** (yellow) bands around the median expected limit.
-#
-# One important note: the conversion from `scale_ul` to τ_χ **inverts the order of the percentiles** — a large `scale_ul` (weak limit on scale) corresponds to a small τ_χ (weak limit on lifetime), so the bands flip when converting to physical units:
-#
-# $$\tau_{\rm p16} = \frac{\tau_{\rm ref}}{\text{scale}_{\rm p84}} \qquad
-# \tau_{\rm p84} = \frac{\tau_{\rm ref}}{\text{scale}_{\rm p16}}$$
-#
-# For **annihilation**, no such inversion is needed: since $\langle\sigma v\rangle$ is directly proportional to `scale`, the percentiles are preserved when converting units:
-#
-# $$\langle\sigma v\rangle_{\rm p16} = \text{scale}_{\rm p16} \times \langle\sigma v\rangle_{\rm ref}
-# \qquad
-# \langle\sigma v\rangle_{\rm p84} = \text{scale}_{\rm p84} \times \langle\sigma v\rangle_{\rm ref}$$
-#
-# This asymmetry between the two cases follows directly from how `scale` enters each physical quantity: linearly for $\langle\sigma v\rangle$ (annihilation), but inversely for $\tau_\chi$ (decay).
-#
-#
-# The single MC realization from the previous section will appear as a dotted line inside the bands — a sanity check that it falls within the expected range.
 
-# In[ ]:
-
+######################################################################
+# 5. Brazilian Plot: Uncertainty Bands on the Exclusion Curve
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# The exclusion curve derived in the previous section is based on a
+# **single background realization**: a different Poisson fluctuation would
+# give a slightly different curve. To quantify this uncertainty, we now
+# repeat the profile scan over many background-only realizations per mass
+# and take the percentiles of the resulting distribution of limits.
+#
+# For each mass we generate `n_realizations` datasets with different
+# Poisson noise, compute one `scale_ul` per realization, and convert to
+# τ_χ. The percentiles give the **1σ** (green) and **2σ** (yellow) bands
+# around the median expected limit.
+#
+# One important note: the conversion from `scale_ul` to τ_χ **inverts
+# the order of the percentiles** — a large `scale_ul` (weak limit on
+# scale) corresponds to a small τ_χ (weak limit on lifetime), so the bands
+# flip when converting to physical units:
+#
+# .. math::
+#
+#    \tau_{\rm p16} = \frac{\tau_{\rm ref}}{\text{scale}_{\rm p84}} \qquad
+#    \tau_{\rm p84} = \frac{\tau_{\rm ref}}{\text{scale}_{\rm p16}}
+#
+# For **annihilation**, no such inversion is needed: since
+# :math:`\langle\sigma v\rangle` is directly proportional to `scale`,
+# the percentiles are preserved when converting units:
+#
+# .. math::
+#
+#    \langle\sigma v\rangle_{\rm p16} = \text{scale}_{\rm p16} \times \langle\sigma v\rangle_{\rm ref}
+#    \qquad
+#    \langle\sigma v\rangle_{\rm p84} = \text{scale}_{\rm p84} \times \langle\sigma v\rangle_{\rm ref}
+#
+# This asymmetry between the two cases follows directly from how `scale`
+# enters each physical quantity: linearly for
+# :math:`\langle\sigma v\rangle` (annihilation), but inversely for
+# :math:`\tau_\chi` (decay).
+#
+# The single MC realization from the previous section will appear as a
+# dotted line inside the bands — a sanity check that it falls within the
+# expected range.
+#
 
 # Number of realizations
 # We only set 20 so the execution is not too long, but it should be at least 100, but it depends on you study.
@@ -1027,10 +1215,6 @@ for mass in masses:
 print("\n" + "─" * 55)
 print(f"Done. {len(brazil['mass'])} mass points computed.")
 
-
-# In[67]:
-
-
 mass_arr = np.array(brazil["mass"])
 p025_arr = np.array(brazil["p025"])
 p16_arr = np.array(brazil["p16"])
@@ -1086,22 +1270,70 @@ plt.tight_layout()
 plt.show()
 
 
-# The Brazilian plot places the single-realization exclusion curve in the context of its expected statistical spread under repeated background-only trials.
+######################################################################
+# The Brazilian plot places the single-realization exclusion curve in the
+# context of its expected statistical spread under repeated
+# background-only trials.
 #
 # **How to read it:**
 #
-# - **Median (black dashed line)**: the expected lower limit on $\tau_\chi$ you would obtain, on average, over many independent realizations of the same observation with no DM signal present. This is the standard figure of merit used to quote projected sensitivity of an instrument or observing strategy — it does not depend on any particular noise draw.
-# - **Green band (±1σ)**: the interval containing 68% of the individual realizations' limits. Roughly two out of three simulated background-only datasets would yield a limit falling inside this band.
-# - **Yellow band (±2σ)**: the interval containing 95% of the realizations.
+# - **Median (black dashed line)**: the expected lower limit on
+#   :math:`\tau_\chi` you would obtain, on average, over many independent
+#   realizations of the same observation with no DM signal present. This
+#   is the standard figure of merit used to quote projected sensitivity of
+#   an instrument or observing strategy — it does not depend on any
+#   particular noise draw.
+# - **Green band (±1σ)**: the interval containing 68% of the individual
+#   realizations’ limits. Roughly two out of three simulated
+#   background-only datasets would yield a limit falling inside this band.
+# - **Yellow band (±2σ)**: the interval containing 95% of the
+#   realizations.
 #
-# **Why the bands look wider (in relative terms) at low mass**: the number of background counts contributing to the relevant part of the spectrum is smaller there, so Poisson fluctuations have a proportionally larger effect on the fitted limit — the same reason the bands narrow towards higher DM masses, where the analysis integrates over more of the instrument's high-effective-area range.
+# **Why the bands look wider (in relative terms) at low mass**: the number
+# of background counts contributing to the relevant part of the spectrum
+# is smaller there, so Poisson fluctuations have a proportionally larger
+# effect on the fitted limit — the same reason the bands narrow towards
+# higher DM masses, where the analysis integrates over more of the
+# instrument’s high-effective-area range.
 #
-# **A note on interpreting the percentile inversion**: because `scale` and $\tau_\chi$ are inversely related (see the decay case above), the percentiles get flipped when converting from `scale_ul` to $\tau_\chi$ — the 97.5th percentile of `scale_ul` (the *weakest* limits on `scale`, i.e. largest allowed `scale`) corresponds to the 2.5th percentile of $\tau_\chi$ (the *weakest* limits on the lifetime, i.e. smallest allowed lifetime), and vice versa. This is already handled in the code above by swapping the percentile pairs during the conversion — but it is worth keeping in mind if you extend this analysis to the annihilation case, where `scale` and $\langle\sigma v\rangle$ are directly (not inversely) proportional, and the percentile order is preserved instead.
+# **A note on interpreting the percentile inversion**: because `scale`
+# and :math:`\tau_\chi` are inversely related (see the decay case above),
+# the percentiles get flipped when converting from `scale_ul` to
+# :math:`\tau_\chi` — the 97.5th percentile of `scale_ul` (the *weakest*
+# limits on `scale`, i.e. largest allowed `scale`) corresponds to the
+# 2.5th percentile of :math:`\tau_\chi` (the *weakest* limits on the
+# lifetime, i.e. smallest allowed lifetime), and vice versa. This is
+# already handled in the code above by swapping the percentile pairs
+# during the conversion — but it is worth keeping in mind if you extend
+# this analysis to the annihilation case, where `scale` and
+# :math:`\langle\sigma v\rangle` are directly (not inversely)
+# proportional, and the percentile order is preserved instead.
+#
 
-# ## References
-# - Bergström, L., Ullio, P., & Buckley, J.H. 1998, Astroparticle Physics, 9, 137–162. - Observability of gamma rays from dark matter neutralino annihilations in the Milky Way halo. [astro-ph/9712318](https://arxiv.org/abs/astro-ph/9712318)
-# - Bonnivard, V. et al. 2015,*MNRAS*, 453, 849 — Dark matter annihilation and decay in dwarf spheroidal galaxies: The classical and ultrafaint dSphs. [arXiv:1504.02048](https://arxiv.org/abs/1504.02048)
-# - Cirelli, M. et al. 2011, *JCAP*, 03, 051 — PPPC 4 DM ID: A Poor Particle Physicist Cookbook for Dark Matter Indirect Detection. [arXiv:1012.4515](https://arxiv.org/abs/1012.4515)
-# - Feldman, G.J. & Cousins, R.D. 1998, *Phys. Rev. D*, 57, 3873 — A Unified Approach to the Classical Statistical Analysis of Small Signals. [physics/9711021](https://arxiv.org/abs/physics/9711021)
-# - Rolke, W.A., López, A.M., & Conrad, J. 2005, *Nucl. Instrum. Meth. A*, 551, 493 — Limits and confidence intervals in the presence of nuisance parameters. [physics/0403059](https://arxiv.org/abs/physics/0403059)
-# - Wilks, S.S., 1938, Ann. Math. Statist. 9(1), 60-62The Large-Sample Distribution of the Likelihood Ratio for Testing Composite Hypotheses. DOI: 10.1214/aoms/1177732360
+
+######################################################################
+# References
+# ----------
+#
+# - Bergström, L., Ullio, P., & Buckley, J.H. 1998, Astroparticle Physics,
+#   9, 137–162. - Observability of gamma rays from dark matter neutralino
+#   annihilations in the Milky Way halo.
+#   `astro-ph/9712318 <https://arxiv.org/abs/astro-ph/9712318>`__
+# - Bonnivard, V. et al. 2015,\ *MNRAS*, 453, 849 — Dark matter
+#   annihilation and decay in dwarf spheroidal galaxies: The classical and
+#   ultrafaint dSphs.
+#   `arXiv:1504.02048 <https://arxiv.org/abs/1504.02048>`__
+# - Cirelli, M. et al. 2011, *JCAP*, 03, 051 — PPPC 4 DM ID: A Poor
+#   Particle Physicist Cookbook for Dark Matter Indirect Detection.
+#   `arXiv:1012.4515 <https://arxiv.org/abs/1012.4515>`__
+# - Feldman, G.J. & Cousins, R.D. 1998, *Phys. Rev. D*, 57, 3873 — A
+#   Unified Approach to the Classical Statistical Analysis of Small
+#   Signals. `physics/9711021 <https://arxiv.org/abs/physics/9711021>`__
+# - Rolke, W.A., López, A.M., & Conrad, J. 2005, *Nucl. Instrum. Meth. A*,
+#   551, 493 — Limits and confidence intervals in the presence of nuisance
+#   parameters.
+#   `physics/0403059 <https://arxiv.org/abs/physics/0403059>`__
+# - Wilks, S.S., 1938, Ann. Math. Statist. 9(1), 60-62The Large-Sample
+#   Distribution of the Likelihood Ratio for Testing Composite Hypotheses.
+#   DOI: 10.1214/aoms/1177732360
+#
