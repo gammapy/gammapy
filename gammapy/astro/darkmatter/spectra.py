@@ -47,16 +47,12 @@ class _SigmaValidator:
 
 
 class PrimaryFlux(TemplateNDSpectralModel):
-    """DM-annihilation gamma-ray spectra.
+    """
+    DM-annihilation gamma-ray spectra.
 
-    Based on the precomputed models of PPPC4 DM ID by [1]_, [2]_ and \
-        CosmiXs by [3]_, [4]_.
-    All available annihilation channels can be found there. The dark matter mass\
-          will be set
-    to the nearest available value. The spectra will be available as
-    `~gammapy.modeling.models.TemplateNDSpectralModel` for a chosen dark matter mass and
-    annihilation channel. Using a `~gammapy.modeling.models.TemplateNDSpectralModel`
-    allows the interpolation between different dark matter masses.
+    Based on the precomputed models of PPPC4 DM ID by [Cirelli2016]_ and CosmiXs by [Arina2024]_, [DiMauro2025]_.
+    All available annihilation channels can be found there. The dark matter mass will be set to the nearest available value. The spectra will be available as `~gammapy.modeling.models.TemplateNDSpectralModel` for a chosen dark matter mass and annihilation channel.
+    Using a `~gammapy.modeling.models.TemplateNDSpectralModel` allows the interpolation between different dark matter masses.
 
     Parameters
     ----------
@@ -86,15 +82,14 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
     References
     ----------
-    .. [1] `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook
-    for dark matter indirect detection" <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
-    .. [2] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook
-    for Dark Matter Indirect Detection" <http://www.marcocirelli.net/PPPC4DMID.html>`_
-    .. [3] `Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for indirect dark
-    matter searches" <https://arxiv.org/abs/2312.01153>`_
-    .. [4] `Di Mauro et al. (2025), "Nailing down the theoretical uncertainties of Dbar
-     spectrum produced from dark matter" <https://arxiv.org/abs/2411.04815>`_
-
+    .. [Cirelli2016] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
+       Cookbook for Dark Matter Indirect Detection"
+       <http://www.marcocirelli.net/PPPC4DMID.html>`_
+    .. [Arina2024] `Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for
+       indirect dark matter searches" <https://arxiv.org/abs/2312.01153>`_
+    .. [DiMauro2025] `Di Mauro et al. (2025), "Nailing down the theoretical
+       uncertainties of Dbar spectrum produced from dark matter"
+       <https://arxiv.org/abs/2411.04815>`_
     """  # noqa: E501
 
     channel_registry = {
@@ -480,14 +475,12 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel, _SigmaValidator):
         >>> channel = "b"
         >>> massDM = 5000 * u.Unit("GeV")
         >>> jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-        >>> modelDM = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel,\
-              jfactor=jfactor)  # noqa: E501
+        >>> modelDM = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel,jfactor=jfactor)  # noqa: E501
 
     References
     ----------
-    `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark
-    matter indirect detection" <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
-
+    `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook
+    for Dark Matter Indirect Detection" <http://www.marcocirelli.net/PPPC4DMID.html>`_
     `Ackermann et al. (2015), "Searching for Dark Matter Annihilation from Milky Way
     Dwarf Spheroidal Galaxies with Six Years of Fermi-LAT Data"
     <https://doi.org/10.1103/PhysRevLett.115.231301>`_
@@ -679,14 +672,12 @@ class DarkMatterDecaySpectralModel(SpectralModel, _SigmaValidator):
         >>> channel = "b"
         >>> massDM = 5000 * u.Unit("GeV")
         >>> jfactor = 3.41e19 * u.Unit("GeV cm-2")
-        >>> modelDM = DarkMatterDecaySpectralModel(mass=massDM, channel=channel,\
-              jfactor=jfactor)  # noqa: E501
+        >>> modelDM = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
 
     References
     ----------
-    `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark
-    matter indirect detection" <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
-
+    `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook
+    for Dark Matter Indirect Detection" <http://www.marcocirelli.net/PPPC4DMID.html>`_
     `Ackermann et al. (2015), "Searching for Dark Matter Annihilation from Milky Way
     Dwarf Spheroidal Galaxies with Six Years of Fermi-LAT Data"
     <https://doi.org/10.1103/PhysRevLett.115.231301>`_
