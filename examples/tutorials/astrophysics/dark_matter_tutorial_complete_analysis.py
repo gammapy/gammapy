@@ -2,123 +2,120 @@
 Dark Matter indirect search analysis with Gammapy
 =================================================
 
+This tutorial covers a full analysis pipeline for the indirect search of
+dark matter using Gammapy. We assume basic familiarity with Gammapy’s
+data structures and the Dark Matter module. If you are new to Gammapy,
+we recommend first working through the introductory and the Dark Matter
+Basics and Data handling tutorials.
+
+In this example we simulate observations of the **Draco dwarf spheroidal
+galaxy** and perform a **3D analysis** — using both spatial and spectral
+information, as opposed to a 1D (spectral-only) analysis (heck the ‘Dark
+Matter Data Handling with Gammapy’ tutorial for further details about
+these approaches).
+
+To perform a dark matter analysis, we need to fit the data with a model
+that includes both the background and the dark matter signal component.
+Rather than fitting the physical parameters (e.g. the annihilation
+cross-section :math:`\langle\sigma v\rangle` or the decay lifetime
+:math:`\tau`) directly, it is common practice to introduce a **scale
+parameter**, that rescales the predicted dark matter signal. Depending
+on the DM model assumed, the constrained quantity is different.
+
+--------------
+
+**Dark matter annihilation**
+
+The expected gamma-ray flux from DM annihilation is:
+
+.. math::
+
+   \Phi_{\rm ann}(>E_{\rm min}) = \frac{\langle\sigma v\rangle}{8\pi m_\chi^2}
+   \cdot J \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
+
+The physical quantity of interest is the **velocity-averaged
+annihilation cross section** ⟨σv⟩. A larger ⟨σv⟩ means a brighter
+signal. A non-detection gives an **upper limit** on ⟨σv⟩: the DM
+particles annihilate *at most* this efficiently.
+
+In Gammapy’s `DarkMatterAnnihilationSpectralModel`, ⟨σv⟩ is encoded
+through a dimensionless **`scale`** parameter:
+
+.. math:: \text{scale} = \frac{\langle\sigma v\rangle}{\langle\sigma v\rangle_{\rm ref}}
+
+where :math:`\langle\sigma v\rangle_{\rm ref} \approx 3\times10^{-26}`
+cm³ s⁻¹ is the thermal relic value. An upper limit on `scale`
+translates directly into an upper limit on ⟨σv⟩:
+
+.. math:: \langle\sigma v\rangle < \text{scale}_{\rm UL} \times \langle\sigma v\rangle_{\rm ref}
+
+--------------
+
+**Dark matter decay**
+
+The expected gamma-ray flux from DM decay is:
+
+.. math::
+
+   \Phi_{\rm dec}(>E_{\rm min}) = \frac{1}{4\pi \tau_\chi m_\chi}
+   \cdot D \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
+
+The physical quantity of interest is the **DM lifetime** τ_χ. Note that
+it appears in the **denominator**: a *longer* lifetime means a *fainter*
+signal — the opposite behaviour from the annihilation case. A
+non-detection gives a **lower limit** on τ_χ: the DM particle must live
+*at least* this long.
+
+In Gammapy’s `DarkMatterDecaySpectralModel`, the lifetime is encoded
+through the same **`scale`** parameter, but now it multiplies the
+**decay rate** (inverse lifetime):
+
+.. math:: \text{scale} = \frac{1/\tau_\chi}{1/\tau_{\rm ref}} = \frac{\tau_{\rm ref}}{\tau_\chi}
+
+where :math:`\tau_{\rm ref}` is an internal reference value
+(`LIFETIME_AGE_OF_UNIVERSE` ≈ 4.3 × 10¹⁷ s). Because of the inverse
+relationship, an **upper** limit on `scale` becomes a **lower** limit
+on τ_χ:
+
+.. math:: \tau_\chi > \frac{\tau_{\rm ref}}{\text{scale}_{\rm UL}}
+
+This approach decouples the statistical treatment from the specific
+physical model: once we obtain the best-fit value of the scale and its
+uncertainty, we can translate it directly into a constraint on
+:math:`\langle\sigma v\rangle` or :math:`\tau` through the linear
+relation above.
+
+In this way, the steps/sections followed in this tutorial are:
+
+1. **Data.** We obtain and manage the data to be analyzed. In this case,
+   this corresponds to a 3D dataset (spatial + spectral information).
+2. **Analysis of signal detection.** We perform a statistical test to
+   determine whether the dataset contains a genuine signal or is
+   compatible with background only, and outline the procedure to follow
+   in each case.
+3. **Obtaining limits.**
+
+   - *No signal detected*: we derive upper limits on the dark matter
+     cross-section (or decay lifetime).
+   - *Signal detected*: we derive confidence intervals on the signal
+     parameters.
+
+4. **Exclusion curve: scanning over masses.** We repeat the
+   limit-setting procedure over a grid of dark matter masses to build
+   the exclusion curve.
+5. **Brazilian plot: uncertainty bands on the exclusion curve.** We
+   compute the expected sensitivity and its uncertainty bands (1σ/2σ)
+   around the exclusion curve, following the standard “Brazilian plot”
+   convention.
+
+**Prerequisites**
+
+- Understanding of the Dark Matter basics, see the tutorial ‘Dark Matter
+  Indirect Detection with Gammapy: Basics’
+- Familiarity with the Dark Matter Data handling, check the tutorial
+  ‘Dark Matter Data Handling with Gammapy’
+
 """
-
-
-######################################################################
-# This tutorial covers a full analysis pipeline for the indirect search of
-# dark matter using Gammapy. We assume basic familiarity with Gammapy’s
-# data structures and the Dark Matter module. If you are new to Gammapy,
-# we recommend first working through the introductory and the Dark Matter
-# Basics and Data handling tutorials.
-#
-# In this example we simulate observations of the **Draco dwarf spheroidal
-# galaxy** and perform a **3D analysis** — using both spatial and spectral
-# information, as opposed to a 1D (spectral-only) analysis (heck the ‘Dark
-# Matter Data Handling with Gammapy’ tutorial for further details about
-# these approaches).
-#
-# To perform a dark matter analysis, we need to fit the data with a model
-# that includes both the background and the dark matter signal component.
-# Rather than fitting the physical parameters (e.g. the annihilation
-# cross-section :math:`\langle\sigma v\rangle` or the decay lifetime
-# :math:`\tau`) directly, it is common practice to introduce a **scale
-# parameter**, that rescales the predicted dark matter signal. Depending
-# on the DM model assumed, the constrained quantity is different.
-#
-# --------------
-#
-# **Dark matter annihilation**
-#
-# The expected gamma-ray flux from DM annihilation is:
-#
-# .. math::
-#
-#    \Phi_{\rm ann}(>E_{\rm min}) = \frac{\langle\sigma v\rangle}{8\pi m_\chi^2}
-#    \cdot J \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
-#
-# The physical quantity of interest is the **velocity-averaged
-# annihilation cross section** ⟨σv⟩. A larger ⟨σv⟩ means a brighter
-# signal. A non-detection gives an **upper limit** on ⟨σv⟩: the DM
-# particles annihilate *at most* this efficiently.
-#
-# In Gammapy’s `DarkMatterAnnihilationSpectralModel`, ⟨σv⟩ is encoded
-# through a dimensionless **`scale`** parameter:
-#
-# .. math:: \text{scale} = \frac{\langle\sigma v\rangle}{\langle\sigma v\rangle_{\rm ref}}
-#
-# where :math:`\langle\sigma v\rangle_{\rm ref} \approx 3\times10^{-26}`
-# cm³ s⁻¹ is the thermal relic value. An upper limit on `scale`
-# translates directly into an upper limit on ⟨σv⟩:
-#
-# .. math:: \langle\sigma v\rangle < \text{scale}_{\rm UL} \times \langle\sigma v\rangle_{\rm ref}
-#
-# --------------
-#
-# **Dark matter decay**
-#
-# The expected gamma-ray flux from DM decay is:
-#
-# .. math::
-#
-#    \Phi_{\rm dec}(>E_{\rm min}) = \frac{1}{4\pi \tau_\chi m_\chi}
-#    \cdot D \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
-#
-# The physical quantity of interest is the **DM lifetime** τ_χ. Note that
-# it appears in the **denominator**: a *longer* lifetime means a *fainter*
-# signal — the opposite behaviour from the annihilation case. A
-# non-detection gives a **lower limit** on τ_χ: the DM particle must live
-# *at least* this long.
-#
-# In Gammapy’s `DarkMatterDecaySpectralModel`, the lifetime is encoded
-# through the same **`scale`** parameter, but now it multiplies the
-# **decay rate** (inverse lifetime):
-#
-# .. math:: \text{scale} = \frac{1/\tau_\chi}{1/\tau_{\rm ref}} = \frac{\tau_{\rm ref}}{\tau_\chi}
-#
-# where :math:`\tau_{\rm ref}` is an internal reference value
-# (`LIFETIME_AGE_OF_UNIVERSE` ≈ 4.3 × 10¹⁷ s). Because of the inverse
-# relationship, an **upper** limit on `scale` becomes a **lower** limit
-# on τ_χ:
-#
-# .. math:: \tau_\chi > \frac{\tau_{\rm ref}}{\text{scale}_{\rm UL}}
-#
-# This approach decouples the statistical treatment from the specific
-# physical model: once we obtain the best-fit value of the scale and its
-# uncertainty, we can translate it directly into a constraint on
-# :math:`\langle\sigma v\rangle` or :math:`\tau` through the linear
-# relation above.
-#
-# In this way, the steps/sections followed in this tutorial are:
-#
-# 1. **Data.** We obtain and manage the data to be analyzed. In this case,
-#    this corresponds to a 3D dataset (spatial + spectral information).
-# 2. **Analysis of signal detection.** We perform a statistical test to
-#    determine whether the dataset contains a genuine signal or is
-#    compatible with background only, and outline the procedure to follow
-#    in each case.
-# 3. **Obtaining limits.**
-#
-#    - *No signal detected*: we derive upper limits on the dark matter
-#      cross-section (or decay lifetime).
-#    - *Signal detected*: we derive confidence intervals on the signal
-#      parameters.
-#
-# 4. **Exclusion curve: scanning over masses.** We repeat the
-#    limit-setting procedure over a grid of dark matter masses to build
-#    the exclusion curve.
-# 5. **Brazilian plot: uncertainty bands on the exclusion curve.** We
-#    compute the expected sensitivity and its uncertainty bands (1σ/2σ)
-#    around the exclusion curve, following the standard “Brazilian plot”
-#    convention.
-#
-# **Prerequisites**
-#
-# - Understanding of the Dark Matter basics, see the tutorial ‘Dark Matter
-#   Indirect Detection with Gammapy: Basics’
-# - Familiarity with the Dark Matter Data handling, check the tutorial
-#   ‘Dark Matter Data Handling with Gammapy’
-#
 
 
 ######################################################################
