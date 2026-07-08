@@ -6,7 +6,8 @@ Dark matter
 
 The `gammapy.astro.darkmatter` module implements the physics of indirect dark
 matter searches, built around the paradigm of Weakly Interacting Massive
-Particles (WIMPs) as the dark matter candidate. It provides the tools needed to go from a dark matter halo and a particle physics model
+Particles (WIMPs) as the dark matter candidate. It provides the tools needed
+to go from a dark matter halo and a particle physics model
 to a complete gamma-ray analysis. The module is flexible along every axis of
 the analysis:
 
