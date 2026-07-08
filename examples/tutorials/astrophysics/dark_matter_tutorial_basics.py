@@ -210,8 +210,9 @@ plt.show()
 #    center of the galaxy.
 #
 # It should be highlighted that the astrophysical factor can be computed
-# with another tools (i.e. CLUMPY) and used within Gammapy, this is just
-# an example if it wants to be calculated within this framework.
+# with another tools (i.e. CLUMPY) and you can use the final value (scalar
+# value) within Gammapy, this is just an example if it wants to be
+# calculated within this framework.
 #
 
 # Define the DM profile. Check profiles.DMProfile.__subclasses__() for more profiles
@@ -345,17 +346,6 @@ print(f"D-factor integrated on 0.1 deg circle (plotted in red): {total_dfact:.3g
 #    **Important Note:** For the decay, the procedure is the same, but
 #    **the mass must be divided by 2**.
 #
-# ..
-#
-#    **Note:** Computing these spectra requires the Gammapy datasets to be
-#    > downloaded and the `GAMMAPY_DATA` environment variable to be set.
-#    > Please follow the instructions at
-#    https://docs.gammapy.org/dev/getting-started/index.html#recommended-setup
-#    before running the cells below.
-#
-
-# import os
-# os.environ["GAMMAPY_DATA"] = "PATH/gammapy-data"
 
 
 ######################################################################
@@ -633,6 +623,14 @@ plt.suptitle(
 )
 plt.tight_layout()
 plt.show()
+
+
+######################################################################
+# These spectral models can be wrapped into a `SkyModel` with a spatial
+# model, so they can be used for modeling, fitting, or simulation like any
+# other Gammapy `SkyModel` — for example by assigning
+# `sky_model_ann`/`sky_model_dec` to a `MapDataset`.
+#
 
 
 ######################################################################
