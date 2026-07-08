@@ -197,13 +197,16 @@ temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
 # The user can change the settings using the `ìnterp_kwargs`` argument
 # but we warn that this should be done only when the user knows the
 # consequences of the changes. Here, we show how to set them
-# explicitly:
+# when creating a new model:
 #
 
-temporal_model._interp_kwargs = {
+interpolation_kwargs = {
     "method": "linear",  # default
     "values_scale": "log",
 }  # default for energy-dependent models
+temporal_model = LightCurveTemplateTemporalModel.read(
+    filename, format="map", interp_kwargs=interpolation_kwargs
+)
 
 ######################################################################
 # We can have a visual inspection of the temporal model at different energies:
