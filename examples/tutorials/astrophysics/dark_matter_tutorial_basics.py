@@ -2,61 +2,58 @@
 Dark Matter Indirect Detection with Gammapy: Basics
 ===================================================
 
+Weakly Interacting Massive Particles (WIMPs) are among the most
+compelling candidates for Dark Matter (DM). If they exist, WIMPs can
+**annihilate or decay** into Standard Model particles — including gamma
+rays — that can be detected by gamma-ray instruments such as space-based
+telescopes (e.g. Fermi-LAT) or ground-based Imaging Atmospheric
+Cherenkov Telescopes (IACTs) like MAGIC, HESS, VERITAS, or the upcoming
+CTA Observatory.
+
+The expected gamma-ray flux from a DM source has two independent
+components:
+
+- **Astrophysical factor (J/D-factor):** encodes the spatial
+  distribution of DM along the line of sight. It depends on the assumed
+  density profile and the source distance.
+
+- **Particle physics factor (dN/dE):** encodes the gamma-ray energy
+  spectrum produced per annihilation or decay event. It depends on the
+  DM mass and the dominant interaction channel.
+
+The total flux is simply their product:
+
+**Annihilation:**
+
+.. math:: \Phi_{\rm ann}(>E_{\rm min}) = \frac{\langle\sigma v\rangle}{8\pi m_\chi^2} \cdot J \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
+
+**Decay:**
+
+.. math:: \Phi_{\rm dec}(>E_{\rm min}) = \frac{1}{4\pi \tau_\chi m_\chi} \cdot D \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
+
+In this tutorial, we cover the building blocks needed to model this
+signal in Gammapy, using the **Draco dwarf spheroidal galaxy** as our
+example target — one of the most DM-dominated objects in the local
+universe and a standard benchmark for indirect detection searches.
+
+The sections of the tutorial are:
+
+- Spatial Distribution
+
+  - Density profiles
+  - Astrophysical factor
+
+    - J-Factor
+    - D-Factor
+
+- Spectral morphology
+
+  - PPPC4DMID
+  - CosmiXs
+
+- Expected gamma-ray flux map
+
 """
-
-
-######################################################################
-# Weakly Interacting Massive Particles (WIMPs) are among the most
-# compelling candidates for Dark Matter (DM). If they exist, WIMPs can
-# **annihilate or decay** into Standard Model particles — including gamma
-# rays — that can be detected by gamma-ray instruments such as space-based
-# telescopes (e.g. Fermi-LAT) or ground-based Imaging Atmospheric
-# Cherenkov Telescopes (IACTs) like MAGIC, HESS, VERITAS, or the upcoming
-# CTA Observatory.
-#
-# The expected gamma-ray flux from a DM source has two independent
-# components:
-#
-# - **Astrophysical factor (J/D-factor):** encodes the spatial
-#   distribution of DM along the line of sight. It depends on the assumed
-#   density profile and the source distance.
-#
-# - **Particle physics factor (dN/dE):** encodes the gamma-ray energy
-#   spectrum produced per annihilation or decay event. It depends on the
-#   DM mass and the dominant interaction channel.
-#
-# The total flux is simply their product:
-#
-# **Annihilation:**
-#
-# .. math:: \Phi_{\rm ann}(>E_{\rm min}) = \frac{\langle\sigma v\rangle}{8\pi m_\chi^2} \cdot J \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
-#
-# **Decay:**
-#
-# .. math:: \Phi_{\rm dec}(>E_{\rm min}) = \frac{1}{4\pi \tau_\chi m_\chi} \cdot D \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
-#
-# In this tutorial, we cover the building blocks needed to model this
-# signal in Gammapy, using the **Draco dwarf spheroidal galaxy** as our
-# example target — one of the most DM-dominated objects in the local
-# universe and a standard benchmark for indirect detection searches.
-#
-# The sections of the tutorial are:
-#
-# - Spatial Distribution
-#
-#   - Density profiles
-#   - Astrophysical factor
-#
-#     - J-Factor
-#     - D-Factor
-#
-# - Spectral morphology
-#
-#   - PPPC4DMID
-#   - CosmiXs
-#
-# - Expected gamma-ray flux map
-#
 
 
 ######################################################################
