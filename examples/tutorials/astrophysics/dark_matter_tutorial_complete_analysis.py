@@ -608,6 +608,13 @@ dataset_mc.plot_residuals_spectral(
 
 
 ######################################################################
+# Alternatively, the `TSMapEstimator` or `ExcessMapEstimator` can be
+# used to inspect residuals, providing a significance-based map instead of
+# a simple count/flux residual.
+#
+
+
+######################################################################
 # 3. Obtaining limits
 # ~~~~~~~~~~~~~~~~~~~
 #
