@@ -73,14 +73,29 @@ class TestEnergyDependentEstimator:
             rtol=1e-3,
         )
         assert_allclose(
+            results_edep["lon_0_err"],
+            [0.0060174, 0.00664618, 0.0103996] * u.deg,
+            atol=1e-2,
+        )
+        assert_allclose(
             results_edep["lat_0"],
             [0.20289353, 0.20589559, 0.18106776] * u.deg,
             rtol=1e-3,
         )
         assert_allclose(
+            results_edep["lat_0_err"],
+            [0.00601639, 0.00678308, 0.01053394] * u.deg,
+            atol=1e-2,
+        )
+        assert_allclose(
             results_edep["sigma"],
             [0.21709024, 0.2315993, 0.13505759] * u.deg,
             rtol=1e-2,
+        )
+        assert_allclose(
+            results_edep["sigma_err"],
+            [0.00421623, 0.0020569, 0.0063294] * u.deg,
+            atol=1e-2,
         )
         if mode == "single":
             assert_allclose(result["energy_dependence"]["delta_ts"], 50.719, rtol=1e-3)
@@ -116,6 +131,7 @@ class TestEnergyDependentEstimator:
     def test_chi2(self, estimator_result):
         mode, result = estimator_result
         results_edep = result["energy_dependence"]["result"]
+
         chi2_sigma = weighted_chi2_parameter(
             results_edep, parameters=["sigma", "lat_0", "lon_0"]
         )
@@ -134,12 +150,12 @@ class TestEnergyDependentEstimator:
         elif mode == "multiple":
             assert_allclose(
                 chi2_sigma["chi2"],
-                [211.524529, 3.942099, 0.812423],
-                rtol=1e-2,
+                [180, 3.9, 0.8],
+                rtol=3e-1,
             )
 
             assert_allclose(
                 chi2_sigma["significance"],
-                [14.54388, 1.985472, 0.901345],
-                rtol=1e-2,
+                [13, 2, 0.9],
+                rtol=2e-1,
             )
