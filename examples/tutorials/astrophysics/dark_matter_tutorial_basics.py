@@ -70,6 +70,7 @@ Dark Matter Indirect Detection with Gammapy: Basics
 # set up all the data regarding our target source.
 #
 
+# sphinx_gallery_thumbnail_number = 2
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm

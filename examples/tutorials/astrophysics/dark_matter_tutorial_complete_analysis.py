@@ -126,6 +126,7 @@ Dark Matter indirect search analysis with Gammapy
 # -----
 #
 
+# sphinx_gallery_thumbnail_number = 8
 from gammapy.data import Observation, FixedPointingInfo
 from gammapy.datasets import MapDataset, Datasets
 from gammapy.irf import load_irf_dict_from_file

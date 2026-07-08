@@ -52,6 +52,7 @@ analysis - Data inspection
 # -----
 #
 
+# sphinx_gallery_thumbnail_number = 2
 from gammapy.data import Observation, FixedPointingInfo
 from gammapy.datasets import MapDataset, SpectrumDataset
 from gammapy.irf import load_irf_dict_from_file
