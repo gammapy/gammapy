@@ -204,8 +204,10 @@ interpolation_kwargs = {
     "method": "linear",  # default
     "values_scale": "log",
 }  # default for energy-dependent models
-temporal_model = LightCurveTemplateTemporalModel.read(
-    filename, format="map", interp_kwargs=interpolation_kwargs
+temporal_model = LightCurveTemplateTemporalModel(interp_kwargs=interpolation_kwargs)
+temporal_model.read(
+    filename,
+    format="map",
 )
 
 ######################################################################
