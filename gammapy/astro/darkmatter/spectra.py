@@ -50,7 +50,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
     """
     DM-annihilation gamma-ray spectra.
 
-    Based on the precomputed models of PPPC4 DM ID by [Cirelli2016]_ and CosmiXs by [Arina2024]_, [DiMauro2025]_.
+    Based on the precomputed models of PPPC4 DM ID by [1]_ and CosmiXs by [2]_, [3]_.
     All available annihilation channels can be found there. The dark matter mass will be set to the nearest available value. The spectra will be available as `~gammapy.modeling.models.TemplateNDSpectralModel` for a chosen dark matter mass and annihilation channel.
     Using a `~gammapy.modeling.models.TemplateNDSpectralModel` allows the interpolation between different dark matter masses.
 
@@ -82,12 +82,12 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
     References
     ----------
-    .. [Cirelli2016] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
+    .. [1] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
        Cookbook for Dark Matter Indirect Detection"
        <http://www.marcocirelli.net/PPPC4DMID.html>`_
-    .. [Arina2024] `Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for
+    .. [2] `Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for
        indirect dark matter searches" <https://arxiv.org/abs/2312.01153>`_
-    .. [DiMauro2025] `Di Mauro et al. (2025), "Nailing down the theoretical
+    .. [3] `Di Mauro et al. (2025), "Nailing down the theoretical
        uncertainties of Dbar spectrum produced from dark matter"
        <https://arxiv.org/abs/2411.04815>`_
     """  # noqa: E501
@@ -479,11 +479,12 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel, _SigmaValidator):
 
     References
     ----------
-    `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook
-    for Dark Matter Indirect Detection" <http://www.marcocirelli.net/PPPC4DMID.html>`_
-    `Ackermann et al. (2015), "Searching for Dark Matter Annihilation from Milky Way
-    Dwarf Spheroidal Galaxies with Six Years of Fermi-LAT Data"
-    <https://doi.org/10.1103/PhysRevLett.115.231301>`_
+    .. [1] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
+       Cookbook for Dark Matter Indirect Detection"
+       <http://www.marcocirelli.net/PPPC4DMID.html>`_
+    .. [2] `Ackermann et al. (2015), "Searching for Dark Matter Annihilation from Milky Way
+       Dwarf Spheroidal Galaxies with Six Years of Fermi-LAT Data"
+       <https://doi.org/10.1103/PhysRevLett.115.231301>`_
     """
 
     THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
@@ -676,11 +677,12 @@ class DarkMatterDecaySpectralModel(SpectralModel, _SigmaValidator):
 
     References
     ----------
-    `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook
-    for Dark Matter Indirect Detection" <http://www.marcocirelli.net/PPPC4DMID.html>`_
-    `Ackermann et al. (2015), "Searching for Dark Matter Annihilation from Milky Way
-    Dwarf Spheroidal Galaxies with Six Years of Fermi-LAT Data"
-    <https://doi.org/10.1103/PhysRevLett.115.231301>`_
+    .. [1] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
+       Cookbook for Dark Matter Indirect Detection"
+       <http://www.marcocirelli.net/PPPC4DMID.html>`_
+    .. [2] `Ackermann et al. (2015), "Searching for Dark Matter Annihilation from Milky Way
+       Dwarf Spheroidal Galaxies with Six Years of Fermi-LAT Data"
+       <https://doi.org/10.1103/PhysRevLett.115.231301>`_
     """
 
     LIFETIME_AGE_OF_UNIVERSE = 4.3e17 * u.Unit("s")
