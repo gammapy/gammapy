@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
-This script check that all the file in a given folder and its subfolder start with
-the license statement. Can also be applied to single file. If the `--fix` or `-f`
-option is used, fix by prepending the license statement at the beginning of the file.
+This script check that all the python files tracked by git in a given folder and its
+subfolder start with the license statement. Can also be applied to single file.
+If the `--fix` or `-f` option is used, fix by prepending the license statement
+at the beginning of the file.
 
 Usage:
   python license_checker <PATH> [Options]
@@ -12,11 +13,13 @@ Usage:
 """
 
 import pathlib
-from dataclasses import dataclass
-from typing import Sequence
+import subprocess
+from typing import Sequence, Iterator
 import tempfile
+from enum import StrEnum
 import os
 import io
+import shutil
 
 
 LICENSE_STATEMENT = "# Licensed under a 3-clause BSD style license - see LICENSE.rst"
@@ -32,12 +35,11 @@ class NoArgumentError(Exception):
     pass
 
 
-@dataclass
-class PrintColor:
-    WARNGING: str = "\033[93m"
-    ENDC: str = "\033[0m"
-    FAIL: str = "\033[91m"
-    OKBLUE: str = "\033[94m"
+class PrintColor(StrEnum):
+    WARNGING = "\033[93m"
+    ENDC = "\033[0m"
+    FAIL = "\033[91m"
+    OKBLUE = "\033[94m"
 
 
 def print_usage():
@@ -56,7 +58,7 @@ def prepend_line(
     file_path: pathlib.Path,
     original_file: io.TextIOWrapper,
     reserved_first_line: bool = False,
-):
+) -> None:
     """
     Prepend the license statement to a file. Uses `tempfile` to prevent data losses.
 
@@ -83,7 +85,7 @@ def prepend_line(
     os.replace(tmp_path, file_path)
 
 
-def check_and_fix(file: pathlib.Path, fix: bool = False):
+def check_and_fix(file: pathlib.Path, fix: bool = False) -> None:
     """
     Check that the file start with the license statement. Fix it if the `fix`
     parameter is set to `True`.
@@ -117,14 +119,32 @@ def check_and_fix(file: pathlib.Path, fix: bool = False):
                 print()
 
 
-def main(argv: Sequence[str] | None = None):
+def get_git_files(path: pathlib.Path) -> Iterator[pathlib.Path]:
+    """Run a subprocess to get all the python files tracked by git in the directory `path`.
+
+    Parameters
+    ----------
+    path: pathlib.Path
+        Path where to list files with git."""
+    git_path = shutil.which("git")
+    result = subprocess.run(
+        [git_path, "-C", path, "ls-files", "*.py"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    files = map(path.joinpath, map(pathlib.Path, result.stdout.splitlines()))
+    return files
+
+
+def main(argv: Sequence[str] | None = None) -> None:
     try:
         if argv[0] in ["--help", "-h"]:
             print_usage()
             exit()
         root_path = pathlib.Path(argv[0])
     except IndexError:
-        raise NoArgumentError("Missing required argument: path to apply this script")
+        raise NoArgumentError("Missing required argument: path to apply this script.")
 
     fix = False
     if (len(argv) == 2) and (argv[1] in ["--fix", "-f"]):
@@ -132,7 +152,7 @@ def main(argv: Sequence[str] | None = None):
     if root_path.is_file():
         check_and_fix(root_path, fix)
 
-    files = map(pathlib.Path, root_path.rglob("*.py"))
+    files = get_git_files(root_path)
 
     for file in files:
         check_and_fix(file, fix)
