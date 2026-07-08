@@ -1,4 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import warnings
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -327,8 +329,6 @@ def test_primary_flux_invalid_type():
 
 @requires_data()
 def test_decay_expected_primary_flux_mass_is_half():
-    import warnings
-
     mDM = 2 * u.TeV
     test_flux = ContinuumPrimaryFlux(mDM=1 * u.TeV, channel="b")
 
@@ -552,53 +552,105 @@ def test_dm_decay_evaluation_on_dataset():
     assert np.all(flux.value > 0)
 
 
-# Backpor compatibility tests for old field names in serialized dicts
+# Backport compatibility tests for old field names in serialized dicts
 @requires_data()
-def test_dm_decay_from_dict_old_field_names_warns_and_maps():
-    """A dict serialized with the old field names ('mass', 'jfactor') must
-    still be loadable via from_dict, emitting a deprecation warning and
-    correctly mapping to the new names ('mDM', 'factor')."""
+def test_dm_decay_from_dict_missing_primary_flux_key():
+    """A dict serialized before 'primary_flux' existed must still be loadable via from_dict, reconstructing the
+    primary flux from the legacy flat 'source'/'mapping_dict' fields."""
     model = DarkMatterDecaySpectralModel(mDM=1 * u.TeV, channel="b")
     data = model.to_dict()
-
-    # Simulate an old-format serialized dict
-    data["spectral"]["jfactor"] = data["spectral"].pop("factor")
-
-    with pytest.warns(GammapyDeprecationWarning, match="'jfactor'"):
-        new_model = DarkMatterDecaySpectralModel.from_dict(data)
-
+    data["spectral"].pop("primary_flux", None)
+    new_model = DarkMatterDecaySpectralModel.from_dict(data)
     assert_quantity_allclose(new_model.mDM, model.mDM)
     assert_allclose(new_model.factor.value, model.factor.value, rtol=1e-2)
     assert new_model.channel == model.channel
 
 
 @requires_data()
-def test_dm_annihilation_from_dict_old_field_names_warns_and_maps():
-    """Same backward-compatibility check for DarkMatterAnnihilationSpectralModel."""
+def test_dm_annihilation_from_dict_missing_primary_flux_key():
+    """Backward-compatibility check for DarkMatterAnnihilationSpectralModel."""
     model = DarkMatterAnnihilationSpectralModel(mDM=1 * u.TeV, channel="b")
     data = model.to_dict()
-
-    data["spectral"]["mass"] = data["spectral"].pop("mDM")
-
-    with pytest.warns(GammapyDeprecationWarning, match="'mass'"):
-        new_model = DarkMatterAnnihilationSpectralModel.from_dict(data)
-
+    data["spectral"].pop("primary_flux", None)
+    new_model = DarkMatterAnnihilationSpectralModel.from_dict(data)
     assert_quantity_allclose(new_model.mDM, model.mDM)
     assert_allclose(new_model.factor.value, model.factor.value, rtol=1e-2)
     assert new_model.channel == model.channel
 
 
 @requires_data()
-def test_dm_decay_from_dict_new_field_names_no_warning():
-    """Loading a dict already using the new field names ('mDM', 'factor')
-    must NOT emit the backward-compatibility deprecation warning."""
-    import warnings
-
+def test_dm_decay_from_dict_missing_primary_flux_and_old_field_names():
+    """Dict with both no 'primary_flux' key AND old field names ('mass' instead of 'mDM')."""
     model = DarkMatterDecaySpectralModel(mDM=1 * u.TeV, channel="b")
     data = model.to_dict()
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("error", GammapyDeprecationWarning)
+    data["spectral"].pop("primary_flux", None)
+    data["spectral"]["mass"] = data["spectral"].pop("mDM")
+    with pytest.warns(GammapyDeprecationWarning, match="'mass'"):
         new_model = DarkMatterDecaySpectralModel.from_dict(data)
-
     assert_quantity_allclose(new_model.mDM, model.mDM)
+    assert new_model.channel == model.channel
+
+
+@requires_data()
+def test_dm_annihilation_from_dict_missing_primary_flux_and_old_field_names():
+    """Dict with both no 'primary_flux' key AND old field names ('mass' instead of 'mDM')."""
+    model = DarkMatterAnnihilationSpectralModel(mDM=1 * u.TeV, channel="b")
+    data = model.to_dict()
+    data["spectral"].pop("primary_flux", None)
+    data["spectral"]["mass"] = data["spectral"].pop("mDM")
+    with pytest.warns(GammapyDeprecationWarning, match="'mass'"):
+        new_model = DarkMatterAnnihilationSpectralModel.from_dict(data)
+    assert_quantity_allclose(new_model.mDM, model.mDM)
+    assert new_model.channel == model.channel
+
+
+@requires_data()
+def test_dm_decay_from_dict_both_old_field_names_warns_and_maps():
+    """Dict using both old field names ('mass' and 'jfactor') at once must map both and warn for each."""
+    model = DarkMatterDecaySpectralModel(mDM=1 * u.TeV, channel="b")
+    data = model.to_dict()
+    data["spectral"]["mass"] = data["spectral"].pop("mDM")
+    data["spectral"]["jfactor"] = data["spectral"].pop("factor")
+    with pytest.warns(GammapyDeprecationWarning) as record:
+        new_model = DarkMatterDecaySpectralModel.from_dict(data)
+    messages = [str(w.message) for w in record]
+    assert any("'mass'" in m for m in messages)
+    assert any("'jfactor'" in m for m in messages)
+    assert_quantity_allclose(new_model.mDM, model.mDM)
+    assert_allclose(new_model.factor.value, model.factor.value, rtol=1e-2)
+    assert new_model.channel == model.channel
+
+
+@requires_data()
+def test_dm_annihilation_from_dict_both_old_field_names_warns_and_maps():
+    """Dict using both old field names ('mass' and 'jfactor') at once must map both and warn for each."""
+    model = DarkMatterAnnihilationSpectralModel(mDM=1 * u.TeV, channel="b")
+    data = model.to_dict()
+    data["spectral"]["mass"] = data["spectral"].pop("mDM")
+    data["spectral"]["jfactor"] = data["spectral"].pop("factor")
+    with pytest.warns(GammapyDeprecationWarning) as record:
+        new_model = DarkMatterAnnihilationSpectralModel.from_dict(data)
+    messages = [str(w.message) for w in record]
+    assert any("'mass'" in m for m in messages)
+    assert any("'jfactor'" in m for m in messages)
+    assert_quantity_allclose(new_model.mDM, model.mDM)
+    assert_allclose(new_model.factor.value, model.factor.value, rtol=1e-2)
+    assert new_model.channel == model.channel
+
+
+@requires_data()
+def test_dm_decay_from_dict_unknown_primary_flux_type_raises():
+    model = DarkMatterDecaySpectralModel(mDM=1 * u.TeV, channel="b")
+    data = model.to_dict()
+    data["spectral"]["primary_flux"]["type"] = "not_a_real_type"
+    with pytest.raises(ValueError, match="Unknown primary_flux type"):
+        DarkMatterDecaySpectralModel.from_dict(data)
+
+
+@requires_data()
+def test_dm_decay_from_dict_missing_primary_flux_key_custom_source():
+    model = DarkMatterDecaySpectralModel(mDM=1 * u.TeV, channel="b", source="cosmixs")
+    data = model.to_dict()
+    data["spectral"].pop("primary_flux", None)
+    new_model = DarkMatterDecaySpectralModel.from_dict(data)
+    assert new_model.primary_flux.source == "cosmixs"

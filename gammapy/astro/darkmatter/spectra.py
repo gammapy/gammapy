@@ -878,18 +878,29 @@ class DarkMatterAnnihilationSpectralModel(
                 )
                 data[new_name] = data.pop(old_name)
 
-        pf_data = data.pop("primary_flux")
-        pf_cls = PRIMARY_FLUX_REGISTRY.get(pf_data["type"])
-        if pf_cls is None:
-            raise ValueError(
-                f"Unknown primary_flux type: '{pf_data['type']}'. "
-                f"Available: {list(PRIMARY_FLUX_REGISTRY.keys())}"
-            )
-        primary_flux = pf_cls.from_dict(pf_data)
+        pf_data = data.pop("primary_flux", None)
 
+        if pf_data is None:
+            # Old format
+            primary_flux = ContinuumPrimaryFlux(
+                data.get("mDM", data.get("mass")),
+                channel=data["channel"],
+                source=data.get("source"),
+                mapping_dict=data.get("mapping_dict"),
+            )
+        else:
+            pf_cls = PRIMARY_FLUX_REGISTRY.get(pf_data["type"])
+            if pf_cls is None:
+                raise ValueError(
+                    f"Unknown primary_flux type: '{pf_data['type']}'. "
+                    f"Available: {list(PRIMARY_FLUX_REGISTRY.keys())}"
+                )
+            primary_flux = pf_cls.from_dict(pf_data)
+
+        data.pop("source", None)
+        data.pop("mapping_dict", None)
         parameters = data.pop("parameters")
         scale = next(p["value"] for p in parameters if p["name"] == "scale")
-
         return cls(scale=scale, primary_flux=primary_flux, **data)
 
     @property
@@ -1125,14 +1136,27 @@ class DarkMatterDecaySpectralModel(
                 )
                 data[new_name] = data.pop(old_name)
 
-        pf_data = data.pop("primary_flux")
-        pf_cls = PRIMARY_FLUX_REGISTRY.get(pf_data["type"])
-        if pf_cls is None:
-            raise ValueError(
-                f"Unknown primary_flux type: '{pf_data['type']}'. "
-                f"Available: {list(PRIMARY_FLUX_REGISTRY.keys())}"
+        pf_data = data.pop("primary_flux", None)
+
+        if pf_data is None:
+            # Old format
+            primary_flux = ContinuumPrimaryFlux(
+                data.get("mDM", data.get("mass")),
+                channel=data["channel"],
+                source=data.get("source"),
+                mapping_dict=data.get("mapping_dict"),
             )
-        primary_flux = pf_cls.from_dict(pf_data)
+        else:
+            pf_cls = PRIMARY_FLUX_REGISTRY.get(pf_data["type"])
+            if pf_cls is None:
+                raise ValueError(
+                    f"Unknown primary_flux type: '{pf_data['type']}'. "
+                    f"Available: {list(PRIMARY_FLUX_REGISTRY.keys())}"
+                )
+            primary_flux = pf_cls.from_dict(pf_data)
+
+        data.pop("source", None)
+        data.pop("mapping_dict", None)
 
         parameters = data.pop("parameters")
         scale = next(p["value"] for p in parameters if p["name"] == "scale")
