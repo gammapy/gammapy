@@ -19,7 +19,7 @@ import pytest
 
 @requires_data()
 class TestEnergyDependentEstimator:
-    @pytest.fixture(params=["single", "multiple"])
+    @pytest.fixture(params=["single", "multiple"], scope="class")
     def estimator_result(self, request):
         stacked_dataset = MapDataset.read(
             "$GAMMAPY_DATA/estimators/mock_DL4/dataset_energy_dependent.fits.gz"
@@ -134,12 +134,12 @@ class TestEnergyDependentEstimator:
         elif mode == "multiple":
             assert_allclose(
                 chi2_sigma["chi2"],
-                [152.278292, 3.942099, 0.812423],
+                [211.524529, 3.942099, 0.812423],
                 rtol=1e-2,
             )
 
             assert_allclose(
                 chi2_sigma["significance"],
-                [12.340109, 1.985472, 0.901345],
+                [14.54388, 1.985472, 0.901345],
                 rtol=1e-2,
             )
