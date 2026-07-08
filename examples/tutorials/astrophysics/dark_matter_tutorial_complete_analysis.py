@@ -112,6 +112,13 @@ Dark Matter indirect search analysis with Gammapy
 #    around the exclusion curve, following the standard “Brazilian plot”
 #    convention.
 #
+# **Prerequisites**
+#
+# - Understanding of the Dark Matter basics, see the tutorial ‘Dark Matter
+#   Indirect Detection with Gammapy: Basics’
+# - Familiarity with the Dark Matter Data handling, check the tutorial
+#   ‘Dark Matter Data Handling with Gammapy’
+#
 
 
 ######################################################################
@@ -120,7 +127,7 @@ Dark Matter indirect search analysis with Gammapy
 #
 
 from gammapy.data import Observation, FixedPointingInfo
-from gammapy.datasets import MapDataset
+from gammapy.datasets import MapDataset, Datasets
 from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import (
     MapDatasetMaker,
@@ -133,6 +140,7 @@ from gammapy.modeling.models import (
     SkyModel,
     PointSpatialModel,
 )
+from gammapy.modeling import select_nested_models
 from gammapy.astro.darkmatter import DarkMatterDecaySpectralModel, profiles, JFactory
 from gammapy.modeling import Fit
 from gammapy.estimators import ParameterEstimator
@@ -220,18 +228,6 @@ geom_draco = WcsGeom.create(
 
 # DM Spatial distribution
 spatial_model = PointSpatialModel(lon_0=draco_pos.ra, lat_0=draco_pos.dec, frame="icrs")
-
-
-######################################################################
-#    **Note:** Computing these spectra requires the Gammapy datasets to be
-#    downloaded and the `GAMMAPY_DATA` environment variable to be set.
-#    Please follow the instructions at
-#    https://docs.gammapy.org/dev/getting-started/index.html#recommended-setup
-#    before running the cells below.
-#
-
-# import os
-# os.environ["GAMMAPY_DATA"] = "PATH/gammapy-data"
 
 # DM spectral distribution
 
@@ -342,12 +338,14 @@ print(f"Simulated counts : {dataset_mc.counts.data.sum()}")
 #
 # .. math:: \text{TS} = -2\ln\frac{\mathcal{L}(\text{H}_0)}{\mathcal{L}(\text{H}_1)} = \text{stat}_{H_0} - \text{stat}_{H_1}
 #
-# As a rule of thumb, :math:`\sqrt{\text{TS}}` approximates the detection
-# significance in Gaussian sigmas — a value of TS = 25 corresponds to a
-# :math:`5\sigma` detection. The brighter the injected signal, the larger
-# the TS. Under the background-only hypothesis, we expect **TS ≈ 0**,
-# meaning the fitter finds no evidence for a dark matter signal in the
-# data.
+# For the case of one degree of freedom (i.e. a single free parameter
+# between :math:`H_0` and :math:`H_1`, as is the case here with
+# `scale`), Wilks’ theorem gives :math:`\text{TS} \sim \chi^2_1`, so
+# :math:`\sqrt{\text{TS}}` approximates the detection significance in
+# Gaussian sigmas — a value of TS = 25 corresponds to a :math:`5\sigma`
+# detection. The brighter the injected signal, the larger the TS. Under
+# the background-only hypothesis, we expect **TS ≈ 0**, meaning the fitter
+# finds no evidence for a dark matter signal in the data.
 #
 # Gammapy’s `Fit` class provides a unified interface to several
 # optimization backends; by default it uses
@@ -398,30 +396,6 @@ dataset_mc.models["draco-dm"].spectral_model.scale.frozen = True
 dataset_mc.models["dataset-simu-draco-bkg"].parameters["norm"].frozen = False
 dataset_mc.models["dataset-simu-draco-bkg"].parameters["tilt"].frozen = False
 
-fit = Fit()
-result_bkg = fit.run(datasets=[dataset_mc])
-print(f"Background fit converged: {result_bkg.success}")
-
-if not result_bkg.success:
-    print("WARNING: fit did not converge. Adjust starting values before continuing.")
-else:
-    stat_H0 = dataset_mc.stat_sum()
-    print(f"         stat_H0 = {stat_H0:.4f}")
-
-# Another way to do the background-only fit is to create a new model with only the background component and assign it to the dataset. This is useful if you want to keep the original model intact for later use.
-# Here you have the code sample
-# models_nosrc = Models([bkg_model])
-# dataset_mc.models = models_nosrc
-# fit = Fit()
-# result_nosrc = fit.run(datasets=[dataset_mc])
-
-
-######################################################################
-# If fit does not converge, you can try to adjust the initial parameters
-# setting a starting value, minimum or maximum, but make sure it converges
-# before getting to the next step. Here we leave an example.
-#
-
 # Example of how to set the background normalization parameter for a specific dataset. This is useful when you want to adjust the background model's normalization before fitting or analyzing the data.
 dataset_mc.models["dataset-simu-draco-bkg"].parameters[
     "norm"
@@ -436,8 +410,20 @@ print(f"Background fit converged: {result_bkg.success}")
 if not result_bkg.success:
     print("WARNING: fit did not converge. Adjust starting values before continuing.")
 else:
-    stat_H0 = result_bkg.total_stat
+    stat_H0 = dataset_mc.stat_sum()
     print(f"         stat_H0 = {stat_H0:.4f}")
+
+# Another way to do the background-only fit is to create a new model with only the background component and assign it to the dataset. This is useful if you want to keep the original model intact for later use.
+# Here you have the code sample
+models_nosrc = Models([bkg_model])
+dataset_mc.models = models_nosrc
+fit = Fit()
+result_nosrc = fit.run(datasets=[dataset_mc])
+if not result_nosrc.success:
+    print("WARNING: fit did not converge. Adjust starting values before continuing.")
+else:
+    stat_H0_nosrc = dataset_mc.stat_sum()
+    print(f"         stat_H0 = {stat_H0_nosrc:.4f}")
 
 
 ######################################################################
@@ -459,12 +445,15 @@ else:
     stat_H1 = result_full.total_stat
     print(f"         stat_H1 = {stat_H1:.4f}")
 
+
 # Another way to do the full fit is to create a new model with both the DM and background components and assign it to the dataset. This is useful if you want to keep the original model intact for later use.
 # Here you have the code sample
-# spectral_model.parameters["scale"].frozen = False
-# models_src = Models([model_simu, bkg_model])
-# dataset_mc.models = models_src
-# result_src = fit.run(datasets=[dataset_mc])
+spectral_model.parameters["scale"].frozen = False
+models_src = Models([model_simu, bkg_model])
+dataset_mc.models = models_src
+result_src = fit.run(datasets=[dataset_mc])
+if not result_src.success:
+    print("WARNING: fit did not converge. Adjust starting values before continuing.")
 
 
 ######################################################################
@@ -483,6 +472,27 @@ print(f"TS = {TS:.2f}")  # Expected ~ 0 for background-only dataset
 # simulation where we set the scale of the DM signal to 0, effectively
 # simulating a scenario with no dark matter contribution.
 #
+
+
+######################################################################
+# Another method: `select_nested_models`
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Alternatively, `select_nested_models` automates this nested-hypothesis
+# test internally: it keeps the background and all other sources in the
+# field of view free and identical in both fits, and only freezes the DM
+# `scale` parameter to 0 for H0, restoring its original state
+# afterwards.
+#
+
+result = select_nested_models(
+    datasets=Datasets(dataset_mc),
+    parameters=[spectral_model.parameters["scale"]],
+    null_values=[0],
+)
+
+TS = result["ts"]
+print(f"TS = {TS:.4f}")
 
 
 ######################################################################
