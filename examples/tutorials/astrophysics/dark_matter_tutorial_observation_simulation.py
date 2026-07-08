@@ -244,15 +244,6 @@ spatial_model = PointSpatialModel(lon_0=draco_pos.ra, lat_0=draco_pos.dec, frame
 # combines Particle Physics (mass and annihilation channel) with
 # Astrophysics (the J-Factor).
 #
-#    **Note:** Computing these spectra requires the Gammapy datasets to be
-#    downloaded and the `GAMMAPY_DATA` environment variable to be set.
-#    Please follow the instructions at
-#    https://docs.gammapy.org/dev/getting-started/index.html#recommended-setup
-#    before running the cells below.
-#
-
-# import os
-# os.environ["GAMMAPY_DATA"] = "PATH/gammapy-data"
 
 # DM spectral distribution
 
