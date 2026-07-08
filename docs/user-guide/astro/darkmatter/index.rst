@@ -34,8 +34,7 @@ A dark matter analysis in Gammapy combines two ingredients:
   covering a wide range of masses and channels.
 
 - **Spatial distribution** -- the dark matter halo density profile, described
-  through radially symmetric models (see
-  `~gammapy.astro.darkmatter.profiles`): NFW, Einasto, Isothermal, Burkert,
+  through radially symmetric models: NFW, Einasto, Isothermal, Burkert,
   Moore, and Zhao profiles are currently implemented, covering both cuspy and
   cored halo shapes.
 
