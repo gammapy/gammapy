@@ -413,10 +413,11 @@ else:
 
 # Another way to do the background-only fit is to create a new model with only the background component and assign it to the dataset. This is useful if you want to keep the original model intact for later use.
 # Here you have the code sample
+dataset_example = dataset_mc
 models_nosrc = Models([bkg_model])
-dataset_mc.models = models_nosrc
+dataset_example.models = models_nosrc
 fit = Fit()
-result_nosrc = fit.run(datasets=[dataset_mc])
+result_nosrc = fit.run(datasets=[dataset_example])
 if not result_nosrc.success:
     print("WARNING: fit did not converge. Adjust starting values before continuing.")
 else:
@@ -448,8 +449,8 @@ else:
 # Here you have the code sample
 spectral_model.parameters["scale"].frozen = False
 models_src = Models([model_simu, bkg_model])
-dataset_mc.models = models_src
-result_src = fit.run(datasets=[dataset_mc])
+dataset_example.models = models_src
+result_src = fit.run(datasets=[dataset_example])
 if not result_src.success:
     print("WARNING: fit did not converge. Adjust starting values before continuing.")
 
