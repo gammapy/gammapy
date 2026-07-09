@@ -14,7 +14,7 @@ the analysis:
 - **Scenario:** annihilation or decay
 - **Data:** real observations or simulated data
 - **Analysis type:** 3D (spatial+spectral) or 1D (spectral-only)
-- **Output:** upper limits, exclusion curves, and sensitivity (Brazil) bands
+- **Output:** upper limits, exclusion curves, and sensitivity with the 68% and 95% containment bands, popularly known as the Brazilian bands.
 
 For hands-on, step-by-step examples covering the full
 analysis pipeline with real code, see the tutorials linked at the bottom of
