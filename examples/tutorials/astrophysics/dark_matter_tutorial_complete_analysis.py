@@ -306,8 +306,16 @@ dataset = maker_safe_mask.run(dataset, obs)
 dataset.models = Models([model_simu, bkg_model])
 
 # Counts simulation
-aux_dataset = dataset
-dataset_mc = aux_dataset
+dataset_mc = dataset.copy(name="dataset-simu-draco-mc")
+
+model_simu_copy = model_simu.copy(name="draco-dm")
+
+bkg_model_copy = bkg_model.copy()
+bkg_model_copy.datasets_names = [
+    dataset_mc.name
+]  # clave: vincula el bkg al dataset copiado
+
+dataset_mc.models = Models([model_simu_copy, bkg_model_copy])
 
 # Sample Poisson fluctuations around the prediction
 # random_state fixes the seed for reproducibility, but it may be random
@@ -412,10 +420,17 @@ else:
     print(f"         stat_H0 = {stat_H0:.4f}")
 
 # Another way to do the background-only fit is to create a new model with only the background component and assign it to the dataset. This is useful if you want to keep the original model intact for later use.
-# Here you have the code sample
-dataset_example = dataset_mc
-models_nosrc = Models([bkg_model])
-dataset_example.models = models_nosrc
+# Here you have the code sample with a mock dataset
+dataset_example = dataset.copy(name="dataset-simu-draco-mc")
+
+model_simu_copy = model_simu.copy(name="draco-dm")
+
+bkg_model_copy = bkg_model.copy()
+bkg_model_copy.datasets_names = [dataset_mc.name]
+
+dataset_example.models = Models([bkg_model_copy])
+dataset_example.fake(44)
+
 fit = Fit()
 result_nosrc = fit.run(datasets=[dataset_example])
 if not result_nosrc.success:
@@ -435,7 +450,6 @@ dataset_mc.models["dataset-simu-draco-bkg"].parameters["tilt"].frozen = False
 dataset_mc.models["draco-dm"].spectral_model.scale.frozen = False
 
 result_full = fit.run(datasets=[dataset_mc])
-print(f"Background fit converged: {result_bkg.success}")
 print(f"Full fit converged: {result_full.success}")
 
 if not result_full.success:
@@ -447,10 +461,11 @@ else:
 
 # Another way to do the full fit is to create a new model with both the DM and background components and assign it to the dataset. This is useful if you want to keep the original model intact for later use.
 # Here you have the code sample
-spectral_model.parameters["scale"].frozen = False
-models_src = Models([model_simu, bkg_model])
-dataset_example.models = models_src
-result_src = fit.run(datasets=[dataset_example])
+dataset_mc.models["dataset-simu-draco-bkg"].parameters["norm"].frozen = False
+dataset_mc.models["dataset-simu-draco-bkg"].parameters["tilt"].frozen = False
+dataset_mc.models["draco-dm"].spectral_model.scale.frozen = False
+
+result_src = fit.run(datasets=[dataset_mc])
 if not result_src.success:
     print("WARNING: fit did not converge. Adjust starting values before continuing.")
 
