@@ -47,7 +47,7 @@ class DMProfile(abc.ABC):
             Distance at which the profile is normalized to ``local_density``.
         local_density : `~astropy.units.Quantity`, optional
             Local dark matter density. Default is the solar neighborhood
-            value (0.3 GeV/cm³).
+            value (0.3 GeV/cm³ - local variable LOCAL_DENSITY).
         """
 
         if local_density is None:
