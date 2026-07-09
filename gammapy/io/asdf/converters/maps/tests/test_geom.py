@@ -126,6 +126,9 @@ tested_hpx_geom = [
         ],
     ),
     (8, True, "galactic", "DISK(110.,75.,10.)", None),
+    (8, False, "icrs", "DISK_INC(110.,75.,10.,4)", None),
+    (8, True, "icrs", "HPX_PIXEL(NESTED,2,3)", None),
+    (8, False, "icrs", "HPX_PIXEL(RING,2,3)", None),
 ]
 
 
