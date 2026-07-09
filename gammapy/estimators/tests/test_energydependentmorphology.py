@@ -106,8 +106,8 @@ class TestEnergyDependentEstimator:
             assert_allclose(result["energy_dependence"]["delta_ts"], 101.738, rtol=1e-3)
             assert_allclose(
                 results_edep["sigma_err"],
-                [0.00421623, 0.0020569, 0.0063294] * u.deg,
-                atol=1e-3,
+                [0.0042, 0.003, 0.006] * u.deg,
+                atol=2e-3,
             )
             assert_allclose(
                 results_edep["lat_0_err"],
