@@ -251,6 +251,7 @@ def test_dm_analysis_pipeline(dm_scenario):
     scale_par.scan_values = np.logspace(-10, np.log10(scale_max), 50)
 
     profile = fit.stat_profile(datasets=dataset, parameter=scale_par, reoptimize=True)
+    scale_scan = profile[f"{dm_model_name}.spectral.scale_scan"]
     delta_ts = profile["stat_scan"] - profile["stat_scan"].min()
     idx_min = np.argmin(delta_ts)
 
@@ -260,10 +261,41 @@ def test_dm_analysis_pipeline(dm_scenario):
             f"[{cfg}] Could not compute a one-sided 95% CL upper limit -- "
             "profile scan range or fit may be broken."
         )
+
+        # Extract the actual upper limit value via interpolation
+        scale_ul = np.interp(2.71, delta_ts[idx_min:], scale_scan[idx_min:])
+
+        # Sanity check on the extracted value itself, not just that it exists
+        assert scale_ul > 0, (
+            f"[{cfg}] Extracted upper limit is not positive: {scale_ul}"
+        )
+        assert np.isfinite(scale_ul), (
+            f"[{cfg}] Extracted upper limit is not finite: {scale_ul}"
+        )
+
+        # Expected value range
+        if cfg["channel_type"] == "decay":
+            expected_ul_range = (1e-9, 1e-7)
+        else:
+            expected_ul_range = (1e2, 1e4)
+
+        assert expected_ul_range[0] < scale_ul < expected_ul_range[1], (
+            f"[{cfg}] Upper limit ({scale_ul:.2e}) is outside the expected "
+            f"order-of-magnitude range {expected_ul_range} for this dataset "
+            "-- possible regression in sensitivity or a bug."
+        )
+
     else:
         # two-sided branch: extract the 95% CL interval on both sides
         lo_branch = delta_ts[: idx_min + 1]
         hi_branch = delta_ts[idx_min:]
+
+        print(
+            f"[{cfg}] idx_min={idx_min}  len(scale_scan)={len(scale_scan)}  "
+            f"best_fit={scale_scan[idx_min]:.3e}"
+        )
+        print(f"[{cfg}] lo_branch (len={len(lo_branch)}): {lo_branch}")
+        print(f"[{cfg}] hi_branch (len={len(hi_branch)}): {hi_branch}")
         assert lo_branch.max() > 3.84 or idx_min == 0, (
             f"[{cfg}] Could not bracket the lower side of the 95% CL "
             "two-sided interval -- scan range may not extend low enough."
@@ -271,4 +303,27 @@ def test_dm_analysis_pipeline(dm_scenario):
         assert hi_branch.max() > 3.84, (
             f"[{cfg}] Could not bracket the upper side of the 95% CL "
             "two-sided interval -- scan range may not extend high enough."
+        )
+
+        # Extract the actual interval bounds via interpolation
+        scale_lo = np.interp(3.84, lo_branch[::-1], scale_scan[: idx_min + 1][::-1])
+        scale_hi = np.interp(3.84, hi_branch, scale_scan[idx_min:])
+        print(
+            f"[{cfg}] scale_lo = {scale_lo:.3e}"
+        )  # añade temporalmente, corre el test, anota el valor
+        print(
+            f"[{cfg}] scale_hi = {scale_hi:.3e}"
+        )  # añade temporalmente, corre el test, anota el valor
+
+        # Sanity checks: bounds must bracket the best fit and be positive/finite
+        best_fit_scale = scale_scan[idx_min]
+        assert scale_lo < best_fit_scale < scale_hi, (
+            f"[{cfg}] Extracted interval [{scale_lo:.2e}, {scale_hi:.2e}] "
+            f"does not bracket the best-fit scale ({best_fit_scale:.2e})."
+        )
+        assert scale_lo > 0 and np.isfinite(scale_lo), (
+            f"[{cfg}] Extracted lower bound is not positive/finite: {scale_lo}"
+        )
+        assert np.isfinite(scale_hi), (
+            f"[{cfg}] Extracted upper bound is not finite: {scale_hi}"
         )
