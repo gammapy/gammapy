@@ -64,15 +64,15 @@ def prepend_line(
 
     Parameters
     ----------
-        file_path: `pathlib.Path`
-            Path to the file.
-        original_file: `io.TextIOWrapper`
-           Instance of the open original file.
-        reserved_first_line: str, Optional
-            Whether the original file starts with a reserved first line, e.g. shebang
-            (`#!`) for executable or `# -*- coding: utf-8 -*-` in docs python file.
-            If that is the case, put the license statement on the second line.
-            Default if False.
+    file_path: `pathlib.Path`
+        Path to the file.
+    original_file: `io.TextIOWrapper`
+       Instance of the open original file.
+    reserved_first_line: str, Optional
+        Whether the original file starts with a reserved first line, e.g. shebang
+        (`#!`) for executable or `# -*- coding: utf-8 -*-` in docs python file.
+        If that is the case, put the license statement on the second line.
+        Default if False.
     """
 
     file_descriptor, tmp_path = tempfile.mkstemp(dir=file_path.parent)
