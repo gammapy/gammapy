@@ -2894,7 +2894,7 @@ class MapDatasetOnOff(MapDataset):
     def _to_asimov_dataset(self):
         """Create Asimov dataset from the current models.
         Uses the nominal background (alpha * counts_off) instead of the
-        misginalised background estimate."""
+        profiled background estimate."""
 
         npred = self.npred_signal() + self.background
         data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
