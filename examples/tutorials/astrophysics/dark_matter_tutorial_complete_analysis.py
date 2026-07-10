@@ -8,11 +8,10 @@ data structures and the Dark Matter module. If you are new to Gammapy,
 we recommend first working through the introductory and the Dark Matter
 Basics and Data handling tutorials.
 
-In this example we simulate observations of the **Draco dwarf spheroidal
-galaxy** and perform a **3D analysis** — using both spatial and spectral
-information, as opposed to a 1D (spectral-only) analysis (heck the ‘Dark
-Matter Data Handling with Gammapy’ tutorial for further details about
-these approaches).
+In this example we perform a **3D analysis** — using both spatial and
+spectral information, as opposed to a 1D (spectral-only) analysis (heck
+the ‘Dark Matter Data Handling with Gammapy’ tutorial for further
+details about these approaches).
 
 To perform a dark matter analysis, we need to fit the data with a model
 that includes both the background and the dark matter signal component.
@@ -103,10 +102,9 @@ In this way, the steps/sections followed in this tutorial are:
 4. **Exclusion curve: scanning over masses.** We repeat the
    limit-setting procedure over a grid of dark matter masses to build
    the exclusion curve.
-5. **Brazilian plot: uncertainty bands on the exclusion curve.** We
-   compute the expected sensitivity and its uncertainty bands (1σ/2σ)
-   around the exclusion curve, following the standard “Brazilian plot”
-   convention.
+5. **Bands plot: uncertainty bands on the exclusion curve.** We compute
+   the expected sensitivity and its uncertainty bands (1σ/2σ) around the
+   exclusion curve, following the standard bands plot convention.
 
 **Prerequisites**
 
@@ -124,13 +122,7 @@ In this way, the steps/sections followed in this tutorial are:
 #
 
 # sphinx_gallery_thumbnail_number = 8
-from gammapy.data import Observation, FixedPointingInfo
 from gammapy.datasets import MapDataset, Datasets
-from gammapy.irf import load_irf_dict_from_file
-from gammapy.makers import (
-    MapDatasetMaker,
-    SafeMaskMaker,
-)
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     FoVBackgroundModel,
@@ -146,8 +138,7 @@ from gammapy.estimators import ParameterEstimator
 from regions import CircleSkyRegion
 
 import astropy.units as u
-from astropy.coordinates import SkyCoord, EarthLocation, AltAz
-from astropy.time import Time
+from astropy.coordinates import SkyCoord
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -160,103 +151,92 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 ######################################################################
-# In this section we simulate a dataset containing only background,
-# mimicking the realistic scenario where no dark matter signal is present
-# in the data. First we will do the analysis for one point (mass),
-# obtaining its scale upper limits, and at the end we will make the
-# implementation of a range mass.
-#
-
-
-######################################################################
 # 1. Data
 # ~~~~~~~
 #
 
 
 ######################################################################
-# For this tutorial we will simulate observations of 500 hours of the
-# **Draco dwarf spheroidal galaxy** using CTA-North IRFs (prod5
-# configuration), obtaining the counts with a Monte Carlo approach.
-# Additionally, we are going to consider that the data follows an Einasto
-# profile and we are going to study the case of Decay with channel b.
+# For this tutorial we will use the data of a non-signal dataset provided
+# by the Gammapy database.. Additionally, we are going to consider that
+# the data follows an Einasto profile and we are going to study the case
+# of Decay with channel b.
 #
 # **For further detail in this step or if you want to use Real Data please
 # check the tutorial ‘Dark Matter Data Handling with Gammapy’.**
 #
 
-# Source coordinates
-draco_pos = SkyCoord(ra=260.05167 * u.deg, dec=57.915 * u.deg, frame="icrs")
-draco_dist = 76 * u.kpc
+# We obtain the data
+dataset = MapDataset.read("$GAMMAPY_DATA/datasets/empty-dl4/empty-dl4.fits.gz")
 
-# Location coordinates, i.e CTA-North
-cta_norte = EarthLocation(lat=28.762 * u.deg, lon=-17.89 * u.deg, height=2200 * u.m)
+dataset.meta_table
 
-# Observation start time
-obs_time = Time("2025-06-17 01:00:00")  # UTC
 
-altaz = AltAz(obstime=obs_time, location=cta_norte)
-draco_altaz = draco_pos.transform_to(altaz)
+######################################################################
+# We can see that only one observation is on the dataset, so we are not
+# going to perform any data selection or reduction (see the tutorial in
+# the Dark Matter Data Handling how to do it). The observation pointing is
+# towards M87, so we are going to take it as a reference.
+#
 
-# Altitude and zenith angle
-altitude = draco_altaz.alt.deg
-zenith_angle = 90 - altitude
-
-print(f"Altitude: {altitude:.2f}°")
-print(f"Zenith angle: {zenith_angle:.2f}°")
+# We set our target position. In this case we use the same as in the dataset, since we only have one observation. Let's pretend we are interested on that source
+target_pos = SkyCoord(
+    ra=187.27791666667 * u.deg, dec=2.55238888889 * u.deg, frame="icrs"
+)
+target_dist = 16400 * u.kpc
 
 # Set energy bounds
-energy_edges = np.logspace(-1, 2, 15)
+energy_edges = np.logspace(-1, 1.5, 15)
 # The reconstructed energy axis, used for the final map and counts (i.e. what the telescope measures).
 # In this case we use the same for true and reco, but it depends on your energy range study.
 energy_reco = MapAxis.from_edges(energy_edges, unit="TeV", name="energy", interp="log")
-# The true energy axis, used internally for the IRFs (e.g. effective area, energy dispersion), since the instrument's response is defined in terms of the true photon energy before any reconstruction effects.
-energy_true = MapAxis.from_edges(
-    energy_edges, unit="TeV", name="energy_true", interp="log"
-)
 
 # Geometry map we are going to work with
-geom_draco = WcsGeom.create(
+geom = WcsGeom.create(
     binsz=0.1,  # Pixel size
-    skydir=draco_pos,  # Sky position of the target, center of the map
+    skydir=target_pos,  # Sky position of the target, center of the map
     width=3.0,  # Width of the map (i.e 3x3 map)
     frame="icrs",  # Coordinates system
     axes=[energy_reco],
 )
 
-# DM Spatial distribution
-spatial_model = PointSpatialModel(lon_0=draco_pos.ra, lat_0=draco_pos.dec, frame="icrs")
 
+# DM Spatial distribution
+
+spatial_model = PointSpatialModel(
+    lon_0=target_pos.ra, lat_0=target_pos.dec, frame="icrs"
+)
 # DM spectral distribution
 
 # DM parameters: mass and channel
 channel = "b"
 massDM = 10 * u.TeV
 
+# This density data is not accurate for M87, but we set these values as examples
 r_s = 0.91 * u.kpc  # Scale radius
 rho_s = 1.3e7 * (u.M_sun / u.kpc**3)  # Scale density
 rho_s_GeV = rho_s.to(u.GeV / u.cm**3, equivalencies=u.mass_energy())  # Units conversion
 
 # Define the DM profile. Check profiles.DMProfile.__subclasses__() for more profiles
-draco_profile = profiles.EinastoProfile(r_s=0.91 * u.kpc, rho_s=rho_s_GeV)
+profile = profiles.EinastoProfile(r_s=0.91 * u.kpc, rho_s=rho_s_GeV)
 
 # Dfactor - This can also be calculated with the class JFactory, but we set the value for simplicity. You can look for it in dedicated papers.
 dfactory = JFactory(
-    geom=geom_draco,  # Geometry map
-    profile=draco_profile,  # Chosen density profile
-    distance=draco_dist,  # Target distance
+    geom=geom,  # Geometry map
+    profile=profile,  # Chosen density profile
+    distance=target_dist,  # Target distance
     annihilation=False,  # Set if it is annihilation (true) or decay (false)
 )
 
 # Computation of the J factor
-dfact_draco = dfactory.compute_jfactor()
+dfact = dfactory.compute_jfactor()
 
 # Define a region of interest (i.e., 0.1 deg circle)
-sky_reg = CircleSkyRegion(center=draco_pos, radius=0.1 * u.deg)
-pix_reg = sky_reg.to_pixel(wcs=geom_draco.wcs)
+sky_reg = CircleSkyRegion(center=target_pos, radius=0.1 * u.deg)
+pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 
 # Integration of DFactor within that region
-total_dfact = pix_reg.to_mask().multiply(dfact_draco).sum()
+total_dfact = pix_reg.to_mask().multiply(dfact).sum()
 
 spectral_model = DarkMatterDecaySpectralModel(
     mass=massDM,
@@ -266,73 +246,24 @@ spectral_model = DarkMatterDecaySpectralModel(
 )
 
 # Combined model
-model_simu = SkyModel(
-    spatial_model=spatial_model, spectral_model=spectral_model, name="draco-dm"
+sky_model = SkyModel(
+    spatial_model=spatial_model, spectral_model=spectral_model, name="dm"
 )
 
-# Background model
-bkg_model = FoVBackgroundModel(dataset_name="dataset-simu-draco")
-
-# Load IRFs
-irf_path = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
-irfs = load_irf_dict_from_file(irf_path)
-
-# Create the Observation: 500 hours of livetime
-livetime = 500 * u.h
-obs = Observation.create(
-    pointing=FixedPointingInfo(fixed_icrs=draco_pos),
-    livetime=livetime,
-    irfs=irfs,
-    reference_time=obs_time,
-)
-
-# Dataset creation
-# Create an empty MapDataset
-empty = MapDataset.create(
-    geom=geom_draco, name="dataset-simu-draco", energy_axis_true=energy_true
-)
-
-# Setup Maker to calculate exposure, background, PSF, and energy dispersion
-maker = MapDatasetMaker(selection=["exposure", "background", "psf", "edisp"])
-
-# Safe mask
-maker_safe_mask = SafeMaskMaker(methods=["offset-max"], offset_max=2.5 * u.deg)
-
-# Run the maker and attach models
-dataset = maker.run(empty, obs)
-dataset = maker_safe_mask.run(dataset, obs)
+bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
 
 # Attach the DM model and a Field-of-View background model
-dataset.models = Models([model_simu, bkg_model])
+dataset.models = Models([sky_model, bkg_model])
 
-# Counts simulation
-dataset_mc = dataset.copy(name="dataset-simu-draco-mc")
-
-model_simu_copy = model_simu.copy(name="draco-dm")
-
-bkg_model_copy = bkg_model.copy()
-bkg_model_copy.datasets_names = [
-    dataset_mc.name
-]  # clave: vincula el bkg al dataset copiado
-
-dataset_mc.models = Models([model_simu_copy, bkg_model_copy])
-
-# Sample Poisson fluctuations around the prediction
-# random_state fixes the seed for reproducibility, but it may be random
-dataset_mc.fake(random_state=44)
-
-print("=== MC Observation ===")
-# We do not expect the same counts since the statistical noise is introduced
-print(f"Predicted counts : {dataset_mc.npred().data.sum():.2f}")
-print(f"Simulated counts : {dataset_mc.counts.data.sum()}")
+dataset.peek()
 
 
 ######################################################################
 # 2. Analysis of signal detection
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# To verify that our simulated dataset contains no dark matter signal, we
-# perform a **likelihood ratio test** between two hypotheses:
+# To verify that our dataset contains no dark matter signal, we perform a
+# **likelihood ratio test** between two hypotheses:
 #
 # - **H₀ (background-only):** the dataset is described by the background
 #   model alone
@@ -385,7 +316,7 @@ print(f"Simulated counts : {dataset_mc.counts.data.sum()}")
 #
 
 # First check the parameters of the model
-print(dataset_mc.models.parameters.to_table())
+print(dataset.models.parameters.to_table())
 
 
 ######################################################################
@@ -393,50 +324,40 @@ print(dataset_mc.models.parameters.to_table())
 # so we make sure we study the target we want.
 #
 
-dataset_mc.models["draco-dm"].parameters["lon_0"].frozen = True
-dataset_mc.models["draco-dm"].parameters["lat_0"].frozen = True
+dataset.models["dm"].parameters["lon_0"].frozen = True
+dataset.models["dm"].parameters["lat_0"].frozen = True
 
 # Fit with background only (no DM signal)
 # Freeze the DM model parameters and free the background model parameters
-dataset_mc.models["draco-dm"].spectral_model.scale.frozen = True
-dataset_mc.models["dataset-simu-draco-bkg"].parameters["norm"].frozen = False
-dataset_mc.models["dataset-simu-draco-bkg"].parameters["tilt"].frozen = False
+dataset.models["dm"].spectral_model.scale.frozen = True
+dataset.models["stacked-bkg"].parameters["norm"].frozen = False
+dataset.models["stacked-bkg"].parameters["tilt"].frozen = False
 
 # Example of how to set the background normalization parameter for a specific dataset. This is useful when you want to adjust the background model's normalization before fitting or analyzing the data.
-dataset_mc.models["dataset-simu-draco-bkg"].parameters[
+dataset.models["stacked-bkg"].parameters[
     "norm"
 ].value = 1.0  # Starting point of the optimizer
-dataset_mc.models["dataset-simu-draco-bkg"].parameters["norm"].min = 0.5
-dataset_mc.models["dataset-simu-draco-bkg"].parameters["norm"].max = 2.0
+dataset.models["stacked-bkg"].parameters["norm"].min = 0.5
+dataset.models["stacked-bkg"].parameters["norm"].max = 2.0
 
 fit = Fit()
-result_bkg = fit.run(datasets=[dataset_mc])
+result_bkg = fit.run(datasets=[dataset])
 print(f"Background fit converged: {result_bkg.success}")
 
 if not result_bkg.success:
     print("WARNING: fit did not converge. Adjust starting values before continuing.")
 else:
-    stat_H0 = dataset_mc.stat_sum()
+    stat_H0 = dataset.stat_sum()
     print(f"         stat_H0 = {stat_H0:.4f}")
 
 # Another way to do the background-only fit is to create a new model with only the background component and assign it to the dataset. This is useful if you want to keep the original model intact for later use.
 # Here you have the code sample with a mock dataset
-dataset_example = dataset.copy(name="dataset-simu-draco-mc")
-
-model_simu_copy = model_simu.copy(name="draco-dm")
-
-bkg_model_copy = bkg_model.copy()
-bkg_model_copy.datasets_names = [dataset_mc.name]
-
-dataset_example.models = Models([bkg_model_copy])
-dataset_example.fake(44)
-
 fit = Fit()
-result_nosrc = fit.run(datasets=[dataset_example])
+result_nosrc = fit.run(datasets=[dataset])
 if not result_nosrc.success:
     print("WARNING: fit did not converge. Adjust starting values before continuing.")
 else:
-    stat_H0_nosrc = dataset_mc.stat_sum()
+    stat_H0_nosrc = dataset.stat_sum()
     print(f"         stat_H0 = {stat_H0_nosrc:.4f}")
 
 
@@ -445,11 +366,11 @@ else:
 #
 
 # Full fit — all parameters free
-dataset_mc.models["dataset-simu-draco-bkg"].parameters["norm"].frozen = False
-dataset_mc.models["dataset-simu-draco-bkg"].parameters["tilt"].frozen = False
-dataset_mc.models["draco-dm"].spectral_model.scale.frozen = False
+dataset.models["stacked-bkg"].parameters["norm"].frozen = False
+dataset.models["stacked-bkg"].parameters["tilt"].frozen = False
+dataset.models["dm"].spectral_model.scale.frozen = False
 
-result_full = fit.run(datasets=[dataset_mc])
+result_full = fit.run(datasets=[dataset])
 print(f"Full fit converged: {result_full.success}")
 
 if not result_full.success:
@@ -461,11 +382,11 @@ else:
 
 # Another way to do the full fit is to create a new model with both the DM and background components and assign it to the dataset. This is useful if you want to keep the original model intact for later use.
 # Here you have the code sample
-dataset_mc.models["dataset-simu-draco-bkg"].parameters["norm"].frozen = False
-dataset_mc.models["dataset-simu-draco-bkg"].parameters["tilt"].frozen = False
-dataset_mc.models["draco-dm"].spectral_model.scale.frozen = False
+dataset.models["stacked-bkg"].parameters["norm"].frozen = False
+dataset.models["stacked-bkg"].parameters["tilt"].frozen = False
+dataset.models["dm"].spectral_model.scale.frozen = False
 
-result_src = fit.run(datasets=[dataset_mc])
+result_src = fit.run(datasets=[dataset])
 if not result_src.success:
     print("WARNING: fit did not converge. Adjust starting values before continuing.")
 
@@ -482,9 +403,7 @@ print(f"TS = {TS:.2f}")  # Expected ~ 0 for background-only dataset
 ######################################################################
 # As aforementioned, the TS value is expected to be around 0 for a
 # background-only dataset, indicating that the addition of the DM signal
-# does not significantly improve the fit. This is consistent with our
-# simulation where we set the scale of the DM signal to 0, effectively
-# simulating a scenario with no dark matter contribution.
+# does not significantly improve the fit.
 #
 
 
@@ -500,7 +419,7 @@ print(f"TS = {TS:.2f}")  # Expected ~ 0 for background-only dataset
 #
 
 result = select_nested_models(
-    datasets=Datasets(dataset_mc),
+    datasets=Datasets(dataset),
     parameters=[spectral_model.parameters["scale"]],
     null_values=[0],
 )
@@ -517,7 +436,7 @@ print(f"TS = {TS:.4f}")
 fig_peek, axs = plt.subplots(2, 2, figsize=(7, 7))
 
 img_1 = axs[0, 0].imshow(
-    np.sum(dataset_mc.counts.data, axis=0),
+    np.sum(dataset.counts.data, axis=0),
     extent=(10.0 + 0.0, -10.0 + 0.0, 10.0 + 0.0, -10.0 + 0.0),
     origin="lower",
     cmap="YlOrBr",
@@ -528,7 +447,7 @@ cax = divider.append_axes("right", size="5%", pad=0.05)
 cbar_1 = fig_peek.colorbar(img_1, cax=cax, orientation="vertical")
 
 img_2 = axs[0, 1].imshow(
-    np.sum(dataset_mc.background.data, axis=0),
+    np.sum(dataset.background.data, axis=0),
     extent=(10.0 + 0.0, -10.0 + 0.0, 10.0 + 0.0, -10.0 + 0.0),
     origin="lower",
     cmap="YlOrBr",
@@ -539,7 +458,7 @@ cax = divider.append_axes("right", size="5%", pad=0.05)
 cbar_2 = fig_peek.colorbar(img_2, cax=cax, orientation="vertical")
 
 img_3 = axs[1, 0].imshow(
-    np.sum(dataset_mc.counts.data, axis=0) - np.sum(dataset_mc.background.data, axis=0),
+    np.sum(dataset.counts.data, axis=0) - np.sum(dataset.background.data, axis=0),
     extent=(10.0 + 0.0, -10.0 + 0.0, 10.0 + 0.0, -10.0 + 0.0),
     origin="lower",
     cmap="YlOrBr",
@@ -550,7 +469,7 @@ cax = divider.append_axes("right", size="5%", pad=0.05)
 cbar_3 = fig_peek.colorbar(img_3, cax=cax, orientation="vertical")
 
 img_4 = axs[1, 1].imshow(
-    np.sum(dataset_mc.exposure.data, axis=0),
+    np.sum(dataset.exposure.data, axis=0),
     extent=(10.0 + 0.0, -10.0 + 0.0, 10.0 + 0.0, -10.0 + 0.0),
     origin="lower",
     cmap="YlOrBr",
@@ -568,14 +487,12 @@ plt.plot()
 
 # Let's check the spectrum and the different contributions
 spec, axs = plt.subplots(1, 1, figsize=(6, 4))
-dataset_mc.counts.get_spectrum().plot(label="Total counts")
-dataset_mc.npred_background().get_spectrum().plot(label="BKG counts")
+dataset.counts.get_spectrum().plot(label="Total counts")
+dataset.npred_background().get_spectrum().plot(label="BKG counts")
 
 axs.set_ylabel("Counts", fontsize=12)
 axs.legend()
 plt.plot()
-
-dataset_mc.peek()
 
 
 ######################################################################
@@ -605,7 +522,7 @@ dataset_mc.peek()
 #
 
 # Spatial residuals map
-dataset_mc.plot_residuals_spatial(
+dataset.plot_residuals_spatial(
     method="diff/sqrt(model)",
     smooth_kernel="gauss",
     smooth_radius=0.1 * u.deg,
@@ -616,7 +533,7 @@ dataset_mc.plot_residuals_spatial(
 )
 
 # Spectral residuals (residual counts vs energy)
-dataset_mc.plot_residuals_spectral(
+dataset.plot_residuals_spectral(
     method="diff/sqrt(model)",
 )
 
@@ -719,24 +636,24 @@ spectral_model.scale.max = None
 spectral_model.scale.frozen = False
 
 # Release background parameters
-dataset_mc.models["dataset-simu-draco-bkg"].parameters["norm"].frozen = False
-dataset_mc.models["dataset-simu-draco-bkg"].parameters["tilt"].frozen = False
+dataset.models["stacked-bkg"].parameters["norm"].frozen = False
+dataset.models["stacked-bkg"].parameters["tilt"].frozen = False
 
-scale_par = dataset_mc.models["draco-dm"].spectral_model.scale
+scale_par = dataset.models["dm"].spectral_model.scale
 # Set a range of values to scan over for the scale parameter. This is useful for performing a profile likelihood scan to explore how the likelihood changes with different values of the scale parameter.
-# In this cases it is from 1e-10 to 1e-2 with 300 points, which allows for a detailed exploration of the parameter space.
-scale_par.scan_values = np.logspace(-10, -2, 300)
+# In this cases it is from 1e-4 to 1e-2 with 20 points, which allows for a detailed exploration of the parameter space.
+scale_par.scan_values = np.logspace(-4, -2, 20)
 
 print(
     f"Scan range:       {scale_par.scan_values.min():.1e}"
     f" — {scale_par.scan_values.max():.1e}"
 )
 print(f"Number of points: {len(scale_par.scan_values)}")
-print("Running profile scan (this may take a few minutes)...")
+print("Running profile scan...")
 
 # Run the profile likelihood
 profile = fit.stat_profile(
-    datasets=dataset_mc,
+    datasets=dataset,
     parameter=scale_par,
     reoptimize=True,  # re-optimize background at each scan point
 )
@@ -744,7 +661,7 @@ profile = fit.stat_profile(
 print("Profile scan completed ✓")
 
 # Extract arrays──
-scale_scan = profile["draco-dm.spectral.scale_scan"]
+scale_scan = profile["dm.spectral.scale_scan"]
 delta_ts = profile["stat_scan"] - profile["stat_scan"].min()
 
 # Sanity checks───
@@ -777,7 +694,6 @@ tau_lower_limit = tau_ref / scale_ul
 
 print(f"  DM mass:    {massDM}")
 print(f"  Channel:    {channel}")
-print(f"  Livetime:   {livetime}")
 print(f"  scale UL (95% CL):          {scale_ul:.3e}")
 print(f"  Lifetime lower limit (95% CL): {tau_lower_limit:.3e} s")
 
@@ -870,7 +786,7 @@ estimator = ParameterEstimator(
     n_sigma_ul=1.645,  # level for upper limit
     selection_optional=["ul"],  # ask to also compute the UL
 )
-result_par = estimator.run(datasets=[dataset_mc], parameter="scale")
+result_par = estimator.run(datasets=[dataset], parameter="scale")
 
 print(f"Scale (best fit)      : {result_par['scale']:.4g}")
 print(f"Scale upper limit     : {result_par['scale_ul']:.4g}")
@@ -947,106 +863,130 @@ for cl_label, delta_ts_threshold in [("68%", 1.0), ("95%", 3.84)]:
 # The result is a curve of lower limits on τ_χ (or upper limits on ⟨σv⟩)
 # as a function of DM mass.
 #
+# Below you can find the code for making the scan, but in this tutorial we
+# will not run it because it can take sereval minutes.
+#
 
-# Mass range we want to scan. In this case we scan 40 masses, for instance.
-masses = np.logspace(2, 4, 40) * u.GeV
+# # Mass range we want to scan. In this case we scan 40 masses, for instance.
+# masses = np.logspace(2, 4, 40) * u.GeV
 
-# Scan grid (adjust if needed per mass)
-scale_values = np.logspace(-10, -2, 100)
+# # Scan grid (adjust if needed per mass)
+# scale_values = np.logspace(-10, -2, 100)
 
-# Output containers
-results = {
-    "mass": [],
-    "scale_ul": [],
-    "scale_ll": [],  # lower limit on scale
-}
+# # Output containers
+# results = {
+#     "mass"     : [],
+#     "scale_ul" : [],
+#     "scale_ll"   : []   # lower limit on scale
+# }
 
-fit = Fit()
+# fit = Fit()
 
-print(f"Running exclusion curve over {len(masses)} masses...")
-for mass in masses:
-    print(f"  mass = {mass}  ...", end=" ")
+# print(f"Running exclusion curve over {len(masses)} masses...")
+# for mass in masses:
 
-    spectral_model_m = DarkMatterDecaySpectralModel(
-        mass=mass,
-        channel=channel,
-        jfactor=total_dfact,
-    )
-    spectral_model_m.scale.value = 0
-    spectral_model_m.scale.frozen = True
-    spectral_model_m.scale.min = 0
+#     print(f"  mass = {mass}  ...", end=" ")
 
-    bkg_model_m = FoVBackgroundModel(dataset_name=f"dataset-{mass.value:.0f}GeV")
-    bkg_model_m.parameters["norm"].frozen = False
-    bkg_model_m.parameters["tilt"].frozen = False
+#     spectral_model_m = DarkMatterDecaySpectralModel(
+#         mass=mass,
+#         channel=channel,
+#         jfactor=total_dfact,
+#     )
+#     spectral_model_m.scale.value  = 0
+#     spectral_model_m.scale.frozen = True
+#     spectral_model_m.scale.min    = 0
 
-    dataset_m = dataset.copy(name=f"dataset-{mass.value:.0f}GeV")
-    sky_model_m = SkyModel(
-        spatial_model=spatial_model, spectral_model=spectral_model_m, name="draco-dm"
-    )
-    dataset_m.models = Models([sky_model_m, bkg_model_m])
+#     bkg_model_m = FoVBackgroundModel(dataset_name=f"dataset-{mass.value:.0f}GeV")
+#     bkg_model_m.parameters["norm"].frozen = False
+#     bkg_model_m.parameters["tilt"].frozen = False
 
-    # Fit background
-    result_bkg_m = fit.run(datasets=[dataset_m])
-    if not result_bkg_m.success:
-        print("background fit did not converge, skipping.")
-        continue
+#     dataset_m = dataset.copy(name=f"dataset-{mass.value:.0f}GeV")
+#     sky_model_m = SkyModel(
+#         spatial_model=spatial_model,
+#         spectral_model=spectral_model_m,
+#         name="dm"
+#     )
+#     dataset_m.models = Models([sky_model_m, bkg_model_m])
 
-    # Sanity check: signal changes with scale
-    spectral_model_m.scale.value = 1e-7
-    npred_sig = dataset_m.npred_signal().data.sum()
-    print(f"npred_signal = {npred_sig:.4e}", end=" ... ")
-    spectral_model_m.scale.value = 0
+#     # Fit background
+#     result_bkg_m = fit.run(datasets=[dataset_m])
+#     if not result_bkg_m.success:
+#         print("background fit did not converge, skipping.")
+#         continue
 
-    # Profile scan (reoptimizing background at each point)
-    spectral_model_m.scale.value = 1e-7
-    spectral_model_m.scale.frozen = False
+#     # Sanity check: signal changes with scale
+#     spectral_model_m.scale.value = 1e-7
+#     npred_sig = dataset_m.npred_signal().data.sum()
+#     print(f"npred_signal = {npred_sig:.4e}", end=" ... ")
+#     spectral_model_m.scale.value = 0
 
-    scale_par_m = dataset_m.models["draco-dm"].spectral_model.scale
-    scale_par_m.scan_values = scale_values
+#     # Profile scan (reoptimizing background at each point)
+#     spectral_model_m.scale.value  = 1e-7
+#     spectral_model_m.scale.frozen = False
 
-    profile_m = fit.stat_profile(
-        datasets=dataset_m,
-        parameter=scale_par_m,
-        reoptimize=True,
-    )
+#     scale_par_m = dataset_m.models["dm"].spectral_model.scale
+#     scale_par_m.scan_values = scale_values
 
-    scale_scan_m = profile_m["draco-dm.spectral.scale_scan"]
-    delta_ts_m = profile_m["stat_scan"] - profile_m["stat_scan"].min()
+#     profile_m = fit.stat_profile(
+#         datasets=dataset_m,
+#         parameter=scale_par_m,
+#         reoptimize=True,
+#     )
 
-    if delta_ts_m.max() < 2.71:
-        print("profile did not reach ΔTS=2.71, skipping.")
-        continue
+#     scale_scan_m = profile_m["dm.spectral.scale_scan"]
+#     delta_ts_m   = profile_m["stat_scan"] - profile_m["stat_scan"].min()
 
-    idx_min = np.argmin(delta_ts_m)
-    scale_ul = np.interp(2.71, delta_ts_m[idx_min:], scale_scan_m[idx_min:])
+#     if delta_ts_m.max() < 2.71:
+#         print("profile did not reach ΔTS=2.71, skipping.")
+#         continue
 
-    tau_ref = spectral_model_m.LIFETIME_AGE_OF_UNIVERSE
-    tau_ll = tau_ref / scale_ul
+#     idx_min  = np.argmin(delta_ts_m)
+#     scale_ul = np.interp(2.71,
+#                          delta_ts_m[idx_min:],
+#                          scale_scan_m[idx_min:])
 
-    results["mass"].append(mass.to("TeV").value)
-    results["scale_ul"].append(scale_ul)
-    results["scale_ll"].append(tau_ll.value)
+#     tau_ref = spectral_model_m.LIFETIME_AGE_OF_UNIVERSE
+#     tau_ll  = tau_ref / scale_ul
 
-    print(f"scale_ul = {scale_ul:.3e}  |  τ_χ > {tau_ll:.3e}")
+#     results["mass"].append(mass.to("TeV").value)
+#     results["scale_ul"].append(scale_ul)
+#     results["scale_ll"].append(tau_ll.value)
 
-fig, ax = plt.subplots(1, figsize=(12, 5))
+#     print(f"scale_ul = {scale_ul:.3e}  |  τ_χ > {tau_ll:.3e}")
 
-mass_arr = np.array(results["mass"])
-scale_arr = np.array(results["scale_ll"])
 
-# Decay: lower limit on scale ────────────────────────────────────────────────
-ax.plot(mass_arr, scale_arr, color="steelblue", linewidth=2, marker="o", markersize=5)
-ax.set_xscale("log")
-ax.set_yscale("log")
-ax.set_xlabel(r"$m_{\rm DM}$  [TeV]", fontsize=12)
-ax.set_ylabel(r"Lower limit on $\tau_\chi$  [s]", fontsize=12)
-ax.set_title(rf"Decay — channel: {channel}", fontsize=12)
-ax.grid(True, which="both", alpha=0.3)
+######################################################################
+# For plotting the results you can use the code below. Also you have an
+# example of the resulting plot.
+#
 
-plt.suptitle(rf"Expected sensitivity — Draco dSph,  {livetime}", fontsize=13, y=1.02)
-plt.tight_layout()
-plt.show()
+# fig, ax = plt.subplots(1, figsize=(12, 5))
+
+# mass_arr    = np.array(results["mass"])
+# scale_arr   = np.array(results["scale_ll"])
+
+# # Decay: lower limit on scale ────────────────────────────────────────────────
+# ax.plot(mass_arr, scale_arr,
+#         color="steelblue", linewidth=2, marker="o", markersize=5)
+# ax.set_xscale("log")
+# ax.set_yscale("log")
+# ax.set_xlabel(r"$m_{\rm DM}$  [TeV]", fontsize=12)
+# ax.set_ylabel(r"Lower limit on $\tau_\chi$  [s]", fontsize=12)
+# ax.set_title(rf"Decay — channel: {channel}", fontsize=12)
+# ax.grid(True, which="both", alpha=0.3)
+
+# plt.suptitle(r"Expected sensitivity",
+#              fontsize=13, y=1.02)
+# plt.tight_layout()
+# plt.show()
+
+
+######################################################################
+# .. figure:: /_static/dark_matter_mass_scan_example.png
+#    :alt: image
+#
+#    image
+#
 
 
 ######################################################################
@@ -1081,15 +1021,15 @@ plt.show()
 #
 # Keep in mind this single curve is subject to the specific Poisson
 # fluctuation of the one background realization it was built from — a
-# different simulated dataset (same true background model, different
-# noise) would trace a slightly different curve. That variability is
-# exactly what the Brazilian plot in the next section quantifies.
+# different dataset (same true background model, different noise) would
+# trace a slightly different curve. That variability is exactly what the
+# plot in the next section quantifies.
 #
 
 
 ######################################################################
-# 5. Brazilian Plot: Uncertainty Bands on the Exclusion Curve
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 5. Bands Plot: Uncertainty Bands on the Exclusion Curve
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The exclusion curve derived in the previous section is based on a
 # **single background realization**: a different Poisson fluctuation would
@@ -1131,180 +1071,185 @@ plt.show()
 # dotted line inside the bands — a sanity check that it falls within the
 # expected range.
 #
+# As in the previuos section, since it takes some time to execute this
+# cell, we just display the code and the expected final plot.
+#
 
-# Number of realizations
-# We only set 20 so the execution is not too long, but it should be at least 100, but it depends on you study.
-n_realizations = 20
+# # Number of realizations
+# # We only set 20 so the execution is not too long, but it should be at least 100, but it depends on you study.
+# n_realizations = 20
 
-# Values to scan for the scale parameter in the profile likelihood.
-scale_values = np.logspace(-100, -2, 100)
+# # Values to scan for the scale parameter in the profile likelihood.
+# scale_values = np.logspace(-100, -2, 100)
 
-# We set only 10 masses to make this tutorial quick, this can take several minutes, but you should cover much more.
-masses = np.logspace(2.5, 4, 10) * u.GeV
+# # We set only 10 masses to make this tutorial quick, this can take several minutes, but you should cover much more.
+# masses = np.logspace(2.5, 4, 10) * u.GeV
 
-brazil = {
-    "mass": [],
-    "p025": [],
-    "p16": [],
-    "p50": [],
-    "p84": [],
-    "p975": [],
-}
+# bands = {
+#     "mass" : [],
+#     "p025" : [],
+#     "p16"  : [],
+#     "p50"  : [],
+#     "p84"  : [],
+#     "p975" : [],
+# }
 
-fit = Fit()
+# fit = Fit()
 
-print(f"Running Brazilian plot: {len(masses)} masses × {n_realizations} realizations")
-print("─" * 55)
+# print(f"Running bands plot: {len(masses)} masses × {n_realizations} realizations")
+# print("─" * 55)
 
-for mass in masses:
-    print(f"\n  mass = {mass}")
-    scale_ul_mc = []
+# for mass in masses:
 
-    for i in range(n_realizations):
-        # Recreate spectral model with this mass
-        spectral_model_i = DarkMatterDecaySpectralModel(
-            mass=mass,
-            channel=channel,
-            jfactor=total_dfact,
-        )
-        spectral_model_i.scale.value = 0
-        spectral_model_i.scale.frozen = True
-        spectral_model_i.scale.min = 0
+#     print(f"\n  mass = {mass}")
+#     scale_ul_mc = []
 
-        bkg_model_i = FoVBackgroundModel(
-            dataset_name=f"dataset-{mass.value:.0f}GeV-{i}"
-        )
-        bkg_model_i.parameters["norm"].frozen = False
-        bkg_model_i.parameters["tilt"].frozen = False
+#     for i in range(n_realizations):
 
-        dataset_i = dataset.copy(name=f"dataset-{mass.value:.0f}GeV-{i}")
-        dataset_i.models = Models(
-            [
-                SkyModel(
-                    spatial_model=spatial_model,
-                    spectral_model=spectral_model_i,
-                    name="draco-dm",
-                ),
-                bkg_model_i,
-            ]
-        )
+#         # Recreate spectral model with this mass
+#         spectral_model_i = DarkMatterDecaySpectralModel(
+#             mass=mass,
+#             channel=channel,
+#             jfactor=total_dfact,
+#         )
+#         spectral_model_i.scale.value  = 0
+#         spectral_model_i.scale.frozen = True
+#         spectral_model_i.scale.min    = 0
 
-        # Generate Poisson realization
-        dataset_i.fake(random_state=i)
+#         bkg_model_i = FoVBackgroundModel(
+#             dataset_name=f"dataset-{mass.value:.0f}GeV-{i}"
+#         )
+#         bkg_model_i.parameters["norm"].frozen = False
+#         bkg_model_i.parameters["tilt"].frozen = False
 
-        # Fit background (scale frozen)
-        result_i = fit.run(datasets=[dataset_i])
-        if not result_i.success:
-            continue
+#         dataset_i = dataset.copy(
+#             name=f"dataset-{mass.value:.0f}GeV-{i}"
+#         )
+#         dataset_i.models = Models([
+#             SkyModel(spatial_model=spatial_model,
+#                      spectral_model=spectral_model_i,
+#                      name="dm"),
+#             bkg_model_i
+#         ])
 
-        # Profile scan
-        spectral_model_i.scale.value = 1e-7
-        spectral_model_i.scale.frozen = False
-        dataset_i.models["draco-dm"].parameters["scale"].frozen = False
+#         # Generate Poisson realization
+#         dataset_i.fake(random_state=i)
 
-        scale_par_i = dataset_i.models["draco-dm"].spectral_model.scale
-        scale_par_i.scan_values = scale_values
+#         # Fit background (scale frozen)
+#         result_i = fit.run(datasets=[dataset_i])
+#         if not result_i.success:
+#             continue
 
-        profile_i = fit.stat_profile(
-            datasets=dataset_i, parameter=scale_par_i, reoptimize=True
-        )
+#         # Profile scan
+#         spectral_model_i.scale.value  = 1e-7
+#         spectral_model_i.scale.frozen = False
+#         dataset_i.models["dm"].parameters["scale"].frozen = False
 
-        scale_scan_i = profile_i["draco-dm.spectral.scale_scan"]
-        delta_ts_i = profile_i["stat_scan"] - profile_i["stat_scan"].min()
+#         scale_par_i = dataset_i.models["dm"].spectral_model.scale
+#         scale_par_i.scan_values = scale_values
 
-        if delta_ts_i.max() < 2.71:
-            continue
+#         profile_i = fit.stat_profile(
+#             datasets=dataset_i,
+#             parameter=scale_par_i,
+#             reoptimize=True
+#         )
 
-        idx_min = np.argmin(delta_ts_i)
-        scale_ul = np.interp(2.71, delta_ts_i[idx_min:], scale_scan_i[idx_min:])
-        scale_ul_mc.append(scale_ul)
+#         scale_scan_i = profile_i["dm.spectral.scale_scan"]
+#         delta_ts_i   = profile_i["stat_scan"] - profile_i["stat_scan"].min()
 
-    # Compute percentiles for this mass
-    if len(scale_ul_mc) < 10:
-        print(f"    Too few valid realizations ({len(scale_ul_mc)}), skipping.")
-        continue
+#         if delta_ts_i.max() < 2.71:
+#             continue
 
-    scale_ul_array = np.array(scale_ul_mc)
-    tau_ref = spectral_model_i.LIFETIME_AGE_OF_UNIVERSE
+#         idx_min  = np.argmin(delta_ts_i)
+#         scale_ul = np.interp(2.71,
+#                              delta_ts_i[idx_min:],
+#                              scale_scan_i[idx_min:])
+#         scale_ul_mc.append(scale_ul)
 
-    # Invert percentile order when converting scale → τ_χ
-    p025 = tau_ref / np.percentile(scale_ul_array, 97.5)
-    p16 = tau_ref / np.percentile(scale_ul_array, 84)
-    p50 = tau_ref / np.percentile(scale_ul_array, 50)
-    p84 = tau_ref / np.percentile(scale_ul_array, 16)
-    p975 = tau_ref / np.percentile(scale_ul_array, 2.5)
+#     # Compute percentiles for this mass
+#     if len(scale_ul_mc) < 10:
+#         print(f"    Too few valid realizations ({len(scale_ul_mc)}), skipping.")
+#         continue
 
-    brazil["mass"].append(mass.to("TeV").value)
-    brazil["p025"].append(p025.value)
-    brazil["p16"].append(p16.value)
-    brazil["p50"].append(p50.value)
-    brazil["p84"].append(p84.value)
-    brazil["p975"].append(p975.value)
+#     scale_ul_array = np.array(scale_ul_mc)
+#     tau_ref        = spectral_model_i.LIFETIME_AGE_OF_UNIVERSE
 
-    print(f"    valid: {len(scale_ul_mc)}/{n_realizations}  |  median τ_χ > {p50:.2e}")
+#     # Invert percentile order when converting scale → τ_χ
+#     p025 = tau_ref / np.percentile(scale_ul_array, 97.5)
+#     p16  = tau_ref / np.percentile(scale_ul_array, 84)
+#     p50  = tau_ref / np.percentile(scale_ul_array, 50)
+#     p84  = tau_ref / np.percentile(scale_ul_array, 16)
+#     p975 = tau_ref / np.percentile(scale_ul_array, 2.5)
 
-print("\n" + "─" * 55)
-print(f"Done. {len(brazil['mass'])} mass points computed.")
+#     bands["mass"].append(mass.to("TeV").value)
+#     bands["p025"].append(p025.value)
+#     bands["p16"].append(p16.value)
+#     bands["p50"].append(p50.value)
+#     bands["p84"].append(p84.value)
+#     bands["p975"].append(p975.value)
 
-mass_arr = np.array(brazil["mass"])
-p025_arr = np.array(brazil["p025"])
-p16_arr = np.array(brazil["p16"])
-p50_arr = np.array(brazil["p50"])
-p84_arr = np.array(brazil["p84"])
-p975_arr = np.array(brazil["p975"])
+#     print(f"    valid: {len(scale_ul_mc)}/{n_realizations}  |  "
+#           f"median τ_χ > {p50:.2e}")
 
-fig, ax = plt.subplots(figsize=(9, 5))
-
-# 2σ band (yellow)
-ax.fill_between(
-    mass_arr,
-    p025_arr,
-    p975_arr,
-    color="gold",
-    alpha=0.9,
-    label=r"Expected $\pm 2\sigma$",
-)
-
-# 1σ band (green)
-ax.fill_between(
-    mass_arr,
-    p16_arr,
-    p84_arr,
-    color="limegreen",
-    alpha=0.9,
-    label=r"Expected $\pm 1\sigma$",
-)
-
-# Median
-ax.plot(
-    mass_arr,
-    p50_arr,
-    color="black",
-    linewidth=2,
-    linestyle="--",
-    label="Expected median",
-)
-
-
-ax.set_xscale("log")
-ax.set_yscale("log")
-ax.set_xlabel(r"$m_{\rm DM}$  [TeV]", fontsize=12)
-ax.set_ylabel(r"Lower limit on $\tau_\chi$  [s]", fontsize=12)
-ax.set_title(
-    rf"Expected Sensitivity — Draco dSph,  {livetime}  —  channel: {channel}",
-    fontsize=12,
-)
-ax.set_xlim(0.35, 10)
-ax.legend(fontsize=10, loc="upper left")
-ax.grid(True, which="both", alpha=0.3)
-plt.tight_layout()
-plt.show()
+# print("\n" + "─" * 55)
+# print(f"Done. {len(bands['mass'])} mass points computed.")
 
 
 ######################################################################
-# The Brazilian plot places the single-realization exclusion curve in the
-# context of its expected statistical spread under repeated
-# background-only trials.
+#
+#
+
+# mass_arr = np.array(bands["mass"])
+# p025_arr = np.array(bands["p025"])
+# p16_arr  = np.array(bands["p16"])
+# p50_arr  = np.array(bands["p50"])
+# p84_arr  = np.array(bands["p84"])
+# p975_arr = np.array(bands["p975"])
+
+# fig, ax = plt.subplots(figsize=(9, 5))
+
+# # 2σ band (yellow)
+# ax.fill_between(mass_arr, p025_arr, p975_arr,
+#                 color="gold", alpha=0.9,
+#                 label=r"Expected $\pm 2\sigma$")
+
+# # 1σ band (green)
+# ax.fill_between(mass_arr, p16_arr, p84_arr,
+#                 color="limegreen", alpha=0.9,
+#                 label=r"Expected $\pm 1\sigma$")
+
+# # Median
+# ax.plot(mass_arr, p50_arr,
+#         color="black", linewidth=2, linestyle="--",
+#         label="Expected median")
+
+
+# ax.set_xscale("log")
+# ax.set_yscale("log")
+# ax.set_xlabel(r"$m_{\rm DM}$  [TeV]", fontsize=12)
+# ax.set_ylabel(r"Lower limit on $\tau_\chi$  [s]", fontsize=12)
+# ax.set_title(
+#     "Expected Sensitivity",
+#     fontsize=12
+# )
+# ax.set_xlim(0.35,10)
+# ax.legend(fontsize=10, loc="upper left")
+# ax.grid(True, which="both", alpha=0.3)
+# plt.tight_layout()
+# plt.show()
+
+
+######################################################################
+# .. figure:: /_static/dark_matter_bands_plot_example.png
+#    :alt: image
+#
+#    image
+#
+
+
+######################################################################
+# The plot places the single-realization exclusion curve in the context of
+# its expected statistical spread under repeated background-only trials.
 #
 # **How to read it:**
 #
