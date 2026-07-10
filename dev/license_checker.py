@@ -125,7 +125,8 @@ def get_git_files(path: pathlib.Path) -> Iterator[pathlib.Path]:
     Parameters
     ----------
     path: pathlib.Path
-        Path where to list files with git."""
+        Path where to list files with git.
+    """
     git_path = shutil.which("git")
     result = subprocess.run(
         [git_path, "-C", path, "ls-files", "*.py"],
