@@ -1,1 +1,1 @@
-Add unit support to the violins plot used with the `~gammapy.estimators.FluxCollection`
+Add unit support to the violins plot from `gammapy.utils.visualization.plot_samples_violin_vs_energy` used with the `~gammapy.estimators.FluxCollectionEstimator`
