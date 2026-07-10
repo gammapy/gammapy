@@ -600,8 +600,8 @@ class FluxCollectionEstimator:
         if len(datasets) == 0:
             raise ValueError("datasets cannot be empty")
 
-        if not datasets.is_all_same_geom:
-            raise ValueError("Inconsistent geometries between datasets")
+        if not datasets.energy_axes_are_aligned:
+            raise ValueError("Energy axes are not aligned between datasets")
 
         for d in datasets:
             d.npred()  # precompute npred
@@ -672,7 +672,9 @@ class FluxCollectionEstimator:
             dnde_dict = {}
             for model_idx, m in enumerate(self.models):
                 dnde_dict[m.name] = []
-                dnde_ref = fp_dict["flux_points"][m.name]["dnde_ref"].squeeze()
+                dnde_ref = np.atleast_1d(
+                    fp_dict["flux_points"][m.name]["dnde_ref"].squeeze()
+                )
                 for dnde, fp in zip(dnde_ref, fp_results):
                     points = fp["solver_results"]["weighted_samples"]["points"]
                     dnde_dict[m.name].append(dnde * points[:, model_idx])
