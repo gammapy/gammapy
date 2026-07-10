@@ -355,6 +355,8 @@ class FluxCollectionEstimator:
         Sampler solver always compute errn-errp and ul.
     """
 
+    tag = "FluxCollectionEstimator"
+
     def __init__(
         self,
         energy_edges,
