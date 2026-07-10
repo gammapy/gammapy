@@ -62,11 +62,19 @@ profile_classes = [
     profiles.MooreProfile,
 ]
 
+profile_labels = {
+    profiles.NFWProfile: "NFW",
+    profiles.EinastoProfile: "Einasto",
+    profiles.IsothermalProfile: "Isothermal",
+    profiles.BurkertProfile: "Burkert",
+    profiles.MooreProfile: "Moore",
+}
+
 for profile_class in profile_classes:
     p = profile_class()
     p.scale_to_local_density(10 * u.kpc)
     radii = np.logspace(-3, 2, 100) * u.kpc
-    plt.plot(radii, p(radii), label=p.__class__.__name__)
+    plt.plot(radii, p(radii), label=profile_labels[profile_class])
 
 
 plt.loglog()
