@@ -199,8 +199,7 @@ class Sampler:
             "logz": self._sampler.log_z,
             "posterior": {"mean": mean, "stdev": stdev},
             "samples": self._sampler.posterior(equal_weight=True)[0],
-            "points": points,
-            "log_w": log_w,
+            "weighted_samples": dict(points=points, weights=np.exp(log_w)),
             "log_l": log_l,
         }
         return result
