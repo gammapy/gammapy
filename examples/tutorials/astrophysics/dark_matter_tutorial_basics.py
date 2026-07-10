@@ -31,6 +31,15 @@ The total flux is simply their product:
 
 .. math:: \Phi_{\rm dec}(>E_{\rm min}) = \frac{1}{4\pi \tau_\chi m_\chi} \cdot D \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
 
+where :math:`m_\chi` is the DM particle mass,
+:math:`\langle\sigma v\rangle` is the velocity-averaged annihilation
+cross-section, :math:`\tau_\chi` is the decay lifetime, :math:`J` and
+:math:`D` are the J-factor and D-factor (line-of-sight integrals of
+:math:`\rho^2` and :math:`\rho`, respectively, over the region of
+interest), :math:`dN/dE` is the differential photon spectrum per
+annihilation/decay event, and :math:`E_{\rm min}`, :math:`E_{\rm max}`
+are the integration energy bounds.
+
 In this tutorial, we cover the building blocks needed to model this
 signal in Gammapy, using the **Draco dwarf spheroidal galaxy** as our
 example target — one of the most DM-dominated objects in the local
@@ -96,14 +105,14 @@ distance_dwarf_draco = 76 * u.kpc
 # Spatial distribution
 # --------------------
 #
-# To calculate the expected gamma-ray flux from Dark Matter, we first need
-# to understand its spatial distribution.
+# To calculate the expected gamma-ray flux from DM, we first need to
+# understand its spatial distribution.
 #
 # For **Dark Matter annihilation**, we use the **J-Factor**. It represents
-# the astrophysical component of the flux and is the integral of the Dark
-# Matter density squared (:math:`\rho^2`) along the line of sight
-# (:math:`l`) integrated over a solid angle (:math:`\Delta \Omega`), since
-# it requires two particles to collide:
+# the astrophysical component of the flux and is the integral of the DM
+# density squared (:math:`\rho^2`) along the line of sight (:math:`l`)
+# integrated over a solid angle (:math:`\Delta \Omega`), since it requires
+# two particles to collide:
 #
 # .. math:: J = \int_{\Delta \Omega} \int_{l.o.s.} \rho^2(l, \Omega) \, dl \, d\Omega
 #
@@ -127,12 +136,11 @@ distance_dwarf_draco = 76 * u.kpc
 # Density profiles
 # ~~~~~~~~~~~~~~~~
 #
-# The spatial distribution of Dark Matter within a halo is described by a
-# density profile ρ(r). Different theoretical models and observational
-# fits predict different shapes, particularly in the inner regions of the
-# halo (the so-called “cusp vs core” debate). The choice of profile is one
-# of the dominant systematic uncertainties in DM indirect detection
-# searches.
+# The spatial distribution of DM within a halo is described by a density
+# profile ρ(r). Different theoretical models and observational fits
+# predict different shapes, particularly in the inner regions of the halo.
+# The choice of profile is one of the dominant systematic uncertainties in
+# DM indirect detection searches.
 #
 # The current implemented profiles in Gammapy are: Burkert, Einasto,
 # Isothermal, Moore, NFW and Zhao.
@@ -202,14 +210,14 @@ plt.show()
 # 2. Compute the JFactor/DFactor using the JFactory class. It is possible
 #    to plot the results and also to integrate the factor in a desired
 #    region of interest, since not all telescopes have the same angular
-#    resolution and Dark Matter halos are extended objects. Additionally,
-#    to optimize our observation, we would like to know how much Dark
-#    Matter signal is contained within a specific angular radius from the
-#    center of the galaxy.
+#    resolution and DM halos are extended objects. Additionally, to
+#    optimize our observation, we would like to know how much DM signal is
+#    contained within a specific angular radius from the center of the
+#    galaxy.
 #
 # It should be highlighted that the astrophysical factor can be computed
-# with another tools and you can use the final value (scalar value) within
-# Gammapy, this is just an example if it wants to be calculated within
+# with another tools and one can use the final value (scalar value) within
+# Gammapy, this is just an example if one wants to calculate it within
 # this framework.
 #
 
@@ -309,9 +317,8 @@ print(f"D-factor integrated on 0.1 deg circle: {total_dfact:.3g}")
 # ---------------------
 #
 # The second component of our model is governed by particle physics. When
-# Weakly Interacting Massive Particles (WIMPs) annihilate (or decay), they
-# produce Standard Model particles that eventually annihilate, decay or
-# hadronize into gamma rays.
+# WIMPS annihilate (or decay), they produce Standard Model particles that
+# eventually annihilate, decay or hadronize into gamma rays.
 #
 # The energy spectrum of these gamma rays, dN/dE, depends on two
 # quantities:
@@ -352,7 +359,7 @@ print(f"D-factor integrated on 0.1 deg circle: {total_dfact:.3g}")
 # annihilating into several typical channels.
 #
 #    **Important Note:** For the decay, the procedure is the same, but
-#    **the mass must be divided by 2**.
+#    internally **the mass is divided by 2**.
 #
 
 
@@ -530,7 +537,8 @@ fluxes_from_table = PrimaryFlux(mDM=mDM, channel="tau", source=table)
 # - **`DarkMatterDecaySpectralModel`**
 #
 # Internally, they wrap `PrimaryFlux` and apply the corresponding
-# normalization (⟨σv⟩/8πm² for annihilation, 1/4πτm for decay) — so you
+# normalization (:math:`\langle\sigma v\rangle / (8\pi m_\chi^2)` for
+# annihilation, :math:`1 / (4\pi \tau_\chi m_\chi)` for decay) — so you
 # don’t need to build the flux formula by hand. Because they are standard
 # `SpectralModel` objects, they expose the same API as any other model
 # in Gammapy (`.evaluate()`, `.integral()`, `.plot()`, combination
@@ -541,7 +549,7 @@ fluxes_from_table = PrimaryFlux(mDM=mDM, channel="tau", source=table)
 # computed earlier to get the expected physical flux from Draco.
 #
 #    **Note on default values:** For
-#    `DarkMatterAnnihilationSpectralModel` nor
+#    `DarkMatterAnnihilationSpectralModel` and
 #    `DarkMatterDecaySpectralModel` Gammapy falls back to conventional
 #    benchmark values:
 #    :math:`\langle\sigma v\rangle = 3\times10^{-26}\,\mathrm{cm^3\,s^{-1}}`
@@ -549,7 +557,7 @@ fluxes_from_table = PrimaryFlux(mDM=mDM, channel="tau", source=table)
 #    $:raw-latex:`\tau`\_:raw-latex:`\chi `=
 #    4.3:raw-latex:`\times10`^{17}s $ (age of the Universe) for decay.
 #    These are **not** fitted or measured values for Draco — they are
-#    illustrative defaults. If you want to fit this parameter, please
+#    illustrative defaults. If you want to fit these parameters, please
 #    check the tutorial ‘Dark Matter indirect search analysis with
 #    Gammapy’.
 #
@@ -637,7 +645,9 @@ plt.show()
 # These spectral models can be wrapped into a `SkyModel` with a spatial
 # model, so they can be used for modeling, fitting, or simulation like any
 # other Gammapy `SkyModel` — for example by assigning
-# `sky_model_ann`/`sky_model_dec` to a `MapDataset`.
+# `sky_model_ann`/`sky_model_dec` to a `MapDataset`. See the `Models
+# tutorial <../examples/tutorials/details/models.py>`__ for further
+# detailts on the models.
 #
 
 
