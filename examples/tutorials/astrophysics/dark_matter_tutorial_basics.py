@@ -75,7 +75,7 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.coordinates import SkyCoord
 
-from gammapy.maps import WcsGeom, WcsNDMap
+from gammapy.maps import WcsGeom, WcsNDMap, RegionGeom
 from gammapy.astro.darkmatter import (
     JFactory,
     PrimaryFlux,
@@ -143,8 +143,8 @@ distance_dwarf_draco = 76 * u.kpc
 # - **r_s (scale radius):** the characteristic distance at which the
 #   profile changes slope.
 #
-# - **ρ_s (scale density):** the overall normalization of the profile,
-#   setting the total amount of DM in the halo.
+# - **:math:`\rho_s` (scale density):** the overall normalization of the
+#   profile, setting the total amount of DM in the halo.
 #
 # Below you can find a representation of the shape of each available
 # profile.
@@ -208,9 +208,9 @@ plt.show()
 #    center of the galaxy.
 #
 # It should be highlighted that the astrophysical factor can be computed
-# with another tools (i.e. CLUMPY) and you can use the final value (scalar
-# value) within Gammapy, this is just an example if it wants to be
-# calculated within this framework.
+# with another tools and you can use the final value (scalar value) within
+# Gammapy, this is just an example if it wants to be calculated within
+# this framework.
 #
 
 # Define the DM profile. Check profiles.DMProfile.__subclasses__() for more profiles
@@ -251,13 +251,16 @@ ax = jfact_map_draco.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 
 # Define a region of interest (i.e., 0.1 deg circle)
 sky_reg = CircleSkyRegion(center=position_dwarf_draco, radius=0.1 * u.deg)
-pix_reg = sky_reg.to_pixel(wcs=geom_draco.wcs)
-pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="0.1 deg circle")
-plt.show()
+region_geom = RegionGeom(sky_reg, wcs=geom_draco.wcs)
+region_geom.plot_region(
+    ax=ax, facecolor="none", edgecolor="red", label="0.1 deg circle"
+)
+
+mask = geom_draco.region_mask([sky_reg])
 
 # Integration of JFactor within that region
-total_jfact = pix_reg.to_mask().multiply(jfact_draco).sum()
-print(f"J-factor integrated on 0.1 deg circle (plotted in red): {total_jfact:.3g}")
+total_jfact = (mask.data * jfact_draco).sum()
+print(f"J-factor integrated on 0.1 deg circle: {total_jfact:.3g}")
 
 
 ######################################################################
@@ -286,13 +289,19 @@ ax = dfact_map_draco.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 
 # Define a region of interest (i.e., 0.1 deg circle)
 sky_reg = CircleSkyRegion(center=position_dwarf_draco, radius=0.1 * u.deg)
-pix_reg = sky_reg.to_pixel(wcs=geom_draco.wcs)
-pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="0.1 deg circle")
-plt.show()
+region_geom = RegionGeom(sky_reg, wcs=geom_draco.wcs)
+region_geom.plot_region(
+    ax=ax, facecolor="none", edgecolor="red", label="0.1 deg circle"
+)
+
+mask = geom_draco.region_mask([sky_reg])
 
 # Integration of DFactor within that region
-total_dfact = pix_reg.to_mask().multiply(dfact_draco).sum()
-print(f"D-factor integrated on 0.1 deg circle (plotted in red): {total_dfact:.3g}")
+
+mask = geom_draco.region_mask([sky_reg])
+
+total_dfact = (mask.data * dfact_draco).sum()
+print(f"D-factor integrated on 0.1 deg circle: {total_dfact:.3g}")
 
 
 ######################################################################
@@ -307,8 +316,9 @@ print(f"D-factor integrated on 0.1 deg circle (plotted in red): {total_dfact:.3g
 # The energy spectrum of these gamma rays, dN/dE, depends on two
 # quantities:
 #
-# - **The DM mass (m_χ):** sets the maximum energy of the photons, since
-#   E_max = m_χ for annihilation (or m_χ/2 for decay).
+# - **The DM mass (:math:`m_\chi`):** sets the maximum energy of the
+#   photons, since E_max = (:math:`m_\chi`) for annihilation (or
+#   (:math:`m_\chi`)/2 for decay).
 # - **The annihilation/decay channel:** determines the shape of the
 #   spectrum. Different final states (quarks, leptons, gauge bosons)
 #   produce different gamma-ray spectra through different annihilation,
