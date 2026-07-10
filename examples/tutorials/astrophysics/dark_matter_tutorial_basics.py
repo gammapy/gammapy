@@ -541,9 +541,7 @@ fluxes_from_table = PrimaryFlux(mDM=mDM, channel="tau", source=table)
 # annihilation, :math:`1 / (4\pi \tau_\chi m_\chi)` for decay) — so you
 # don’t need to build the flux formula by hand. Because they are standard
 # `SpectralModel` objects, they expose the same API as any other model
-# in Gammapy (`.evaluate()`, `.integral()`, `.plot()`, combination
-# with a spatial model into a `SkyModel`), which is what makes them
-# directly usable in a full 1D/3D analysis.
+# in Gammapy (`.evaluate()`, `.integral()`, `.plot()`).
 #
 # In the next section we combine them with the J and D-factor maps
 # computed earlier to get the expected physical flux from Draco.
