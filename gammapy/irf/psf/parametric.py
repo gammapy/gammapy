@@ -124,7 +124,7 @@ class ParametricPSF(PSF):
         """
         from gammapy.irf.io import IRF_DL3_HDU_SPECIFICATION
 
-        table = self.axes.to_table(format="gadf-dl3")
+        table = self._irf_axes_to_table(self.axes, format=format)
         spec = IRF_DL3_HDU_SPECIFICATION[self.tag]["column_name"]
 
         for name in self.required_parameters:
