@@ -407,9 +407,10 @@ def make_grid_rectangle_sky_regions(
     center, width, height, wcs, nbinx=1, nbiny=1, angle=0 * u.deg
 ):
     """Utility function to creates a 2D grid of
-    `~regions.RectangleSkyRegion` tiles centered on
-    a given sky coordinate. This is similar to
-    `make_orthogonal_rectangle_sky_regions` but covers a 2-D field
+    `~regions.RectangleSkyRegion` tiles on the
+    projection plane defined by the input WCS.
+    This is similar to `make_orthogonal_rectangle_sky_regions`
+    but covers a 2-D field
     instead of a 1-D profile
 
     Parameters
