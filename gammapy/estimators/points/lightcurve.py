@@ -50,6 +50,9 @@ class LightCurveEstimator(FluxPointsEstimator):
     n_sigma_ul : float, optional
         Number of sigma to use for upper limit computation. Must be a positive value.
         Default is 2.
+    n_sigma_sensitivity : float, optional
+        Sigma to use for sensitivity computation. Must be a positive value.
+        Default is same as 'n_sigma_ul'.
     selection_optional : list of str, optional
         Which steps to execute. Available options are:
 
@@ -100,6 +103,8 @@ class LightCurveEstimator(FluxPointsEstimator):
 
     Notes
     -----
+    By default, points below 2-sigma detection will be considered as upper limits. This can be configured
+    on-the-fly on the resultant `FluxPoints` object by setting the ``sqrt_ts_threshold_ul``.
     In case of failure of upper limits computation (e.g. nan), see the User Guide: :ref:`dropdown-UL`.
     """
 
