@@ -45,23 +45,6 @@ signal in Gammapy, using the **Draco dwarf spheroidal galaxy** as our
 example target — one of the most DM-dominated objects in the local
 universe and a standard benchmark for indirect detection searches.
 
-The sections of the tutorial are:
-
-- Spatial Distribution
-
-  - Density profiles
-  - Astrophysical factor
-
-    - J-Factor
-    - D-Factor
-
-- Spectral morphology
-
-  - PPPC4DMID
-  - CosmiXs
-
-- Expected gamma-ray flux map
-
 """
 
 
