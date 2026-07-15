@@ -426,10 +426,10 @@ def make_grid_rectangle_sky_regions(
     wcs : `~astropy.wcs.WCS`
         WCS projection object used to convert between sky and pixel
         coordinates.
-    nbinx : int
-        Number of boxes along x-axis (RA/longitude)
-    nbiny : int
-        Number of boxes along y-axis (Dec/latitude)
+    nbinx : int, optional
+        Number of boxes along x-axis (RA/longitude). Default is 1.
+    nbiny : int, optional
+        Number of boxes along y-axis (Dec/latitude). Default is 1.
     angle : `~astropy.units.Quantity`, optional
         Rotation angle (in deg) of the grid, anti-clockwise.
         Default is 0 deg.
