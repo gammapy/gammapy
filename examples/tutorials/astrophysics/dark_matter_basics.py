@@ -52,11 +52,9 @@ universe and a standard benchmark for indirect detection searches.
 # Setup
 # -----
 #
-
-
-######################################################################
-# In this part we upload all the necessary packages for this tutorials and
-# set up all the data regarding our target source.
+# As usual, we’ll start with some setup uploading all the necessary
+# packages for this tutorials and setting up all the data regarding our
+# target source.
 #
 
 # sphinx_gallery_thumbnail_number = 2
@@ -77,10 +75,12 @@ from gammapy.astro.darkmatter import (
 )
 from regions import CircleSkyRegion
 
-# Source position
-position_dwarf_draco = SkyCoord(260.05, 57.915, frame="icrs", unit="deg")
 
-# Distance
+######################################################################
+# Define the target of interest for this tutorial:
+#
+
+position_dwarf_draco = SkyCoord(260.05, 57.915, frame="icrs", unit="deg")
 distance_dwarf_draco = 76 * u.kpc
 
 
@@ -137,8 +137,7 @@ distance_dwarf_draco = 76 * u.kpc
 # - **:math:`\rho_s` (scale density):** the overall normalization of the
 #   profile, setting the total amount of DM in the halo.
 #
-# Below you can find a representation of the shape of each available
-# profile.
+# Below we set up the shape of each available profile.
 #
 
 # Common parameters for comparison
@@ -158,6 +157,11 @@ profile_list = {
     "Moore": profiles.MooreProfile(r_s=r_s, rho_s=rho_s_GeV),
     "Zhao": profiles.ZhaoProfile(r_s=r_s, rho_s=rho_s_GeV),
 }
+
+
+######################################################################
+# Here we show a plot for the available profiles:
+#
 
 fig, ax = plt.subplots(figsize=(7, 5))
 
@@ -221,6 +225,11 @@ geom_draco = WcsGeom.create(
 # ^^^^^^^^
 #
 
+
+######################################################################
+# We compute the J-Factor with the compute_jfactor() function.
+#
+
 jfactory = JFactory(
     geom=geom_draco,  # Geometry map
     profile=draco_profile,  # Chosen density profile
@@ -257,6 +266,12 @@ print(f"J-factor integrated on 0.1 deg circle: {total_jfact:.3g}")
 ######################################################################
 # D-Factor
 # ^^^^^^^^
+#
+
+
+######################################################################
+# We follow the same procedure for the D-Fatcor, but setting the parameter
+# `annihilation` to False.
 #
 
 dfactory = JFactory(
@@ -341,8 +356,8 @@ print(f"D-factor integrated on 0.1 deg circle: {total_dfact:.3g}")
 # Here we plot the primary gamma-ray spectrum for a **10 TeV** DM particle
 # annihilating into several typical channels.
 #
-#    **Important Note:** For the decay, the procedure is the same, but
-#    internally **the mass is divided by 2**.
+# .. NOTE:: For the decay, the procedure is the same, but internally **the
+# mass is divided by 2**.
 #
 
 
@@ -433,8 +448,6 @@ plt.show()
 # mapping dictionary.
 #
 
-# Using the PATH
-
 # Minimal custom spectral table with the expected column names:
 # mDM, Log[10,x], and one column per channel
 masses = [10, 100, 1000, 10000]  # GeV
@@ -455,7 +468,12 @@ for m in masses:
 
 custom_table = Table(rows=rows)
 
-# Here by default the table is written in the tutorial container folder, please change the route as you wish
+
+######################################################################
+# Here by default the table is written in the tutorial container folder,
+# please change the route as you wish
+#
+
 custom_table.write("custom_spectra.ecsv", overwrite=True)
 custom_table
 
@@ -468,7 +486,11 @@ fluxes_custom = PrimaryFlux(
 )
 fluxes_custom.plot(energy_bounds=[mDM / 100, mDM], yunits=u.Unit("1/GeV"))
 
+
+######################################################################
 # Loading the table as an astropy.table.Table object
+#
+
 table = Table.read("custom_spectra.ecsv")
 print(table)
 
@@ -529,18 +551,16 @@ fluxes_from_table = PrimaryFlux(mDM=mDM, channel="tau", source=table)
 # In the next section we combine them with the J and D-factor maps
 # computed earlier to get the expected physical flux from Draco.
 #
-#    **Note on default values:** For
-#    `DarkMatterAnnihilationSpectralModel` and
-#    `DarkMatterDecaySpectralModel` Gammapy falls back to conventional
-#    benchmark values:
-#    :math:`\langle\sigma v\rangle = 3\times10^{-26}\,\mathrm{cm^3\,s^{-1}}`
-#    (the thermal relic cross-section) for annihilation, and
-#    $:raw-latex:`\tau`\_:raw-latex:`\chi `=
-#    4.3:raw-latex:`\times10`^{17}s $ (age of the Universe) for decay.
-#    These are **not** fitted or measured values for Draco — they are
-#    illustrative defaults. If you want to fit these parameters, please
-#    check the tutorial ‘Dark Matter indirect search analysis with
-#    Gammapy’.
+# .. NOTE:: For `DarkMatterAnnihilationSpectralModel` and
+# `DarkMatterDecaySpectralModel` Gammapy falls back to conventional
+# benchmark values:
+# :math:`\langle\sigma v\rangle = 3\times10^{-26}\,\mathrm{cm^3\,s^{-1}}`
+# (the thermal relic cross-section) for annihilation, and
+# $:raw-latex:`\tau`\_:raw-latex:`\chi `= 4.3:raw-latex:`\times10`^{17}s $
+# (age of the Universe) for decay. These are **not** fitted or measured
+# values for Draco — they are illustrative defaults. If you want to fit
+# these parameters, please check the tutorial ‘Dark Matter indirect search
+# analysis with Gammapy’.
 #
 
 # Common parameters
@@ -552,7 +572,9 @@ E_min = 0.1 * u.TeV
 E_max = mass_DM
 
 
-# Annihilation flux  (uses J-factor, DarkMatterAnnihilationSpectralModel)
+######################################################################
+# Annihilation flux (uses J-factor, DarkMatterAnnihilationSpectralModel)
+#
 
 ann_model = DarkMatterAnnihilationSpectralModel(
     mass=mass_DM,
@@ -565,8 +587,14 @@ int_flux_ann = (
 ).to("cm-2 s-1")
 
 
+######################################################################
+#
+#
+
+
+######################################################################
 # Decay flux (uses D-factor, DarkMatterDecaySpectralModel)
-# For the D-factor we recompute JFactory with annihilation=False
+#
 
 jfactory_dec = JFactory(
     geom=geom_draco,
@@ -583,7 +611,9 @@ int_flux_dec = (
 ).to("cm-2 s-1")
 
 
+######################################################################
 # Plot side by side
+#
 
 fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
