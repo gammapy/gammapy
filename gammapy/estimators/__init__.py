@@ -9,6 +9,7 @@ from .map import ASmoothMapEstimator, ExcessMapEstimator, FluxMaps, TSMapEstimat
 from .metadata import FluxMetaData
 from .parameter import ParameterEstimator, ParameterSensitivityEstimator
 from .points import (
+    FluxCollectionEstimator,
     FluxPoints,
     FluxPointsEstimator,
     FluxProfileEstimator,
@@ -23,6 +24,7 @@ __all__ = [
     "Estimator",
     "ESTIMATOR_REGISTRY",
     "ExcessMapEstimator",
+    "FluxCollectionEstimator",
     "FluxMaps",
     "FluxPoints",
     "FluxPointsEstimator",
@@ -44,6 +46,7 @@ ESTIMATOR_REGISTRY = Registry(
     [
         ExcessMapEstimator,
         TSMapEstimator,
+        FluxCollectionEstimator,
         FluxPointsEstimator,
         ASmoothMapEstimator,
         LightCurveEstimator,

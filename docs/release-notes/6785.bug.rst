@@ -1,0 +1,1 @@
+Fix the `~gammapy.estimators.FluxCollectionEstimator` to support computation over datasets with different spatial geometries, and single flux point.
