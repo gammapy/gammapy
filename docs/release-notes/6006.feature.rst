@@ -1,0 +1,1 @@
+Add utility function to creates a 2D grid of `~regions.RectangleSkyRegion` tiles on a given WCS.
