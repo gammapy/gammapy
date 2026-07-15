@@ -25,7 +25,7 @@ properties:
   wcs:
     tag: "tag:astropy.org:astropy/wcs/wcs-1.*"
     description: |
-       Optional WCS object to project the region if needed.
+       WCS object to project the region when needed.
 
 required: [region, wcs]
 additionalProperties: false
