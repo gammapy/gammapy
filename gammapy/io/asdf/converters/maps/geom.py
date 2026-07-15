@@ -104,5 +104,5 @@ class RegionGeomConverter(Converter):
         return RegionGeom(
             region=region,
             axes=node.get("axes"),
-            wcs=node.get("wcs"),
+            wcs=node["wcs"],
         )

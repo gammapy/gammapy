@@ -27,6 +27,6 @@ properties:
     description: |
        Optional WCS object to project the region if needed.
 
-required: [region]
+required: [region, wcs]
 additionalProperties: false
 ...
