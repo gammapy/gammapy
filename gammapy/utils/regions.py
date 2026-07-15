@@ -406,7 +406,9 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
 def make_grid_rectangle_sky_regions(
     center, width, height, wcs, nbinx=1, nbiny=1, angle=0 * u.deg
 ):
-    """Utility function to creates a 2D grid of
+    """Utility to return a list of 2D grid of rectangular projections
+
+    This function to create a 2D grid of
     `~regions.RectangleSkyRegion` tiles on the
     projection plane defined by the input WCS.
     This is similar to `make_orthogonal_rectangle_sky_regions`
@@ -489,7 +491,7 @@ def make_concentric_annulus_sky_regions(
     Returns
     -------
     regions : `~regions.Regions`
-        list of `~regions.CircleAnnulusSkyRegion` in which the profiles are made.
+        List of `~regions.CircleAnnulusSkyRegion` in which the profiles are made.
     """
     regions = []
 
