@@ -12,12 +12,15 @@ from .converters.maps.axes import (
     MapAxisConverter,
     TimeMapAxisConverter,
 )
+from .converters.maps.geom import HpxGeomConverter, WcsGeomConverter
 
 GAMMAPY_CONVERTERS = [
     MapAxisConverter(),
     MapAxesConverter(),
     TimeMapAxisConverter(),
     LabelMapAxisConverter(),
+    HpxGeomConverter(),
+    WcsGeomConverter(),
 ]
 
 GAMMAPY_EXTENSIONS = [

@@ -39,6 +39,33 @@ class JFactory:
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
 
+    def _integrate_los_branch(self, impact, radius_min, radius_max, ndecade):
+        """Integrate one radial line-of-sight branch."""
+        exponent = 2 if self.annihilation else 1
+        unit = radius_max.unit
+
+        impact = impact.to(unit)
+        radius_min = radius_min.to(unit)
+        radius_max = radius_max.to(unit)
+
+        if impact.value == 0:
+            return self.profile.integral(
+                radius_min, radius_max, 0, ndecade, self.annihilation
+            )
+
+        logmin = np.log10(radius_min.value)
+        logmax = np.log10(radius_max.value)
+        n = max(2, int((logmax - logmin) * ndecade))
+
+        t_min = np.arccosh(np.maximum((radius_min / impact).to_value(""), 1))
+        t_max = np.arccosh(np.maximum((radius_max / impact).to_value(""), 1))
+        t = np.linspace(t_min, t_max, n)
+
+        radius = impact * np.cosh(t)
+        values = self.profile(radius) ** exponent * radius
+
+        return np.trapezoid(values, t)
+
     def compute_differential_jfactor(self, ndecade=1e4):
         r"""Compute differential J-Factor.
 
@@ -67,7 +94,7 @@ class JFactory:
         sides of the halo. To account for this, the integration is split into
         two regions:
 
-        1. :math:`[r_{\min}, r_{\max}]` - from the observer to the source,
+        1. :math:`[r_\perp, r_{\max}]` - from the observer to the source,
            counted twice to include contributions from both near and far sides.
         2. :math:`[r_{\max}, 4 r_{\max}]` - from the source to infinity.
            The upper limit is truncated at :math:`4 r_{\max}` because
@@ -76,53 +103,36 @@ class JFactory:
         Hence, the effective integration domain is:
 
         .. math::
-            2 \times [r_{\min}, r_{\max}] \;+\; [r_{\max}, 4 r_{\max}].
+            2 \times [r_\perp, r_{\max}] \;+\; [r_{\max}, 4 r_{\max}].
 
-        The LoS integral is converted into a radial integral over the profile through:
-
-        .. math::
-            r^2 = l^2 + r_{\max}^2 - 2 dl \cos \theta
-
-        Rearranging for the differential gives:
+        The impact parameter is given by:
 
         .. math::
-            \mathrm dl = \frac{2 r}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr.
+            r_\perp = r_{\max} \sin \theta.
 
-        This substitution allows the integral to be evaluated directly as
-        radial integrals using ``profile.integral``, giving
+        The LoS integral is converted into radial branches with:
 
         .. math::
-            \int_0^{l_\mathrm{max}} \rho^2(r(l, \theta)) \, \mathrm dl
-            = 2 \int_{r_{\min}}^{r_{\max}} \frac{r \, \rho^2(r)}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr
-              + \int_{r_{\max}}^{4 r_{\max}} \frac{r \, \rho^2(r)}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr.
+            \mathrm dl = \frac{r}{\sqrt{r^2 - r_\perp^2}} \, \mathrm dr.
+
+        The apparent singularity at :math:`r = r_\perp` is integrable. To avoid
+        evaluating it directly, each radial branch is integrated with the
+        substitution :math:`r = r_\perp \cosh t`.
         """
         separation = self.geom.separation(self.geom.center_skydir).rad
-        rmin = u.Quantity(
-            value=np.tan(separation) * self.distance, unit=self.distance.unit
+        impact = u.Quantity(
+            value=np.sin(separation) * self.distance, unit=self.distance.unit
         )
         rmax = self.distance
         val = [
             (
-                2
-                * self.profile.integral(
-                    _.value * u.kpc,
-                    rmax,
-                    np.arctan(_.value / self.distance.value),
-                    ndecade,
-                    self.annihilation,
-                )
-                + self.profile.integral(
-                    self.distance,
-                    4 * rmax,
-                    np.arctan(_.value / self.distance.value),
-                    ndecade,
-                    self.annihilation,
-                )
+                2 * self._integrate_los_branch(impact_i, impact_i, rmax, ndecade)
+                + self._integrate_los_branch(impact_i, rmax, 4 * rmax, ndecade)
             )
-            for _ in rmin.ravel()
+            for impact_i in impact.ravel()
         ]
         integral_unit = u.Unit("GeV2 cm-5") if self.annihilation else u.Unit("GeV cm-2")
-        jfact = u.Quantity(val).to(integral_unit).reshape(rmin.shape)
+        jfact = u.Quantity(val).to(integral_unit).reshape(impact.shape)
         return jfact / u.steradian
 
     def compute_jfactor(self, ndecade=1e4):

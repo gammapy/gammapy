@@ -1,0 +1,1 @@
+Add unit support to the violins plot used with the `~gammapy.estimators.FluxCollection`
