@@ -1,4 +1,4 @@
-"""
+r"""
 Dark Matter Indirect Detection with Gammapy: Basics
 ===================================================
 
@@ -21,7 +21,8 @@ components:
   spectrum produced per annihilation or decay event. It depends on the
   DM mass and the dominant interaction channel.
 
-The total flux is simply their product:
+The total flux is simply their product `(Bergström, L. et al.,
+1998) <https://arxiv.org/abs/astro-ph/9712318>`__:
 
 **Annihilation:**
 
@@ -131,10 +132,10 @@ distance_dwarf_draco = 76 * u.kpc
 # Each profile is characterized by two scale parameters fitted to
 # observations:
 #
-# - **r_s (scale radius):** the characteristic distance at which the
-#   profile changes slope.
+# - r_s (scale radius): the characteristic distance at which the profile
+#   changes slope.
 #
-# - **:math:`\rho_s` (scale density):** the overall normalization of the
+# - :math:`\rho_s` (scale density): the overall normalization of the
 #   profile, setting the total amount of DM in the halo.
 #
 # Below we set up the shape of each available profile.
@@ -321,24 +322,26 @@ print(f"D-factor integrated on 0.1 deg circle: {total_dfact:.3g}")
 # The energy spectrum of these gamma rays, dN/dE, depends on two
 # quantities:
 #
-# - **The DM mass (:math:`m_\chi`):** sets the maximum energy of the
-#   photons, since E_max = (:math:`m_\chi`) for annihilation (or
+# - The DM mass (:math:`m_\chi`): sets the maximum energy of the photons,
+#   since :math:`E_{\rm max}` = (:math:`m_\chi`) for annihilation (or
 #   (:math:`m_\chi`)/2 for decay).
-# - **The annihilation/decay channel:** determines the shape of the
-#   spectrum. Different final states (quarks, leptons, gauge bosons)
-#   produce different gamma-ray spectra through different annihilation,
-#   decay and hadronization chains.
+# - The annihilation/decay channel: determines the shape of the spectrum.
+#   Different final states (quarks, leptons, gauge bosons) produce
+#   different gamma-ray spectra through different annihilation, decay and
+#   hadronization chains.
 #
 # Gammapy implements these spectra via look-up tables from three sources:
 #
-# - **PPPC4DMID** (Cirelli et al. 2011): tables computed with PYTHIA for a
-#   wide range of masses and channels, including electroweak corrections.
-#   This is the standard reference for most indirect detection analyses.
-# - **CosmiXs** (Arina et al. 2023): more recent tables with updated Monte
-#   Carlo generators, particularly relevant at high masses (above ~100
-#   TeV) where PPPC4DMID may be less accurate.
-# - **Custom file**: a custom spectral table can be provided either as a
-#   path to a local file (in any format readable by
+# - PPPC4DMID `(Cirelli et al. 2011) <https://arxiv.org/abs/1012.4515>`__:
+#   tables computed with PYTHIA for a wide range of masses and channels,
+#   including electroweak corrections. This is the standard reference for
+#   most indirect detection analyses.
+# - CosmiXs `(Arina et al. 2023) <https://arxiv.org/abs/2312.01153>`__:
+#   more recent tables with updated Monte Carlo generators, particularly
+#   relevant at high masses (above ~100 TeV) where PPPC4DMID may be less
+#   accurate.
+# - Custom file: a custom spectral table can be provided either as a path
+#   to a local file (in any format readable by
 #   `astropy.table.Table.read`, e.g. `.ecsv`, `.fits`, `.csv`,
 #   `.dat`) or directly as an `astropy.table.Table` object. This table
 #   must contain a `mDM` column, a `Log[10,x]` column, and one column
@@ -348,16 +351,16 @@ print(f"D-factor integrated on 0.1 deg circle: {total_dfact:.3g}")
 #
 # Currently, the default source is PPPC4DMID.
 #
-# The `PrimaryFlux` class in Gammapy interpolates these tables and
-# returns dN/dE as a spectral model that can be directly combined with the
-# astrohysical factor to compute the expected flux (as shown in the next
-# section).
+# The :class:`~gammapy.astro.darkmatter.PrimaryFlux` class in Gammapy
+# interpolates these tables and returns dN/dE as a spectral model that can
+# be directly combined with the astrohysical factor to compute the
+# expected flux (as shown in the next section).
+#
+# Please note that for the decay, the procedure is the same, but
+# internally the mass is divided by 2.
 #
 # Here we plot the primary gamma-ray spectrum for a **10 TeV** DM particle
 # annihilating into several typical channels.
-#
-# .. NOTE:: For the decay, the procedure is the same, but internally **the
-# mass is divided by 2**.
 #
 
 
@@ -534,26 +537,24 @@ fluxes_from_table = PrimaryFlux(mDM=mDM, channel="tau", source=table)
 # The spatial morphology is entirely determined by the J/D-factor map,
 # while the overall normalization depends on the particle physics model.
 #
-# `PrimaryFlux` gives you the raw dN/dE table, but it is not yet a model
-# you can plug into Gammapy’s modeling/fitting machinery. For that,
-# Gammapy provides two ready-to-use `SpectralModel` classes:
+# :class:`~gammapy.astro.darkmatter.PrimaryFlux` gives you the raw dN/dE
+# table, but it is not yet a model you can plug into Gammapy’s
+# modeling/fitting machinery. For that, Gammapy provides two ready-to-use
+# :class:`~gammapy.astro.modeling.models.SpectralModel` classes:
 #
-# - **`DarkMatterAnnihilationSpectralModel`**
-# - **`DarkMatterDecaySpectralModel`**
+# - **:class:`~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`**
+# - **:class:`~gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`**
 #
-# Internally, they wrap `PrimaryFlux` and apply the corresponding
-# normalization (:math:`\langle\sigma v\rangle / (8\pi m_\chi^2)` for
-# annihilation, :math:`1 / (4\pi \tau_\chi m_\chi)` for decay) — so you
-# don’t need to build the flux formula by hand. Because they are standard
-# `SpectralModel` objects, they expose the same API as any other model
-# in Gammapy (`.evaluate()`, `.integral()`, `.plot()`).
+# Internally, they wrap :class:`~gammapy.astro.darkmatter.PrimaryFlux`
+# and apply the corresponding normalization
+# (:math:`\langle\sigma v\rangle / (8\pi m_\chi^2)` for annihilation,
+# :math:`1 / (4\pi \tau_\chi m_\chi)` for decay) — so you don’t need to
+# build the flux formula by hand. Because they are standard
+# :class:`~gammapy.astro.modeling.models.SpectralModel` objects, they
+# expose the same API as any other model in Gammapy.
 #
-# In the next section we combine them with the J and D-factor maps
-# computed earlier to get the expected physical flux from Draco.
-#
-# .. NOTE:: For `DarkMatterAnnihilationSpectralModel` and
-# `DarkMatterDecaySpectralModel` Gammapy falls back to conventional
-# benchmark values:
+# For the spectral classes Gammapy falls back to conventional benchmark
+# values:
 # :math:`\langle\sigma v\rangle = 3\times10^{-26}\,\mathrm{cm^3\,s^{-1}}`
 # (the thermal relic cross-section) for annihilation, and
 # $:raw-latex:`\tau`\_:raw-latex:`\chi `= 4.3:raw-latex:`\times10`^{17}s $
@@ -561,6 +562,9 @@ fluxes_from_table = PrimaryFlux(mDM=mDM, channel="tau", source=table)
 # values for Draco — they are illustrative defaults. If you want to fit
 # these parameters, please check the tutorial ‘Dark Matter indirect search
 # analysis with Gammapy’.
+#
+# In the next section we combine them with the J and D-factor maps
+# computed earlier to get the expected physical flux from Draco.
 #
 
 # Common parameters
@@ -573,7 +577,7 @@ E_max = mass_DM
 
 
 ######################################################################
-# Annihilation flux (uses J-factor, DarkMatterAnnihilationSpectralModel)
+# Annihilation flux
 #
 
 ann_model = DarkMatterAnnihilationSpectralModel(
@@ -588,12 +592,7 @@ int_flux_ann = (
 
 
 ######################################################################
-#
-#
-
-
-######################################################################
-# Decay flux (uses D-factor, DarkMatterDecaySpectralModel)
+# Decay flux
 #
 
 jfactory_dec = JFactory(
@@ -659,25 +658,4 @@ plt.show()
 # `sky_model_ann`/`sky_model_dec` to a `MapDataset`. See the `Models
 # tutorial <../examples/tutorials/details/models.py>`__ for further
 # detailts on the models.
-#
-
-
-######################################################################
-# References
-# ----------
-#
-# - Arina, C. et al. 2023, *JCAP*, 05, 024 — CosmiXs: Cosmic messenger
-#   spectra for indirect dark matter searches.
-#   `arXiv:2312.01153 <https://arxiv.org/abs/2312.01153>`__
-# - Bergström, L., Ullio, P., & Buckley, J.H. 1998, Astroparticle Physics,
-#   9, 137–162. - Observability of gamma rays from dark matter neutralino
-#   annihilations in the Milky Way halo.
-#   `astro-ph/9712318 <https://arxiv.org/abs/astro-ph/9712318>`__
-# - Bonnivard, V. et al. 2015,\ *MNRAS*, 453, 849 — Dark matter
-#   annihilation and decay in dwarf spheroidal galaxies: The classical and
-#   ultrafaint dSphs.
-#   `arXiv:1504.02048 <https://arxiv.org/abs/1504.02048>`__
-# - Cirelli, M. et al. 2011, *JCAP*, 03, 051 — PPPC 4 DM ID: A Poor
-#   Particle Physicist Cookbook for Dark Matter Indirect Detection.
-#   `arXiv:1012.4515 <https://arxiv.org/abs/1012.4515>`__
 #
