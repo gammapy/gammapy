@@ -26,10 +26,6 @@ properties:
     tag: "tag:astropy.org:astropy/wcs/wcs-1.*"
     description: |
        Optional WCS object to project the region if needed.
-  binsz_wcs:
-    tag: "tag:astropy.org:astropy/coordinates/angle-*"
-    description: |
-      Angular bin size of the underlying WCS used to evaluate quantities inside the region.
 
 required: [region]
 additionalProperties: false

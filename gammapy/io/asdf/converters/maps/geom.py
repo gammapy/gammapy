@@ -84,7 +84,6 @@ class RegionGeomConverter(Converter):
             "region": ds9_strings,
             "axes": obj.axes,
             "wcs": obj.wcs,
-            "binsz_wcs": obj.binsz_wcs,
         }
 
         return node
@@ -106,5 +105,4 @@ class RegionGeomConverter(Converter):
             region=region,
             axes=node.get("axes"),
             wcs=node.get("wcs"),
-            binsz_wcs=node.get("binsz_wcs"),
         )

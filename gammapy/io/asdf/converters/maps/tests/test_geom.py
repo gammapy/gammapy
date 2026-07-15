@@ -329,7 +329,6 @@ tested_region_geom = [
         wcs=WcsGeom.create(
             skydir=(0, 0), frame="galactic", width="1.5deg", binsz="0.1deg"
         ).wcs,
-        binsz_wcs=0.01,
     ),
 ]
 
@@ -352,13 +351,11 @@ tested_read_regiongeom_invalid_examples = [
         "example": """!<asdf://gammapy.org/gammapy/tags/maps/regiongeom-1.0.0>
          axes: !<asdf://gammapy.org/gammapy/tags/maps/mapaxes-1.0.0>
            axes: []
-         binsz_wcs: 0.1 deg
          """,
     },
     {
         "example": """!<asdf://gammapy.org/gammapy/tags/maps/regiongeom-1.0.0>
          region: 42
-         binsz_wcs: 0.1 deg
          """,
     },
 ]
