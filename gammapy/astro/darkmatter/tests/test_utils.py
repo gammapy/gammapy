@@ -131,6 +131,7 @@ def test_dmfluxmap_decay(jfact_decay):
     assert_quantity_allclose(actual, desired, rtol=1e-3)
 
 
+@requires_data()
 def test_prior_attached(dm_decay_model):
     """The prior should be a GaussianPrior with the given sigma,
     centered on mu=1 by default (i.e. the nominal factor value)."""
@@ -142,6 +143,7 @@ def test_prior_attached(dm_decay_model):
     assert prior.mu.value == pytest.approx(1.0)
 
 
+@requires_data()
 def test_custom_mu(dm_decay_model):
     """A custom `mu` should be respected instead of the default 1.0."""
     add_factor_prior(dm_decay_model, sigma=0.15, mu=0.5)
@@ -151,6 +153,7 @@ def test_custom_mu(dm_decay_model):
     assert prior.sigma.value == pytest.approx(0.15)
 
 
+@requires_data()
 def test_jfactor_unaffected(dm_decay_model):
     """The nominal factor attribute itself should remain untouched;
     only `scale` should carry the nuisance treatment."""
@@ -161,12 +164,14 @@ def test_jfactor_unaffected(dm_decay_model):
     assert dm_decay_model.jfactor == jfactor_before
 
 
+@requires_data()
 def test_returns_model(dm_decay_model):
     """The function should return the same model instance (for chaining)."""
     returned = add_factor_prior(dm_decay_model, sigma=0.2)
     assert returned is dm_decay_model
 
 
+@requires_data()
 def test_flux_scale_degeneracy_regression(dm_decay_model):
     """Evaluating the model at scale=1 must reproduce the
     flux computed with the nominal factor, i.e. the prior on `scale`
