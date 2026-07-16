@@ -6,7 +6,7 @@ import astropy.units as u
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
-from gammapy.maps import WcsGeom, WcsNDMap, MapAxis
+from gammapy.maps import HpxGeom, HpxNDMap, WcsGeom, WcsNDMap, MapAxis
 
 asdf = pytest.importorskip("asdf")
 pytest.importorskip("asdf.testing")
@@ -158,3 +158,121 @@ def test_wcsndmap_roundtrip_dtype(dtype, unit, meta, tmp_path):
         assert result.unit == m.unit
         assert result.meta == m.meta
         assert result.data.dtype == m.data.dtype
+
+
+tested_hpx_ndmap = [
+    # All-sky
+    (8, False, "galactic", None, None, "", None),
+    (
+        8,
+        False,
+        "galactic",
+        None,
+        [MapAxis(np.logspace(0.0, 3.0, 4))],
+        "",
+        {"telescope": "CTA"},
+    ),
+    (
+        [2, 4, 8],
+        False,
+        "galactic",
+        None,
+        [MapAxis(np.logspace(0.0, 3.0, 4))],
+        "m2 s",
+        None,
+    ),
+    (
+        8,
+        False,
+        "galactic",
+        None,
+        [
+            MapAxis(np.logspace(0.0, 3.0, 3), name="axis0"),
+            MapAxis(np.logspace(0.0, 2.0, 4), name="axis1"),
+        ],
+        1 / (u.cm**2 / u.s),
+        None,
+    ),
+    (8, True, "galactic", None, None, "cm2 s-1", {"author": "test"}),
+    (8, False, "icrs", None, None, "m2", {"telescope": "HESS"}),
+    # Partial-sky
+    (8, True, "galactic", "DISK(110.,75.,10.)", None, "", None),
+    (
+        8,
+        False,
+        "galactic",
+        "DISK(110.,75.,10.)",
+        [MapAxis(np.logspace(0.0, 3.0, 4))],
+        "",
+        {"key": "value"},
+    ),
+    (
+        [8, 16, 32],
+        False,
+        "galactic",
+        "DISK(110.,75.,10.)",
+        [MapAxis(np.logspace(0.0, 3.0, 4))],
+        "cm2 s",
+        None,
+    ),
+    (
+        [[8, 16, 32], [8, 8, 16]],
+        False,
+        "galactic",
+        "DISK(110.,75.,10.)",
+        [
+            MapAxis(np.logspace(0.0, 3.0, 3), name="axis0"),
+            MapAxis(np.logspace(0.0, 2.0, 4), name="axis1"),
+        ],
+        "s",
+        None,
+    ),
+    (8, True, "icrs", "DISK_INC(110.,75.,10.,4)", None, "", {"creator": "gammapy"}),
+    (8, True, "icrs", "HPX_PIXEL(NESTED,2,3)", None, "cm2 s-1", None),
+    (8, False, "icrs", "HPX_PIXEL(RING,2,3)", None, "", None),
+]
+
+
+@pytest.mark.parametrize(
+    ("nside", "nested", "frame", "region", "axes", "unit", "meta"), tested_hpx_ndmap
+)
+def test_hpxndmap_roundtrip(nside, nested, frame, region, axes, unit, meta, tmp_path):
+    file_path = tmp_path / "test.asdf"
+    geom = HpxGeom(nside=nside, nest=nested, frame=frame, region=region, axes=axes)
+    m = HpxNDMap(geom, unit=unit, meta=meta)
+    m.data = np.arange(m.data.size).reshape(m.geom.data_shape)
+    with asdf.AsdfFile() as af:
+        af["map"] = m
+        af.write_to(file_path)
+    with asdf.open(file_path) as af:
+        result = af["map"]
+        assert_allclose(result.data, m.data)
+        assert result.unit == m.unit
+        assert result.meta == m.meta
+
+
+def test_hpxnd_roundtrip_compressed(tmp_path):
+    file_path = tmp_path / "test.asdf"
+    geom = HpxGeom(
+        nside=8, nest=False, frame="galactic", region="DISK(110.,75.,10.)", axes=None
+    )
+    idx = geom.get_idx(flat=True)
+    geom = HpxGeom(nside=8, nest=False, frame="galactic", region=idx, axes=None)
+    m = HpxNDMap(
+        geom,
+        unit=1 / (u.cm**2 / u.s),
+        meta={
+            "observation_date": Time("2020-01-15"),
+            "exposure": 7200.0 * u.s,
+            "telescope": "Fermi",
+        },
+    )
+    m.data = np.arange(m.data.size).reshape(m.geom.data_shape)
+    with asdf.AsdfFile() as af:
+        af["map"] = m
+        af.write_to(file_path, all_array_compression="zlib")
+    with asdf.open(file_path) as af:
+        result = af["map"]
+        assert_allclose(result.data, m.data)
+        assert result.unit == m.unit
+        assert result.meta == m.meta

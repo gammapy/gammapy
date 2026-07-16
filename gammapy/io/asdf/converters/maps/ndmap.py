@@ -26,3 +26,28 @@ class WcsNDMapConverter(Converter):
             meta=node.get("meta", {}),
             unit=node.get("unit", ""),
         )
+
+
+class HpxNDMapConverter(Converter):
+    tags = ["asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0"]
+    types = ["gammapy.maps.hpx.ndmap.HpxNDMap"]
+
+    def to_yaml_tree(self, obj, tag, ctx):
+        node = {
+            "geom": obj.geom,
+            "data": obj.data,
+            "unit": str(obj.unit),
+        }
+        if obj.meta:
+            node["meta"] = obj.meta
+        return node
+
+    def from_yaml_tree(self, node, tag, ctx):
+        from gammapy.maps import HpxNDMap
+
+        return HpxNDMap(
+            geom=node["geom"],
+            data=node["data"],
+            meta=node.get("meta", {}),
+            unit=node.get("unit", ""),
+        )
