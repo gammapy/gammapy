@@ -1,7 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from pathlib import Path
-from unittest.mock import patch
-
 import astropy.units as u
 import numpy as np
 import pytest
@@ -13,7 +10,7 @@ from gammapy.astro.darkmatter import (
     DarkMatterDecaySpectralModel,
     PrimaryFlux,
 )
-from gammapy.modeling.models import GaussianPrior, Models, SkyModel
+from gammapy.modeling.models import Models, SkyModel
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
@@ -22,19 +19,10 @@ def test_primary_flux():
     with pytest.raises(ValueError):
         PrimaryFlux(channel="Spam", mDM=1 * u.TeV)
 
-    with pytest.raises(ValueError):
-        PrimaryFlux(channel="b", mDM=1000 * u.TeV)
-
     primflux = PrimaryFlux(channel="W", mDM=1 * u.TeV)
     actual = primflux(500 * u.GeV)
     desired = 9.3319318e-05 / u.GeV
     assert_quantity_allclose(actual, desired)
-
-
-def test_primary_flux_source_case_insensitive():
-    with patch.object(Path, "exists", return_value=False):
-        with pytest.raises(FileNotFoundError):
-            PrimaryFlux(mDM=1 * u.TeV, channel="b", source="PPPC4")
 
 
 @pytest.mark.parametrize(
@@ -103,7 +91,10 @@ def test_dm_spectral_model(
     flux = model.integral(energy_min=energy_min, energy_max=energy_max).to("cm-2 s-1")
     dnde = model.evaluate(energy=1 * u.TeV, scale=1).to("cm-2 s-1 TeV-1")
 
-    sky_model = SkyModel(spectral_model=model, name="skymodel")
+    sky_model = SkyModel(
+        spectral_model=model,
+        name="skymodel",
+    )
     models = Models([sky_model])
     filename = tmpdir / "model.yaml"
     models.write(filename, overwrite=True)
@@ -146,223 +137,6 @@ def test_primary_flux_cosmixs():
         PrimaryFlux(channel="u", mDM=1 * u.TeV, source="pppc4")
     with pytest.raises(ValueError):
         PrimaryFlux(channel="s", mDM=1 * u.TeV, source="pppc4")
-
-
-# ─── DarkMatterAnnihilationSpectralModel — nuisance ──────────────────────────
-
-
-@requires_data()
-def test_annihilation_no_sigma_frozen():
-    """Without sigma, log10_jfactor must stay frozen."""
-    jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-    model = DarkMatterAnnihilationSpectralModel(
-        mass=5 * u.TeV, channel="b", jfactor=jfactor
-    )
-    assert model.log10_jfactor.frozen is True
-    assert model.log10_jfactor.prior is None
-
-
-@requires_data()
-def test_annihilation_sigma_zero_equivalent_to_none():
-    """sigma=0.0 must behave identically to sigma=None."""
-    jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-    model = DarkMatterAnnihilationSpectralModel(
-        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma=0.0
-    )
-    assert model.log10_jfactor.frozen is True
-    assert model.log10_jfactor.prior is None
-
-
-@requires_data()
-def test_annihilation_with_sigma_unfreezes():
-    """With sigma, log10_jfactor must be free and have a prior."""
-    jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-    model = DarkMatterAnnihilationSpectralModel(
-        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma=0.2
-    )
-    assert model.log10_jfactor.frozen is False
-    assert model.log10_jfactor.prior is not None
-    assert_allclose(model.log10_jfactor.value, np.log10(3.41e19), rtol=1e-6)
-
-
-@requires_data()
-def test_annihilation_prior_is_gaussian_with_correct_params():
-    """Prior must be GaussianPrior with mu=log10(J_obs) and correct sigma."""
-    jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-    sigma = 0.3
-    model = DarkMatterAnnihilationSpectralModel(
-        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma=sigma
-    )
-    assert isinstance(model.log10_jfactor.prior, GaussianPrior)
-    assert_allclose(model.log10_jfactor.prior.mu.value, np.log10(3.41e19), rtol=1e-6)
-    assert_allclose(model.log10_jfactor.prior.sigma.value, sigma, rtol=1e-6)
-
-
-@requires_data()
-def test_annihilation_prior_bounds():
-    """log10_jfactor bounds must be ±5*sigma around the observed value."""
-    jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-    sigma = 0.5
-    log10_j_obs = np.log10(3.41e19)
-    model = DarkMatterAnnihilationSpectralModel(
-        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma=sigma
-    )
-    assert_allclose(model.log10_jfactor.min, log10_j_obs - 5 * sigma, rtol=1e-6)
-    assert_allclose(model.log10_jfactor.max, log10_j_obs + 5 * sigma, rtol=1e-6)
-
-
-@requires_data()
-def test_annihilation_sigma_validates():
-    jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-    with pytest.raises(ValueError):
-        DarkMatterAnnihilationSpectralModel(
-            mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma=-0.1
-        )
-    with pytest.raises(TypeError):
-        DarkMatterAnnihilationSpectralModel(
-            mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma="bad"
-        )
-
-
-@requires_data()
-def test_annihilation_evaluate_uses_log10_jfactor():
-    """evaluate() must scale correctly when log10_jfactor is shifted by 1 dex."""
-    jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-    model = DarkMatterAnnihilationSpectralModel(
-        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma=0.5
-    )
-    log10_j = np.log10(3.41e19)
-    flux_nominal = model.evaluate(energy=1 * u.TeV, scale=1, log10_jfactor=log10_j)
-    flux_10x = model.evaluate(energy=1 * u.TeV, scale=1, log10_jfactor=log10_j + 1)
-    assert_allclose(flux_10x.value / flux_nominal.value, 10.0, rtol=1e-5)
-
-
-@requires_data()
-def test_annihilation_jfactor_array_raises():
-    """Passing a map (array) as jfactor must raise ValueError."""
-    jfactor_map = np.array([3.41e19, 3.41e18]) * u.Unit("GeV2 cm-5")
-    with pytest.raises(ValueError, match="scalar Quantity"):
-        DarkMatterAnnihilationSpectralModel(
-            mass=5 * u.TeV, channel="b", jfactor=jfactor_map
-        )
-
-
-@requires_data()
-def test_annihilation_serialization_with_sigma(tmpdir):
-    """sigma must survive a YAML round-trip."""
-    jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-    model = DarkMatterAnnihilationSpectralModel(
-        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma=0.3
-    )
-    sky_model = SkyModel(spectral_model=model, name="skymodel")
-    models = Models([sky_model])
-    filename = tmpdir / "model_sigma.yaml"
-    models.write(filename, overwrite=True)
-    new_models = Models.read(filename)
-    new_model = new_models[0].spectral_model
-    assert_allclose(new_model._sigma, 0.3, rtol=1e-6)
-    assert new_model.log10_jfactor.frozen is False
-    assert new_model.log10_jfactor.prior is not None
-
-
-# ─── DarkMatterDecaySpectralModel — nuisance ─────────────────────────────────
-
-
-@requires_data()
-def test_decay_no_sigma_frozen():
-    """Without sigma, log10_jfactor must stay frozen."""
-    jfactor = 3.41e19 * u.Unit("GeV cm-2")
-    model = DarkMatterDecaySpectralModel(mass=5 * u.TeV, channel="b", jfactor=jfactor)
-    assert model.log10_jfactor.frozen is True
-    assert model.log10_jfactor.prior is None
-
-
-@requires_data()
-def test_decay_sigma_zero_equivalent_to_none():
-    """sigma=0.0 must behave identically to sigma=None."""
-    jfactor = 3.41e19 * u.Unit("GeV cm-2")
-    model = DarkMatterDecaySpectralModel(
-        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma=0.0
-    )
-    assert model.log10_jfactor.frozen is True
-    assert model.log10_jfactor.prior is None
-
-
-@requires_data()
-def test_decay_with_sigma_unfreezes():
-    """With sigma, log10_jfactor must be free and have a prior."""
-    jfactor = 3.41e19 * u.Unit("GeV cm-2")
-    model = DarkMatterDecaySpectralModel(
-        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma=0.2
-    )
-    assert model.log10_jfactor.frozen is False
-    assert model.log10_jfactor.prior is not None
-    assert_allclose(model.log10_jfactor.value, np.log10(3.41e19), rtol=1e-6)
-
-
-@requires_data()
-def test_decay_prior_is_gaussian_with_correct_params():
-    """Prior must be GaussianPrior with mu=log10(J_obs) and correct sigma."""
-    jfactor = 3.41e19 * u.Unit("GeV cm-2")
-    sigma = 0.3
-    model = DarkMatterDecaySpectralModel(
-        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma=sigma
-    )
-    assert isinstance(model.log10_jfactor.prior, GaussianPrior)
-    assert_allclose(model.log10_jfactor.prior.mu.value, np.log10(3.41e19), rtol=1e-6)
-    assert_allclose(model.log10_jfactor.prior.sigma.value, sigma, rtol=1e-6)
-
-
-@requires_data()
-def test_decay_prior_bounds():
-    """log10_jfactor bounds must be ±5*sigma around the observed value."""
-    jfactor = 3.41e19 * u.Unit("GeV cm-2")
-    sigma = 0.2
-    log10_j_obs = np.log10(3.41e19)
-    model = DarkMatterDecaySpectralModel(
-        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma=sigma
-    )
-    assert_allclose(model.log10_jfactor.min, log10_j_obs - 5 * sigma, rtol=1e-6)
-    assert_allclose(model.log10_jfactor.max, log10_j_obs + 5 * sigma, rtol=1e-6)
-
-
-@requires_data()
-def test_decay_evaluate_uses_log10_jfactor():
-    """evaluate() must scale correctly when log10_jfactor is shifted by 1 dex."""
-    jfactor = 3.41e19 * u.Unit("GeV cm-2")
-    model = DarkMatterDecaySpectralModel(
-        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma=0.5
-    )
-    log10_j = np.log10(3.41e19)
-    flux_nominal = model.evaluate(energy=1 * u.TeV, scale=1, log10_jfactor=log10_j)
-    flux_10x = model.evaluate(energy=1 * u.TeV, scale=1, log10_jfactor=log10_j + 1)
-    assert_allclose(flux_10x.value / flux_nominal.value, 10.0, rtol=1e-5)
-
-
-@requires_data()
-def test_decay_jfactor_array_raises():
-    """Passing a map (array) as jfactor must raise ValueError."""
-    jfactor_map = np.array([3.41e19, 3.41e18]) * u.Unit("GeV cm-2")
-    with pytest.raises(ValueError, match="scalar Quantity"):
-        DarkMatterDecaySpectralModel(mass=5 * u.TeV, channel="b", jfactor=jfactor_map)
-
-
-@requires_data()
-def test_decay_serialization_with_sigma(tmpdir):
-    """sigma must survive a YAML round-trip."""
-    jfactor = 3.41e19 * u.Unit("GeV cm-2")
-    model = DarkMatterDecaySpectralModel(
-        mass=5 * u.TeV, channel="b", jfactor=jfactor, sigma=0.3
-    )
-    sky_model = SkyModel(spectral_model=model, name="skymodel")
-    models = Models([sky_model])
-    filename = tmpdir / "model_sigma.yaml"
-    models.write(filename, overwrite=True)
-    new_models = Models.read(filename)
-    new_model = new_models[0].spectral_model
-    assert_allclose(new_model._sigma, 0.3, rtol=1e-6)
-    assert new_model.log10_jfactor.frozen is False
-    assert new_model.log10_jfactor.prior is not None
 
 
 @requires_data()

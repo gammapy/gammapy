@@ -4,8 +4,11 @@
 import html
 import numpy as np
 import astropy.units as u
+from gammapy.modeling.models.prior import (
+    GaussianPrior,
+)
 
-__all__ = ["JFactory"]
+__all__ = ["JFactory", "add_factor_prior"]
 
 
 class JFactory:
@@ -156,3 +159,20 @@ class JFactory:
         """
         diff_jfact = self.compute_differential_jfactor(ndecade)
         return diff_jfact * self.geom.to_image().solid_angle()
+
+
+def add_factor_prior(model, sigma, mu=1.0):
+    """Attach a Gaussian nuisance prior on `scale` for J/D-factor uncertainty.
+
+    Parameters
+    ----------
+    model : DarkMatterAnnihilationSpectralModel or DarkMatterDecaySpectralModel
+        Model whose `scale` parameter will get an attached prior.
+    sigma : float
+        Uncertainty on log10(J) [dex].
+    mu : float
+        Center of the prior in scale units (default 1, i.e. nominal J-factor).
+    """
+    model.scale.frozen = False
+    model.scale.prior = GaussianPrior(mu=mu, sigma=sigma)
+    return model

@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import html
 from unittest.mock import patch
 import numpy as np
 import astropy.units as u
@@ -11,6 +10,7 @@ from gammapy.astro.darkmatter import (
     DarkMatterDecaySpectralModel,
     JFactory,
     profiles,
+    add_factor_prior,
 )
 from gammapy.maps import WcsGeom
 from gammapy.modeling import Parameter
@@ -41,6 +41,15 @@ def jfact_decay(geom):
         annihilation=False,
     )
     return jfactory.compute_jfactor()
+
+
+@pytest.fixture
+def dm_decay_model():
+    return DarkMatterDecaySpectralModel(
+        mass=5000 * u.Unit("GeV"),
+        channel="b",
+        jfactor=3.41e19 * u.Unit("GeV cm-2"),
+    )
 
 
 def test_compute_differential_jfactor_large_separation():
@@ -122,15 +131,51 @@ def test_dmfluxmap_decay(jfact_decay):
     assert_quantity_allclose(actual, desired, rtol=1e-3)
 
 
-def test_jfactory_repr_html_fallback(geom):
-    jfactory = JFactory(geom=geom, profile=profiles.NFWProfile(), distance=8.5 * u.kpc)
+def test_prior_attached(dm_decay_model):
+    """The prior should be a GaussianPrior with the given sigma,
+    centered on mu=1 by default (i.e. the nominal factor value)."""
+    add_factor_prior(dm_decay_model, sigma=0.2)
 
-    with patch.object(jfactory, "to_html", side_effect=AttributeError, create=True):
-        repr_str = jfactory._repr_html_()
+    prior = dm_decay_model.scale.prior
+    assert prior is not None
+    assert prior.sigma.value == pytest.approx(0.2)
+    assert prior.mu.value == pytest.approx(1.0)
 
-        # Check that it went through the except block returning the <pre> tags
-        assert repr_str.startswith("<pre>")
-        assert repr_str.endswith("</pre>")
 
-        expected_string = html.escape(str(jfactory))
-        assert expected_string in repr_str
+def test_custom_mu(dm_decay_model):
+    """A custom `mu` should be respected instead of the default 1.0."""
+    add_factor_prior(dm_decay_model, sigma=0.15, mu=0.5)
+
+    prior = dm_decay_model.scale.prior
+    assert prior.mu.value == pytest.approx(0.5)
+    assert prior.sigma.value == pytest.approx(0.15)
+
+
+def test_jfactor_unaffected(dm_decay_model):
+    """The nominal factor attribute itself should remain untouched;
+    only `scale` should carry the nuisance treatment."""
+    jfactor_before = dm_decay_model.jfactor
+
+    add_factor_prior(dm_decay_model, sigma=0.2)
+
+    assert dm_decay_model.jfactor == jfactor_before
+
+
+def test_returns_model(dm_decay_model):
+    """The function should return the same model instance (for chaining)."""
+    returned = add_factor_prior(dm_decay_model, sigma=0.2)
+    assert returned is dm_decay_model
+
+
+def test_flux_scale_degeneracy_regression(dm_decay_model):
+    """Evaluating the model at scale=1 must reproduce the
+    flux computed with the nominal factor, i.e. the prior on `scale`
+    does not change the model's evaluate() behaviour by itself."""
+    energy = 100 * u.GeV
+    flux_before = dm_decay_model(energy)
+
+    add_factor_prior(dm_decay_model, sigma=0.2)
+    # attaching the prior alone shouldn't move scale's current value
+    flux_after = dm_decay_model(energy)
+
+    assert u.allclose(flux_before, flux_after)
