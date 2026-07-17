@@ -493,7 +493,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     linear with a log scale for the values. The interpolation method and scale values
     can be changed with the ``interp_kwargs`` argument which expects a dictionary with
     (any of) the keys ``method``, ``fill_value`` and ``values_scale``.
-    The ``method`` and ``values_scale`` arguments have been deprecated.
+    The ``method`` and ``values_scale`` arguments have been deprecated in version 2.1.
 
     For more information see :ref:`LightCurve-temporal-model`.
 
@@ -502,7 +502,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     map : `~gammapy.maps.RegionNDMap`
         Map template with a "time" axes and optionally an "energy" axes.
     tref : float, optional
-        Reference time for the time-axes in the map. Default is: 2000-01-01
+        Reference time for the time-axes in the map. Default is 2000-01-01.
     filename : string, optional
         Default name for the serialisation. Default is "".
     interp_kwargs : dict, optional
@@ -511,10 +511,10 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             {'method': 'linear', 'values_scale':'lin', 'fill_value': 0}.
         For energy-dependent models the default arguments are
             {'method': 'linear', 'values_scale':'log', 'fill_value': -np.inf}.
-    method : string, optional, deprecated
-        Method to use for interpolation. Default is "linear".
-    values_scale : string, optional, deprecated
-        Optional value scaling. Default is "log" for energy dependent models and "lin" otherwise.
+    method : string, optional
+        Deprecated in 2.1. Method to use for interpolation. Default is "linear".
+    values_scale : string, optional
+        Deprecated in 2.1. Optional value scaling. Default is "log" for energy dependent models and "lin" otherwise.
 
     Examples
     --------
@@ -569,6 +569,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         method=None,
         values_scale=None,
         interp_kwargs=None,
+        fill_value=None,
     ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
@@ -670,7 +671,12 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         return cls(m, t_ref=t_ref, filename=filename)
 
     @classmethod
-    def read(cls, filename, format="table"):
+    def read(
+        cls,
+        filename,
+        format="table",
+        interp_kwargs=None,
+    ):
         """Read a template model.
 
         Parameters
@@ -679,6 +685,12 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             Name of file to read.
         format : {"table", "map"}
             Format of the input file.
+        interp_kwargs : dict, optional
+            Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
+            For energy independent models the default arguments are
+                {'method': 'linear', 'values_scale':'lin', 'fill_value': 0}.
+            For energy-dependent models the default arguments are
+                {'method': 'linear', 'values_scale':'log', 'fill_value': -np.inf}.
 
         Returns
         -------
@@ -701,7 +713,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
                 # have the evaluate method work
                 hdulist["SKYMAP_BANDS"].header.pop("MJDREFI")
                 m = RegionNDMap.from_hdulist(hdulist)
-            return cls(m, t_ref=t_ref, filename=filename)
+            return cls(m, t_ref=t_ref, filename=filename, interp_kwargs=interp_kwargs)
 
         else:
             raise ValueError(
