@@ -162,16 +162,32 @@ class JFactory:
 
 
 def add_factor_prior(model, sigma, mu=1.0):
-    """Attach a Gaussian nuisance prior on `scale` for J/D-factor uncertainty.
+    """Attach a Gaussian nuisance prior on ``scale`` for J/D-factor uncertainty.
+
+    The J/D-factor is kept fixed at its nominal value; the associated
+    uncertainty is instead expressed as an equivalent prior on ``scale``,
+    since the predicted flux depends only on the product
+    ``scale * jfactor``. Placing the prior directly on a second parameter
+    (e.g. ``log10_jfactor``) would make it perfectly degenerate with
+    ``scale``. This reparametrisation is a pure shift, so the prior
+    retains the same shape and ``sigma``, centered at ``scale = 1``
+    instead of at the nominal log10(J).
 
     Parameters
     ----------
-    model : DarkMatterAnnihilationSpectralModel or DarkMatterDecaySpectralModel
-        Model whose `scale` parameter will get an attached prior.
+    model : `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel` or `~gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`
+        Model whose ``scale`` parameter will get the prior attached.
+        ``scale`` is unfrozen as part of this call.
     sigma : float
-        Uncertainty on log10(J) [dex].
-    mu : float
-        Center of the prior in scale units (default 1, i.e. nominal J-factor).
+        Uncertainty on log10(J) (or log10(D)), in dex.
+    mu : float, optional
+        Center of the prior, in units of ``scale``. Default is 1.0, i.e.
+        the nominal J/D-factor value.
+
+    Returns
+    -------
+    model : `DarkMatterAnnihilationSpectralModel` or `DarkMatterDecaySpectralModel`
+        The same model instance, with the prior attached, for chaining.
     """
     model.scale.frozen = False
     model.scale.prior = GaussianPrior(mu=mu, sigma=sigma)
