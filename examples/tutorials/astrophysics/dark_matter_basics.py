@@ -54,8 +54,7 @@ universe and a standard benchmark for indirect detection searches.
 # -----
 #
 # As usual, we’ll start with some setup uploading all the necessary
-# packages for this tutorials and setting up all the data regarding our
-# target source.
+# packages for this tutorial.
 #
 
 # sphinx_gallery_thumbnail_number = 2
@@ -135,8 +134,8 @@ distance_dwarf_draco = 76 * u.kpc
 # - r_s (scale radius): the characteristic distance at which the profile
 #   changes slope.
 #
-# - :math:`\rho_s` (scale density): the overall normalization of the
-#   profile, setting the total amount of DM in the halo.
+# - rho_s (scale density): the overall normalization of the profile,
+#   setting the total amount of DM in the halo.
 #
 # Below we set up the shape of each available profile.
 #
@@ -214,10 +213,7 @@ draco_profile = profiles.EinastoProfile(r_s=0.91 * u.kpc, rho_s=rho_s_GeV)
 
 # Geometry map we are going to work with
 geom_draco = WcsGeom.create(
-    binsz=0.1,  # Pixel size
-    skydir=position_dwarf_draco,  # Sky position of the target, center of the map
-    width=3.0,  # Width of the map (i.e 3x3 map)
-    frame="icrs",  # Coordinates system
+    binsz=0.1, skydir=position_dwarf_draco, width=3.0, frame="icrs"
 )
 
 
@@ -228,7 +224,9 @@ geom_draco = WcsGeom.create(
 
 
 ######################################################################
-# We compute the J-Factor with the compute_jfactor() function.
+# We compute the J-Factor with the
+# `~gammapy.astro.darkmatter.JFactory.compute_jfactor()` function. Here
+# we set `annihilation` to be True, since we are computing the J-Factor.
 #
 
 jfactory = JFactory(
@@ -268,10 +266,7 @@ print(f"J-factor integrated on 0.1 deg circle: {total_jfact:.3g}")
 # D-Factor
 # ^^^^^^^^
 #
-
-
-######################################################################
-# We follow the same procedure for the D-Fatcor, but setting the parameter
+# We follow the same procedure for the D-Factor, but setting the parameter
 # `annihilation` to False.
 #
 
@@ -343,7 +338,7 @@ print(f"D-factor integrated on 0.1 deg circle: {total_dfact:.3g}")
 # - Custom file: a custom spectral table can be provided either as a path
 #   to a local file (in any format readable by
 #   `astropy.table.Table.read`, e.g. `.ecsv`, `.fits`, `.csv`,
-#   `.dat`) or directly as an `astropy.table.Table` object. This table
+#   `.dat`) or directly as a `astropy.table.Table` object. This table
 #   must contain a `mDM` column, a `Log[10,x]` column, and one column
 #   per desired channel. If the column names in your file don’t match
 #   these expected names, a `mapping_dict` must be provided to map them
@@ -488,10 +483,11 @@ fluxes_custom = PrimaryFlux(
     source="custom_spectra.ecsv",
 )
 fluxes_custom.plot(energy_bounds=[mDM / 100, mDM], yunits=u.Unit("1/GeV"))
+plt.show()
 
 
 ######################################################################
-# Loading the table as an astropy.table.Table object
+# Loading the table as a `~astropy.table.Table` object
 #
 
 table = Table.read("custom_spectra.ecsv")
@@ -540,28 +536,27 @@ fluxes_from_table = PrimaryFlux(mDM=mDM, channel="tau", source=table)
 # :class:`~gammapy.astro.darkmatter.PrimaryFlux` gives you the raw dN/dE
 # table, but it is not yet a model you can plug into Gammapy’s
 # modeling/fitting machinery. For that, Gammapy provides two ready-to-use
-# :class:`~gammapy.astro.modeling.models.SpectralModel` classes:
+# :class:`~gammapy.modeling.models.SpectralModel` classes:
 #
-# - **:class:`~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`**
-# - **:class:`~gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`**
+# - `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`
+# - `~gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`
 #
 # Internally, they wrap :class:`~gammapy.astro.darkmatter.PrimaryFlux`
 # and apply the corresponding normalization
 # (:math:`\langle\sigma v\rangle / (8\pi m_\chi^2)` for annihilation,
 # :math:`1 / (4\pi \tau_\chi m_\chi)` for decay) — so you don’t need to
 # build the flux formula by hand. Because they are standard
-# :class:`~gammapy.astro.modeling.models.SpectralModel` objects, they
-# expose the same API as any other model in Gammapy.
+# `~gammapy.modeling.models.SpectralModel` objects, they expose the same
+# API as any other model in Gammapy.
 #
 # For the spectral classes Gammapy falls back to conventional benchmark
 # values:
 # :math:`\langle\sigma v\rangle = 3\times10^{-26}\,\mathrm{cm^3\,s^{-1}}`
 # (the thermal relic cross-section) for annihilation, and
-# $:raw-latex:`\tau`\_:raw-latex:`\chi `= 4.3:raw-latex:`\times10`^{17}s $
-# (age of the Universe) for decay. These are **not** fitted or measured
-# values for Draco — they are illustrative defaults. If you want to fit
-# these parameters, please check the tutorial ‘Dark Matter indirect search
-# analysis with Gammapy’.
+# :math:`\tau_\chi = 4.3\times10^{17}s` (age of the Universe) for decay.
+# These are **not** fitted or measured values for Draco — they are
+# illustrative defaults. If you want to fit these parameters, please check
+# the tutorial ‘Dark Matter indirect search analysis with Gammapy’.
 #
 # In the next section we combine them with the J and D-factor maps
 # computed earlier to get the expected physical flux from Draco.
@@ -652,10 +647,12 @@ plt.show()
 
 
 ######################################################################
-# These spectral models can be wrapped into a `SkyModel` with a spatial
-# model, so they can be used for modeling, fitting, or simulation like any
-# other Gammapy `SkyModel` — for example by assigning
-# `sky_model_ann`/`sky_model_dec` to a `MapDataset`. See the `Models
+# These spectral models can be wrapped into a
+# `~gammapy.modeling.models.SkyModel` with a spatial model, so they can
+# be used for modeling, fitting, or simulation like any other Gammapy
+# `~gammapy.modeling.models.SkyModel` — for example by assigning
+# `sky_model_ann`/`sky_model_dec` to a
+# `~gammapy.datasets.MapDataset`. See the `Models
 # tutorial <../examples/tutorials/details/models.py>`__ for further
 # detailts on the models.
 #
