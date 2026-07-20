@@ -160,8 +160,7 @@ def test_wcsndmap_roundtrip_dtype(dtype, unit, meta, tmp_path):
         assert result.data.dtype == m.data.dtype
 
 
-tested_hpx_ndmap = [
-    # All-sky
+tested_allsky_hpx_ndmap = [
     (8, False, "galactic", None, None, "", None),
     (
         8,
@@ -195,7 +194,8 @@ tested_hpx_ndmap = [
     ),
     (8, True, "galactic", None, None, "cm2 s-1", {"author": "test"}),
     (8, False, "icrs", None, None, "m2", {"telescope": "HESS"}),
-    # Partial-sky
+]
+tested_partialsky_hpx_ndmap = [
     (8, True, "galactic", "DISK(110.,75.,10.)", None, "", None),
     (
         8,
@@ -231,6 +231,7 @@ tested_hpx_ndmap = [
     (8, True, "icrs", "HPX_PIXEL(NESTED,2,3)", None, "cm2 s-1", None),
     (8, False, "icrs", "HPX_PIXEL(RING,2,3)", None, "", None),
 ]
+tested_hpx_ndmap = tested_allsky_hpx_ndmap + tested_partialsky_hpx_ndmap
 
 
 @pytest.mark.parametrize(
