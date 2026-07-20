@@ -251,7 +251,7 @@ def test_hpxndmap_roundtrip(nside, nested, frame, region, axes, unit, meta, tmp_
         assert result.meta == m.meta
 
 
-def test_hpxnd_roundtrip_compressed(tmp_path):
+def test_hpxndmap_roundtrip_compressed(tmp_path):
     file_path = tmp_path / "test.asdf"
     geom = HpxGeom(
         nside=8, nest=False, frame="galactic", region="DISK(110.,75.,10.)", axes=None
