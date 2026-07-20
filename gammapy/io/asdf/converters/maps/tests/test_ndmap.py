@@ -12,7 +12,6 @@ from gammapy.maps import WcsGeom, WcsNDMap, MapAxis
 
 asdf = pytest.importorskip("asdf")
 pytest.importorskip("asdf.testing")
-from asdf.testing.helpers import yaml_to_asdf  # noqa: E402
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
 axes2 = [
