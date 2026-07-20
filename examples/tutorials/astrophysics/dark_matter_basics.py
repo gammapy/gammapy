@@ -72,6 +72,7 @@ from gammapy.astro.darkmatter import (
     profiles,
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
+    add_factor_prior,
 )
 from regions import CircleSkyRegion
 
@@ -184,9 +185,6 @@ plt.show()
 # Astrophysical factor
 # ~~~~~~~~~~~~~~~~~~~~
 #
-
-
-######################################################################
 # Now we are going to calculate the target source J-Factor and D-Factor.
 # For this example we will use an Einasto profile. The steps to follow
 # are:
@@ -304,6 +302,28 @@ mask = geom_draco.region_mask([sky_reg])
 
 total_dfact = (mask.data * dfact_draco).sum()
 print(f"D-factor integrated on 0.1 deg circle: {total_dfact:.3g}")
+
+
+######################################################################
+# Nuisance parameter: J/D-factor
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# By default, the astrophysical factor is not computed with any
+# uncertainty, but it can be treated as a **nuisance parameter** with
+# astrophysical uncertainty, rather than a free spectral model parameter —
+# this avoids the degeneracy between `scale` and the astrophysical
+# factor (in log) (both scale the flux linearly).
+#
+# - The model uses `jfactor=1` by default → flux per unit J-factor.
+# - `scale` (:math:`\langle\sigma v\rangle` or :math:`1 / \tau_\chi`) is
+#   the only free model parameter.
+# - The J/D-factor uncertainty is added externally via
+#   `~gammapy.astro.darkmatter.add_factor_prior()`, a log-normal prior
+#   term on the likelihood. This should be used once the spectral model is
+#   set (`~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`
+#   or `~gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`). Check
+#   the next subsections for details.
+#
 
 
 ######################################################################
@@ -584,6 +604,13 @@ ann_model = DarkMatterAnnihilationSpectralModel(
 int_flux_ann = (
     jfact_draco * ann_model.integral(energy_min=E_min, energy_max=E_max)
 ).to("cm-2 s-1")
+
+
+######################################################################
+# As an example, we are going to set the JFactor nuisance.
+#
+
+add_factor_prior(ann_model, sigma=0.5)
 
 
 ######################################################################
