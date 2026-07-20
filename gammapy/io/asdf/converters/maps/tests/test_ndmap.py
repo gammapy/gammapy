@@ -6,8 +6,6 @@ import astropy.units as u
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
-
-
 from gammapy.maps import WcsGeom, WcsNDMap, MapAxis
 
 asdf = pytest.importorskip("asdf")
@@ -20,8 +18,7 @@ axes2 = [
 ]
 skydir = SkyCoord(110.0, 75.0, unit="deg", frame="icrs")
 
-tested_wcs_ndmap = [
-    # All-sky
+tested_allsky_wcs_ndmap = [
     (None, 10.0, "galactic", "AIT", skydir, None, "", None),
     (None, 10.0, "icrs", "AIT", skydir, axes1, "", {"telescope": "CTA"}),
     (None, [10.0, 20.0], "galactic", "AIT", skydir, axes1, "cm2 s", None),
@@ -36,7 +33,8 @@ tested_wcs_ndmap = [
         "s",
         None,
     ),
-    # Partial-sky
+]
+tested_partialsky_wcs_ndmap = [
     (
         10,
         1.0,
@@ -78,6 +76,8 @@ tested_wcs_ndmap = [
         None,
     ),
 ]
+
+tested_wcs_ndmap = tested_allsky_wcs_ndmap + tested_partialsky_wcs_ndmap
 
 
 @pytest.mark.parametrize(
