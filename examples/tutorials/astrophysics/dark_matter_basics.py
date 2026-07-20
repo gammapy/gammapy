@@ -15,7 +15,8 @@ components:
 
 - **Astrophysical factor (J/D-factor):** encodes the spatial
   distribution of DM along the line of sight. It depends on the assumed
-  density profile and the source distance.
+  density profile and the source distance. J-Factor stands for
+  annihilation and D-Factor for the decay approach.
 
 - **Particle physics factor (dN/dE):** encodes the gamma-ray energy
   spectrum produced per annihilation or decay event. It depends on the
@@ -264,8 +265,10 @@ print(f"J-factor integrated on 0.1 deg circle: {total_jfact:.3g}")
 # D-Factor
 # ^^^^^^^^
 #
-# We follow the same procedure for the D-Factor, but setting the parameter
-# `annihilation` to False.
+# Next, we calculate the expected density of Dark Matter along the line of
+# sight assuming decay rather than annihilation. We follow the same
+# procedure for the D-Factor, but setting the parameter `annihilation`
+# to False.
 #
 
 dfactory = JFactory(
