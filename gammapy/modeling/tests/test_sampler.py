@@ -96,6 +96,14 @@ def test_run(backend, datasets_sampler, models_sampler):
         result.samples.shape[1]
         == datasets_sampler.models.parameters.free_unique_parameters.value.shape[0]
     )
+    assert (
+        result.sampler_results["weighted_samples"]["points"].shape[1]
+        == datasets_sampler.models.parameters.free_unique_parameters.value.shape[0]
+    )
+    assert (
+        result.sampler_results["weighted_samples"]["weights"].shape[0]
+        == result.sampler_results["weighted_samples"]["points"].shape[0]
+    )
 
     required_keys = [
         "logz",

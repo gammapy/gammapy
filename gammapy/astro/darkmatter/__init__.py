@@ -18,9 +18,10 @@ from .spectra import (
     DarkMatterDecaySpectralModel,
     PrimaryFlux,
 )
-from .utils import JFactory
+from .utils import JFactory, add_factor_prior
 
 __all__ = [
+    "add_factor_prior",
     "ContinuumPrimaryFlux",
     "PrimaryFlux",
     "DarkMatterAnnihilationSpectralModel",
