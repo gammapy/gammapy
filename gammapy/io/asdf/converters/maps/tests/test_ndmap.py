@@ -126,3 +126,35 @@ def test_wcsndmap_roundtrip_compressed(tmp_path):
         assert_allclose(result.data, m.data)
         assert result.unit == m.unit
         assert result.meta == m.meta
+
+
+tested_wcs_ndmap_dtypes = [
+    (np.float32, "m2", None),
+    (np.float64, "", {"test": "dtype"}),
+    (bool, "", None),
+]
+
+
+@pytest.mark.parametrize(
+    ("dtype", "unit", "meta"),
+    tested_wcs_ndmap_dtypes,
+)
+def test_wcsndmap_roundtrip_dtype(dtype, unit, meta, tmp_path):
+    file_path = tmp_path / "test.asdf"
+    geom = WcsGeom.create(
+        npix=10, binsz=1.0, proj="AIT", skydir=skydir, frame="galactic", axes=axes1
+    )
+    m = WcsNDMap(geom, unit=unit, meta=meta)
+    if dtype is bool:
+        m.data = np.arange(m.data.size).reshape(m.geom.data_shape) % 2 == 0
+    else:
+        m.data = np.arange(m.data.size, dtype=dtype).reshape(m.geom.data_shape)
+    with asdf.AsdfFile() as af:
+        af["map"] = m
+        af.write_to(file_path)
+    with asdf.open(file_path) as af:
+        result = af["map"]
+        assert_allclose(result.data, m.data)
+        assert result.unit == m.unit
+        assert result.meta == m.meta
+        assert result.data.dtype == m.data.dtype
