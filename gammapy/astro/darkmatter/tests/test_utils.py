@@ -28,7 +28,8 @@ def jfact_annihilation(geom):
     jfactory = JFactory(
         geom=geom,
         profile=profiles.NFWProfile(),
-        distance=profiles.DMProfile.DISTANCE_GC,
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
     )
     return jfactory.compute_jfactor()
 
@@ -38,8 +39,9 @@ def jfact_decay(geom):
     jfactory = JFactory(
         geom=geom,
         profile=profiles.NFWProfile(),
-        distance=profiles.DMProfile.DISTANCE_GC,
+        distance=8.33 * u.kpc,
         annihilation=False,
+        rmax=1 * u.kpc,
     )
     return jfactory.compute_jfactor()
 
@@ -60,8 +62,8 @@ def test_compute_differential_jfactor_large_separation():
     jfactory = JFactory(
         geom=geom,
         profile=profiles.NFWProfile(),
-        distance=DISTANCE_GC,
-        rmax=RMAX_GC,
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
     )
 
     jfactor = jfactory.compute_differential_jfactor(ndecade=100)
@@ -76,8 +78,8 @@ def test_integrate_los_branch_zero_impact_positive_radius():
     jfactory = JFactory(
         geom=geom,
         profile=profile,
-        distance=DISTANCE_GC,
-        rmax=RMAX_GC,
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
     )
 
     radius_min = 1 * u.kpc
@@ -85,6 +87,15 @@ def test_integrate_los_branch_zero_impact_positive_radius():
 
     actual = jfactory._integrate_los_branch(
         0 * u.kpc, radius_min, radius_max, ndecade=100
+    )
+
+    desired = profile.integral(
+        rmin=radius_min,
+        rmax=radius_max,
+        separation=0,
+        ndecade=100,
+        squared=True,
+        distance=8.33 * u.kpc,
     )
 
     assert_quantity_allclose(actual, desired)
@@ -110,7 +121,7 @@ def test_dmfluxmap_annihilation(jfact_annihilation):
         / total_jfact
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
-    desired = 5.96827647e-12 / u.cm**2 / u.s
+    desired = 5.902332e-12 / u.cm**2 / u.s
 
     assert_quantity_allclose(actual, desired, rtol=1e-3)
 
@@ -129,7 +140,7 @@ def test_dmfluxmap_decay(jfact_decay):
         / diff_flux.jfactor
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
-    desired = 1.6796e-3 / u.cm**2 / u.s
+    desired = 1.277e-3 / u.cm**2 / u.s
     assert_quantity_allclose(actual, desired, rtol=1e-3)
 
 
