@@ -241,7 +241,7 @@ def test_hpxndmap_roundtrip(nside, nested, frame, region, axes, unit, meta, tmp_
     file_path = tmp_path / "test.asdf"
     geom = HpxGeom(nside=nside, nest=nested, frame=frame, region=region, axes=axes)
     m = HpxNDMap(geom, unit=unit, meta=meta)
-    m.data = np.arange(m.data.size).reshape(m.geom.data_shape)
+    m.data = np.arange(m.data.size, dtype=m.data.dtype).reshape(m.geom.data_shape)
     with asdf.AsdfFile() as af:
         af["map"] = m
         af.write_to(file_path)
@@ -268,7 +268,7 @@ def test_hpxndmap_roundtrip_compressed(tmp_path):
             "telescope": "Fermi",
         },
     )
-    m.data = np.arange(m.data.size).reshape(m.geom.data_shape)
+    m.data = np.arange(m.data.size, dtype=m.data.dtype).reshape(m.geom.data_shape)
     with asdf.AsdfFile() as af:
         af["map"] = m
         af.write_to(file_path, all_array_compression="zlib")
