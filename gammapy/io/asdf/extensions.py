@@ -17,6 +17,7 @@ from .converters.maps.geom import (
     RegionGeomConverter,
     WcsGeomConverter,
 )
+from .converters.maps.ndmap import WcsNDMapConverter
 
 GAMMAPY_CONVERTERS = [
     MapAxisConverter(),
@@ -26,6 +27,7 @@ GAMMAPY_CONVERTERS = [
     HpxGeomConverter(),
     RegionGeomConverter(),
     WcsGeomConverter(),
+    WcsNDMapConverter(),
 ]
 
 GAMMAPY_EXTENSIONS = [
