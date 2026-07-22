@@ -92,7 +92,7 @@ def test_wcsndmap_roundtrip(
         npix=npix, binsz=binsz, frame=frame, proj=proj, skydir=skydir, axes=axes
     )
     m = WcsNDMap(geom, unit=unit, meta=meta)
-    m.data = np.arange(m.data.size).reshape(m.geom.data_shape)
+    m.data = np.arange(m.data.size, dtype=m.data.dtype).reshape(m.geom.data_shape)
     with asdf.AsdfFile() as af:
         af["map"] = m
         af.write_to(file_path)
@@ -117,7 +117,7 @@ def test_wcsndmap_roundtrip_compressed(tmp_path):
             "t_stop": Time("2020-01-02"),
         },
     )
-    m.data = np.arange(m.data.size).reshape(m.geom.data_shape)
+    m.data = np.arange(m.data.size, dtype=m.data.dtype).reshape(m.geom.data_shape)
     with asdf.AsdfFile() as af:
         af["map"] = m
         af.write_to(file_path, all_array_compression="zlib")
