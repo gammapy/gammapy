@@ -83,7 +83,7 @@ cmd = "pytest --doctest-rst --pyargs gammapy ./docs --cov gammapy --cov-config=.
 
 # All dependencies features
 [feature.all]
-platforms = ["linux-64", "osx-64"]
+platforms = ["linux-64", "osx-arm64"]
 # ------------
 # Dependencies
 # ------------
