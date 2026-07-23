@@ -2,11 +2,12 @@
 """Utilities to compute J-factor maps."""
 
 import html
-import numpy as np
+
 import astropy.units as u
 from gammapy.modeling.models.prior import (
     GaussianPrior,
 )
+import numpy as np
 
 __all__ = ["JFactory", "add_factor_prior"]
 
@@ -25,16 +26,24 @@ class JFactory:
     profile : `~gammapy.astro.darkmatter.profiles.DMProfile`
         Dark matter profile.
     distance : `~astropy.units.Quantity`
-        Distance to convert angular scale of the map.
-    annihilation : bool, optional
+        Distance from the observer to the dark matter halo center,
+        used to compute the line-of-sight integration geometry.
+    annihilation : `~astropy.units.Quantity`, optional
         Decay or annihilation. Default is True.
+    rmax : `~astropy.units.Quantity`
+        Physical size of the dark matter halo (upper limit of the
+        line-of-sight integral). For extragalactic sources, this should
+        be set to the halo radius (~kpc), **not** the distance to the
+        source. Defaults to ``distance`` for backward compatibility,
+        which is only appropriate for Galactic sources.
     """
 
-    def __init__(self, geom, profile, distance, annihilation=True):
+    def __init__(self, geom, profile, distance, rmax, annihilation=True):
         self.geom = geom
         self.profile = profile
         self.distance = distance
         self.annihilation = annihilation
+        self.rmax = rmax
 
     def _repr_html_(self):
         try:
@@ -53,7 +62,7 @@ class JFactory:
 
         if impact.value == 0:
             return self.profile.integral(
-                radius_min, radius_max, 0, ndecade, self.annihilation
+                radius_min, radius_max, 0, ndecade, self.annihilation, self.distance
             )
 
         logmin = np.log10(radius_min.value)
@@ -126,7 +135,7 @@ class JFactory:
         impact = u.Quantity(
             value=np.sin(separation) * self.distance, unit=self.distance.unit
         )
-        rmax = self.distance
+        rmax = self.rmax
         val = [
             (
                 2 * self._integrate_los_branch(impact_i, impact_i, rmax, ndecade)
