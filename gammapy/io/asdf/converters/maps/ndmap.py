@@ -14,10 +14,12 @@ class WcsNDMapConverter(Converter):
         }
         if obj.meta:
             node["meta"] = obj.meta
+
         return node
 
     def from_yaml_tree(self, node, tag, ctx):
         from gammapy.maps import WcsNDMap
+
         return WcsNDMap(
             geom=node["geom"],
             data=node["data"],
@@ -42,6 +44,7 @@ class HpxNDMapConverter(Converter):
 
     def from_yaml_tree(self, node, tag, ctx):
         from gammapy.maps import HpxNDMap
+
         return HpxNDMap(
             geom=node["geom"],
             data=node["data"],
@@ -66,6 +69,7 @@ class RegionNDMapConverter(Converter):
 
     def from_yaml_tree(self, node, tag, ctx):
         from gammapy.maps import RegionNDMap
+
         return RegionNDMap(
             geom=node["geom"],
             data=node["data"],
