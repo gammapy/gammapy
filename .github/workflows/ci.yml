@@ -1,35 +1,41 @@
 name: CI
 on: [push, pull_request]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint:
+  pre-commit:
     name: Run pre-commit hooks
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
         with:
-          python-version: '3.12'
-      - name: Install pre-commit
-        run: pip install pre-commit
+          run-install: false
+          post-cleanup: false
+      - uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
+        with:
+          cache: false
+          environments: pre-commit
       - name: Run pre-commit
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            pre-commit run \
+            pixi run pre-commit run \
             --from-ref "${{ github.event.pull_request.base.sha }}" \
             --to-ref   "${{ github.event.pull_request.head.sha }}"
           else  # push event
-            pre-commit run \
+            pixi run pre-commit run \
             --from-ref "${{ github.event.before }}" \
             --to-ref   "${{ github.event.after }}"
           fi
+
   ci-runs:
-    name: ${{ matrix.os }}, ${{ matrix.tox_env }}
+    name: ${{ matrix.os }}, ${{ matrix.pixi_env }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.allowed_fail }}
     if: contains(github.event.pull_request.labels.*.name, 'skip-tests') == false
@@ -41,72 +47,79 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python: '3.13'
-            tox_env: 'py313-test-alldeps-cov'
+            pixi_env: 'coverage'
             gammapy_data: true
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.14'
-            tox_env: 'py314-test-alldeps'
+            pixi_env: 'py313'
+            gammapy_data: true
+            allowed_fail: true
+          - os: ubuntu-latest
+            pixi_env: 'py314'
+            gammapy_data: true
+            allowed_fail: true
+          - os: ubuntu-latest
+            pixi_env: 'all'
             gammapy_data: true
             allowed_fail: false
+          # - os: ubuntu-latest
+          #   pixi_env: 'oldest-deps'
+          #   allowed_fail: true
           - os: macos-latest
-            python: '3.13'
-            tox_env: 'py313-test'
-            gammapy_data: true
-            allowed_fail: false
-          - os: windows-latest
-            python: '3.12'
-            tox_env: 'py312-test-alldeps_noray'
+            pixi_env: 'py313'
             gammapy_data: true
             allowed_fail: false
           - os: macos-14
-            python: '3.12'
-            tox_env: 'py312-test'
+            pixi_env: 'py312'
             allowed_fail: false
-          - os: ubuntu-latest
-            python: '3.12'
-            tox_env: 'oldestdeps'
-            allowed_fail: false
-          - os: ubuntu-latest
-            python: '3.13'
-            tox_env: 'devdeps'
+          - os: windows-latest
+            pixi_env: 'all-no-ray'
             gammapy_data: true
-            allowed_fail: true
+            allowed_fail: false
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v6
+      - name: Set up Pixi
+        uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
         with:
-          python-version: ${{ matrix.python }}
-      - name: Install base dependencies
+          run-install: false
+          post-cleanup: false
+      - name: Apply workarounds
+        if: ${{ matrix.os != 'windows-latest' }}
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install tox
-      - name: download datasets
+          # Workaround for https://github.com/prefix-dev/pixi/issues/3762
+          sed -i.bak 's@editable = true@editable = false@g' pixi.toml
+          rm pixi.toml.bak
+          # Show any changes
+          git diff
+      - name: Apply workarounds (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}  # Braces are required for expressions
+        shell: pwsh
+        run: |
+          # Workaround for https://github.com/prefix-dev/pixi/issues/3762
+          (Get-Content pixi.toml) -replace 'editable = true', 'editable = false' | Set-Content pixi.toml
+          git diff
+      - uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
+        with:
+          cache: false
+          environments: ${{ matrix.pixi_env }}
+      - name: Download Gammapy datasets
         if: ${{ matrix.gammapy_data }}
         run: |
-          python -m pip install -e .
-          gammapy download datasets
-      - name: Print Python, pip, and tox versions
-        run: |
-          python -c "import sys; print(f'Python {sys.version}')"
-          python -c "import pip; print(f'pip {pip.__version__}')"
-          python -c "import tox; print(f'tox {tox.__version__}')"
+          pixi run gammapy download datasets
       - name: Run tests
         if: ${{ !matrix.gammapy_data }}
-        run: tox -e ${{ matrix.tox_env }} -- -n auto
+        run: pixi run -e ${{ matrix.pixi_env }} pytest -- -n auto
       - name: Run tests with data
         if: ${{ matrix.gammapy_data }}
         env:
           GAMMAPY_DATA: ${{ github.workspace }}/gammapy-datasets/dev
-        run: tox -e ${{ matrix.tox_env }} -- -n auto
+        run: pixi run -e ${{ matrix.pixi_env }} pytest -- -n auto
       - name: Upload coverage to codecov
-        if: "contains(matrix.tox_env, '-cov')"
+        if: "contains(matrix.pixi_env, 'coverage')"
         uses: codecov/codecov-action@v7
         with:
           file: ./coverage.xml
@@ -119,7 +132,7 @@ jobs:
           SOURCE_BRANCH: ${{ github.event.pull_request.head.ref }}
           TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
         run: |
-          pip install setuptools_scm
+          pixi run pip install setuptools_scm
           # Use :- to handle unset as empty string and avoid parsing issues in SonarQube
           echo "PR_NUMBER=${PR_NUMBER}" >> sonar_env
           echo "SOURCE_REPOSITORY=${SOURCE_REPOSITORY}" >> sonar_env
@@ -130,7 +143,7 @@ jobs:
 
       # upload coverage report for SonarQube workflow
       - uses: actions/upload-artifact@v7
-        if: "contains(matrix.tox_env, '-cov')"
+        if: "contains(matrix.pixi_env, 'coverage')"
         with:
           name: gammapy-coverage-report
           path: |
@@ -154,21 +167,28 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v6
+      - name: Set up Pixi
+        uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
         with:
-          python-version: '3.12'
-      - name: Install base dependencies
+          run-install: false
+          post-cleanup: false
+      - name: Apply workarounds
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install tox
+          # Workaround for https://github.com/prefix-dev/pixi/issues/3762
+          sed -i.bak 's@editable = true@editable = false@g' pixi.toml
+          rm pixi.toml.bak
+          # Show any changes
+          git diff
+      - uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
+        with:
+          cache: false
+          environments: docs
       - name: download datasets
         run: |
-          python -m pip install -e .
-          gammapy download datasets
+          pixi run gammapy download datasets
       - name: test build docs
         run: |
-          tox -e build_docs
+          pixi run build-docs
       - name: Upload HTML output
         uses: actions/upload-artifact@v7
         with:
