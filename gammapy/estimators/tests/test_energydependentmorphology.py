@@ -28,9 +28,10 @@ class TestEnergyDependentEstimator:
         if request.param == "single":
             datasets = stacked_dataset
         else:
-            datasets = Datasets(
-                [stacked_dataset, stacked_dataset.copy(name="dataset_copy")]
-            )
+            dataset2 = stacked_dataset.copy(name="dataset_copy")
+            dataset2.counts.data *= 2
+            dataset2.background.data *= 1.2
+            datasets = Datasets([stacked_dataset, dataset2])
         energy_edges = [1, 5, 20] * u.TeV
 
         source_pos = SkyCoord(5.58, 0.2, unit="deg", frame="galactic")
@@ -103,7 +104,9 @@ class TestEnergyDependentEstimator:
                 atol=1e-3,
             )
         elif mode == "multiple":
-            assert_allclose(result["energy_dependence"]["delta_ts"], 101.738, rtol=1e-3)
+            assert_allclose(
+                result["energy_dependence"]["delta_ts"], 146.50763, rtol=1e-3
+            )
             assert_allclose(
                 results_edep["sigma_err"],
                 [0.0042, 0.003, 0.006] * u.deg,
@@ -111,12 +114,12 @@ class TestEnergyDependentEstimator:
             )
             assert_allclose(
                 results_edep["lat_0_err"],
-                [0.00601639, 0.00678308, 0.01053394] * u.deg,
+                [0.004977, 0.005625, 0.008692] * u.deg,
                 atol=1e-3,
             )
             assert_allclose(
                 results_edep["lon_0_err"],
-                [0.0060174, 0.00664618, 0.0103996] * u.deg,
+                [0.004974, 0.005587, 0.008564] * u.deg,
                 atol=1e-3,
             )
 
@@ -137,12 +140,12 @@ class TestEnergyDependentEstimator:
         elif mode == "multiple":
             assert_allclose(
                 results_src["delta_ts"],
-                [3362.55821, 579.631],
+                [4748.066426, 830.525984],
                 rtol=1e-3,
             )
             assert_allclose(
                 results_src["significance"],
-                [np.inf, 23.5882],
+                [np.inf, 28.387593],
                 rtol=1e-3,
             )
 
@@ -168,12 +171,12 @@ class TestEnergyDependentEstimator:
         elif mode == "multiple":
             assert_allclose(
                 chi2_sigma["chi2"],
-                [152.278292, 3.942099, 0.812423],
+                [216.77012, 5.892194, 1.202006],
                 rtol=1e-2,
             )
 
             assert_allclose(
                 chi2_sigma["significance"],
-                [12.340109, 1.985472, 0.901345],
+                [14.723115, 2.427384, 1.09636],
                 rtol=1e-2,
             )
