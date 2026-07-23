@@ -107,7 +107,7 @@ class TestEnergyDependentEstimator:
             assert_allclose(
                 results_edep["sigma_err"],
                 [0.0042, 0.003, 0.006] * u.deg,
-                atol=2e-3,
+                atol=1e-3,
             )
             assert_allclose(
                 results_edep["lat_0_err"],
@@ -168,12 +168,12 @@ class TestEnergyDependentEstimator:
         elif mode == "multiple":
             assert_allclose(
                 chi2_sigma["chi2"],
-                [180, 3.9, 0.8],
-                rtol=3e-1,
+                [152.278292, 3.942099, 0.812423],
+                rtol=1e-2,
             )
 
             assert_allclose(
                 chi2_sigma["significance"],
-                [13, 2, 0.9],
-                rtol=2e-1,
+                [12.340109, 1.985472, 0.901345],
+                rtol=1e-2,
             )
