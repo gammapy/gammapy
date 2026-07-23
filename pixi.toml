@@ -33,6 +33,8 @@ description = "Run pre-commit hooks"
 python = "3.12.*"
 [feature.py313.dependencies]
 python = "3.13.*"
+[feature.py314.dependencies]
+python = "3.14.*"
 
 # Numpy features
 # ------------
@@ -104,6 +106,7 @@ default = { features = ["gammapy"], solve-group = "gammapy" }
 # Python matrix environments
 py312 = { features = ["test", "py312"], solve-group = "py312" }
 py313 = { features = ["test", "py313"], solve-group = "py313" }
+py314 = { features = ["test", "py314"], solve-group = "py314" }
 
 # Numpy pins environments
 numpy20 = { features = ["test", "numpy20"], solve-group = "numpy20" }
@@ -111,7 +114,7 @@ numpy21 = { features = ["test", "numpy21"], solve-group = "numpy21" }
 
 # All dependencies environments
 all = { features = ["test", "all"] }
-allnoray = { features = ["test", "all_no_ray"] }
+all-no-ray = { features = ["test", "all_no_ray"] }
 
 # Tooling environments
 docs = { features = ["docs"], solve-group = "docs" }
