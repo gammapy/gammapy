@@ -19,6 +19,7 @@ from regions import (
     PixCoord,
     PointSkyRegion,
     RectanglePixelRegion,
+    RectangleSkyRegion,
     Regions,
     SkyRegion,
 )
@@ -157,11 +158,23 @@ class RegionGeom(Geom):
 
         try:
             rectangle_pix = bbox.to_region()
-        except ValueError:
-            rectangle_pix = RectanglePixelRegion(
-                center=PixCoord(*bbox.center[::-1]), width=1, height=1
-            )
-        return rectangle_pix.to_sky(self.wcs)
+            return rectangle_pix.to_sky(self.wcs)
+        except (ValueError, np.linalg.LinAlgError):
+            # `bbox.to_region()` raises `ValueError` for a degenerate
+            # (e.g. point-like) bounding box. Separately, `to_sky()` can
+            # raise `LinAlgError` for a *non*-degenerate pixel rectangle
+            # when the underlying WCS has an extremely coarse pixel
+            # scale (e.g. all-sky maps with a handful of pixels), since
+            # `regions>=0.12` derives the sky rectangle via an SVD of the
+            # local pixel-to-sky Jacobian, which cannot be linearized
+            # over such a large angular extent.
+            #
+            # In both cases, fall back to a minimal region built
+            # directly from the known sky center and the (angular)
+            # pixel scale, bypassing the pixel round-trip entirely.
+            center = compound_region_center(self.region)
+            pix_scale = np.mean(np.abs(proj_plane_pixel_scales(self.wcs))) * u.deg
+            return RectangleSkyRegion(center=center, width=pix_scale, height=pix_scale)
 
     @property
     def width(self):

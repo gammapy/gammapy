@@ -5,7 +5,12 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from regions import CircleSkyRegion, CompoundSkyRegion, RectangleSkyRegion
+from regions import (
+    CircleSkyRegion,
+    CompoundSkyRegion,
+    RectanglePixelRegion,
+    RectangleSkyRegion,
+)
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import mpl_plot_check
@@ -84,6 +89,53 @@ def test_centers(region):
 def test_width(region):
     geom = RegionGeom.create(region, binsz_wcs=0.01)
     assert_allclose(geom.width.value, [2.02, 2.02])
+
+
+@pytest.mark.parametrize("position", ["0d 0d", "180d 0d", "0d 90d", "180d -90d"])
+def test_rectangle_bbox_point_region_coarse_wcs(position):
+    """Regression test for #6775.
+
+    `RegionGeom.center_skydir` (and anything relying on `_rectangle_bbox`,
+    e.g. `width`) must not raise for a point region defined on top of a
+    very coarse (near all-sky) WCS, such as the one used internally by
+    `EDispMap.from_diagonal_response`. With `regions>=0.12`, converting a
+    pixel rectangle spanning such a large angular extent via `to_sky()`
+    can raise `numpy.linalg.LinAlgError: SVD did not converge`.
+    """
+    position = SkyCoord(position)
+
+    wcs = WcsGeom.create(
+        npix=(2, 2), binsz=180, skydir=(0, 0), frame="icrs", proj="CAR"
+    ).wcs
+
+    geom = RegionGeom.create(position, wcs=wcs)
+
+    center = geom.center_skydir
+    assert np.isfinite(center.data.lon.deg)
+    assert np.isfinite(center.data.lat.deg)
+    assert np.all(np.isfinite(geom.width.value))
+
+
+def test_rectangle_bbox_svd_failure(region, monkeypatch):
+    """Regression test for #6775, independent of the installed ``regions`` version.
+
+    The ``LinAlgError`` raised by ``RectanglePixelRegion.to_sky`` only occurs
+    with ``regions>=0.12``, which is currently excluded by the version pin in
+    ``pyproject.toml``. Forcing the error keeps this branch covered regardless
+    of which ``regions`` version is installed.
+    """
+
+    def _raise(self, wcs):
+        raise np.linalg.LinAlgError("SVD did not converge")
+
+    monkeypatch.setattr(RectanglePixelRegion, "to_sky", _raise)
+
+    geom = RegionGeom.create(region)
+
+    center = geom.center_skydir
+    assert np.isfinite(center.data.lon.deg)
+    assert np.isfinite(center.data.lat.deg)
+    assert np.all(np.isfinite(geom.width.value))
 
 
 def test_create_axis(region, energy_axis, test_axis):
