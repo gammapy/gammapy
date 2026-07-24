@@ -1,0 +1,1 @@
+Fix regarding the Log Normal prior implemented for obtaining the Dark Matter Astrophysical Factor nuisance.

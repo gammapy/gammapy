@@ -5,7 +5,7 @@ import html
 import numpy as np
 import astropy.units as u
 from gammapy.modeling.models.prior import (
-    GaussianPrior,
+    LogNormalPrior,
 )
 
 __all__ = ["JFactory", "add_factor_prior"]
@@ -162,7 +162,7 @@ class JFactory:
 
 
 def add_factor_prior(model, sigma, mu=1.0):
-    """Attach a Gaussian nuisance prior on ``scale`` for J/D-factor uncertainty.
+    """Attach a Log Normal nuisance prior on ``scale`` for J/D-factor uncertainty.
 
     The J/D-factor is kept fixed at its nominal value; the associated
     uncertainty is instead expressed as an equivalent prior on ``scale``,
@@ -190,5 +190,5 @@ def add_factor_prior(model, sigma, mu=1.0):
         The same model instance, with the prior attached, for chaining.
     """
     model.scale.frozen = False
-    model.scale.prior = GaussianPrior(mu=mu, sigma=sigma)
+    model.scale.prior = LogNormalPrior(mu=mu, sigma=sigma)
     return model

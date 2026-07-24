@@ -4,7 +4,7 @@
 import logging
 import numpy as np
 import astropy.units as u
-from scipy.stats import norm, uniform, loguniform, gennorm, gaussian_kde
+from scipy.stats import norm, uniform, loguniform, gennorm, gaussian_kde, lognorm
 from scipy.interpolate import interp1d
 from scipy.special import ndtr
 from gammapy.modeling import PriorParameter, PriorParameters
@@ -17,6 +17,7 @@ __all__ = [
     "LogUniformPrior",
     "Prior",
     "SamplesKDEPrior",
+    "LogNormalPrior",
 ]
 
 log = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ class Prior(ModelBase):
     - `GaussianPrior`
     - `UniformPrior`
     - `LogUniformPrior`
+    - `LogNormalPrior`
     """
 
     _unit = ""
@@ -376,3 +378,33 @@ class SamplesKDEPrior(Prior):
         if weights is not None:
             weights = np.array(weights, dtype=float)
         return cls(samples=samples, weights=weights)
+
+
+class LogNormalPrior(Prior):
+    """Log-normal prior: gaussian in log10(value).
+
+    Parameters
+    ----------
+    mu : float, optional
+        Median of the distribution (i.e. mean of log10(value) is log10(mu)).
+        Default is 1.
+    sigma : float, optional
+        Standard deviation of log10(value).
+        Default is 1.
+    """
+
+    tag = ["LogNormalPrior"]
+    _type = "prior"
+    mu = PriorParameter(name="mu", value=1, unit="")
+    sigma = PriorParameter(name="sigma", value=1, unit="")
+
+    @staticmethod
+    def evaluate(value, mu, sigma):
+        """Evaluate the log-normal prior (gaussian in log10(value))."""
+        rv = lognorm(s=sigma * np.log(10), scale=mu)
+        return -2 * rv.logpdf(value)
+
+    @property
+    def _random_variable(self):
+        """Return random variable object for prior."""
+        return lognorm(s=self.sigma.value * np.log(10), scale=self.mu.value)
