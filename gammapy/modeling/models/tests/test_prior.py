@@ -15,6 +15,7 @@ from gammapy.modeling.models import (
     UniformPrior,
     LogUniformPrior,
     SamplesKDEPrior,
+    LogNormalPrior,
 )
 from gammapy.utils.testing import assert_quantity_allclose
 
@@ -58,6 +59,16 @@ TEST_PRIORS = [
         val_at_0=17.837877,
         val_at_1=10.837877,
         inverse_cdf_at_0=-np.inf,
+        inverse_cdf_at_1=np.inf,
+    ),
+    dict(
+        name="lognorm",
+        model=LogNormalPrior(mu=1, sigma=0.5),
+        prior_0=1.0 * u.Unit(""),
+        prior_1=2.0 * u.Unit(""),
+        val_at_0=2.1196476,
+        val_at_1=3.868418,
+        inverse_cdf_at_0=0,
         inverse_cdf_at_1=np.inf,
     ),
 ]
