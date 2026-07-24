@@ -329,7 +329,7 @@ class FluxCollectionEstimator:
     ----------
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the flux point bins.
-    models : `~gammapy.modeling.Models` or list
+    models : `~gammapy.modeling.models.Models` or list
         Source models for which the flux points are computed (others are frozen).
     n_sigma : float, optional
         Number of sigma to use for asymmetric error computation. Must be a positive value.
@@ -351,6 +351,7 @@ class FluxCollectionEstimator:
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
             * "errn-errp": estimate asymmetric errors on flux.
+
         Fit solver computes upper limits if sqrt(TS) < n_sigma_ul.
         Sampler solver always compute errn-errp and ul.
     """
