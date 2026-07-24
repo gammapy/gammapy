@@ -71,56 +71,65 @@ class TestEnergyDependentEstimator:
         assert_allclose(
             results_edep["lon_0"],
             [5.606, 5.608, 5.597] * u.deg,
-            atol=1e-2,
-        )
-
-        assert_allclose(
-            results_edep["lat_0"],
-            [0.20289353, 0.20589559, 0.18106776] * u.deg,
-            atol=1e-2,
-        )
-
-        assert_allclose(
-            results_edep["sigma"],
-            [0.217, 0.231, 0.135] * u.deg,
-            atol=1e-2,
+            rtol=1e-3,
         )
 
         if mode == "single":
             assert_allclose(result["energy_dependence"]["delta_ts"], 50.719, rtol=1e-3)
+
+            assert_allclose(
+                results_edep["lat_0"],
+                [0.2028, 0.2058, 0.1810] * u.deg,
+                rtol=1e-3,
+            )
+            assert_allclose(
+                results_edep["sigma"],
+                [0.2170, 0.2315, 0.1350] * u.deg,
+                rtol=1e-3,
+            )
             assert_allclose(
                 results_edep["sigma_err"],
-                [0.0059, 0.0065, 0.0089] * u.deg,
-                atol=1e-3,
+                [0.005957, 0.006542, 0.008959] * u.deg,
+                rtol=1e-3,
             )
             assert_allclose(
                 results_edep["lat_0_err"],
-                [0.00849, 0.0095, 0.014] * u.deg,
-                atol=1e-3,
+                [0.008503, 0.009585, 0.014906] * u.deg,
+                rtol=1e-3,
             )
             assert_allclose(
                 results_edep["lon_0_err"],
-                [0.0084, 0.0095, 0.0147] * u.deg,
-                atol=1e-3,
+                [0.008504, 0.009538, 0.014714] * u.deg,
+                rtol=1e-3,
             )
         elif mode == "multiple":
             assert_allclose(
                 result["energy_dependence"]["delta_ts"], 146.50763, rtol=1e-3
             )
             assert_allclose(
+                results_edep["lat_0"],
+                [0.2026, 0.2057, 0.1806] * u.deg,
+                rtol=1e-3,
+            )
+            assert_allclose(
+                results_edep["sigma"],
+                [0.2138, 0.2283, 0.1335] * u.deg,
+                rtol=1e-3,
+            )
+            assert_allclose(
                 results_edep["sigma_err"],
-                [0.0042, 0.003, 0.006] * u.deg,
-                atol=1e-3,
+                [0.003453, 0.003802, 0.005196] * u.deg,
+                rtol=1e-3,
             )
             assert_allclose(
                 results_edep["lat_0_err"],
                 [0.004977, 0.005625, 0.008692] * u.deg,
-                atol=1e-3,
+                rtol=1e-3,
             )
             assert_allclose(
                 results_edep["lon_0_err"],
                 [0.004974, 0.005587, 0.008564] * u.deg,
-                atol=1e-3,
+                rtol=1e-3,
             )
 
     def test_significance(self, estimator_result):
