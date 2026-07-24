@@ -20,3 +20,5 @@ tags:
   schema_uri: asdf://gammapy.org/gammapy/schemas/maps/regiongeom-1.0.0
 - tag_uri: asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0
   schema_uri: asdf://gammapy.org/gammapy/schemas/maps/wcsndmap-1.0.0
+- tag_uri: asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0
+  schema_uri: asdf://gammapy.org/gammapy/schemas/maps/hpxndmap-1.0.0
