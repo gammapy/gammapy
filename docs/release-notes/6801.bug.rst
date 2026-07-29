@@ -1,1 +1,1 @@
-Fix ``RegionGeom`` ASDF roundtrip for DS9-format regions where ``meta`` and ``visual`` were not cleared consistently on write and read.
+Fix `~gammapy.maps.RegionGeom` ASDF roundtrip for DS9-formatted regions to clear ``meta`` and ``visual`` on write.
