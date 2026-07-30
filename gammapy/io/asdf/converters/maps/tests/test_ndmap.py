@@ -359,6 +359,7 @@ test_region_ndmap = [
             "t_stop": Time("2020-01-02"),
         },
     ),
+    (RegionGeom.from_regions("icrs;circle(83.63, 22.01, 1)"), "", None),
     (
         RegionGeom.from_regions(
             [
