@@ -301,6 +301,7 @@ energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
 center1 = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
 center2 = SkyCoord(110.0, 75.0, unit="deg", frame="galactic")
 tested_region_geom = [
+    RegionGeom.create("icrs;circle(83.63, 22.01, 1)"),
     RegionGeom.create(CircleSkyRegion(center=center1, radius=1 * u.deg)),
     RegionGeom.create(
         CircleSkyRegion(center=center1, radius=1 * u.deg), axes=[energy_axis]

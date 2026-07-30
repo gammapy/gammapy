@@ -79,6 +79,9 @@ class RegionGeomConverter(Converter):
         from gammapy.utils.regions import compound_region_to_regions
 
         region = compound_region_to_regions(obj.region)
+        for _ in region:
+            _.meta.clear()
+            _.visual.clear()
         ds9_strings = [_.serialize(format="ds9") for _ in region]
         node = {
             "region": ds9_strings,
