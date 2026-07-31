@@ -8,8 +8,8 @@ PIG 31 - Separation of Plotting Methods using Plotter classes
 
 * Author: Régis Terrier and Atreyee Sinha
 * Created: ``2025-03-14``
-* Accepted:
-* Status:
+* Accepted: ``2026-07-31``
+* Status: Accepted
 * Discussion: `#5726`_
 
 Abstract
@@ -35,7 +35,7 @@ Currently, plotting methods are tightly integrated with Gammapy objects. This pr
   possible.
 - **Performance Overhead**: We initially always used delayed imports for matplotlib but removed this at some point.
   Yet always importing `matplotlib` is inefficient for workflows that do not need plotting functionalities.
-- **Untested plotting code**: Most of out plotting code is not tested, except for `Models.plot_regions()` which has a complicated test for 
+- **Untested plotting code**: Most of out plotting code is not tested, except for `Models.plot_regions()` which has a complicated test for
    the colours. We only check that a plot is generated.
 
 A more modular approach, using dedicated `Plotter` classes, would resolve these issues while preserving all current plotting functionalities.
