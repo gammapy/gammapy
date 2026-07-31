@@ -62,8 +62,10 @@ cmd = "pytest --pyargs gammapy"
 # ------------
 # Dependencies
 # ------------
+[feature.docs]
+platforms = ["linux-64", "osx-arm64"]
 [feature.docs.pypi-dependencies]
-gammapy = { path = ".", editable = true, extras = ["docs"] }
+gammapy = { path = ".", editable = true, extras = ["docs", "all"] }
 # -----
 # Tasks
 # -----
