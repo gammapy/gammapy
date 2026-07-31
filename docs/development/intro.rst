@@ -371,8 +371,8 @@ Finally to make a completely clean folder for build the documentation you can ru
 Using pixi
 ----------
 
-Once `pixi <https://pixi.prefix.dev/latest/>`__ is installed, information on environments
-and tasks can be displayed using:
+Once `pixi <https://pixi.prefix.dev/latest/>`__ is installed, information on
+environments and tasks can be displayed using:
 
 .. code-block:: bash
 
