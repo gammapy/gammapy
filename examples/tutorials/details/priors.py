@@ -59,9 +59,10 @@ The setup
 
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
-import matplotlib.pyplot as plt
+
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
@@ -69,7 +70,6 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-
 
 ######################################################################
 # Model and dataset
@@ -420,6 +420,10 @@ model_weak_prior = model_weak.copy(name="weak-model-prior")
 uniform_penalty = UniformPenalty(min=0, max=np.inf, penalty=2)
 model_weak_prior.parameters["amplitude"].prior = uniform_penalty
 
+######################################################################
+# As we are only interested in the behaviour of the amplitude, we freeze the
+# spectral index here
+model_weak.parameters["index"].frozen = True
 
 ######################################################################
 # We set the minimum value to zero and the maximum value
@@ -439,7 +443,8 @@ plt.plot(
     uni_prior_stat_sums,
     color="tab:orange",
     linestyle="dashed",
-    label=f"Uniform Prior\n $min={uniform_penalty.min.value}$, penalty={uniform_penalty.penalty.value}",
+    label=f"Uniform Prior\n $min={uniform_penalty.min.value}$, "
+    f"penalty={uniform_penalty.penalty.value}",
 )
 plt.xlabel("Amplitude Value [1 / (TeV s cm2)]")
 plt.ylabel("Prior")
@@ -452,7 +457,7 @@ plt.show()
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # To showcase how the uniform prior affects the fit results, :math:`100`
-# datasets are created and fitted without and with the prior
+# datasets are created and fitted without and with the prior:
 #
 
 results, results_prior = [], []
@@ -468,32 +473,24 @@ for n in range(N):
     # fitting without the prior
     fit = Fit()
     result = fit.optimize(dataset2)
-    results.append(
-        {
-            "index": result.parameters["index"].value,
-            "amplitude": result.parameters["amplitude"].value,
-        }
-    )
+    results.append({"amplitude": result.parameters["amplitude"].value})
     # fitting with the prior
     fit_prior = Fit()
     result = fit_prior.optimize(dataset2_prior)
-    results_prior.append(
-        {
-            "index": result.parameters["index"].value,
-            "amplitude": result.parameters["amplitude"].value,
-        }
-    )
+    results_prior.append({"amplitude": result.parameters["amplitude"].value})
 
+######################################################################
+# We can plot these results in a histogram:
 
-fig, axs = plt.subplots(1, 2, figsize=(7, 4))
-for i, parname in enumerate(["index", "amplitude"]):
-    par = np.array([_[parname] for _ in results])
-    c, bins, _ = axs[i].hist(par, bins=20, alpha=0.5, label="Without Prior")
-    par = np.array([_[parname] for _ in results_prior])
-    axs[i].hist(par, bins=bins, alpha=0.5, color="tab:green", label="With Prior")
-    axs[i].axvline(x=model_weak.parameters[parname].value, color="red")
-    axs[i].set_xlabel(f"Reconstructed spectral\n {parname}")
-    axs[i].legend()
+fig, ax = plt.subplots(1, 1, figsize=(5, 4))
+parname = "amplitude"
+par = np.array([_[parname] for _ in results])
+c, bins, _ = ax.hist(par, bins=20, alpha=0.5, label="Without Prior")
+par = np.array([_[parname] for _ in results_prior])
+ax.hist(par, bins=bins, alpha=0.5, color="tab:green", label="With Prior")
+ax.axvline(x=model_weak.parameters[parname].value, color="red")
+ax.set_xlabel(f"Reconstructed spectral\n {parname}")
+ax.legend()
 plt.tight_layout()
 plt.show()
 

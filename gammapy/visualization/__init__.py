@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from .catalogs import plot_pulse_profile_3PC
 from .cmap import colormap_hess, colormap_milagro
 from .datasets import plot_npred_signal, plot_spectrum_datasets_off_regions
 from .heatmap import annotate_heatmap, plot_heatmap
@@ -26,4 +27,5 @@ __all__ = [
     "plot_npred_signal",
     "plot_distribution",
     "plot_samples_violin_vs_energy",
+    "plot_pulse_profile_3PC",
 ]

@@ -4,11 +4,12 @@ import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from astropy.units import Quantity, Unit
-from astropy.utils.introspection import minversion
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
+
+import warnings
 
 __all__ = ["ObservationTable"]
 
@@ -18,6 +19,45 @@ class ObservationTable(Table):
 
     Data format specification: :ref:`gadf:obs-index`.
     """
+
+    def __init__(self, data=None, table=None, copy=False, meta=None, **kwargs):
+        """Constructor for internal observation table.
+
+        Parameters
+        ----------
+        table : `astropy.table.Table'
+            Astropy table to initialize observation table.
+        meta : ~dict
+            Dictionary of metadata to update the `table` object.
+        """
+        if data is not None and isinstance(data, Table):
+            warnings.warn(
+                "The `data` argument is deprecated and will be removed in a future release. "
+                "Please use the `table` argument instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if table is None:
+                table = data
+
+        input_data = table if table is not None else data
+        if table is not None and not isinstance(table, Table):
+            raise TypeError("The input `table` is not an `astropy.table.Table`.")
+
+        if meta is None and hasattr(input_data, "meta"):
+            meta = input_data.meta.copy()
+
+        super().__init__(data=input_data, copy=copy, meta=meta, **kwargs)
+
+        if table is not None:
+            self._validate_columns()
+
+    def _validate_columns(self):
+        """Check that the table contains the OBS_ID column."""
+        required_columns = ["OBS_ID"]
+        for column in required_columns:
+            if column not in self.colnames:
+                raise ValueError(f"Missing mandatory column: {column}.")
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -74,9 +114,9 @@ class ObservationTable(Table):
         except IndexError:
             self.add_index("OBS_ID")
 
-        if minversion("astropy", "7.0"):
+        try:
             return self.__class__(self.loc.with_index("OBS_ID")[obs_id])
-        else:
+        except AttributeError:
             return self.__class__(self.loc["OBS_ID", obs_id])
 
     def summary(self):
@@ -267,28 +307,35 @@ class ObservationTable(Table):
         Examples
         --------
         >>> from gammapy.data import ObservationTable
-        >>> obs_table = ObservationTable.read('$GAMMAPY_DATA/hess-dl3-dr1/obs-index.fits.gz')
+        >>> obs_table = ObservationTable.read(
+        ...     "$GAMMAPY_DATA/hess-dl3-dr1/obs-index.fits.gz"
+        ... )
         >>> from astropy.coordinates import Angle
-        >>> selection = dict(type='sky_circle', frame='galactic',
-        ...                  lon=Angle(0, 'deg'),
-        ...                  lat=Angle(0, 'deg'),
-        ...                  radius=Angle(5, 'deg'),
-        ...                  border=Angle(2, 'deg'))
+        >>> selection = dict(
+        ...     type="sky_circle",
+        ...     frame="galactic",
+        ...     lon=Angle(0, "deg"),
+        ...     lat=Angle(0, "deg"),
+        ...     radius=Angle(5, "deg"),
+        ...     border=Angle(2, "deg"),
+        ... )
         >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> from astropy.time import Time
-        >>> time_range = Time(['2012-01-01T01:00:00', '2012-01-01T02:00:00'])
-        >>> selection = dict(type='time_box', time_range=time_range)
+        >>> time_range = Time(["2012-01-01T01:00:00", "2012-01-01T02:00:00"])
+        >>> selection = dict(type="time_box", time_range=time_range)
         >>> selected_obs_table = obs_table.select_observations(selection)
 
-        >>> value_range = Angle([60., 70.], 'deg')
-        >>> selection = dict(type='par_box', variable='ALT_PNT', value_range=value_range)
+        >>> value_range = Angle([60.0, 70.0], "deg")
+        >>> selection = dict(
+        ...     type="par_box", variable="ALT_PNT", value_range=value_range
+        ... )
         >>> selected_obs_table = obs_table.select_observations(selection)
 
-        >>> selection = dict(type='par_box', variable='OBS_ID', value_range=[2, 5])
+        >>> selection = dict(type="par_box", variable="OBS_ID", value_range=[2, 5])
         >>> selected_obs_table = obs_table.select_observations(selection)
 
-        >>> selection = dict(type='par_box', variable='N_TELS', value_range=[4, 4])
+        >>> selection = dict(type="par_box", variable="N_TELS", value_range=[4, 4])
         >>> selected_obs_table = obs_table.select_observations(selection)
         """
         if isinstance(selections, dict):

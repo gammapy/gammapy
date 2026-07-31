@@ -252,6 +252,7 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
 
     @property
     def is_pointlike(self):
+        """Whether the source is pointlike."""
         return self.data["spec0_radius"] == 0.0  # NOSONAR
         # (S1244): explicit check for exactly representable zeros
 

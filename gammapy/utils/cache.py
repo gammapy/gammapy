@@ -55,7 +55,8 @@ def make_key(sig, *args, **kwargs):
 
 class _WeakIdDict:
     """Like `weakref.WeakKeyDictionary`, but uses identity-based hashing and equality.
-    from https://github.com/python/cpython/issues/102618#issuecomment-2839489762.
+
+    Taken from https://github.com/python/cpython/issues/102618#issuecomment-2839489762.
     """
 
     __slots__ = ("_dict",)
@@ -74,8 +75,7 @@ class _WeakIdDict:
 
 
 def cachemethod(fn):
-    """
-    Decorator to cache method results on a per-instance basis using weak references.
+    """Decorator to cache method results on a per-instance basis using weak references.
 
     This decorator stores cached results of method calls in a `WeakKeyDictionary`,
     ensuring that the cache is automatically cleared when the instance is garbage collected.
@@ -92,7 +92,6 @@ def cachemethod(fn):
     wrapper : callable
         The wrapped method with caching behavior.
     """
-
     cache1 = _WeakIdDict()
     sig = inspect.signature(fn)
 

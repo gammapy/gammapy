@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """iminuit fitting functions."""
+
 import logging
 import numpy as np
 from scipy.stats import chi2, norm

@@ -8,13 +8,13 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - name: Install pre-commit
         run: pip install pre-commit
       - name: Run pre-commit
@@ -61,21 +61,22 @@ jobs:
             gammapy_data: true
             allowed_fail: false
           - os: macos-14
-            python: '3.11'
-            tox_env: 'py311-test'
+            python: '3.12'
+            tox_env: 'py312-test'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.11'
+            python: '3.12'
             tox_env: 'oldestdeps'
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.13'
             tox_env: 'devdeps'
+            gammapy_data: true
             allowed_fail: true
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python }}
@@ -106,7 +107,7 @@ jobs:
         run: tox -e ${{ matrix.tox_env }} -- -n auto
       - name: Upload coverage to codecov
         if: "contains(matrix.tox_env, '-cov')"
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           file: ./coverage.xml
           verbose: true
@@ -137,7 +138,7 @@ jobs:
             sonar_env
 
   sphinx:
-    name: Linux python 3.11 sphinx all-deps
+    name: Linux python 3.12 sphinx all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -150,13 +151,13 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Set up Python 3.11
+      - name: Set up Python 3.12
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - name: Install base dependencies
         run: |
           python -m pip install --upgrade pip

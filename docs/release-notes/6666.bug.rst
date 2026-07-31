@@ -1,0 +1,1 @@
+Fixes `~gammapy.irf.EffectiveAreaTable2D.plot_offset_dependence()` to remove area being divided twice.

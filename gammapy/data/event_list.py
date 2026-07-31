@@ -47,7 +47,9 @@ class EventList:
     Examples
     --------
     >>> from gammapy.data import EventList
-    >>> events = EventList.read("$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits")
+    >>> events = EventList.read(
+    ...     "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
+    ... )
     >>> print(events)
     EventList
     ---------
@@ -296,15 +298,17 @@ class EventList:
         --------
         >>> from gammapy.data import EventList
         >>> import numpy as np
-        >>> filename = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
+        >>> filename = (
+        ...     "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
+        ... )
         >>> events = EventList.read(filename)
-        >>> #Use a boolean mask as ``row_specifier``:
-        >>> mask = events.table['MC_ID'] == 1
+        >>> # Use a boolean mask as ``row_specifier``:
+        >>> mask = events.table["MC_ID"] == 1
         >>> events2 = events.select_row_subset(mask)
         >>> print(len(events2.table))
         97978
-        >>> #Use row index array as ``row_specifier``:
-        >>> idx = np.where(events.table['MC_ID'] == 1)[0]
+        >>> # Use row index array as ``row_specifier``:
+        >>> idx = np.where(events.table["MC_ID"] == 1)[0]
         >>> events2 = events.select_row_subset(idx)
         >>> print(len(events2.table))
         97978
@@ -331,7 +335,7 @@ class EventList:
         >>> from gammapy.data import EventList
         >>> filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz"
         >>> event_list = EventList.read(filename)
-        >>> energy_range =[1, 20] * u.TeV
+        >>> energy_range = [1, 20] * u.TeV
         >>> event_list = event_list.select_energy(energy_range=energy_range)
         """
         energy = self.energy
@@ -409,11 +413,17 @@ class EventList:
         >>> event_list = EventList.read(filename)
         >>> zd = (0, 30) * u.deg
         >>> # Select event list through the zenith angle
-        >>> event_list_zd = event_list.select_parameter(parameter='ZENITH_ANGLE', values=zd)
+        >>> event_list_zd = event_list.select_parameter(
+        ...     parameter="ZENITH_ANGLE", values=zd
+        ... )
         >>> print(len(event_list_zd.table))
         123944
         >>> # Select event list through the run ID
-        >>> event_list_id = event_list.select_parameter(parameter='RUN_ID', values=[239557414, 239559565, 459941302], is_range=False)
+        >>> event_list_id = event_list.select_parameter(
+        ...     parameter="RUN_ID",
+        ...     values=[239557414, 239559565, 459941302],
+        ...     is_range=False,
+        ... )
         >>> print(len(event_list_id.table))
         38
         """
@@ -518,7 +528,7 @@ class EventList:
         The distribution shown in this plot is for this quantity::
 
             offset = center.separation(events.radec).deg
-            offset2 = offset ** 2
+            offset2 = offset**2
 
         Note that this method is just for a quicklook plot.
 
@@ -527,6 +537,7 @@ class EventList:
         containment radius using `numpy.percentile`::
 
             import numpy as np
+
             r68 = np.percentile(offset, q=68)
 
         Parameters
@@ -553,21 +564,23 @@ class EventList:
 
         >>> from gammapy.data import EventList
         >>> from astropy import units as u
-        >>> filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+        >>> filename = (
+        ...     "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+        ... )
         >>> events = EventList.read(filename)
 
-        >>> #Plot the offset^2 distribution wrt. the observation pointing position
-        >>> #(this is a commonly used plot to check the background spatial distribution):
-        >>> events.plot_offset2_distribution() # doctest: +SKIP
+        >>> # Plot the offset^2 distribution wrt. the observation pointing position
+        >>> # (this is a commonly used plot to check the background spatial distribution):
+        >>> events.plot_offset2_distribution()  # doctest: +SKIP
         Plot the offset^2 distribution wrt. the Crab pulsar position (this is
         commonly used to check both the gamma-ray signal and the background
         spatial distribution):
 
         >>> import numpy as np
         >>> from astropy.coordinates import SkyCoord
-        >>> center = SkyCoord(83.63307, 22.01449, unit='deg')
-        >>> bins = np.linspace(start=0, stop=0.3 ** 2, num=30) * u.deg ** 2
-        >>> events.plot_offset2_distribution(center=center, bins=bins) # doctest: +SKIP
+        >>> center = SkyCoord(83.63307, 22.01449, unit="deg")
+        >>> bins = np.linspace(start=0, stop=0.3**2, num=30) * u.deg**2
+        >>> events.plot_offset2_distribution(center=center, bins=bins)  # doctest: +SKIP
 
         Note how we passed the ``bins`` option of `matplotlib.pyplot.hist` to control
         the histogram binning, in this case 30 bins ranging from 0 to (0.3 deg)^2.
@@ -688,9 +701,11 @@ class EventList:
         --------
         >>> from gammapy.data import EventList
         >>> from gammapy.maps import WcsGeom, Map
-        >>> geom = WcsGeom.create(skydir=(0,0), width=(4, 4), frame="galactic")
+        >>> geom = WcsGeom.create(skydir=(0, 0), width=(4, 4), frame="galactic")
         >>> mask = geom.region_mask("galactic;circle(0, 0, 0.5)")
-        >>> filename = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
+        >>> filename = (
+        ...     "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
+        ... )
         >>> events = EventList.read(filename)
         >>> masked_event = events.select_mask(mask)
         >>> len(masked_event.table)
@@ -801,9 +816,11 @@ class EventList:
         --------
         >>> from gammapy.data import EventList
         >>> import astropy.units as u
-        >>> filename = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
+        >>> filename = (
+        ...     "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
+        ... )
         >>> events = EventList.read(filename)
-        >>> selected_events = events.select_offset([0.3, 0.9]*u.deg)
+        >>> selected_events = events.select_offset([0.3, 0.9] * u.deg)
         >>> len(selected_events.table)
         12688
 

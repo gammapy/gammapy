@@ -1,10 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+import pytest
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
+from numpy.testing import assert_allclose
+
 from gammapy.data import Observation
 from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets import (
@@ -270,7 +271,7 @@ def test_run_pwl(fpe_pwl, tmpdir):
     assert_allclose(actual, [1.216227, 1.035472, 1.316878], rtol=1e-2)
 
     actual = table["norm_sensitivity"].data
-    assert_allclose(actual, [0.15901235, 0.13117017, 0.55880332], rtol=1e-2)
+    assert_allclose(actual, [0.265929, 0.217676, 0.579713], rtol=1e-2)
 
     actual = table["sqrt_ts"].data
     assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-2)

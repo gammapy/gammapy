@@ -398,6 +398,7 @@ class MapEvaluator:
 
     @property
     def apply_psf_after_edisp(self):
+        """Compute the PSF after the EDISP."""
         return (
             self.psf is not None and "energy" in self.psf.psf_kernel_map.geom.axes.names
         )

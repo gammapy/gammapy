@@ -305,13 +305,13 @@ class ReflectedRegionsFinder(RegionsFinder):
     >>> from astropy.coordinates import SkyCoord, Angle
     >>> from regions import CircleSkyRegion
     >>> from gammapy.makers import ReflectedRegionsFinder
-    >>> pointing = SkyCoord(83.2, 22.7, unit='deg', frame='icrs')
-    >>> target_position = SkyCoord(80.2, 23.5, unit='deg', frame='icrs')
-    >>> theta = Angle(0.4, 'deg')
+    >>> pointing = SkyCoord(83.2, 22.7, unit="deg", frame="icrs")
+    >>> target_position = SkyCoord(80.2, 23.5, unit="deg", frame="icrs")
+    >>> theta = Angle(0.4, "deg")
     >>> on_region = CircleSkyRegion(target_position, theta)
-    >>> finder = ReflectedRegionsFinder(min_distance_input='1 rad')
+    >>> finder = ReflectedRegionsFinder(min_distance_input="1 rad")
     >>> regions, wcs = finder.run(region=on_region, center=pointing)
-    >>> print(regions[0]) # doctest: +ELLIPSIS
+    >>> print(regions[0])  # doctest: +ELLIPSIS
     Region: CircleSkyRegion
     center: <SkyCoord (ICRS): (ra, dec) in deg
         (83.19879005, 25.57300957)>

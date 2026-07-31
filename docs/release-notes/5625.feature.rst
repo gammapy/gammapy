@@ -1,0 +1,1 @@
+Add `~gammapy.estimators.RegularizedFluxPointsEstimator` to perform estimate of flux points in true energy space using a regularized likelihood approach.

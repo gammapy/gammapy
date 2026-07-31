@@ -1,0 +1,1 @@
+Fixes bug to return ``ax`` object for ``TemplateSpatialModel.plot()``.

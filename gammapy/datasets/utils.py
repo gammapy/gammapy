@@ -44,15 +44,13 @@ def apply_edisp(input_map, edisp):
     >>>
     >>> axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6, name="energy_true")
     >>> m = Map.create(
-    ...     skydir=(0.8, 0.8),
-    ...     width=(1, 1),
-    ...     binsz=0.02,
-    ...     axes=[axis],
-    ...     frame="galactic"
+    ...     skydir=(0.8, 0.8), width=(1, 1), binsz=0.02, axes=[axis], frame="galactic"
     ... )
     >>> e_true = m.geom.axes[0]
     >>> e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
-    >>> edisp = EDispKernel.from_diagonal_response(energy_axis_true=e_true, energy_axis=e_reco)
+    >>> edisp = EDispKernel.from_diagonal_response(
+    ...     energy_axis_true=e_true, energy_axis=e_reco
+    ... )
     >>> map_edisp = apply_edisp(m, edisp)
     >>> print(map_edisp)
     WcsNDMap
@@ -65,19 +63,25 @@ def apply_edisp(input_map, edisp):
         dtype : float64
     <BLANKLINE>
     """
-    # TODO: either use sparse matrix multiplication or something like edisp.is_diagonal
     if edisp is not None:
         loc = input_map.geom.axes.index("energy_true")
-        data = np.rollaxis(input_map.data, loc, len(input_map.data.shape))
-        data = np.matmul(data, edisp.pdf_matrix)
-        data = np.rollaxis(data, -1, loc)
+        data = np.moveaxis(input_map.data, loc, -1)
+        shape_space = data.shape[:-1]
+        n_pix = int(np.prod(shape_space))
+        n_true = data.shape[-1]
+
+        data_2d = data.reshape(n_pix, n_true)
+        out_2d = data_2d @ edisp.pdf_matrix
+        out = out_2d.reshape(shape_space + (edisp.pdf_matrix.shape[-1],))
+
+        out = np.moveaxis(out, -1, loc)
         energy_axis = edisp.axes["energy"].copy(name="energy")
     else:
-        data = input_map.data
+        out = input_map.data
         energy_axis = input_map.geom.axes["energy_true"].copy(name="energy")
 
     geom = input_map.geom.to_image().to_cube(axes=[energy_axis])
-    return Map.from_geom(geom=geom, data=data, unit=input_map.unit)
+    return Map.from_geom(geom=geom, data=out, unit=input_map.unit)
 
 
 def get_figure(fig, width, height):
@@ -141,18 +145,26 @@ def split_dataset(dataset, width, margin, split_template_models=True):
     --------
     >>> from gammapy.datasets import MapDataset
     >>> from gammapy.datasets.utils import split_dataset
-    >>> from gammapy.modeling.models import GaussianSpatialModel, PowerLawSpectralModel, SkyModel
+    >>> from gammapy.modeling.models import (
+    ...     GaussianSpatialModel,
+    ...     PowerLawSpectralModel,
+    ...     SkyModel,
+    ... )
     >>> import astropy.units as u
     >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
     >>> # Split the dataset
     >>> width = 4 * u.deg
     >>> margin = 1 * u.deg
-    >>> split_datasets = split_dataset(dataset, width, margin, split_template_models=False)
+    >>> split_datasets = split_dataset(
+    ...     dataset, width, margin, split_template_models=False
+    ... )
     >>> # Apply a model and split the dataset
     >>> spatial_model = GaussianSpatialModel()
     >>> spectral_model = PowerLawSpectralModel()
     >>> sky_model = SkyModel(
-    ...     spatial_model=spatial_model, spectral_model=spectral_model, name="test-model"
+    ...     spatial_model=spatial_model,
+    ...     spectral_model=spectral_model,
+    ...     name="test-model",
     ... )
     >>> dataset.models = [sky_model]
     >>> split_datasets = split_dataset(
@@ -234,8 +246,8 @@ def create_map_dataset_from_dl4(data, geom=None, energy_axis_true=None, name=Non
     dataset : `~gammapy.datasets.MapDataset`
         Map dataset.
     """
-    from gammapy.makers import MapDatasetMaker
     from gammapy.datasets import MapDataset
+    from gammapy.makers import MapDatasetMaker
 
     # define target geom
     if geom is None:

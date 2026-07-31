@@ -7,7 +7,6 @@ import numpy as np
 import astropy.units as u
 import pytest
 
-
 from gammapy.maps import Map, WcsGeom, MapAxis
 from gammapy.modeling import Fit, Sampler
 from gammapy.modeling.models import (
@@ -17,7 +16,6 @@ from gammapy.modeling.models import (
     FoVBackgroundModel,
 )
 from gammapy.datasets import MapDataset, Datasets
-
 from gammapy.estimators.points.sed import FluxCollectionEstimator
 
 
@@ -86,7 +84,7 @@ class MockSamplerMulti(Sampler):
     """Mock sampler for multiple-source."""
 
     def __init__(self, ns=1):
-        super().__init__(backend="mock", sampler_opts={})
+        super().__init__(sampler_opts={})
         self.ns = ns
 
     def run(self, datasets):
@@ -146,7 +144,7 @@ def test_asymmetric_errors_present(simple_dataset, energy_edges, mock_fit):
 
 
 def test_inconsistent_geometry_raises(simple_dataset, mock_fit):
-    # dataset with different geom
+    # dataset with 2d geom
     geom2 = WcsGeom.create(npix=(3, 3), binsz=0.1)
     ds2 = simple_dataset.copy(name="bad-ds")
     ds2.counts = Map.from_geom(geom2, data=np.ones(geom2.data_shape))
@@ -157,6 +155,15 @@ def test_inconsistent_geometry_raises(simple_dataset, mock_fit):
         models=[model],
         solver=mock_fit,
     )
+
+    with pytest.raises(KeyError):
+        est.run(Datasets([simple_dataset, ds2]))
+
+    # dataset with energy axis not aligned
+    axis = MapAxis.from_energy_bounds(0.1, 7, 1, unit="TeV")
+    geom2 = WcsGeom.create(npix=20, binsz=0.02, axes=[axis])
+    ds2 = simple_dataset.copy(name="bad-ds")
+    ds2.counts = Map.from_geom(geom2, data=np.ones(geom2.data_shape))
 
     with pytest.raises(ValueError):
         est.run(Datasets([simple_dataset, ds2]))
@@ -231,9 +238,39 @@ def test_run_multi_source(simple_dataset, energy_edges, mock_fit, mock_sampler_m
     assert len(samples["test-source"]) == nbin
     assert samples["test-source"][0].shape[0] == 200
 
+    # Also test two sources that are applied to the dataset, but only one is used in the FCP
+    fit_est = FluxCollectionEstimator(
+        energy_edges=energy_edges,
+        models=[m1],
+        solver=mock_fit,
+        selection_optional=["errn-errp"],
+    )
+
+    sampler_est = FluxCollectionEstimator(
+        energy_edges=energy_edges,
+        models=[m1],
+        solver=mock_sampler_multi,
+    )
+
+    for est in [fit_est, sampler_est]:
+        result = est.run(Datasets([simple_dataset]))
+        flux_points = result["flux_points"]
+        nbin = len(energy_edges) - 1
+
+        fp = flux_points["test-source"]
+        assert len(fp["dnde"].data) == nbin
+        assert np.all(np.isfinite(fp["dnde"]))
+        assert np.all(np.isfinite(fp["dnde_errn"]))
+        assert np.all(np.isfinite(fp["dnde_errp"]))
+        assert np.all(np.isfinite(fp["dnde_ul"]))
+        assert np.all(np.isfinite(fp["ts"]))
+        assert np.all(fp["ts"] >= 0)
+
+    assert result["solver_results"].shape == (nbin,)
+
 
 def test_run_multi_dataset(simple_dataset, energy_edges, mock_fit):
-    ds2 = simple_dataset.copy(name="dataset-2")
+    ds2 = simple_dataset.downsample(factor=2, name="dataset-2")
     ds2.counts = ds2.counts.copy(data=12 * np.ones(ds2.counts.data.shape))
     ds2.background = ds2.background.copy(data=9 * np.ones(ds2.background.data.shape))
 

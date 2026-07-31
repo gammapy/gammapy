@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate source catalogs."""
+
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.table import Column, Table

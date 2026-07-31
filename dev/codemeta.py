@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utility script to work with the codemeta.json file."""
+
 import json
 import logging
 from configparser import ConfigParser
@@ -20,13 +21,11 @@ def update_codemeta(maintainer, filename, setup_file=None):
         if "familyName" in author.keys() and author["familyName"] == maintainer:
             log.info(f"Setting maintainer to {maintainer}")
             data["maintainer"] = author
-    data["author"].insert(0,
-        {
-            "@type": "Organization",
-            "name": "Gammapy team"
-        }
-    )
-    data["funding"] = ["10.13039/501100000780::101129751", "10.13039/501100000780::824064"] #, "10.3030/101131928::101131928"]
+    data["author"].insert(0, {"@type": "Organization", "name": "Gammapy team"})
+    data["funding"] = [
+        "10.13039/501100000780::101129751",
+        "10.13039/501100000780::824064",
+    ]  # , "10.3030/101131928::101131928"]
     data["readme"] = "https://gammapy.org"
     data["issueTracker"] = "https://github.com/gammapy/gammapy/issues"
     data["developmentStatus"] = ("active",)
@@ -34,7 +33,6 @@ def update_codemeta(maintainer, filename, setup_file=None):
 
     modified_date = str(date.today())
     data["dateModified"] = modified_date
-
 
     if setup_file:
         # complete with software requirements from pyproject.toml
@@ -65,7 +63,9 @@ def update_codemeta(maintainer, filename, setup_file=None):
 @click.option(
     "--filename", default="../codemeta.json", type=str, help="codemeta filename"
 )
-@click.option("--setup_file", default="../pyproject.toml", type=str, help="setup filename")
+@click.option(
+    "--setup_file", default="../pyproject.toml", type=str, help="setup filename"
+)
 @click.option(
     "--log_level",
     default="INFO",

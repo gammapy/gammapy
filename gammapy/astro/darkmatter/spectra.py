@@ -1,21 +1,25 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Dark matter spectra."""
 
-import numpy as np
+import logging
+from pathlib import Path
+
 import astropy.units as u
+import numpy as np
 from astropy.table import Table
+
 from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import SpectralModel, TemplateNDSpectralModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_map_columns
-import warnings
 
 __all__ = [
     "PrimaryFlux",
     "DarkMatterAnnihilationSpectralModel",
     "DarkMatterDecaySpectralModel",
 ]
+log = logging.getLogger(__name__)
 
 
 class PrimaryFlux(TemplateNDSpectralModel):
@@ -34,17 +38,38 @@ class PrimaryFlux(TemplateNDSpectralModel):
         Dark matter particle mass as rest mass energy.
     channel : str
         Annihilation channel. List available channels with `~gammapy.astro.darkmatter.PrimaryFlux.allowed_channels`.
-    source : {"cosmixs", "pppc4"}, optional
-        Data source for the spectra. Default is 'pppc4'.
+    source : str or Table, optional
+        Data source for the spectra. Options are:
+
+        * ``"pppc4"`` (default): Cirelli et al. 2011.
+        * ``"cosmixs"``: Cirelli et al. 2024.
+        * A path to a custom file: Any format readable by `astropy.table.Table.read`
+        (e.g., .ecsv, .fits, .csv, .dat).
+        * An Astropy Table that read the desired path
+
+        If a custom file path is provided, it must contain 'mDM' (mass of dark
+        matter particle) and 'Log[10,x]' (energy) columns, plus columns named after
+        the requested annihilation/decay channels (see the documentation).
+    mapping_dict : dict, optional
+        Mapping dictionary to map the columns of the custom source file to the expected
+        column names. This is only needed if a file as a spectra source is provided
+        and the column names in the file do not match the expected names. The dictionary
+        should have the format {actual_column_name_in_file:expected_column_name}.
+        An example of the expected columns can be found in the documentation.
+
 
     References
     ----------
-    .. [1] `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection" <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
-    .. [2] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook for Dark Matter Indirect Detection" <http://www.marcocirelli.net/PPPC4DMID.html>`_
-    .. [3] `Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for indirect dark matter searches" <https://arxiv.org/abs/2312.01153>`_
-    .. [4] `Di Mauro et al. (2025), "Nailing down the theoretical uncertainties of Dbar spectrum produced from dark matter" <https://arxiv.org/abs/2411.04815>`_
+    .. [1] `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook
+    for dark matter indirect detection" <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    .. [2] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook
+    for Dark Matter Indirect Detection" <http://www.marcocirelli.net/PPPC4DMID.html>`_
+    .. [3] `Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for indirect dark
+    matter searches" <https://arxiv.org/abs/2312.01153>`_
+    .. [4] `Di Mauro et al. (2025), "Nailing down the theoretical uncertainties of Dbar
+     spectrum produced from dark matter" <https://arxiv.org/abs/2411.04815>`_
 
-    """
+    """  # noqa: E501
 
     channel_registry = {
         "eL": "eL",
@@ -82,6 +107,8 @@ class PrimaryFlux(TemplateNDSpectralModel):
         "s": "s",
     }
 
+    mandatory_keys = ["mDM", "Log[10,x]"]
+
     mapping_dict_PPPC4_to_CosmiXs = {
         "DM": "mDM",
         "Log10[x]": "Log[10,x]",
@@ -97,9 +124,9 @@ class PrimaryFlux(TemplateNDSpectralModel):
         "dNdLog10x[nue]": "\\[Nu]e",
         "dNdLog10x[numu]": "\\[Nu]\\[Mu]",
         "dNdLog10x[nutau]": "\\[Nu]\\[Tau]",
-        "dNdLog10x[u]": "u",  # Does not exist explicitly on PPPC4, but it is equivalent to q
-        "dNdLog10x[d]": "d",  # Does not exist explicitly on PPPC4, but it is equivalent to q
-        "dNdLog10x[s]": "s",  # Does not exist explicitly on PPPC4, but it is equivalent to q
+        "dNdLog10x[u]": "u",  # Does not exist on PPPC4, it is equivalent to q
+        "dNdLog10x[d]": "d",  # Does not exist on PPPC4, it is equivalent to q
+        "dNdLog10x[s]": "s",  # Does not exist on PPPC4, it is equivalent to q
         "dNdLog10x[c]": "c",
         "dNdLog10x[b]": "b",
         "dNdLog10x[t]": "t",
@@ -118,55 +145,63 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
     tag = ["PrimaryFlux", "dm-pf"]
 
-    def __init__(self, mDM, channel, source="pppc4"):
-        if source is None:
-            source = "pppc4"
-            warnings.warn(
-                "\nSince no spectra source has been chosen, PPPC4 will be used by default.\n",
-                UserWarning,
-            )
-        self.source = source.lower()
-        if self.source == "pppc4":
-            table_filename = (
-                "$GAMMAPY_DATA/dark_matter_spectra/PPPC4DMID/AtProduction_gammas.dat"
-            )
-        elif self.source == "cosmixs":
-            table_filename = (
-                "$GAMMAPY_DATA/dark_matter_spectra/cosmixs/AtProduction-Gamma.dat"
-            )
-        else:
-            raise ValueError(
-                "\n\nData source is not valid, please choose between PPPC4 or cosmixs\n"
-            )
+    def __init__(self, mDM, channel, source=None, mapping_dict=None):
+        self.source = source
 
-        self.table_path = make_path(table_filename)
-        if not self.table_path.exists():
-            raise FileNotFoundError(
-                f"\n\nFile not found: {table_filename}\n"
-                "You may download the dataset needed with the following command:\n"
-                "gammapy download datasets --src dark_matter_spectra"
-            )
+        if self._source_type == "custom_file":
+            self.mapping_dict = mapping_dict
+
+            if isinstance(self.source, Table):
+                self.table = self.source
+            else:
+                table_filename = self.source
+                self.table_path = make_path(table_filename)
+
+                if self.table_path is None or not self.table_path.exists():
+                    raise FileNotFoundError(  # pragma: no cover
+                        f"\n\nFile not found: {table_filename}\n"
+                        "You may download the dataset needed with the \
+                            following command:\n"
+                        "gammapy download datasets --src dark_matter_spectra"
+                    )
+                self.table = Table.read(self.table_path)
+
         else:
+            base_data_path = "$GAMMAPY_DATA/dark_matter_spectra"
+            if self.source == "pppc4":
+                table_filename = f"{base_data_path}/PPPC4DMID/AtProduction_gammas.dat"
+            elif self.source == "cosmixs":
+                table_filename = f"{base_data_path}/cosmixs/AtProduction-Gamma.dat"
+
+            self.table_path = make_path(table_filename)
+
+            if self.table_path is None or not self.table_path.exists():
+                raise FileNotFoundError(
+                    f"\n\nFile not found: {table_filename}\n"
+                    "You may download the dataset needed with the following command:\n"
+                    "gammapy download datasets --src dark_matter_spectra"
+                )
+
             ascii_format = (
                 "ascii.commented_header"
                 if self.source == "cosmixs"
                 else "ascii.fast_basic"
             )
             self.table = Table.read(
-                str(self.table_path),
+                self.table_path,
                 format=ascii_format,
                 guess=False,
                 delimiter=" ",
             )
-            if self.source == "cosmixs":
-                self.table = table_map_columns(
-                    self.table, self.mapping_dict_PPPC4_to_CosmiXs
-                )
+
+        if self._source_type == "custom_file" and self.mapping_dict:
+            self.table = table_map_columns(self.table, self.mapping_dict)
+        if self.source == "cosmixs":
+            self.table = table_map_columns(
+                self.table, self.mapping_dict_PPPC4_to_CosmiXs
+            )
 
         self.channel = channel
-
-        # create RegionNDMap for channel
-
         masses = np.unique(self.table["mDM"])
         log10x = np.unique(self.table["Log[10,x]"])
 
@@ -174,7 +209,6 @@ class PrimaryFlux(TemplateNDSpectralModel):
         log10x_axis = MapAxis.from_nodes(log10x, name="energy_true")
 
         channel_name = self.channel_registry[self.channel]
-
         geom = RegionGeom(region=None, axes=[log10x_axis, mass_axis])
         region_map = Map.from_geom(
             geom=geom, data=self.table[channel_name].reshape(geom.data_shape)
@@ -201,7 +235,8 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
         if _mDM_val < self.mass.min or _mDM_val > self.mass.max:
             raise ValueError(
-                f"The mass {_mDM} is out of the bounds of the model. Please choose a mass between {min_mass} < `mDM` < {max_mass}"
+                f"The mass {_mDM} is out of the bounds of the model. Please choose a \
+                mass between {min_mass} < `mDM` < {max_mass}"
             )
 
         self.mass.value = _mDM_val
@@ -210,6 +245,48 @@ class PrimaryFlux(TemplateNDSpectralModel):
     def allowed_channels(self):
         """List of allowed annihilation channels."""
         return list(self.channel_registry.keys())
+
+    @property
+    def source(self):
+        """Data source for the spectra."""
+        return self._source
+
+    @source.setter
+    def source(self, source):
+        if source is None:
+            self._source = "pppc4"
+
+            log.info(
+                "\nSince no spectra source has been chosen, PPPC4 will be \
+                    used by default.\n",
+            )
+        elif isinstance(source, Table):
+            self._source = source
+        elif isinstance(source, str):
+            if source.lower() in ("pppc4", "cosmixs"):
+                self._source = source.lower()
+            else:
+                path = Path(make_path(source))
+                if path.exists() and path.is_file():
+                    if path.stat().st_size == 0:
+                        raise KeyError("Source file is empty.")
+                    self._source = source
+
+                else:
+                    raise ValueError(
+                        f"Invalid source: {source}\nAvailable options: 'pppc4', \
+                        'cosmixs' or a valid file path.\n"
+                    )
+        else:
+            raise TypeError(
+                f"source must be None, a string ('pppc4', 'cosmixs', or a file "
+                f"path), or an astropy.table.Table instance, got {type(source)}"
+            )
+
+    @property
+    def _source_type(self):
+        """Return source type (predefined or custom)."""
+        return "predefined" if self.source in ("pppc4", "cosmixs") else "custom_file"
 
     @property
     def channel(self):
@@ -223,32 +300,74 @@ class PrimaryFlux(TemplateNDSpectralModel):
                 f"Invalid channel: {channel}\nAvailable: {self.allowed_channels}\n"
             )
         else:
-            if self.source == "pppc4":
+            if self._source_type == "custom_file":
+                channel_translation = self.channel_registry[channel]
+
+                if self.mapping_dict is not None:
+                    if channel_translation not in self.mapping_dict.values():
+                        raise ValueError(
+                            f"The channel {channel_translation} is not available \
+                            in the provided mapping dictionary. Please choose another \
+                            channel or check the mapping_dict provided.\n"
+                        )
+
+                if channel_translation not in self.table.colnames:
+                    raise ValueError(
+                        f"\n\nThe channel {channel_translation} is not available \
+                        in the provided source file. Please choose another channel \
+                        or check the column names in the file.\n"
+                    )
+            elif self.source == "pppc4":
                 if channel in ("aZ", "HZ"):
                     raise ValueError(
-                        f"\n\nThe channel {channel} is not available in PPPC4, please choose another channel or use CosmiXs (cosmixs) as source\n"
+                        f"\n\nThe channel {channel} is not available in PPPC4, please \
+                           choose another channel or use CosmiXs (cosmixs) as source\n"
                     )
                 elif channel in ("d", "u", "s"):
                     raise ValueError(
-                        f"\n\nThe channel {channel} is not available in PPPC4, please choose the equivalent channel q or use CosmiXs (cosmixs) as source\n"
+                        f"\n\nThe channel {channel} is not available in PPPC4, \
+                         please choose the equivalent channel q \
+                         or CosmiXs (cosmixs) as source\n"
                     )
-                else:
-                    self._channel = channel
 
             elif self.source == "cosmixs":
                 if channel in ("V->e", "V->mu", "V->tau"):
                     raise ValueError(
-                        f"\n\nThe channel {channel} is not available in CosmiXs, please choose another channel or use PPPC4 as source\n"
+                        f"\n\nThe channel {channel} is not available in CosmiXs, \
+                        please choose another channel or use PPPC4 as source\n"
                     )
                 elif channel == "q":
                     raise ValueError(
-                        "\n\nThe channel q is not available in cosmixs, please choose an equivalent channel such as d, u or s or use PPPC4 as source\n"
+                        "\n\nThe channel q is not available in cosmixs, please \
+                        choose an equivalent channel such as d, u or s or \
+                        use PPPC4 as source\n"
                     )
-                else:
-                    self._channel = channel
+
+            self._channel = channel
+
+    @property
+    def mapping_dict(self):
+        """Mapping dictionary for the spectra file."""
+        return self._mapping_dict
+
+    @mapping_dict.setter
+    def mapping_dict(self, mapping_dict):
+        if mapping_dict is not None:
+            if not isinstance(mapping_dict, dict):
+                raise TypeError("mapping_dict must be a dictionary.")
+
+            for key in self.mandatory_keys:
+                if key not in mapping_dict.values():
+                    raise KeyError(
+                        f"Mandatory column {key} not found in file. \
+                        Please check the mapping_dict provided or the column \
+                        names in the file.\n"
+                    )
+        self._mapping_dict = mapping_dict
 
     def evaluate(self, energy, *args):
         """Evaluate the primary flux."""
+
         args = list(args)
         args.append(self.mDM)
 
@@ -274,19 +393,37 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
     mass : `~astropy.units.Quantity`
         Dark matter mass.
     channel : str
-        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`, e.g. "b" for "bbar".
+        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`, e.g. "b"
+        for "bbar".
         See `PrimaryFlux.channel_registry` for more.
     scale : float
         Scale parameter for model fitting.
-    jfactor : `~astropy.units.Quantity`
+    jfactor : `~astropy.units.Quantity`, optional
         Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
-        is used.
+        is used. Default is 1.
     z : float, optional
         Redshift value. Default is 0.
     k : int, optional
         Type of dark matter particle (k:2 Majorana, k:4 Dirac). Default is 2.
-    source : {"cosmixs", "pppc4"}, optional
-        Data source for the spectra. Default is 'pppc4'.
+    source : str or Table, optional
+        Data source for the spectra. Options are:
+
+        * ``"pppc4"`` (default): Cirelli et al. 2011.
+        * ``"cosmixs"``: Cirelli et al. 2024.
+        * A path to a custom file: Any format readable by `astropy.table.Table.read`
+        (e.g., .ecsv, .fits, .csv, .dat).
+        * An Astropy Table that read the desired path
+
+
+        If a custom file path is provided, it must contain 'mDM' (mass of dark
+        matter particle) and 'Log[10,x]' (energy) columns, plus columns named after
+        the requested annihilation/decay channels (see the documentation).
+    mapping_dict : dict, optional
+        Mapping dictionary to map the columns of the custom source file to the expected
+        column names. This is only needed if a file as a spectra source is provided
+        and the column names in the file do not match the expected names. The dictionary
+        should have the format {actual_column_name_in_file:expected_column_name}.
+        An example of the expected columns can be found in the documentation.
 
     Examples
     --------
@@ -298,11 +435,13 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         >>> channel = "b"
         >>> massDM = 5000*u.Unit("GeV")
         >>> jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-        >>> modelDM = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
+        >>> modelDM = DarkMatterAnnihilationSpectralModel(mass=massDM,
+          channel=channel, jfactor=jfactor)  # noqa: E501
 
     References
     ----------
-    `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection" <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark
+      matter indirect detection" <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
@@ -317,15 +456,30 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
     tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
 
     def __init__(
-        self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2, source="pppc4"
+        self,
+        mass,
+        channel,
+        scale=scale.quantity,
+        jfactor=1,
+        z=0,
+        k=2,
+        source=None,
+        mapping_dict=None,
     ):
         self.k = k
         self.z = z
         self.mass = u.Quantity(mass)
         self.channel = channel
         self.jfactor = u.Quantity(jfactor)
-        self.primary_flux = PrimaryFlux(mass, channel=self.channel, source=source)
         self.source = source
+        self.mapping_dict = mapping_dict
+        self.primary_flux = PrimaryFlux(
+            mass,
+            channel=self.channel,
+            source=self.source,
+            mapping_dict=self.mapping_dict,
+        )
+
         super().__init__(scale=scale)
 
     def evaluate(self, energy, scale):
@@ -351,6 +505,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         data["spectral"]["z"] = self.z
         data["spectral"]["k"] = self.k
         data["spectral"]["source"] = self.source
+        data["spectral"]["mapping_dict"] = self.mapping_dict
         return data
 
     @classmethod
@@ -393,13 +548,31 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         See `PrimaryFlux.channel_registry` for more.
     scale : float
         Scale parameter for model fitting
-    jfactor : `~astropy.units.Quantity`
+    jfactor : `~astropy.units.Quantity`, optional
         Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
-        is used.
+        is used. Default is 1.
     z : float, optional
         Redshift value. Default is 0.
-    source : {"cosmixs", "pppc4"}, optional
-        Data source for the spectra. Default is 'pppc4'.
+    source : str or Table, optional
+        Data source for the spectra. Options are:
+
+        * ``"pppc4"`` (default): Cirelli et al. 2011.
+        * ``"cosmixs"``: Cirelli et al. 2024.
+        * A path to a custom file: Any format readable by `astropy.table.Table.read`
+        (e.g., .ecsv, .fits, .csv, .dat).
+        * An Astropy Table that read the desired path
+
+
+        If a custom file path is provided, it must contain 'mDM' (mass of dark
+        matter particle) and 'Log[10,x]' (energy) columns, plus columns named after
+        the requested annihilation/decay channels (see the documentation).
+    mapping_dict : dict, optional
+        Mapping dictionary to map the columns of the custom source file to the expected
+        column names. This is only needed if a file as a spectra source is provided
+        and the column names in the file do not match the expected names. The dictionary
+        should have the format {actual_column_name_in_file:expected_column_name}.
+        An example of the expected columns can be found in the documentation.
+
 
     Examples
     --------
@@ -411,11 +584,13 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         >>> channel = "b"
         >>> massDM = 5000*u.Unit("GeV")
         >>> jfactor = 3.41e19 * u.Unit("GeV cm-2")
-        >>> modelDM = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
+        >>> modelDM = DarkMatterDecaySpectralModel(mass=massDM,
+        channel=channel, jfactor=jfactor)
 
     References
     ----------
-    `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection" <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark
+    matter indirect detection" <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     LIFETIME_AGE_OF_UNIVERSE = 4.3e17 * u.Unit("s")
@@ -431,16 +606,28 @@ class DarkMatterDecaySpectralModel(SpectralModel):
     tag = ["DarkMatterDecaySpectralModel", "dm-decay"]
 
     def __init__(
-        self, mass, channel, scale=scale.quantity, jfactor=1, z=0, source="pppc4"
+        self,
+        mass,
+        channel,
+        scale=scale.quantity,
+        jfactor=1,
+        z=0,
+        source=None,
+        mapping_dict=None,
     ):
         self.z = z
         self.mass = u.Quantity(mass)
         self.channel = channel
         self.jfactor = u.Quantity(jfactor)
-        self.primary_flux = PrimaryFlux(
-            self.mass / 2, channel=self.channel, source=source
-        )
         self.source = source
+        self.mapping_dict = mapping_dict
+        self.primary_flux = PrimaryFlux(
+            self.mass / 2,
+            channel=self.channel,
+            source=self.source,
+            mapping_dict=self.mapping_dict,
+        )
+
         super().__init__(scale=scale)
 
     def evaluate(self, energy, scale):
@@ -462,6 +649,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         data["spectral"]["jfactor"] = self.jfactor.to_string()
         data["spectral"]["z"] = self.z
         data["spectral"]["source"] = self.source
+        data["spectral"]["mapping_dict"] = self.mapping_dict
         return data
 
     @classmethod

@@ -39,7 +39,8 @@ def _get_reference_model(model, energy_bounds, margin_percent=70):
 
 
 class FluxPointsDataset(Dataset):
-    """Bundle a set of flux points with a parametric model, to compute fit statistic function using different statistics (see ``stat_type``).
+    """Bundle a set of flux points with a parametric model, to compute fit
+    statistic function using different statistics (see ``stat_type``).
 
     For more information see :ref:`datasets`.
 
@@ -61,14 +62,17 @@ class FluxPointsDataset(Dataset):
 
                 * chi2 : estimate from chi2 statistics.
                 * profile : estimate from interpolation of the likelihood profile.
-                * distrib : Assuming gaussian errors the likelihood is given by the probability density function
-                  of the normal distribution. For the upper limit case it is necessary to marginalize over the unknown
-                  measurement, so we integrate the normal distribution up to the upper limit value which gives the
-                  complementary error function. See eq. C7 of `Mohanty et al (2013) <https://iopscience.iop.org/article/10.1088/0004-637X/773/2/168/pdf>`__
+                * distrib : Assuming gaussian errors the likelihood is given by the
+                  probability density function of the normal distribution. For the
+                  upper limit case it is necessary to marginalize over the unknown
+                  measurement, so we integrate the normal distribution up to the upper
+                  limit value which gives the complementary error function. See eq. C7 of
+                  `Mohanty et al (2013) <https://iopscience.iop.org/article/10.1088/0004-637X/773/2/168/pdf>`__
 
-        Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
-        However, it is recommended to use `profile` if `stat_scan` is available on flux points.
-        The `distrib` case provides an approximation if the profile is not available.
+        Default is `chi2`, in that case upper limits are ignored and the mean of
+        asymetrics error is used. However, it is recommended to use `profile`
+        if `stat_scan` is available on flux points. The `distrib` case provides an
+        approximation if the profile is not available.
     stat_kwargs : dict
         Extra arguments specifying the interpolation scheme of the likelihood profile.
         Used only if `stat_type=="profile"`. In that case the default is :
@@ -222,10 +226,11 @@ class FluxPointsDataset(Dataset):
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         checksum : bool
-            When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS file.
+            When True adds both DATASUM and CHECKSUM cards to the headers
+            written to the FITS file.
             Applies only if filename has .fits suffix. Default is False.
         **kwargs : dict, optional
-             Keyword arguments passed to `~astropy.table.Table.write`.
+            Keyword arguments passed to `~astropy.table.Table.write`.
         """
         table = self.data.to_table()
 
@@ -400,7 +405,7 @@ class FluxPointsDataset(Dataset):
 
         Parameters
         ----------
-        method: {"diff", "diff/model"}
+        method : {"diff", "diff/model"}
             Method used to compute the residuals. Available options are:
 
             - ``"diff"`` (default): data - model.
@@ -422,8 +427,6 @@ class FluxPointsDataset(Dataset):
 
     def plot_fit(
         self,
-        ax_spectrum=None,
-        ax_residuals=None,
         kwargs_spectrum=None,
         kwargs_residuals=None,
     ):
@@ -433,14 +436,12 @@ class FluxPointsDataset(Dataset):
 
         Parameters
         ----------
-        ax_spectrum : `~matplotlib.axes.Axes`, optional
-            Axes to plot flux points and best fit model on. Default is None.
-        ax_residuals : `~matplotlib.axes.Axes`, optional
-            Axes to plot residuals on. Default is None.
         kwargs_spectrum : dict, optional
-            Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`. Default is None.
+            Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`.
+            Default is None.
         kwargs_residuals : dict, optional
-            Keyword arguments passed to `~FluxPointsDataset.plot_residuals`. Default is None.
+            Keyword arguments passed to `~FluxPointsDataset.plot_residuals`.
+            Default is None.
 
         Returns
         -------
@@ -453,28 +454,33 @@ class FluxPointsDataset(Dataset):
         >>> from gammapy.estimators import FluxPoints
         >>> from gammapy.datasets import FluxPointsDataset
 
-        >>> #load precomputed flux points
+        >>> # load precomputed flux points
         >>> filename = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
         >>> flux_points = FluxPoints.read(filename)
         >>> model = SkyModel(spectral_model=PowerLawSpectralModel())
         >>> dataset = FluxPointsDataset(model, flux_points)
-        >>> #configuring optional parameters
-        >>> kwargs_spectrum = {"kwargs_model": {"color":"red", "ls":"--"}, "kwargs_fp":{"color":"green", "marker":"o"}}
-        >>> kwargs_residuals = {"color": "blue", "markersize":4, "marker":'s', }
-        >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum) # doctest: +SKIP
+        >>> # configuring optional parameters
+        >>> kwargs_spectrum = {
+        ...     "kwargs_model": {"color": "red", "ls": "--"},
+        ...     "kwargs_fp": {"color": "green", "marker": "o"},
+        ... }
+        >>> kwargs_residuals = {
+        ...     "color": "blue",
+        ...     "markersize": 4,
+        ...     "marker": "s",
+        ... }
+        >>> dataset.plot_fit(
+        ...     kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum
+        ... )  # doctest: +SKIP
         """
         if self.data.geom.ndim > 3:
             raise ValueError("Plot fit works with only one energy axis")
         fig = plt.figure(figsize=(9, 7))
 
         gs = GridSpec(7, 1)
-        if ax_spectrum is None:
-            ax_spectrum = fig.add_subplot(gs[:5, :])
-            if ax_residuals is None:
-                plt.setp(ax_spectrum.get_xticklabels(), visible=False)
-
-        if ax_residuals is None:
-            ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum)
+        ax_spectrum = fig.add_subplot(gs[:5, :])
+        plt.setp(ax_spectrum.get_xticklabels(), visible=False)
+        ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum)
 
         kwargs_spectrum = kwargs_spectrum or {}
         kwargs_residuals = kwargs_residuals or {}
@@ -503,7 +509,8 @@ class FluxPointsDataset(Dataset):
         ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         method : {"diff", "diff/model"}
-            Normalization used to compute the residuals, see `FluxPointsDataset.residuals`. Default is "diff".
+            Normalization used to compute the residuals, see `FluxPointsDataset.residuals`.
+            Default is "diff".
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
 
@@ -511,7 +518,6 @@ class FluxPointsDataset(Dataset):
         -------
         ax : `~matplotlib.axes.Axes`
             Axes object.
-
         """
         if self.data.geom.ndim > 3:
             raise ValueError("Plot residuals works with only one energy axis")
@@ -550,7 +556,7 @@ class FluxPointsDataset(Dataset):
             ax.axhline(0, color=kwargs["color"], lw=0.5)
 
             # format axes
-            ax.set_xlabel(f"Energy [{self._energy_unit.to_string(UNIT_STRING_FORMAT)}]")
+            ax.set_xlabel(f"Energy [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
             ax.set_xscale("log")
             label = self._residuals_labels[method]
             ax.set_ylabel(f"Residuals\n {label}")
@@ -570,13 +576,15 @@ class FluxPointsDataset(Dataset):
         ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         kwargs_fp : dict, optional
-            Keyword arguments passed to `gammapy.estimators.FluxPoints.plot` to configure the plot style.
-            Default is None.
+            Keyword arguments passed to `gammapy.estimators.FluxPoints.plot` to
+            configure the plot style. Default is None.
         kwargs_model : dict, optional
-            Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot` and
-            `gammapy.modeling.models.SpectralModel.plot_error` to configure the plot style. Default is None.
+            Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot`
+            and `gammapy.modeling.models.SpectralModel.plot_error` to configure the
+            plot style. Default is None.
         axis_name : str
-            Axis along which to plot the flux points for multiple axes. Default is energy.
+            Axis along which to plot the flux points for multiple axes.
+            Default is energy.
 
         Returns
         -------
@@ -589,15 +597,17 @@ class FluxPointsDataset(Dataset):
         >>> from gammapy.estimators import FluxPoints
         >>> from gammapy.datasets import FluxPointsDataset
 
-        >>> #load precomputed flux points
+        >>> # load precomputed flux points
         >>> filename = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
         >>> flux_points = FluxPoints.read(filename)
         >>> model = SkyModel(spectral_model=PowerLawSpectralModel())
         >>> dataset = FluxPointsDataset(model, flux_points)
-        >>> #configuring optional parameters
-        >>> kwargs_model = {"color":"red", "ls":"--"}
-        >>> kwargs_fp = {"color":"green", "marker":"o"}
-        >>> dataset.plot_spectrum(kwargs_fp=kwargs_fp, kwargs_model=kwargs_model) # doctest: +SKIP
+        >>> # configuring optional parameters
+        >>> kwargs_model = {"color": "red", "ls": "--"}
+        >>> kwargs_fp = {"color": "green", "marker": "o"}
+        >>> dataset.plot_spectrum(
+        ...     kwargs_fp=kwargs_fp, kwargs_model=kwargs_model
+        ... )  # doctest: +SKIP
         """
         kwargs_fp = (kwargs_fp or {}).copy()
         kwargs_model = (kwargs_model or {}).copy()

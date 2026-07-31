@@ -37,9 +37,13 @@ class EDispKernel(IRF):
 
     >>> from gammapy.maps import MapAxis
     >>> from gammapy.irf import EDispKernel
-    >>> energy = MapAxis.from_energy_bounds(0.1, 10, 10, unit='TeV')
-    >>> energy_true = MapAxis.from_energy_bounds(0.1, 10, 10, unit='TeV', name='energy_true')
-    >>> edisp = EDispKernel.from_gauss(energy_axis_true=energy_true, energy_axis=energy, sigma=0.1, bias=0)
+    >>> energy = MapAxis.from_energy_bounds(0.1, 10, 10, unit="TeV")
+    >>> energy_true = MapAxis.from_energy_bounds(
+    ...     0.1, 10, 10, unit="TeV", name="energy_true"
+    ... )
+    >>> edisp = EDispKernel.from_gauss(
+    ...     energy_axis_true=energy_true, energy_axis=energy, sigma=0.1, bias=0
+    ... )
 
     Have a quick look:
 
@@ -182,10 +186,10 @@ class EDispKernel(IRF):
         >>> import astropy.units as u
 
         >>> energy_true_axis = MapAxis.from_energy_edges(
-        ...            [0.5, 1, 2, 4, 6] * u.TeV, name="energy_true"
-        ...        )
+        ...     [0.5, 1, 2, 4, 6] * u.TeV, name="energy_true"
+        ... )
         >>> edisp = EDispKernel.from_diagonal_response(energy_true_axis)
-        >>> edisp.plot_matrix() # doctest: +SKIP
+        >>> edisp.plot_matrix()  # doctest: +SKIP
 
         Example with different energy binnings:
 
@@ -194,7 +198,7 @@ class EDispKernel(IRF):
         ... )
         >>> energy_axis = MapAxis.from_energy_edges([2, 4, 6] * u.TeV)
         >>> edisp = EDispKernel.from_diagonal_response(energy_true_axis, energy_axis)
-        >>> edisp.plot_matrix() # doctest: +SKIP
+        >>> edisp.plot_matrix()  # doctest: +SKIP
         """
         from .map import get_overlap_fraction
 

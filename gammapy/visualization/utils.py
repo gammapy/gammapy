@@ -121,7 +121,7 @@ def plot_map_rgb(map_, ax=None, **kwargs):
     ... )
     >>> map_ = map_.resample_axis(axis_rgb)
     >>> kwargs = {"stretch": 0.5, "Q": 1, "minimum": 0.15}
-    >>> plot_map_rgb(map_.smooth(0.08*u.deg), **kwargs) #doctest: +SKIP
+    >>> plot_map_rgb(map_.smooth(0.08 * u.deg), **kwargs)  # doctest: +SKIP
     """
     geom = map_.geom
     if len(geom.axes) != 1 or geom.axes[0].nbin != 3:
@@ -304,10 +304,18 @@ def plot_distribution(
     >>> from gammapy.visualization import plot_distribution
     >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
     >>> tsmap_est = TSMapEstimator().run(dataset)
-    >>> axs, res = plot_distribution(tsmap_est.sqrt_ts, func="norm", kwargs_hist={'bins': 75, 'range': (-10, 10), 'density': True})
+    >>> axs, res = plot_distribution(
+    ...     tsmap_est.sqrt_ts,
+    ...     func="norm",
+    ...     kwargs_hist={"bins": 75, "range": (-10, 10), "density": True},
+    ... )
     >>> # Equivalently, one can do the following:
-    >>> func = lambda x, mu, sig : norm.pdf(x, loc=mu, scale=sig)
-    >>> axs, res = plot_distribution(tsmap_est.sqrt_ts, func=func, kwargs_hist={'bins': 75, 'range': (-10, 10), 'density': True})
+    >>> func = lambda x, mu, sig: norm.pdf(x, loc=mu, scale=sig)
+    >>> axs, res = plot_distribution(
+    ...     tsmap_est.sqrt_ts,
+    ...     func=func,
+    ...     kwargs_hist={"bins": 75, "range": (-10, 10), "density": True},
+    ... )
     """
     from gammapy.maps import WcsNDMap  # import here to avoid circular import
 

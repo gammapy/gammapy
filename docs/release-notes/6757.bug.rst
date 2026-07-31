@@ -1,0 +1,1 @@
+Fixes `~gammapy.astro.darkmatter.JFactory.compute_differential_jfactor` to use the physical impact parameter in the line-of-sight integration and avoid evaluating the integrable closest-approach singularity directly.

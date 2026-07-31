@@ -29,15 +29,73 @@ from regions import (
 
 from regions.core.pixcoord import PixCoord
 from regions.core.metadata import RegionMeta, RegionVisual
-from regions._utils.wcs_helpers import pixel_scale_angle_at_skycoord
 
 __all__ = [
     "compound_region_to_regions",
     "make_concentric_annulus_sky_regions",
     "make_orthogonal_rectangle_sky_regions",
+    "make_grid_rectangle_sky_regions",
     "regions_to_compound_region",
     "region_to_frame",
 ]
+
+
+# TODO: This is legacy code from astropy regions. Remove when using regions.SkyPolygonRegion.
+def pixel_scale_angle_at_skycoord(skycoord, wcs, offset=1 * u.arcsec):
+    """Calculate the pixel coordinate and scale and WCS rotation angle at
+    the position of a SkyCoord coordinate.
+
+    Parameters
+    ----------
+    skycoord : `~astropy.coordinates.SkyCoord`
+        The SkyCoord coordinate.
+
+    wcs : WCS object
+        A world coordinate system (WCS) transformation that
+        supports the `astropy shared interface for WCS
+        <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`_ (e.g.,
+        `astropy.wcs.WCS`, `gwcs.wcs.WCS`).
+
+    offset : `~astropy.units.Quantity`
+        A small angular offset to use to compute the pixel scale and
+        position angle.
+
+    Returns
+    -------
+    pixcoord : `~regions.core.PixCoord`
+        The pixel coordinate.
+
+    scale : `~astropy.units.Quantity`
+        The pixel scale in arcsec/pixel.
+
+    angle : `~astropy.units.Quantity`
+        The angle (in degrees) measured counterclockwise from the
+        positive x axis to the "North" axis of the celestial coordinate
+        system.
+
+    Notes
+    -----
+    If distortions are present in the image, the x and y pixel scales
+    likely differ.  This function computes a single pixel scale along
+    the North/South axis.
+    """
+    # Convert to pixel coordinates
+    x, y = wcs.world_to_pixel(skycoord)
+    pixcoord = PixCoord(x=x, y=y)
+
+    # We take a point directly North (i.e., latitude offset) the
+    # input sky coordinate and convert it to pixel coordinates,
+    # then we use the pixel deltas between the input and offset sky
+    # coordinate to calculate the pixel scale and angle.
+    skycoord_offset = skycoord.directional_offset_by(0.0, offset)
+    x_offset, y_offset = wcs.world_to_pixel(skycoord_offset)
+
+    dx = x_offset - x
+    dy = y_offset - y
+    scale = offset.to(u.arcsec) / (np.hypot(dx, dy) * u.pixel)
+    angle = (np.arctan2(dy, dx) * u.radian).to(u.deg)
+
+    return pixcoord, scale, angle
 
 
 def compound_region_center(compound_region):
@@ -200,6 +258,7 @@ class SphericalCircleSkyRegion(CircleSkyRegion):
         return separation < self.radius
 
 
+# TODO: can we rely on regions.PolygonSkyRegion instead?
 class PolygonPointsSkyRegion(PolygonSkyRegion):
     """Polygon sky region defined by a list of points."""
 
@@ -253,7 +312,6 @@ class PolygonPointsPixelRegion(PolygonPixelRegion):
         origin : `~regions.PixCoord`, optional
             Origin of the region. Default is `PixCoord(0, 0)`
         """
-
         if origin is None:
             origin = PixCoord(0, 0)
 
@@ -304,7 +362,7 @@ class PolygonPointsPixelRegion(PolygonPixelRegion):
 
 
 def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=1):
-    """Utility returning an array of regions to make orthogonal projections.
+    """Utility returning an array of regions to make orthogonal projections for a 1D profile.
 
     Parameters
     ----------
@@ -321,7 +379,7 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
 
     Returns
     -------
-    regions : list of `~regions.RectangleSkyRegion`
+    regions : `~regions.Regions`
         Regions in which the profiles are made.
     """
     pix_start = start_pos.to_pixel(wcs)
@@ -345,6 +403,75 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
     return regions
 
 
+def make_grid_rectangle_sky_regions(
+    center, width, height, wcs, nbinx=1, nbiny=1, angle=0 * u.deg
+):
+    """Utility to return a list of 2D grid of rectangular projections
+
+    This function to create a 2D grid of
+    `~regions.RectangleSkyRegion` tiles on the
+    projection plane defined by the input WCS.
+    This is similar to `make_orthogonal_rectangle_sky_regions`
+    but covers a 2-D field
+    instead of a 1-D profile
+
+    Parameters
+    ----------
+    center : `~astropy.coordinates.SkyCoord`
+        Center coordinate of the full grid.
+    width : `~astropy.units.Quantity`
+        Total angular width of the grid (longitude direction).
+    height : `~astropy.units.Quantity`
+        Total angular height of the grid (latitude direction).
+    wcs : `~astropy.wcs.WCS`
+        WCS projection object used to convert between sky and pixel
+        coordinates.
+    nbinx : int, optional
+        Number of boxes along x-axis (RA/longitude). Default is 1.
+    nbiny : int, optional
+        Number of boxes along y-axis (Dec/latitude). Default is 1.
+    angle : `~astropy.units.Quantity`, optional
+        Rotation angle (in deg) of the grid, anti-clockwise.
+        Default is 0 deg.
+
+    Returns
+    -------
+    regions : `~regions.Regions`
+         list of `~regions.RectangleSkyRegion`
+
+    """
+    pix_center = center.to_pixel(wcs)
+
+    dx = center.directional_offset_by(angle + 90 * u.deg, width / 2)
+    dy = center.directional_offset_by(angle, height / 2)
+
+    pix_dx = dx.to_pixel(wcs)
+    pix_dy = dy.to_pixel(wcs)
+
+    dir_x = np.array([pix_dx[0] - pix_center[0], pix_dx[1] - pix_center[1]])
+    dir_y = np.array([pix_dy[0] - pix_center[0], pix_dy[1] - pix_center[1]])
+    x_edges = np.linspace(-1, 1, nbinx + 1)
+    y_edges = np.linspace(-1, 1, nbiny + 1)
+    x_center = 0.5 * (x_edges[:-1] + x_edges[1:])
+    y_center = 0.5 * (y_edges[:-1] + y_edges[1:])
+
+    regions = []
+    for x in x_center:
+        for y in y_center:
+            pix_x = pix_center[0] + x * dir_x[0] + y * dir_y[0]
+            pix_y = pix_center[1] + x * dir_x[1] + y * dir_y[1]
+
+            sky_center = SkyCoord.from_pixel(pix_x, pix_y, wcs)
+            reg = RectangleSkyRegion(
+                center=sky_center,
+                width=width / nbinx,
+                height=height / nbiny,
+                angle=angle,
+            )
+            regions.append(reg)
+    return Regions(regions)
+
+
 def make_concentric_annulus_sky_regions(
     center, radius_max, radius_min=1e-5 * u.deg, nbin=11
 ):
@@ -359,12 +486,12 @@ def make_concentric_annulus_sky_regions(
     radius_min : `~astropy.units.Quantity`, optional
         Minimum radius. Default is 1e-5 deg.
     nbin : int, optional
-        Number of boxes along the line. Default is 11.
+        Number of annulus regions. Default is 11.
 
     Returns
     -------
-    regions : list of `~regions.RectangleSkyRegion`
-        Regions in which the profiles are made.
+    regions : `~regions.Regions`
+        List of `~regions.CircleAnnulusSkyRegion` in which the profiles are made.
     """
     regions = []
 
@@ -378,7 +505,7 @@ def make_concentric_annulus_sky_regions(
         )
         regions.append(region)
 
-    return regions
+    return Regions(regions)
 
 
 def region_to_frame(region, frame):
@@ -445,8 +572,8 @@ def extract_bright_star_regions(
 
     Returns
     -------
-    regions : list of `~regions.CircleSkyRegion`
-        Star exclusion regions.
+    regions : `~regions.Regions`
+        Star exclusion regions as list of `~regions.CircleSkyRegion`
     """
     regions = []
 
@@ -474,4 +601,4 @@ def extract_bright_star_regions(
             )
         )
 
-    return regions
+    return Regions(regions)

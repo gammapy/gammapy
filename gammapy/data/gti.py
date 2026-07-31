@@ -38,7 +38,9 @@ class GTI:
     Load GTIs for a H.E.S.S. event list:
 
     >>> from gammapy.data import GTI
-    >>> gti = GTI.read('$GAMMAPY_DATA/hess-dl3-dr1//data/hess_dl3_dr1_obs_id_023523.fits.gz')
+    >>> gti = GTI.read(
+    ...     "$GAMMAPY_DATA/hess-dl3-dr1//data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    ... )
     >>> print(gti)
     GTI info:
     - Number of GTIs: 1

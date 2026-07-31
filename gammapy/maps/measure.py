@@ -85,9 +85,9 @@ def containment_radius(map_, fraction=0.393, position=None):
     ----------
     map_ : `~gammapy.maps.WcsNDMap`
         Map of integral quantities.
-    fraction : float
+    fraction : float, optional
         Containment fraction. Default is 0.393.
-    position : `~astropy.coordinates.SkyCoord`
+    position : `~astropy.coordinates.SkyCoord`, optional
         Position from where the containment is computed.
         Default is the center of the Map.
 

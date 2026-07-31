@@ -16,7 +16,7 @@ variables:
 
 dependencies:
   # core dependencies
-  - python=3.11
+  - python=3.12
   - pip
   - astropy
   - click>8.0
@@ -48,7 +48,9 @@ dependencies:
   - reproject
   - ultranest
   - numba
-  - arviz
+  - arviz>=1
+  - xarray
+  - nautilus-sampler
   # dev dependencies
   - codespell
   - jinja2
@@ -58,7 +60,6 @@ dependencies:
   - pandoc
   - pylint
   - setuptools_scm
-  - sherpa>=4.17
   - sphinx
   - sphinx-click
   - sphinx-gallery
@@ -81,6 +82,6 @@ dependencies:
   - pip:
       - pytest-sphinx
       - ray[default]>=2.9
-      - arviz[preview]
       - PyGithub
       - pypandoc
+      - sherpa>=4.17

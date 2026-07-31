@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions and functions for plotting gamma-ray images."""
+
 import numpy as np
 from astropy.coordinates import Angle
 from matplotlib.gridspec import GridSpec
@@ -31,7 +32,6 @@ class MapPanelPlotter:
     """
 
     def __init__(self, figure, xlim, ylim, npanels=4, **kwargs):
-
         self.figure = figure
         self.parameters = {"xlim": xlim, "ylim": ylim, "npanels": npanels}
         self.grid_spec = GridSpec(nrows=npanels, ncols=1, **kwargs)

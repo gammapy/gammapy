@@ -382,6 +382,7 @@ class RegionGeom(Geom):
 
     def bin_volume(self):
         """If the `RegionGeom` has a non-spatial axis, it returns the volume of the region.
+
         If not, it returns the solid angle size.
 
         Returns
@@ -761,8 +762,10 @@ class RegionGeom(Geom):
         >>> from astropy.coordinates import SkyCoord
         >>> import astropy.units as u
 
-        >>> list_region = [CircleSkyRegion(SkyCoord(326*u.deg, -13*u.deg), radius=0.4*u.deg),
-        ... CircleSkyRegion(SkyCoord(325*u.deg, -14*u.deg), radius=0.3*u.deg)]
+        >>> list_region = [
+        ...     CircleSkyRegion(SkyCoord(326 * u.deg, -13 * u.deg), radius=0.4 * u.deg),
+        ...     CircleSkyRegion(SkyCoord(325 * u.deg, -14 * u.deg), radius=0.3 * u.deg),
+        ... ]
         >>> wcs = WcsGeom.create().wcs
         >>> region = RegionGeom.from_regions(list_region, wcs=wcs)
         >>> print(region)

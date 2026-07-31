@@ -2,7 +2,11 @@
 from .core import FluxPoints
 from .lightcurve import LightCurveEstimator
 from .profile import FluxProfileEstimator
-from .sed import FluxPointsEstimator, FluxCollectionEstimator
+from .sed import (
+    FluxCollectionEstimator,
+    FluxPointsEstimator,
+    RegularizedFluxPointsEstimator,
+)
 from .sensitivity import SensitivityEstimator
 
 __all__ = [
@@ -11,5 +15,6 @@ __all__ = [
     "FluxPointsEstimator",
     "FluxProfileEstimator",
     "LightCurveEstimator",
+    "RegularizedFluxPointsEstimator",
     "SensitivityEstimator",
 ]

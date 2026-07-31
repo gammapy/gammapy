@@ -46,7 +46,7 @@ class PlotMixin:
 
         Examples
         --------
-        >>> #Creating a spectral dataset
+        >>> # Creating a spectral dataset
         >>> from gammapy.datasets import SpectrumDatasetOnOff
         >>> from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
         >>> filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
@@ -54,11 +54,24 @@ class PlotMixin:
         >>> p = PowerLawSpectralModel()
         >>> dataset.models = SkyModel(spectral_model=p)
         >>> # optional configurations
-        >>> kwargs_excess = {"color": "blue", "markersize":8, "marker":'s', }
-        >>> kwargs_npred_signal = {"color": "black", "ls":"--"}
-        >>> kwargs_spectrum = {"kwargs_excess":kwargs_excess, "kwargs_npred_signal":kwargs_npred_signal}
-        >>> kwargs_residuals = {"color": "black", "markersize":4, "marker":'s', }
-        >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum)  # doctest: +SKIP
+        >>> kwargs_excess = {
+        ...     "color": "blue",
+        ...     "markersize": 8,
+        ...     "marker": "s",
+        ... }
+        >>> kwargs_npred_signal = {"color": "black", "ls": "--"}
+        >>> kwargs_spectrum = {
+        ...     "kwargs_excess": kwargs_excess,
+        ...     "kwargs_npred_signal": kwargs_npred_signal,
+        ... }
+        >>> kwargs_residuals = {
+        ...     "color": "black",
+        ...     "markersize": 4,
+        ...     "marker": "s",
+        ... }
+        >>> dataset.plot_fit(
+        ...     kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum
+        ... )  # doctest: +SKIP
         """
         gs = GridSpec(7, 1)
         bool_visible_xticklabel = not (ax_spectrum is None and ax_residuals is None)
@@ -148,12 +161,19 @@ class PlotMixin:
         >>> filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
         >>> dataset = SpectrumDatasetOnOff.read(filename)
         >>> dataset.mask_fit = dataset.mask_safe.copy()
-        >>> dataset.mask_fit.data[40:46] = False  # setting dummy mask_fit for illustration
+        >>> dataset.mask_fit.data[40:46] = (
+        ...     False  # setting dummy mask_fit for illustration
+        ... )
         >>> # Plot the masks on top of the counts histogram
-        >>> kwargs_safe = {"color":"green", "alpha":0.2} #optinonal arguments to configure
-        >>> kwargs_fit = {"color":"pink", "alpha":0.2}
-        >>> ax=dataset.plot_counts()  # doctest: +SKIP
-        >>> dataset.plot_masks(ax=ax, kwargs_fit=kwargs_fit, kwargs_safe=kwargs_safe)  # doctest: +SKIP
+        >>> kwargs_safe = {
+        ...     "color": "green",
+        ...     "alpha": 0.2,
+        ... }  # optinonal arguments to configure
+        >>> kwargs_fit = {"color": "pink", "alpha": 0.2}
+        >>> ax = dataset.plot_counts()  # doctest: +SKIP
+        >>> dataset.plot_masks(
+        ...     ax=ax, kwargs_fit=kwargs_fit, kwargs_safe=kwargs_safe
+        ... )  # doctest: +SKIP
         """
         kwargs_fit = kwargs_fit or {}
         kwargs_safe = kwargs_safe or {}
@@ -199,17 +219,23 @@ class PlotMixin:
 
         Examples
         --------
-        >>> #Creating a spectral dataset
+        >>> # Creating a spectral dataset
         >>> from gammapy.datasets import SpectrumDatasetOnOff
         >>> from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
         >>> filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
         >>> dataset = SpectrumDatasetOnOff.read(filename)
         >>> p = PowerLawSpectralModel()
         >>> dataset.models = SkyModel(spectral_model=p)
-        >>> #Plot the excess in blue and the npred in black dotted lines
-        >>> kwargs_excess = {"color": "blue", "markersize":8, "marker":'s', }
-        >>> kwargs_npred_signal = {"color": "black", "ls":"--"}
-        >>> dataset.plot_excess(kwargs_excess=kwargs_excess, kwargs_npred_signal=kwargs_npred_signal)  # doctest: +SKIP
+        >>> # Plot the excess in blue and the npred in black dotted lines
+        >>> kwargs_excess = {
+        ...     "color": "blue",
+        ...     "markersize": 8,
+        ...     "marker": "s",
+        ... }
+        >>> kwargs_npred_signal = {"color": "black", "ls": "--"}
+        >>> dataset.plot_excess(
+        ...     kwargs_excess=kwargs_excess, kwargs_npred_signal=kwargs_npred_signal
+        ... )  # doctest: +SKIP
         """
         kwargs_excess = kwargs_excess or {}
         kwargs_npred_signal = kwargs_npred_signal or {}
@@ -318,13 +344,15 @@ class SpectrumDataset(PlotMixin, MapDataset):
 
         >>> energy_axis = MapAxis.from_energy_bounds(1.0, 10.0, 4, unit="TeV")
         >>> energy_axis_true = MapAxis.from_energy_bounds(
-        ...            0.5, 20, 10, unit="TeV", name="energy_true"
-        ...        )
+        ...     0.5, 20, 10, unit="TeV", name="energy_true"
+        ... )
         >>> geom = RegionGeom.create(
-        ...            region=None,
-        ...            axes=[energy_axis],
-        ...        )
-        >>> empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true, name="empty")
+        ...     region=None,
+        ...     axes=[energy_axis],
+        ... )
+        >>> empty = SpectrumDataset.create(
+        ...     geom=geom, energy_axis_true=energy_axis_true, name="empty"
+        ... )
         """
         if not geom.is_region:
             raise TypeError("`SpectrumDataset` is only supported for `RegionGeom`.")

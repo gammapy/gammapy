@@ -43,10 +43,7 @@ def standard_scaler(features):
     >>> position = SkyCoord(329.716 * u.deg, -30.225 * u.deg, frame="icrs")
     >>> names = ["edisp-res", "psf-radius"]
     >>> features_irfs = get_irfs_features(
-    ...     obs,
-    ...     energy_true="1 TeV",
-    ...     position=position,
-    ...     names=names
+    ...     obs, energy_true="1 TeV", position=position, names=names
     ... )
     >>> scaled_features_irfs = standard_scaler(features_irfs)
     >>> print(scaled_features_irfs)
@@ -102,14 +99,13 @@ def hierarchical_clustering(features, linkage_kwargs=None, fcluster_kwargs=None)
     >>> position = SkyCoord(329.716 * u.deg, -30.225 * u.deg, frame="icrs")
     >>> names = ["edisp-res", "psf-radius"]
     >>> features_irfs = get_irfs_features(
-    ...     obs,
-    ...     energy_true="1 TeV",
-    ...     position=position,
-    ...     names=names
+    ...     obs, energy_true="1 TeV", position=position, names=names
     ... )
     >>> scaled_features_irfs = standard_scaler(features_irfs)
 
-    >>> features = hierarchical_clustering(scaled_features_irfs, fcluster_kwargs={"t": 2})
+    >>> features = hierarchical_clustering(
+    ...     scaled_features_irfs, fcluster_kwargs={"t": 2}
+    ... )
     >>> print(features)
          edisp-res      obs_id      psf-radius     labels
     ------------------- ------ ------------------- ------

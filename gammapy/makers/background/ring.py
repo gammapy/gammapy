@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Ring background estimation."""
+
 import itertools
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel

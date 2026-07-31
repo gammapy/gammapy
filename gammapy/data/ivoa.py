@@ -1,12 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from astropy.table import Column, Table
+from pathlib import Path
+from typing import ClassVar
+from urllib.parse import urlsplit
+
+from astropy.io import fits
+from astropy.table import Column, Table, vstack
+from pydantic import BaseModel
+
 from gammapy.data import DataStore
 
 __all__ = ["to_obscore_table"]
 
 
 log = logging.getLogger(__name__)
+
+
+BUNDLESIZE = 152  # in MB
 
 DEFAULT_OBSCORE_TEMPLATE = {
     "dataproduct_type": "event",
@@ -17,11 +27,214 @@ DEFAULT_OBSCORE_TEMPLATE = {
 }
 
 
+def progress_download(source, destination):
+    """Progress of the download.
+
+    Notes
+    -----
+    The progress bar can be displayed for this function.
+    """
+    import requests
+    from tqdm import tqdm
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with requests.get(source, stream=True, timeout=60) as r:
+        total_size = (
+            int(r.headers.get("content-length"))
+            if r.headers.get("content-length")
+            else BUNDLESIZE * 1024 * 1024
+        )
+        progress_bar = tqdm(
+            total=total_size, unit="B", unit_scale=True, unit_divisor=1024
+        )
+        with open(destination, "wb") as f:
+            for chunk in r.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
+                    progress_bar.update(len(chunk))
+    progress_bar.close()
+
+
+class ObsTableRow(BaseModel):
+    obs_id: int
+    obs_mode: str
+    ra_pnt: float
+    dec_pnt: float
+    alt_pnt: float
+    az_pnt: float
+    tstart: float
+    tstop: float
+    zen_pnt: float | None = None
+    ontime: float | None = None
+    livetime: float | None = None
+    deadc: float | None = None
+    date_obs: str | None = None
+    time_obs: str | None = None
+    date_end: str | None = None
+    time_end: str | None = None
+    n_tels: int | None = None
+    tellist: str | None = None
+    quality: int | None = None
+    object: str | None = None
+    glon_pnt: float | None = None
+    glat_pnt: float | None = None
+    ra_obj: float | None = None
+    dec_obj: float | None = None
+    tmid: float | None = None
+    tmid_str: str | None = None
+    event_count: int | None = None
+    event_ra_median: float | None = None
+    event_dec_median: float | None = None
+    event_energy_median: float | None = None
+    event_time_min: float | None = None
+    event_time_max: float | None = None
+    bkg_scale: float | None = None
+    trgrate: float | None = None
+    ztrgrate: float | None = None
+    muoneff: float | None = None
+    brokpix: float | None = None
+    airtemp: float | None = None
+    pressure: float | None = None
+    nsblevel: float | None = None
+    relhum: float | None = None
+
+    # GADF defies four keywords in kebab-case, but python can only allow
+    # camel_case variable names
+    REPLACE_KEYS: ClassVar[tuple] = (
+        ["DATE_OBS", "TIME_OBS", "DATE_END", "TIME_END"],
+        ["DATE-OBS", "TIME-OBS", "DATE-END", "TIME-END"],
+    )
+
+    @classmethod
+    def from_row(cls, row):
+        opt_keys = [k for k, v in cls.model_fields.items() if not v.is_required()]
+        optional = {key: row.get(key, None) for key in opt_keys}
+        return cls(
+            **row[
+                "obs_id",
+                "obs_mode",
+                "ra_pnt",
+                "dec_pnt",
+                "alt_pnt",
+                "az_pnt",
+                "tstart",
+                "tstop",
+            ],
+            **optional,
+        )
+
+    def to_obs_table(self):
+        dct = {key.upper(): val for key, val in self.model_dump().items()}
+        tab = Table([dct])
+        clean_missing = []
+        tab.rename_columns(self.REPLACE_KEYS[0], self.REPLACE_KEYS[1])
+        for col in tab.columns:
+            if all(tab[col] == None):  # noqa
+                clean_missing.append(col)
+        tab.remove_columns(clean_missing)
+        return tab
+
+
+def make_obs_table(results):
+    res_table = results.to_table()
+    obs_rows = []
+    for row in res_table:
+        obs_rows.append(ObsTableRow.from_row(row).to_obs_table())
+
+    return vstack(obs_rows)
+
+
+def make_hdu_table(fetched_files):
+    HDU_TYPES = {
+        "EFF_AREA": "aeff",
+        "EDISP": "edisp",
+        "PSF": "psf",
+        "RPSF": "psf",
+        "BKG": "bkg",
+        "RAD_MAX": "rad_max",
+    }
+
+    hdu_tab_rows = []
+
+    for _, fil, obs_id in fetched_files:
+        with fits.open(fil) as hdus:
+            for hdu in hdus:
+                if hdu.name == "PRIMARY":
+                    continue
+                row = {
+                    "FILE_DIR": str(fil.parent.absolute()),
+                    "FILE_NAME": str(fil.name),
+                }
+
+                row["HDU_NAME"] = hdu.name
+                row["OBS_ID"] = int(obs_id)
+                if hdu.name == "EVENTS":
+                    row["HDU_TYPE"] = "events"
+                    row["HDU_CLASS"] = "events"
+                elif hdu.name == "GTI":
+                    row["HDU_TYPE"] = "gti"
+                    row["HDU_CLASS"] = "git"
+                else:
+                    row["HDU_TYPE"] = HDU_TYPES[hdu.header["HDUCLAS2"].strip()]
+                    row["HDU_CLASS"] = hdu.header["HDUCLAS4"].strip().lower()
+                hdu_tab_rows.append(row)
+
+    return Table(hdu_tab_rows)
+
+
+def make_fetch_list(result):
+    fetch_files = []
+    for row in result:
+        fetch_info = {}
+        for dl in row.getdatalink():
+            if dl["semantics"] == "#this":
+                fetch_info[dl["content_qualifier"]] = dl["access_url"]
+            if dl["semantics"] == "#calibration":
+                if dl["content_qualifier"] == "bkgrate":
+                    key = "bkg"
+                else:
+                    key = dl["content_qualifier"]
+                fetch_info[key] = dl["access_url"]
+
+        if len(set(fetch_info.values())) == 1:
+            dwn_urls = [fetch_info["event-list"]]
+            names = ["event-bundle"]
+        else:
+            dwn_urls = list(fetch_info.values())
+            names = list(fetch_info.keys())
+
+        for url, name in zip(dwn_urls, names, strict=True):
+            suffix = "".join(Path(urlsplit(url).path).suffixes)
+            save_name = f"TapResult-{row['obs_id']}-{name}{suffix}"
+            fetch_files.append((url, save_name, row["obs_id"]))
+    return fetch_files
+
+
+def fetch_files(fetch_list, save_dir):
+    fetched_list = []
+    for url, save_name, obs_id in fetch_list:
+        out_path = save_dir / save_name
+        progress_download(url, out_path)
+        fetched_list.append((url, out_path, obs_id))
+    return fetched_list
+
+
+def make_data_store_from_query_result(results, save_dir):
+    fetch_list = make_fetch_list(results)
+    fetched_files = fetch_files(fetch_list, save_dir)
+
+    hdu_tab = make_hdu_table(fetched_files)
+    obs_tab = make_obs_table(results)
+
+    obs_tab.write(save_dir / "obs-index.fits.gz", overwrite=True)
+    hdu_tab.write(save_dir / "hdu-index.fits.gz", overwrite=True)
+
+
 def empty_obscore_table():
     """Generate the Obscore default table.
 
-    In case the obscore standard changes, this function should be changed according
-    to https://www.ivoa.net/documents/ObsCore
+    In case the obscore standard changes, this function should be changed
+    according to https://www.ivoa.net/documents/ObsCore
 
     Returns
     -------
@@ -115,7 +328,8 @@ def empty_obscore_table():
     obscore_table[11] = Column(
         name="s_fov",
         unit="deg",
-        description="Estimated size of the covered region as the diameter of a containing circle",
+        description="Estimated size of the covered region as the diameter of"
+        " a containing circle",
         dtype="f8",
         meta={
             "Utype": "Char.SpatialAxis.Coverage.Bounds.Extent.diameter",
@@ -152,7 +366,8 @@ def empty_obscore_table():
     obscore_table[15] = Column(
         name="s_xel2",
         unit="",
-        description="Number of elements along the second coordinate of the spatial axis",
+        description="Number of elements along the second coordinate of "
+        "the spatial axis",
         dtype="i4",
         meta={"Utype": "Char.SpatialAxis.numBins2", "UCD": "meta.number"},
     )
@@ -257,7 +472,8 @@ def empty_obscore_table():
     obscore_table[27] = Column(
         name="facility_name",
         unit="",
-        description="The name of the facility, telescope space craft used for the observation",
+        description="The name of the facility, telescope space craft used for"
+        " the observation",
         dtype="U10",
         meta={
             "Utype": "Provenance.ObsConfig.Facility.name",
@@ -308,7 +524,8 @@ def to_obscore_table(
     access_url=None,
     obscore_template=None,
 ):
-    """Generate the complete obscore Table by adding one row per observation using _obscore_row().
+    """Generate the complete obscore Table by adding one row per observation
+    using _obscore_row().
 
     Parameters
     ----------
@@ -316,15 +533,18 @@ def to_obscore_table(
         Base directory of the data files.
     selected_obs : list or array of Observation ID(int)
         Default is None (default of ``None`` means ``no observation ``).
-        If not given, the full obscore (for all the obs_ids in DataStore) table is returned.
+        If not given, the full obscore (for all the obs_ids in DataStore) table
+        is returned.
     obs_publisher_did : str, optional
         ID for the Dataset given by the publisher (check IVOA recommendations).
-        Default is None. Giving the values of this argument is highly recommended.
-        If not the corresponding obscore field is filled by the Observation ID value.
+        Default is None. Giving the values of this argument is highly
+        recommended. If not the corresponding obscore field is filled by
+        the Observation ID value.
     access_url : str, optional
         URL used to to access (download) dataset(check IVOA recommendations).
-        Default is None. Giving the values of this argument is highly recommended.
-        If not the corresponding obscore field is filled by the Observation ID value.
+        Default is None. Giving the values of this argument is highly
+        recommended. If not the corresponding obscore field is filled by
+        the Observation ID value.
     obscore_template : dict, optional
         Template for fixed values in the obscore Table.
         Default is DEFAULT_OBSCORE_TEMPLATE
@@ -342,12 +562,14 @@ def to_obscore_table(
     """
     if obs_publisher_did is None:
         log.warning(
-            "Insufficient publisher information: 'obs_publisher_did'. Giving this value is highly recommended."
+            "Insufficient publisher information: 'obs_publisher_did'. Giving"
+            "this value is highly recommended."
         )
         obs_publisher_did = ""
     if access_url is None:
         log.warning(
-            "Insufficient publisher information: 'access_url'. Giving this value is highly recommended."
+            "Insufficient publisher information: 'access_url'. Giving "
+            "this value is highly recommended."
         )
         access_url = ""
 

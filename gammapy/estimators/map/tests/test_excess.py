@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
-import numpy as np
-from numpy.testing import assert_allclose
 import astropy.units as u
+import numpy as np
+import pytest
+from numpy.testing import assert_allclose
+
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.estimators.utils import (
@@ -16,6 +17,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.testing import requires_data
 
 
@@ -448,8 +450,7 @@ def test_joint_excess_map(simple_dataset):
     stacked_dataset.exposure *= 2
     stacked_dataset.background *= 2
     stacked_dataset.models = [model]
-    estimator = ExcessMapEstimator(0.1 * u.deg, sum_over_energy_groups=True)
-    assert estimator.sum_over_energy_groups
+    estimator = ExcessMapEstimator(0.1 * u.deg)
 
     result = estimator.run(stacked_dataset)
     assert_allclose(result["npred_excess"].data.sum(), 2 * 19733.602, rtol=1e-3)
@@ -476,3 +477,20 @@ def test_maps_alpha(simple_dataset_on_off):
     assert_allclose(result["acceptance_on"].data[:, 10, 10], 2, atol=1e-3)
     assert_allclose(result["acceptance_off"].data[:, 10, 10], 2, atol=1e-3)
     assert_allclose(result["alpha"].data[:, 10, 10], 1, atol=1e-3)
+
+
+def test_energy_edges_all(simple_dataset_on_off):
+    estimator = ExcessMapEstimator(energy_edges="all")
+    result = estimator.run(simple_dataset_on_off)
+
+    assert result["npred"].data.shape == (2, 20, 20)
+
+    with pytest.warns(GammapyDeprecationWarning):
+        estimator = ExcessMapEstimator(sum_over_energy_groups=False)
+        result = estimator.run(simple_dataset_on_off)
+        assert result["npred"].data.shape == (2, 20, 20)
+
+    estimator = ExcessMapEstimator()
+    result = estimator.run(simple_dataset_on_off)
+
+    assert result["npred"].data.shape == (1, 20, 20)

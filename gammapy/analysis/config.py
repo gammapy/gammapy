@@ -445,14 +445,19 @@ class AnalysisConfig(GammapyBaseConfig):
     Read from a yaml file::
 
     >>> from gammapy.analysis import AnalysisConfig
-    >>> config = AnalysisConfig.read("config.yaml") # doctest: +SKIP
-    >>> print(config.datasets.geom) # doctest: +SKIP
+    >>> config = AnalysisConfig.read("config.yaml")  # doctest: +SKIP
+    >>> print(config.datasets.geom)  # doctest: +SKIP
 
     Create from scratch
 
     >>> config = AnalysisConfig()
     >>> config.observations.datastore = "$GAMMAPY_DATA/hess-dl3-dr1"
-    >>> config.observations.obs_cone = {"frame": "icrs", "lon": "83.633 deg", "lat": "22.014 deg", "radius": "5 deg"}
+    >>> config.observations.obs_cone = {
+    ...     "frame": "icrs",
+    ...     "lon": "83.633 deg",
+    ...     "lat": "22.014 deg",
+    ...     "radius": "5 deg",
+    ... }
     >>> print(config.observations.obs_cone.lat.deg)
     22.014
     """

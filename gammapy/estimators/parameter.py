@@ -61,7 +61,9 @@ class ParameterEstimator(Estimator):
     >>> filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
     >>> dataset = SpectrumDatasetOnOff.read(filename)
     >>> datasets = Datasets([dataset])
-    >>> spectral_model = PowerLawSpectralModel(amplitude="3e-11 cm-2s-1TeV-1", index=2.7)
+    >>> spectral_model = PowerLawSpectralModel(
+    ...     amplitude="3e-11 cm-2s-1TeV-1", index=2.7
+    ... )
     >>>
     >>> model = SkyModel(spectral_model=spectral_model, name="Crab")
     >>> model.spectral_model.amplitude.scan_n_values = 10

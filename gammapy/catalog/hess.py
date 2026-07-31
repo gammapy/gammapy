@@ -648,12 +648,12 @@ class SourceCatalogHGPS(SourceCatalog):
 
     >>> import matplotlib.pyplot as plt
     >>> from gammapy.catalog import SourceCatalogHGPS
-    >>> filename = '$GAMMAPY_DATA/catalogs/hgps_catalog_v1.fits.gz'
+    >>> filename = "$GAMMAPY_DATA/catalogs/hgps_catalog_v1.fits.gz"
     >>> cat = SourceCatalogHGPS(filename)
 
     Access a source by name:
 
-    >>> source = cat['HESS J1843-033']
+    >>> source = cat["HESS J1843-033"]
     >>> print(source)
     <BLANKLINE>
     *** Basic info ***
@@ -768,9 +768,9 @@ class SourceCatalogHGPS(SourceCatalog):
     Access source spectral data and plot it:
 
     >>> ax = plt.subplot()
-    >>> source.spectral_model().plot(source.energy_range, ax=ax) # doctest: +SKIP
-    >>> source.spectral_model().plot_error(source.energy_range, ax=ax) # doctest: +SKIP
-    >>> source.flux_points.plot(ax=ax) # doctest: +SKIP
+    >>> source.spectral_model().plot(source.energy_range, ax=ax)  # doctest: +SKIP
+    >>> source.spectral_model().plot_error(source.energy_range, ax=ax)  # doctest: +SKIP
+    >>> source.flux_points.plot(ax=ax)  # doctest: +SKIP
 
     Gaussian component information can be accessed as well,
     either via the source, or via the catalog:

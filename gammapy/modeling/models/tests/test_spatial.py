@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from pathlib import Path
-import pytest
-import numpy as np
-from numpy.testing import assert_allclose
+
 import astropy.units as u
+import matplotlib as mpl
+import numpy as np
+import pytest
 from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS
+from numpy.testing import assert_allclose
 from regions import (
     CircleAnnulusSkyRegion,
     CircleSkyRegion,
@@ -14,7 +16,8 @@ from regions import (
     PointSkyRegion,
     RectangleSkyRegion,
 )
-from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom, WcsNDMap, HpxGeom
+
+from gammapy.maps import HpxGeom, Map, MapAxis, MapCoord, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (
     SPATIAL_MODEL_REGISTRY,
     ConstantSpatialModel,
@@ -380,6 +383,8 @@ def test_sky_diffuse_map(caplog):
     with pytest.raises(TypeError):
         model.plot_grid()
 
+    assert isinstance(model.plot(), mpl.axes.Axes)
+
     # change central position
     model.lon_0.value = 12.0
     model.lat_0.value = 6
@@ -429,7 +434,8 @@ def test_sky_diffuse_map_3d():
         model.plot_grid()
 
     with mpl_plot_check():
-        model.plot_interactive()
+        out = model.plot_interactive()
+        assert out is None
 
 
 @requires_dependency("healpy")

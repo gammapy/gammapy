@@ -32,7 +32,6 @@ dataset_empty = SpectrumDataset.create(geom=geom)
 datasets = []
 
 for obs in observations:
-
     dataset = dataset_maker.run(dataset_empty.copy(name=f"obs-{obs.obs_id}"), obs)
     dataset_on_off = bkg_maker.run(observation=obs, dataset=dataset)
     datasets.append(dataset_on_off)

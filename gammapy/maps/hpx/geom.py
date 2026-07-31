@@ -855,11 +855,13 @@ class HpxGeom(Geom):
         Examples
         --------
         >>> from gammapy.maps import HpxGeom, MapAxis
-        >>> axis = MapAxis.from_bounds(0,1,2)
-        >>> geom = HpxGeom.create(nside=16) # doctest: +SKIP
-        >>> geom = HpxGeom.create(binsz=0.1, width=10.0) # doctest: +SKIP
-        >>> geom = HpxGeom.create(nside=64, width=10.0, axes=[axis]) # doctest: +SKIP
-        >>> geom = HpxGeom.create(nside=[32,64], width=10.0, axes=[axis]) # doctest: +SKIP
+        >>> axis = MapAxis.from_bounds(0, 1, 2)
+        >>> geom = HpxGeom.create(nside=16)  # doctest: +SKIP
+        >>> geom = HpxGeom.create(binsz=0.1, width=10.0)  # doctest: +SKIP
+        >>> geom = HpxGeom.create(nside=64, width=10.0, axes=[axis])  # doctest: +SKIP
+        >>> geom = HpxGeom.create(
+        ...     nside=[32, 64], width=10.0, axes=[axis]
+        ... )  # doctest: +SKIP
         """
         if nside is None and binsz is None:
             raise ValueError("Either nside or binsz must be defined.")
@@ -1183,6 +1185,7 @@ class HpxGeom(Geom):
             List of WCS tile geometries.
         """
         import healpy as hp
+
         from gammapy.maps import WcsGeom
 
         margin = u.Quantity(margin)

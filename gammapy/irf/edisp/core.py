@@ -39,23 +39,29 @@ class EnergyDispersion2D(IRF):
 
     >>> from gammapy.maps import MapAxis, MapAxes
     >>> from gammapy.irf import EnergyDispersion2D
-    >>> filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz'
+    >>> filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
     >>> edisp2d = EnergyDispersion2D.read(filename, hdu="EDISP")
 
     Create energy dispersion matrix (`~gammapy.irf.EnergyDispersion2D`)
     for a given field of view offset and energy binning:
 
-    >>> energy_axis = MapAxis.from_bounds(0.1, 20, nbin=60, unit="TeV", interp="log", name='energy')
+    >>> energy_axis = MapAxis.from_bounds(
+    ...     0.1, 20, nbin=60, unit="TeV", interp="log", name="energy"
+    ... )
     >>> edisp = edisp2d.to_edisp_kernel(
-    ... offset='1.2 deg',
-    ... energy_axis=energy_axis,
-    ... energy_axis_true=energy_axis.copy(name='energy_true'),
+    ...     offset="1.2 deg",
+    ...     energy_axis=energy_axis,
+    ...     energy_axis_true=energy_axis.copy(name="energy_true"),
     ... )
 
     Create energy dispersion IRF from axes:
 
-    >>> energy_axis_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10, name="energy_true")
-    >>> offset_axis = MapAxis.from_bounds(0, 1, nbin=3, unit="deg", name="offset", node_type="edges")
+    >>> energy_axis_true = MapAxis.from_energy_bounds(
+    ...     "1 TeV", "10 TeV", nbin=10, name="energy_true"
+    ... )
+    >>> offset_axis = MapAxis.from_bounds(
+    ...     0, 1, nbin=3, unit="deg", name="offset", node_type="edges"
+    ... )
     >>> migra_axis = MapAxis.from_bounds(0, 3, nbin=3, name="migra", node_type="edges")
     >>> axes = MapAxes([energy_axis_true, migra_axis, offset_axis])
     >>> edisp2d_axes = EnergyDispersion2D(axes=axes)

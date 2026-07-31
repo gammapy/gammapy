@@ -1,0 +1,1 @@
+Add `~gammapy.visualization.plot_pulse_profile_3PC` function to plot pulse profiles from the Fermi-LAT 3PC catalog.

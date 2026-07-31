@@ -66,19 +66,21 @@ class FluxProfileEstimator(FluxPointsEstimator):
     >>> dataset.gti = GTI.create("0s", "1e7s", "2010-01-01")
 
     >>> # creation of the boxes and axis
-    >>> start_pos = SkyCoord("-1d", "0d", frame='galactic')
-    >>> end_pos = SkyCoord("1d", "0d", frame='galactic')
+    >>> start_pos = SkyCoord("-1d", "0d", frame="galactic")
+    >>> end_pos = SkyCoord("1d", "0d", frame="galactic")
 
     >>> regions = make_orthogonal_rectangle_sky_regions(
-    ...            start_pos=start_pos,
-    ...            end_pos=end_pos,
-    ...            wcs=dataset.counts.geom.wcs,
-    ...            height=2 * u.deg,
-    ...            nbin=21
-    ...        )
+    ...     start_pos=start_pos,
+    ...     end_pos=end_pos,
+    ...     wcs=dataset.counts.geom.wcs,
+    ...     height=2 * u.deg,
+    ...     nbin=21,
+    ... )
 
     >>> # set up profile estimator and run
-    >>> prof_maker = FluxProfileEstimator(regions=regions, energy_edges=[10, 2000] * u.GeV)
+    >>> prof_maker = FluxProfileEstimator(
+    ...     regions=regions, energy_edges=[10, 2000] * u.GeV
+    ... )
     >>> fermi_prof = prof_maker.run(dataset)
     >>> print(fermi_prof)
     FluxPoints

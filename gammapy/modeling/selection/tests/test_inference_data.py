@@ -60,9 +60,9 @@ def test_inference_data_from_sampler_basic(ultranest_result, datasets):
         predictives=False,
     )
 
-    assert "posterior" in inference_data.groups()
-    assert "sample_stats" not in inference_data.groups()
-    assert "prior" not in inference_data.groups()
+    assert "/posterior" in inference_data.groups
+    assert "/sample_stats" not in inference_data.groups
+    assert "/prior" not in inference_data.groups
 
     n_samples = len(ultranest_result.sampler_results["samples"][:, 0])
     assert inference_data.posterior.sizes["draw"] == n_samples
@@ -88,14 +88,15 @@ def test_inference_data_from_sampler_with_options(ultranest_result, datasets):
         predictives=True,
     )
 
-    assert "sample_stats" in inference_data.groups()
-    assert "posterior" in inference_data.groups()
-    assert "prior" in inference_data.groups()
-    assert "posterior_predictive" in inference_data.groups()
-    assert "prior_predictive" in inference_data.groups()
-    assert "log_likelihood" in inference_data.groups()
-    assert "log_prior" in inference_data.groups()
-    assert "observed_data" in inference_data.groups()
+    groups = list(inference_data.children)
+    assert "sample_stats" in groups
+    assert "posterior" in groups
+    assert "prior" in groups
+    assert "posterior_predictive" in groups
+    assert "prior_predictive" in groups
+    assert "log_likelihood" in groups
+    assert "log_prior" in groups
+    assert "observed_data" in groups
 
     assert inference_data.posterior.sizes["draw"] == 10
     assert inference_data.log_likelihood.sizes["draw"] == 10
@@ -105,10 +106,11 @@ def test_inference_data_from_sampler_with_options(ultranest_result, datasets):
     assert inference_data.prior_predictive.sizes["draw"] == 5
 
     n_pixel = datasets[0].mask.data.sum()
-    assert inference_data.observed_data.sizes["pixel"] == n_pixel
-    assert inference_data.log_likelihood.sizes["pixel"] == n_pixel
-    assert inference_data.posterior_predictive.sizes["pixel"] == n_pixel
-    assert inference_data.prior_predictive.sizes["pixel"] == n_pixel
+    # xxx_dim_0 is auto-generated should be pixel in principle but requires more changes
+    assert inference_data.observed_data.sizes["counts_dim_0"] == n_pixel
+    assert inference_data.log_likelihood.sizes["log_likelihood_dim_0"] == n_pixel
+    assert inference_data.posterior_predictive.sizes["counts_dim_0"] == n_pixel
+    assert inference_data.prior_predictive.sizes["counts_dim_0"] == n_pixel
 
 
 @requires_dependency("ultranest")
@@ -130,7 +132,7 @@ def test_resample_posterior(ultranest_result, datasets):
 
 @requires_dependency("arviz")
 def test_inference_data_from_ultranest():
-    import arviz
+    import xarray
 
     result_dict = {
         "paramnames": ["x", "y"],
@@ -145,8 +147,8 @@ def test_inference_data_from_ultranest():
 
     # unweighted
     data = inference_data_from_ultranest(result_dict, weighted=False)
-    assert isinstance(data, arviz.InferenceData)
-    assert "posterior" in data.groups()
+    assert isinstance(data, xarray.DataTree)
+    assert "/posterior" in data.groups
 
     posterior = data.posterior
     assert set(posterior.data_vars) == {"x", "y"}
@@ -155,9 +157,9 @@ def test_inference_data_from_ultranest():
 
     # weighted
     data = inference_data_from_ultranest(result_dict, weighted=True)
-    assert isinstance(data, arviz.InferenceData)
-    assert "posterior" in data.groups()
-    assert "sample_stats" in data.groups()
+    assert isinstance(data, xarray.DataTree)
+    assert "/posterior" in data.groups
+    assert "/sample_stats" in data.groups
     assert "weights" in data.sample_stats
     assert "log_likelihood" in data.sample_stats
 

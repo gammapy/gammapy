@@ -357,13 +357,15 @@ class WcsGeom(Geom, CacheInstanceMixin):
         --------
         >>> from gammapy.maps import WcsGeom
         >>> from gammapy.maps import MapAxis
-        >>> axis = MapAxis.from_bounds(0,1,2)
-        >>> geom = WcsGeom.create(npix=(100,100), binsz=0.1)
-        >>> geom = WcsGeom.create(npix=(100,100), binsz="0.1deg")
-        >>> geom = WcsGeom.create(npix=[100,200], binsz=[0.1,0.05], axes=[axis])
-        >>> geom = WcsGeom.create(npix=[100,200], binsz=["0.1deg","0.05deg"], axes=[axis])
-        >>> geom = WcsGeom.create(width=[5.0,8.0], binsz=[0.1,0.05], axes=[axis])
-        >>> geom = WcsGeom.create(npix=([100,200],[100,200]), binsz=0.1, axes=[axis])
+        >>> axis = MapAxis.from_bounds(0, 1, 2)
+        >>> geom = WcsGeom.create(npix=(100, 100), binsz=0.1)
+        >>> geom = WcsGeom.create(npix=(100, 100), binsz="0.1deg")
+        >>> geom = WcsGeom.create(npix=[100, 200], binsz=[0.1, 0.05], axes=[axis])
+        >>> geom = WcsGeom.create(
+        ...     npix=[100, 200], binsz=["0.1deg", "0.05deg"], axes=[axis]
+        ... )
+        >>> geom = WcsGeom.create(width=[5.0, 8.0], binsz=[0.1, 0.05], axes=[axis])
+        >>> geom = WcsGeom.create(npix=([100, 200], [100, 200]), binsz=0.1, axes=[axis])
         """
         if skydir is None:
             crval = (0.0, 0.0)
@@ -981,12 +983,12 @@ class WcsGeom(Geom, CacheInstanceMixin):
             from astropy.coordinates import SkyCoord, Angle
             from gammapy.maps import WcsNDMap, WcsGeom
 
-            pos = SkyCoord(0, 0, unit='deg')
+            pos = SkyCoord(0, 0, unit="deg")
             geom = WcsGeom.create(skydir=pos, npix=100, binsz=0.1)
 
             region = CircleSkyRegion(
-                SkyCoord(3, 2, unit='deg'),
-                Angle(1, 'deg'),
+                SkyCoord(3, 2, unit="deg"),
+                Angle(1, "deg"),
             )
 
             # the Gammapy convention for exclusion regions is to take the inverse
@@ -997,6 +999,7 @@ class WcsGeom(Geom, CacheInstanceMixin):
         """
         from gammapy.maps import Map, RegionGeom
         from gammapy.modeling.models import PointSpatialModel
+
         from ..region.geom import _parse_regions
 
         if not self.is_regular:

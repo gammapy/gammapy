@@ -22,6 +22,34 @@ The general procedure can be broken down into three major steps:
 Some steps differ between the bug fix and feature releases, and the two are detailed accordingly.
 
 
+Pre-release step
+-----------------
+
+Before starting the release procedure, run the ``license_checker`` script to verify that the
+license statement appears at the top of every Python file in the ``gammapy/`` directory.
+
+::
+
+  python dev/license_checker.py gammapy
+
+If any files are missing the license statement, they can be fixed automatically using the
+``-f`` (or ``--fix``) option.
+
+::
+
+  python dev/license_checker.py gammapy --fix
+
+Commit and push the changes:
+
+::
+
+  git checkout -b license_checker
+  git add <FILES>
+  git commit -S -m"Run license_checker"
+  git push origin license_checker
+
+Then open a pull request to merge these changes into ``main``.
+
 Bug fix releases
 ----------------
 
@@ -37,12 +65,16 @@ automatically counted in the next feature release.
 #. To create the changelog, towncrier is utilised on the relevant branch (eg: for a
    bugfix on the 2.0 release). The following workflow should be followed::
 
-    git checkout v2.0.x
-    towncrier build --version=<version> --keep
-    mv ``CHANGELOG.rst`` ``v2.0.x.rst``
+     git checkout v2.0.x
+     towncrier build --version=<version> --keep
+     mv ``CHANGELOG.rst`` ``v2.0.x.rst``
 
    * As we will create the changelog again for the major release, we should utilise the ``keep`` keyword,
      as to not delete the fragments.
+   * To generate the list of contributors for the release run (on same branch)
+      ``python dev/contributors.py date_of_last_release date_today``
+   * Manually verify the generated list. You may use ``--debug`` to see the email id and the full PR list.
+   * Make sure to adjust the changelog for the correct values printed by the above command.
    * The file will still be there if you just checkout to main
 
    ::
@@ -52,7 +84,6 @@ automatically counted in the next feature release.
      git add docs/release-notes/2.0.x.rst
      git commit -m -s 'Add changelog'
      git push origin add-file-to-main
-
 
 #. Open two separate PRs for each of these changes and mark each with the ``backport-v<version>.x`` label.
    These PRs will be merged and backport to the ``v<version>.x`` branch.
@@ -89,10 +120,10 @@ Feature releases
     towncrier build --version <version>
 
    * The changelog will be saved as ``docs/release-notes/CHANGELOG.rst``.
-   * To generate the list of contributors for the release run
-     ``python dev/github_summary.py contributors_by_milestone --milestone '<version>.x'``.
-     Note that you will need to use your github token here.
-   * Make sure to adjust the lines at the start of the changelog for the correct values printed by the above command.
+   * To generate the list of contributors for the release run (on ``main`` branch)
+     ``python dev/contributors.py date_of_last_release date_today``
+   * Manually verify the generated list. You may use ``--debug`` to see the email id and the full PR list.
+   * Make sure to adjust the changelog for the correct values printed by the above command.
    * Rename the filename from ``CHANGELOG.rst`` to ``vx.y.rst`` and add
      corresponding entry in ``docs/release-notes/index.rst``. Add an ``rst`` file for the next release.
 

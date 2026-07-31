@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utility script to work with the CITATION.cff file"""
+
 import logging
 import subprocess
 from pathlib import Path
@@ -147,7 +148,9 @@ def check_author_lists(since_last_lts):
 
     print(message + "\n  ".join(authors_annotated) + "\n")
 
-    print("(CC) = Coordination Committee, (AA) = Additional Authors, (OO) = Opted out\n")
+    print(
+        "(CC) = Coordination Committee, (AA) = Additional Authors, (OO) = Opted out\n"
+    )
 
 
 if __name__ == "__main__":

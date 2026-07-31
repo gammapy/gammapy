@@ -147,8 +147,10 @@ class Background3D(BackgroundIRF):
     Here's an example you can use to learn about this class:
 
     >>> from gammapy.irf import Background3D
-    >>> filename = '$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
-    >>> bkg_3d = Background3D.read(filename, hdu='BACKGROUND')
+    >>> filename = (
+    ...     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    ... )
+    >>> bkg_3d = Background3D.read(filename, hdu="BACKGROUND")
     >>> print(bkg_3d)
     Background3D
     ------------
