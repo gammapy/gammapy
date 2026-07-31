@@ -327,8 +327,6 @@ To check for broken external links you can use ``tox``:
 
 Or using ``pixi``::
 
-.. code-block:: bash
-
    pixi run linkcheck
 
 Include png files as images

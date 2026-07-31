@@ -189,13 +189,32 @@ repository from your GitHub:
     cd [your-working-path]
     git clone git@github.com:[your-github-username]/gammapy.git
 
-The development environment is manage by `pixi <https://pixi.prefix.dev/latest/>`__ . Once **pixi** is installed, one can display the list of available pixi environments and tasks using:
+The development environment is managed by `pixi <https://pixi.prefix.dev/latest/>`__ . Once **pixi** is installed, one can display the list of available pixi environments and tasks using:
 
 .. code-block:: bash
 
     pixi info
 
 Note that the **pixi.lock** file is versioned but should not be committed if you update it locally. The **pixi.lock** file update must be done in a dedicated pull request since it impacts the ci operation.
+
+Another way of creating the development environment is to create the conda environment and activate it:
+
+.. code-block:: bash
+
+    cd gammapy
+    conda env create -f environment-dev.yml
+    conda activate gammapy-dev
+
+Instead of Conda, you may use `Mamba <https://mamba.readthedocs.io/en/latest/>`_ as your
+package manager, which offers higher installation speed and more reliable environment solutions.
+In that case, use ``mamba env create -f environment-dev.yml`` to create the environment.
+
+If you are already working with the development version environment and you want
+to update it with the contents of ``environment-dev.yml`` run the following command:
+
+.. code-block:: bash
+
+    conda env update --file environment-dev.yml --prune
 
 Add the gammapy repository as your upstream remote:
 
@@ -349,15 +368,18 @@ Finally to make a completely clean folder for build the documentation you can ru
     make clean-repo
 
 
-**Using pixi**
+Using pixi
+----------
 
-Once `pixi <https://pixi.prefix.dev/latest/>`__ is installed, information on environments and tasks can be displayed using:
+Once `pixi <https://pixi.prefix.dev/latest/>`__ is installed, information on environments
+and tasks can be displayed using:
 
 .. code-block:: bash
 
     pixi info
 
 To run tests:
+
 .. code-block:: bash
 
     pixi run pytest <pytest_options>
