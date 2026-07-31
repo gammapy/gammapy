@@ -52,6 +52,10 @@ The Gammapy development environment is manage using `pixi <https://pixi.prefix.d
 
     pixi info
 
+The ``environment-dev.yml`` file contains the conda environment specification
+that allows one to quickly set up a conda environment for Gammapy development,
+see :ref:`dev_setup`.
+
 
 .. _dev_build:
 
