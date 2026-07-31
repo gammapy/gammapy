@@ -666,6 +666,8 @@ def test_timeaxis_table(time_intervals):
     assert table.colnames == ["START", "STOP"]
     assert len(table["START"]) == axis.nbin
     assert (table["START"] == axis.time_min).all()
+    assert table["START"].format == "isot"
+    assert table["STOP"].format == "isot"
 
 
 def test_pix_to_coord_time_axis(time_intervals):
