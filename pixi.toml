@@ -56,7 +56,7 @@ gammapy = { path = ".", editable = true, extras = ["test"] }
 # Tasks
 # -----
 [feature.test.tasks.pytest]
-cmd = "pytest --pyargs gammapy"
+cmd = "pytest --pyargs gammapy/"
 
 # Docs features
 # ------------

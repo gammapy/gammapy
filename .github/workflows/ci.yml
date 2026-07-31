@@ -112,12 +112,12 @@ jobs:
           pixi run gammapy download datasets
       - name: Run tests
         if: ${{ !matrix.gammapy_data }}
-        run: pixi run -e ${{ matrix.pixi_env }} pytest -- -n auto
+        run: pixi run -e ${{ matrix.pixi_env }} pytest --import-mode=importlib -n auto
       - name: Run tests with data
         if: ${{ matrix.gammapy_data }}
         env:
           GAMMAPY_DATA: ${{ github.workspace }}/gammapy-datasets/dev
-        run: pixi run -e ${{ matrix.pixi_env }} pytest -- -n auto
+        run: pixi run -e ${{ matrix.pixi_env }} pytest --import-mode=importlib -n auto
       - name: Upload coverage to codecov
         if: "contains(matrix.pixi_env, 'coverage')"
         uses: codecov/codecov-action@v7
