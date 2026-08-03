@@ -41,6 +41,22 @@ in the `gammapy-web <https://github.com/gammapy/gammapy-webpage>`__ repository. 
 versioned, and they are placed in the `gammapy-data <https://github.com/gammapy/gammapy-data>`__
 repository.
 
+.. _dev_env_setup:
+
+Developer environment
+---------------------
+
+The Gammapy development environment is manage using `pixi <https://pixi.prefix.dev/latest/>`__ . Once pixi is installed, one can display the list of available pixi environments and tasks using:
+
+.. code-block:: bash
+
+    pixi info
+
+The ``environment-dev.yml`` file contains the conda environment specification
+that allows one to quickly set up a conda environment for Gammapy development,
+see :ref:`dev_setup`.
+
+
 .. _dev_build:
 
 Build

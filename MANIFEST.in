@@ -1,10 +1,10 @@
 include README.rst
 include README
 include LONG_DESCRIPTION.rst
-include environment-dev.yml
 include LICENSE.rst
 include LICENSE
 include pyproject.toml
+include pixi.toml
 include codemeta.json
 
 recursive-include gammapy *.pyx *.c
