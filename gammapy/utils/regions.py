@@ -406,14 +406,13 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
 def make_grid_rectangle_sky_regions(
     center, width, height, wcs, nbinx=1, nbiny=1, angle=0 * u.deg
 ):
-    """Utility to return a list of 2D grid of rectangular projections
+    """Utility to return a list of 2D grid of rectangular projections.
 
     This function to create a 2D grid of
     `~regions.RectangleSkyRegion` tiles on the
     projection plane defined by the input WCS.
     This is similar to `make_orthogonal_rectangle_sky_regions`
-    but covers a 2-D field
-    instead of a 1-D profile
+    but covers a 2-D field instead of a 1-D profile.
 
     Parameters
     ----------
@@ -437,7 +436,7 @@ def make_grid_rectangle_sky_regions(
     Returns
     -------
     regions : `~regions.Regions`
-         list of `~regions.RectangleSkyRegion`
+         List of `~regions.RectangleSkyRegion`
 
     """
     pix_center = center.to_pixel(wcs)
