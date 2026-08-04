@@ -51,3 +51,28 @@ class HpxNDMapConverter(Converter):
             meta=node.get("meta", {}),
             unit=node.get("unit", ""),
         )
+
+
+class RegionNDMapConverter(Converter):
+    tags = ["asdf://gammapy.org/gammapy/tags/maps/regionndmap-1.0.0"]
+    types = ["gammapy.maps.region.ndmap.RegionNDMap"]
+
+    def to_yaml_tree(self, obj, tag, ctx):
+        node = {
+            "geom": obj.geom,
+            "data": obj.data,
+            "unit": str(obj.unit),
+        }
+        if obj.meta:
+            node["meta"] = obj.meta
+        return node
+
+    def from_yaml_tree(self, node, tag, ctx):
+        from gammapy.maps import RegionNDMap
+
+        return RegionNDMap(
+            geom=node["geom"],
+            data=node["data"],
+            meta=node.get("meta", {}),
+            unit=node.get("unit", ""),
+        )
