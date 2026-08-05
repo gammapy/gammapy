@@ -1310,9 +1310,13 @@ def test_priors():
     )
     source_model = SkyModel(spectral_model=spectral_model, name="source")
 
+    stat_sum_no_model = datasets.stat_sum()
+    stat_sum_no_model_dataset = datasets[0].stat_sum()
+
     datasets.models = [source_model]
 
-    stat_sum = datasets.stat_sum()
+    stat_sum_no_prior = datasets.stat_sum(include_prior=False)
+    stat_sum_no_prior_dataset = datasets[0].stat_sum(include_prior=False)
 
     spectral_model.index.prior = GaussianPrior(
         mu=spectral_model.index.value + 0.1, sigma=0.1
@@ -1321,7 +1325,14 @@ def test_priors():
     prior_stat_sum = spectral_model.index.prior_stat_sum()
 
     stat_sum_with_priors = datasets.stat_sum()
+    stat_sum_with_priors_dataset = datasets[0].stat_sum()
 
-    assert_allclose(stat_sum, 87.928542, atol=1e-1)
+    assert_allclose(stat_sum_no_model == stat_sum_no_prior)
+    assert_allclose(stat_sum_no_model_dataset == stat_sum_no_prior_dataset)
+
+    assert_allclose(stat_sum_no_prior, 87.928542, atol=1e-1)
     # Here we check that the prior is applied only once
-    assert_allclose(stat_sum_with_priors, stat_sum + prior_stat_sum)
+    assert_allclose(stat_sum_with_priors, stat_sum_no_prior + prior_stat_sum)
+    assert_allclose(
+        stat_sum_with_priors_dataset, stat_sum_no_prior_dataset + prior_stat_sum
+    )
