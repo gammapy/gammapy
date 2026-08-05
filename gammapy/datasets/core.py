@@ -232,7 +232,7 @@ class Datasets(collections.abc.MutableSequence):
     @property
     def energy_axes_are_aligned(self):
         """Whether all contained datasets have aligned energy axis."""
-        axes = [d.counts.geom.axes["energy"] for d in self]
+        axes = [d.geoms["geom"].axes["energy"] for d in self]
         return np.all([axes[0].is_aligned(ax) for ax in axes])
 
     @property

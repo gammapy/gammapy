@@ -1,16 +1,23 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import logging
+from itertools import repeat
 from astropy.table import Column, Table
-from gammapy.maps import Map
+import astropy.units as u
+from gammapy.maps import Map, MapAxis
+from gammapy.datasets import Datasets
+from gammapy.datasets.actors import DatasetsActor
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
+import gammapy.utils.parallel as parallel
+
 from ..core import Estimator
 from ..utils import apply_threshold_sensitivity
+from .sed import FluxPointsEstimator
 
 log = logging.getLogger(__name__)
 
-__all__ = ["SensitivityEstimator"]
+__all__ = ["SensitivityEstimator", "JointSensitivityEstimator"]
 
 
 class SensitivityEstimator(Estimator):
@@ -205,3 +212,129 @@ class SensitivityEstimator(Estimator):
                 ),
             ]
         )
+
+
+class JointSensitivityEstimator(FluxPointsEstimator):
+    """A joint sensitivity estimator.
+
+    This class follows the logic of `~gammapy.estimators.FluxPointsEstimator`
+    to compute sensitivity using Asimov datasets.
+    This supports multiple telescopes, or multiple event types from the same telescope.
+    All relevant models must be set on the datasets.
+
+    Parameters
+    ----------
+    source : str or int
+        For which source in the model to compute the flux points.
+    n_sigma_sensitivity : float, optional
+        Detection significance threshold. Default is 2.
+    reoptimize : bool, optional
+        If True, the free parameters of the other models are fitted in each bin independently,
+        together with the norm of the source of interest
+        (but the other parameters of the source of interest are kept frozen).
+        If False, only the norm of the source of interest is fitted,
+        and all other parameters are frozen at their current values.
+        Default is False.
+    energy_edges : `~astropy.units.Quantity`
+        Energy bin edges./
+    n_jobs : int, optional
+        Number of processes used in parallel for the computation. The number of jobs is limited to the number of
+        physical CPUs. If None, defaults to `~gammapy.utils.parallel.N_JOBS_DEFAULT`.
+        Default is None.
+    parallel_backend : {"multiprocessing", "ray"}, optional
+        Which backend to use for multiprocessing. If None, defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
+
+
+    """
+
+    tag = "JointSensitivityEstimator"
+
+    def __init__(
+        self,
+        source=0,
+        n_sigma_sensitivity=2.0,
+        reoptimize=False,
+        energy_edges=[1, 10] * u.TeV,
+        n_jobs=None,
+        parallel_backend=None,
+    ):
+        super().__init__(
+            energy_edges=energy_edges,
+            source=source,
+            n_sigma_sensitivity=n_sigma_sensitivity,
+            reoptimize=reoptimize,
+            n_jobs=n_jobs,
+            selection_optional=["sensitivity"],
+            parallel_backend=parallel_backend,
+            allow_multiple_telescopes=True,
+        )
+
+    def _estimate_sensitivity_one_bin(self, datasets, energy_min, energy_max):
+        """Estimate sensitivity for a single energy bin."""
+        datasets_slice = datasets.slice_by_energy(energy_min, energy_max)
+        if len(datasets_slice) == 0:
+            return None
+
+        models = datasets.models.copy()
+        model = self.get_scale_model(models)
+
+        models[self.source].spectral_model = model
+        datasets_slice.models = models
+
+        with datasets_slice.parameters.restore_status():
+            if not self.reoptimize:
+                datasets_slice.parameters.freeze_all()
+                model.norm.frozen = False
+
+            norm_sensitivity = self.estimate_sensitivity(datasets_slice, model.norm)[
+                "norm_sensitivity"
+            ]
+
+        energy_axis = MapAxis.from_energy_edges(energy_edges=[energy_min, energy_max])
+        ref_fluxes = model.reference_fluxes(energy_axis=energy_axis)
+        e2dnde_sensitivity = norm_sensitivity * ref_fluxes["ref_e2dnde"]
+        dnde_sensitivity = norm_sensitivity * ref_fluxes["ref_dnde"]
+
+        return {
+            "e_ref": ref_fluxes["e_ref"],
+            "e_min": energy_min,
+            "e_max": energy_max,
+            "e2dnde": e2dnde_sensitivity.to("erg / (cm2 s)"),
+            "dnde": dnde_sensitivity.to("1 / (TeV cm2 s)"),
+            "norm_sensitivity": norm_sensitivity,
+        }
+
+    def run(self, datasets):
+        """Run sensitivity estimation over all energy bins.
+
+        Parameters
+        ----------
+        datasets : `~gammapy.datasets.Datasets` or list
+            Input datasets.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Sensitivity table with columns: ``e_ref``, ``e_min``, ``e_max``,
+            ``e2dnde``, ``dnde``, ``norm_sensitivity``.
+        """
+        if not isinstance(datasets, (Datasets, DatasetsActor)):
+            datasets = Datasets(datasets)
+
+        if not datasets.energy_axes_are_aligned:
+            raise ValueError("All datasets must have aligned energy axes.")
+
+        rows = parallel.run_multiprocessing(
+            self._estimate_sensitivity_one_bin,
+            zip(
+                repeat(datasets),
+                self.energy_edges[:-1],
+                self.energy_edges[1:],
+            ),
+            backend=self.parallel_backend,
+            pool_kwargs=dict(processes=self.n_jobs),
+            task_name="Energy bins",
+        )
+
+        rows = [r for r in rows if r is not None]
+        return Table(rows, meta={"n_sigma_sensitivity": self.n_sigma_sensitivity})
