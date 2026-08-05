@@ -46,9 +46,9 @@ def jfact_decay(geom):
 @pytest.fixture
 def dm_decay_model():
     return DarkMatterDecaySpectralModel(
-        mass=5000 * u.Unit("GeV"),
+        mDM=5000 * u.Unit("GeV"),
         channel="b",
-        jfactor=3.41e19 * u.Unit("GeV cm-2"),
+        factor=3.41e19 * u.Unit("GeV cm-2"),
     )
 
 
@@ -100,7 +100,7 @@ def test_dmfluxmap_annihilation(jfact_annihilation):
     )
 
     diff_flux = DarkMatterAnnihilationSpectralModel(
-        mass=massDM, channel=channel, jfactor=total_jfact
+        mDM=massDM, channel=channel, factor=total_jfact
     )
     int_flux = (
         diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
@@ -120,11 +120,11 @@ def test_dmfluxmap_decay(jfact_decay):
     massDM = 1 * u.TeV
     channel = "W"
 
-    diff_flux = DarkMatterDecaySpectralModel(mass=massDM, channel=channel)
+    diff_flux = DarkMatterDecaySpectralModel(mDM=massDM, channel=channel)
     int_flux = (
         jfact_decay
         * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
-        / diff_flux.jfactor
+        / diff_flux.factor
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
     desired = 1.6796e-3 / u.cm**2 / u.s
@@ -157,11 +157,11 @@ def test_custom_mu(dm_decay_model):
 def test_jfactor_unaffected(dm_decay_model):
     """The nominal factor attribute itself should remain untouched;
     only `scale` should carry the nuisance treatment."""
-    jfactor_before = dm_decay_model.jfactor
+    factor_before = dm_decay_model.factor
 
     add_factor_prior(dm_decay_model, sigma=0.2)
 
-    assert dm_decay_model.jfactor == jfactor_before
+    assert dm_decay_model.factor == factor_before
 
 
 @requires_data()

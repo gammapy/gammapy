@@ -37,10 +37,10 @@ from matplotlib.colors import LogNorm
 from regions import CircleSkyRegion, RectangleSkyRegion
 
 from gammapy.astro.darkmatter import (
+    ContinuumPrimaryFlux,
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
     JFactory,
-    PrimaryFlux,
     profiles,
 )
 from gammapy.maps import WcsGeom, WcsNDMap
@@ -204,7 +204,7 @@ total_jfact_decay = u.Quantity(
 # For more info see https://arxiv.org/pdf/1012.4515.pdf
 #
 
-fluxes = PrimaryFlux(mDM="1 TeV", channel="eL")
+fluxes = ContinuumPrimaryFlux(mDM="1 TeV", channel="eL")
 print(fluxes.allowed_channels)
 
 fig, axes = plt.subplots(2, 2, figsize=(10, 9))
@@ -218,7 +218,7 @@ for mDM, ax in zip(mDMs, axes):
     ax.set_ylabel("dN/dE")
 
     for channel in ["tau", "mu", "b", "Z"]:
-        fluxes = PrimaryFlux(mDM=mDM, channel=channel)
+        fluxes = ContinuumPrimaryFlux(mDM=mDM, channel=channel)
         fluxes.channel = channel
         fluxes.plot(
             energy_bounds=[mDM / 100, mDM],

@@ -2,6 +2,7 @@
 """Dark matter spatial and spectral models."""
 
 from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
+
 from .profiles import (
     BurkertProfile,
     DMProfile,
@@ -12,6 +13,7 @@ from .profiles import (
     ZhaoProfile,
 )
 from .spectra import (
+    ContinuumPrimaryFlux,
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
     PrimaryFlux,
@@ -20,10 +22,11 @@ from .utils import JFactory, add_factor_prior
 
 __all__ = [
     "add_factor_prior",
+    "ContinuumPrimaryFlux",
+    "PrimaryFlux",
     "DarkMatterAnnihilationSpectralModel",
     "DarkMatterDecaySpectralModel",
     "JFactory",
-    "PrimaryFlux",
     "BurkertProfile",
     "DMProfile",
     "EinastoProfile",
