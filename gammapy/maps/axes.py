@@ -3044,7 +3044,8 @@ class TimeMapAxis:
             Table with axis data.
         """
         t = self.to_gti().table
-
+        t["START"].format = "isot"
+        t["STOP"].format = "isot"
         return t
 
     def to_header(self, format="gadf", idx=0):
