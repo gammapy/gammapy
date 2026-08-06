@@ -83,7 +83,7 @@ class Dataset(abc.ABC):
         """Total statistic given the current model parameters and priors."""
         return self._fit_statistic.stat_sum_dataset(self)
 
-    def _stat_sum_likelihood(self):
+    def stat_sum_likelihood(self):
         """Total statistic given the current model parameters without the priors."""
         return self._fit_statistic.stat_sum_dataset(self)
 
@@ -274,11 +274,11 @@ class Datasets(collections.abc.MutableSequence):
 
         return stat_sum + prior_stat_sum
 
-    def _stat_sum_likelihood(self):
+    def stat_sum_likelihood(self):
         """Total statistic given the current model parameters without the priors."""
         stat_sum = 0
         for dataset in self:
-            stat_sum += dataset._stat_sum_likelihood()
+            stat_sum += dataset.stat_sum_likelihood()
         return stat_sum
 
     def select_time(self, time_min, time_max, atol="1e-6 s"):
