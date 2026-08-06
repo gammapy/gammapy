@@ -1327,8 +1327,8 @@ def test_priors():
     stat_sum_with_priors = datasets.stat_sum()
     stat_sum_with_priors_dataset = datasets[0].stat_sum()
 
-    assert_allclose(stat_sum_no_model, stat_sum_no_prior)
-    assert_allclose(stat_sum_no_model_dataset, stat_sum_no_prior_dataset)
+    assert_allclose(stat_sum_no_model == stat_sum_no_prior)
+    assert_allclose(stat_sum_no_model_dataset == stat_sum_no_prior_dataset)
 
     assert_allclose(stat_sum_no_prior, 87.928542, atol=1e-1)
     # Here we check that the prior is applied only once
