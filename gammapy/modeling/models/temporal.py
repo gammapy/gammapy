@@ -1054,6 +1054,9 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
             Filename with path.
         normalize : bool, optional
             Flag to normalize phase curve integral over phase to 1. Default is True.
+        **kwargs : dict
+            Keyword arguments passed to the class constructor (e.g. the `scale`
+            parameter can be passed here).
         """
         filename = str(make_path(path))
 
