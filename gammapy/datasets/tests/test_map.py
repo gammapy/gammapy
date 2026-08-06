@@ -274,10 +274,10 @@ def test_map_dataset_weight(sky_model, geom, geom_etrue):
 
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit
-    assert_allclose(dataset.stat_sum(), 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 12824.506311)
 
     dataset.mask_fit = dataset.mask_fit * 3.0
-    assert_allclose(dataset.stat_sum(), 3.0 * 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 3.0 * 12824.506311)
 
     dataset = get_map_dataset(geom, geom_etrue, weighted=True)
     assert dataset.stat_type == "cash_weighted"
@@ -287,10 +287,10 @@ def test_map_dataset_weight(sky_model, geom, geom_etrue):
 
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit
-    assert_allclose(dataset.stat_sum(), 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 12824.506311)
 
     dataset.mask_fit = dataset.mask_fit * 3.0
-    assert_allclose(dataset.stat_sum(), 3.0 * 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 3.0 * 12824.506311)
 
     dataset = get_map_dataset(geom, geom_etrue, weighted=True)
     assert dataset.stat_type == "cash_weighted"
@@ -300,7 +300,7 @@ def test_map_dataset_weight(sky_model, geom, geom_etrue):
 
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit * 3.0
-    assert_allclose(dataset.stat_sum(), 3.0 * 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 3.0 * 12824.506311)
 
 
 def test_map_dataset_name():
