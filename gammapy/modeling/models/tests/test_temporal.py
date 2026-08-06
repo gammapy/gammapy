@@ -587,7 +587,8 @@ def test_template_temporal_model_format():
 
 def test_phase_curve_model_scale_serialisation(tmp_path):
     phase = np.linspace(0.0, 1, 101)
-    norm = np.ones_like(phase)
+    norm = np.sin(phase * np.pi)
+
     table = Table(data={"PHASE": phase, "NORM": norm})
 
     t_ref = Time("2028-06-01", scale="tdb")
@@ -606,3 +607,4 @@ def test_phase_curve_model_scale_serialisation(tmp_path):
     new_model = TemplatePhaseCurveTemporalModel.from_dict(model_dict)
 
     assert new_model.scale == "tt"
+    assert_allclose(new_model(t_ref), 0.1298182, rtol=3e-8)
