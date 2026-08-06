@@ -496,10 +496,10 @@ class FluxCollectionEstimator:
     @staticmethod
     def _compute_ts(datasets, param):
         """Test statistic against no source as null hypothesis."""
-        cash = datasets._stat_sum_likelihood()
+        cash = datasets.stat_sum_likelihood()
         with Parameters([param]).restore_status():
             param.value = 0
-            cash0 = datasets._stat_sum_likelihood()
+            cash0 = datasets.stat_sum_likelihood()
         return cash0 - cash
 
     def _run_fit(self, fp_datasets, spectral_models):
@@ -938,6 +938,6 @@ class RegularizedFluxPointsEstimator(Estimator):
         return dict(
             flux_points=fp_dict,
             models=models,
-            stat_sum_likelihood=datasets._stat_sum_likelihood(),
-            stat_sum_penalty=datasets.stat_sum() - datasets._stat_sum_likelihood(),
+            stat_sum_likelihood=datasets.stat_sum_likelihood(),
+            stat_sum_penalty=datasets.stat_sum() - datasets.stat_sum_likelihood(),
         )
