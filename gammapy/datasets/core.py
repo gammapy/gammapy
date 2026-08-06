@@ -79,29 +79,9 @@ class Dataset(abc.ABC):
         elif self.mask_safe is not None:
             return self.mask_safe
 
-    def stat_sum(self, include_prior=True):
-        """Total statistic given the current model parameters and priors.
-
-        Parameters
-        ----------
-        include_prior : bool, optional
-            Include the prior contributions to the statistic. Default is True.
-        """
-
-        if hasattr(self, "models") and include_prior:
-            prior_stat_sum = 0.0
-            if self.models is not None:
-                prior_stat_sum = self.models.parameters.prior_stat_sum()
-                if self.models._penalties is not None:
-                    for penalty in self.models._penalties:
-                        prior_stat_sum += penalty.stat_sum()
-
-            stat_sum = self._fit_statistic.stat_sum_dataset(self)
-
-            return stat_sum + prior_stat_sum
-
-        else:
-            return self._fit_statistic.stat_sum_dataset(self)
+    def stat_sum(self):
+        """Total statistic given the current model parameters and priors."""
+        return self._fit_statistic.stat_sum_dataset(self)
 
     def _stat_sum_likelihood(self):
         """Total statistic given the current model parameters without the priors."""
@@ -279,16 +259,10 @@ class Datasets(collections.abc.MutableSequence):
             contributions.append(value)
         return np.array(contributions)
 
-    def stat_sum(self, include_prior=True):
-        """Compute joint statistic function value.
-
-        Parameters
-        ----------
-        include_prior : bool, optional
-            Include the prior contributions to the statistic. Default is True.
-        """
+    def stat_sum(self):
+        """Compute joint statistic function value."""
         prior_stat_sum = 0.0
-        if self.models is not None and include_prior:
+        if self.models is not None:
             prior_stat_sum = self.models.parameters.prior_stat_sum()
             if self.models._penalties is not None:
                 for penalty in self.models._penalties:
