@@ -583,3 +583,21 @@ def test_template_temporal_model_format():
     temporal_model = LightCurveTemplateTemporalModel.read(path)
     mod_dict = temporal_model.to_dict()
     assert mod_dict["temporal"]["format"] == "table"
+
+
+def test_lightcurve_temporal_integral_broadcasting():
+    time = np.arange(0, 10, 0.06) * u.hour
+    table = Table()
+    table["TIME"] = time
+    table["NORM"] = np.ones(len(time))
+    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
+
+    temporal_model = LightCurveTemplateTemporalModel.from_table(table)
+
+    time_start = Time("2010-01-01T00:00:00") + np.array([[1, 3], [5, 7]]) * u.hour
+    time_stop = Time("2010-01-01T00:00:00") + np.array([[2, 3.5], [6, 8]]) * u.hour
+
+    val = temporal_model.integral(time_start, time_stop)
+
+    assert val.shape == (2, 2)
+    assert np.all(np.isfinite(val))
