@@ -300,6 +300,7 @@ def test_is_all_same_geom_false(heterogenous_map_datasets):
     assert not Datasets(heterogenous_map_datasets[2:]).is_all_same_geom
 
 
+@requires_data()
 def test_dataset_stat_sum_deprecation(map_datasets):
     with pytest.warns(GammapyDeprecationWarning):
         map_datasets[0].stat_sum()
