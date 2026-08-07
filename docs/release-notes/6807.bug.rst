@@ -1,0 +1,1 @@
+Fix how the `TemplatePhaseCurveTemporalModel` in `~gammapy/modeling/models/temporal` handles the `scale` parameter when read from a dict.
