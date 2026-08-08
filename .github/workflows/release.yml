@@ -8,7 +8,7 @@ on:
 jobs:
   release-pypi:
     if: github.repository_owner == 'gammapy'
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v2
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v3
     with:
       targets: |
         - cp3*-manylinux_x86_64*
