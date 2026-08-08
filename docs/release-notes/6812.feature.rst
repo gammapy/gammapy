@@ -1,1 +1,1 @@
-Deprecate `gammapy.datasets.core.Dataset.stat_sum` and make `_stat_sum_likelihood` for `gammapy.datasets.core.Dataset` and `gammapy.datasets.core.Datasets` public.
+Deprecate `gammapy.datasets.Dataset.stat_sum` and make `gammapy.datasets.Dataset.stat_sum_likelihood` and `gammapy.datasets.Datasets.stat_sum_likelihood` public.
