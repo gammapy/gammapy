@@ -222,7 +222,7 @@ class Sampler:
         parameters = parameters.free_unique_parameters
 
         like = SamplerLikelihood(
-            function=datasets._stat_sum_likelihood, parameters=parameters
+            function=datasets.stat_sum_likelihood, parameters=parameters
         )
         if self.backend == "ultranest":
             result_dict = self.sampler_ultranest(parameters, like)
