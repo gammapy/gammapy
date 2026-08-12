@@ -9,6 +9,7 @@ from astropy import units as u
 from astropy.table import Table, vstack
 from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
+from gammapy.utils.deprecation import deprecated
 from gammapy.utils.scripts import make_name, make_path, read_yaml, to_yaml, write_yaml
 from gammapy.stats import FIT_STATISTICS_REGISTRY
 
@@ -79,11 +80,12 @@ class Dataset(abc.ABC):
         elif self.mask_safe is not None:
             return self.mask_safe
 
+    @deprecated("v2.2", alternative="stat_sum_likelihood")
     def stat_sum(self):
-        """Total statistic given the current model parameters and priors."""
+        """Total statistic given the current model parameters without the priors."""
         return self._fit_statistic.stat_sum_dataset(self)
 
-    def _stat_sum_likelihood(self):
+    def stat_sum_likelihood(self):
         """Total statistic given the current model parameters without the priors."""
         return self._fit_statistic.stat_sum_dataset(self)
 
@@ -270,15 +272,15 @@ class Datasets(collections.abc.MutableSequence):
 
         stat_sum = 0.0
         for dataset in self:
-            stat_sum += dataset.stat_sum()
+            stat_sum += dataset.stat_sum_likelihood()
 
         return stat_sum + prior_stat_sum
 
-    def _stat_sum_likelihood(self):
+    def stat_sum_likelihood(self):
         """Total statistic given the current model parameters without the priors."""
         stat_sum = 0
         for dataset in self:
-            stat_sum += dataset._stat_sum_likelihood()
+            stat_sum += dataset.stat_sum_likelihood()
         return stat_sum
 
     def select_time(self, time_min, time_max, atol="1e-6 s"):

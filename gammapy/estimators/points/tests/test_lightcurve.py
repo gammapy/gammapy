@@ -770,11 +770,11 @@ def test_dataset_stat_type():
         data=lightcurve, models=[lightcurve.reference_model]
     )
     lightcurve_dataset.stat_type = "profile"
-    assert_allclose(lightcurve_dataset.stat_sum(), 5.741539, rtol=1e-5)
+    assert_allclose(lightcurve_dataset.stat_sum_likelihood(), 5.741539, rtol=1e-5)
     lightcurve_dataset.stat_type = "distrib"
-    assert_allclose(lightcurve_dataset.stat_sum(), 5.824218, rtol=1e-5)
+    assert_allclose(lightcurve_dataset.stat_sum_likelihood(), 5.824218, rtol=1e-5)
     lightcurve_dataset.stat_type = "chi2"
-    assert_allclose(lightcurve_dataset.stat_sum(), 6.014128, rtol=1e-5)
+    assert_allclose(lightcurve_dataset.stat_sum_likelihood(), 6.014128, rtol=1e-5)
 
     # test if scan is not present
     selection = []
@@ -788,7 +788,7 @@ def test_dataset_stat_type():
     )
     with pytest.raises(AttributeError):
         lightcurve_dataset.stat_type = "profile"
-        lightcurve_dataset.stat_sum()
+        lightcurve_dataset.stat_sum_likelihood()
 
 
 @requires_data()

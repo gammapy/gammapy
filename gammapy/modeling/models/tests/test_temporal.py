@@ -601,3 +601,27 @@ def test_lightcurve_temporal_integral_broadcasting():
 
     assert val.shape == (2, 2)
     assert np.all(np.isfinite(val))
+
+def test_phase_curve_model_scale_serialisation(tmp_path):
+    phase = np.linspace(0.0, 1, 101)
+    norm = np.sin(phase * np.pi)
+
+    table = Table(data={"PHASE": phase, "NORM": norm})
+
+    t_ref = Time("2028-06-01", scale="tdb")
+    phase_model = TemplatePhaseCurveTemporalModel(
+        table=table,
+        filename=tmp_path / "test_scale.fits",
+        t_ref=t_ref.mjd * u.d,
+        scale="tt",
+    )
+
+    phase_model.write()
+
+    model_dict = phase_model.to_dict()
+    assert model_dict["temporal"]["scale"] == "tt"
+
+    new_model = TemplatePhaseCurveTemporalModel.from_dict(model_dict)
+
+    assert new_model.scale == "tt"
+    assert_allclose(new_model(t_ref), 0.1298182, rtol=3e-8)
