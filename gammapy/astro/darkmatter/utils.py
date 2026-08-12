@@ -78,6 +78,25 @@ class JFactory:
 
         return np.trapezoid(values, t)
 
+    def _integrate_los(self, impact, separation, ndecade):
+        """Integrate the physical forward line of sight."""
+        distance = self.distance
+        rmax = self.rmax
+
+        if distance < rmax:
+            if separation < np.pi / 2:
+                return 2 * self._integrate_los_branch(
+                    impact, impact, distance, ndecade
+                ) + self._integrate_los_branch(impact, distance, rmax, ndecade)
+
+            return self._integrate_los_branch(impact, distance, rmax, ndecade)
+
+        if separation < np.pi / 2 and impact < rmax:
+            return 2 * self._integrate_los_branch(impact, impact, rmax, ndecade)
+
+        integral_unit = u.Unit("GeV2 cm-5") if self.annihilation else u.Unit("GeV cm-2")
+        return 0 * integral_unit
+
     def compute_differential_jfactor(self, ndecade=1e4):
         r"""Compute differential J-Factor.
 
@@ -102,46 +121,47 @@ class JFactory:
 
         Notes
         -----
-        The line-of-sight (LoS) integral should include both the near and far
-        sides of the halo. To account for this, the integration is split into
-        two regions:
-
-        1. :math:`[r_\perp, r_{\max}]` - from the observer to the source,
-           counted twice to include contributions from both near and far sides.
-        2. :math:`[r_{\max}, 4 r_{\max}]` - from the source to infinity.
-           The upper limit is truncated at :math:`4 r_{\max}` because
-           contributions beyond this are negligible.
-
-        Hence, the effective integration domain is:
+        The line-of-sight geometry is defined by
 
         .. math::
-            2 \times [r_\perp, r_{\max}] \;+\; [r_{\max}, 4 r_{\max}].
+            r(l)^2 = D^2 + l^2 - 2 D l \cos\theta,
 
-        The impact parameter is given by:
-
-        .. math::
-            r_\perp = r_{\max} \sin \theta.
-
-        The LoS integral is converted into radial branches with:
+        where :math:`D` is the observer-to-halo-center distance and
+        :math:`l \geq 0` is the physical forward line-of-sight coordinate.
+        The impact parameter of the corresponding infinite line is
 
         .. math::
-            \mathrm dl = \frac{r}{\sqrt{r^2 - r_\perp^2}} \, \mathrm dr.
+            r_\perp = D \sin\theta.
 
-        The apparent singularity at :math:`r = r_\perp` is integrable. To avoid
-        evaluating it directly, each radial branch is integrated with the
-        substitution :math:`r = r_\perp \cosh t`.
+        If the observer is inside the integration radius
+        (:math:`D < r_{\max}`), directions with
+        :math:`\theta < \pi / 2` cross the inner radial interval twice,
+        while directions with :math:`\theta \geq \pi / 2` contain only
+        the outward branch.
+
+        If the observer is outside the integration radius
+        (:math:`D \geq r_{\max}`), the line of sight contributes only when
+        it points toward the halo and intersects the integration sphere,
+        i.e. when :math:`\theta < \pi / 2` and
+        :math:`r_\perp < r_{\max}`.
+
+        Each radial branch is evaluated using
+
+        .. math::
+            \mathrm dl =
+            \frac{r}{\sqrt{r^2-r_\perp^2}}\,\mathrm dr.
+
+        The apparent singularity at :math:`r=r_\perp` is integrable and is
+        removed numerically with the substitution
+        :math:`r=r_\perp\cosh t`.
         """
         separation = self.geom.separation(self.geom.center_skydir).rad
         impact = u.Quantity(
             value=np.sin(separation) * self.distance, unit=self.distance.unit
         )
-        rmax = self.rmax
         val = [
-            (
-                2 * self._integrate_los_branch(impact_i, impact_i, rmax, ndecade)
-                + self._integrate_los_branch(impact_i, rmax, 4 * rmax, ndecade)
-            )
-            for impact_i in impact.ravel()
+            self._integrate_los(impact_i, separation_i, ndecade)
+            for impact_i, separation_i in zip(impact.ravel(), separation.ravel())
         ]
         integral_unit = u.Unit("GeV2 cm-5") if self.annihilation else u.Unit("GeV cm-2")
         jfact = u.Quantity(val).to(integral_unit).reshape(impact.shape)
