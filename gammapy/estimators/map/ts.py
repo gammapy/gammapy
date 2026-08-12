@@ -3,6 +3,7 @@
 
 import warnings
 from itertools import repeat
+import logging
 
 import astropy.units as u
 import numpy as np
@@ -33,6 +34,8 @@ from ..utils import (
     estimate_exposure_reco_energy,
 )
 from .core import FluxMaps
+
+log = logging.getLogger(__name__)
 
 __all__ = ["TSMapEstimator"]
 
@@ -103,7 +106,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Default is 2.
     n_sigma_sensitivity : float, optional
         Number of sigma for flux sensitivity. Must be a positive value.
-        Default is 5.
+        Default is same as 'n_sigma_ul'.
     threshold : float, optional
         If the test statistic value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time. Default is None.
@@ -205,7 +208,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         downsampling_factor=None,
         n_sigma=1,
         n_sigma_ul=2,
-        n_sigma_sensitivity=5,
+        n_sigma_sensitivity=None,
         threshold=None,
         rtol=0.01,
         selection_optional=None,
@@ -236,6 +239,11 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         self.downsampling_factor = downsampling_factor
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        if n_sigma_sensitivity is None:
+            n_sigma_sensitivity = n_sigma_ul
+            log.info(
+                f"By default, 'n_sigma_sensitivity' is set to the same value as 'n_sigma_ul', i.e., {n_sigma_ul}."
+            )
         self.n_sigma_sensitivity = n_sigma_sensitivity
         self.threshold = threshold
         self.rtol = rtol
@@ -678,7 +686,11 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         maps["success"].data = maps["success"].data.astype(bool)
 
-        meta = {"n_sigma": self.n_sigma, "n_sigma_ul": self.n_sigma_ul}
+        meta = {
+            "n_sigma": self.n_sigma,
+            "n_sigma_ul": self.n_sigma_ul,
+            "n_sigma_sensitivy": self.n_sigma_sensitivity,
+        }
         return FluxMaps(
             data=maps,
             reference_model=self.kernel_model,
@@ -783,7 +795,7 @@ class BrentqFluxEstimator(Estimator):
         rtol,
         n_sigma,
         n_sigma_ul,
-        n_sigma_sensitivity=5,
+        n_sigma_sensitivity=None,
         selection_optional=None,
         max_niter=100,
         ts_threshold=None,
@@ -792,6 +804,12 @@ class BrentqFluxEstimator(Estimator):
         self.rtol = rtol
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        if n_sigma_sensitivity is None:
+            n_sigma_sensitivity = n_sigma_ul
+            log.info(
+                f"By default, 'n_sigma_sensitivity' is set to the same value as 'n_sigma_ul', i.e., {n_sigma_ul}."
+            )
+
         self.n_sigma_sensitivity = n_sigma_sensitivity
         self.selection_optional = selection_optional
         self.max_niter = max_niter
