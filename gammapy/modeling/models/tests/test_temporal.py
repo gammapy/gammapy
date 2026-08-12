@@ -590,7 +590,7 @@ def test_lightcurve_temporal_integral_broadcasting():
     table = Table()
     table["TIME"] = time
     table["NORM"] = np.ones(len(time))
-    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
+    table.meta = {"MJDREFI": 55197.0, "MJDREFF": 0, "TIMEUNIT": "hour"}
 
     temporal_model = LightCurveTemplateTemporalModel.from_table(table)
 
