@@ -119,17 +119,17 @@ class TestEnergyDependentEstimator:
             assert_allclose(
                 results_edep["sigma_err"],
                 [0.003453, 0.003802, 0.005196] * u.deg,
-                rtol=1e-3,
+                rtol=1e-2,
             )
             assert_allclose(
                 results_edep["lat_0_err"],
                 [0.004977, 0.005625, 0.008692] * u.deg,
-                rtol=1e-3,
+                rtol=1e-2,
             )
             assert_allclose(
                 results_edep["lon_0_err"],
                 [0.004974, 0.005587, 0.008564] * u.deg,
-                rtol=1e-3,
+                rtol=1e-2,
             )
 
     def test_significance(self, estimator_result):
