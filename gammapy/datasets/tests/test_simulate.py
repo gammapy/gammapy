@@ -49,7 +49,9 @@ def signal_model():
     table["NORM"] = norm / norm.max()
     t_ref = Time("2000-01-01")
     table.meta = dict(MJDREFI=t_ref.mjd, MJDREFF=0, TIMEUNIT="s", TIMESYS="utc")
-    temporal_model = LightCurveTemplateTemporalModel.from_table(table)
+    temporal_model = LightCurveTemplateTemporalModel.from_table(
+        table, interp_kwargs={"fill_value": None}
+    )
 
     return SkyModel(
         spatial_model=spatial_model,
@@ -132,7 +134,9 @@ def get_energy_dependent_temporal_model():
 
     m = RegionNDMap.from_geom(data=data.value, geom=geom, unit=data.unit)
     t_ref = Time(51544.00074287037, format="mjd", scale="tt")
-    return LightCurveTemplateTemporalModel(m, t_ref=t_ref)
+    return LightCurveTemplateTemporalModel(
+        m, t_ref=t_ref, interp_kwargs={"fill_value": None}
+    )
 
 
 @pytest.fixture()
@@ -184,7 +188,9 @@ def test_evaluate_timevar_source(energy_dependent_temporal_sky_model, dataset):
     assert_allclose(npred.data[:, 50, 0, 0], [0.729098, 1.442345, 1.869792], rtol=2e-4)
 
     filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
-    temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
+    temporal_model = LightCurveTemplateTemporalModel.read(
+        filename, format="map", interp_kwargs={"fill_value": None}
+    )
     temporal_model.t_ref.value = 51544.00074287037
     dataset.models[0].temporal_model = temporal_model
     evaluator = dataset.evaluators["test-source"]
