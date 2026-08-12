@@ -194,7 +194,7 @@ class EnergyDependentMorphologyEstimator(Estimator):
                 n_sigma=-np.inf,
                 fit=self.fit,
             )
-            test_results.append(test.run(Datasets([sliced])))
+            test_results.append(test.run(Datasets(sliced)))
 
         delta_ts_bkg_src = [_["ts"] for _ in test_results]
         df_src = [
