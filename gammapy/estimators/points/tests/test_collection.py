@@ -144,7 +144,7 @@ def test_asymmetric_errors_present(simple_dataset, energy_edges, mock_fit):
 
 
 def test_inconsistent_geometry_raises(simple_dataset, mock_fit):
-    # dataset with different geom
+    # dataset with 2d geom
     geom2 = WcsGeom.create(npix=(3, 3), binsz=0.1)
     ds2 = simple_dataset.copy(name="bad-ds")
     ds2.counts = Map.from_geom(geom2, data=np.ones(geom2.data_shape))
@@ -155,6 +155,15 @@ def test_inconsistent_geometry_raises(simple_dataset, mock_fit):
         models=[model],
         solver=mock_fit,
     )
+
+    with pytest.raises(KeyError):
+        est.run(Datasets([simple_dataset, ds2]))
+
+    # dataset with energy axis not aligned
+    axis = MapAxis.from_energy_bounds(0.1, 7, 1, unit="TeV")
+    geom2 = WcsGeom.create(npix=20, binsz=0.02, axes=[axis])
+    ds2 = simple_dataset.copy(name="bad-ds")
+    ds2.counts = Map.from_geom(geom2, data=np.ones(geom2.data_shape))
 
     with pytest.raises(ValueError):
         est.run(Datasets([simple_dataset, ds2]))
@@ -261,7 +270,7 @@ def test_run_multi_source(simple_dataset, energy_edges, mock_fit, mock_sampler_m
 
 
 def test_run_multi_dataset(simple_dataset, energy_edges, mock_fit):
-    ds2 = simple_dataset.copy(name="dataset-2")
+    ds2 = simple_dataset.downsample(factor=2, name="dataset-2")
     ds2.counts = ds2.counts.copy(data=12 * np.ones(ds2.counts.data.shape))
     ds2.background = ds2.background.copy(data=9 * np.ones(ds2.background.data.shape))
 

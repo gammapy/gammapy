@@ -1,0 +1,1 @@
+The constructor of `~gammapy.data.ObservationTable` now takes an argument ``table`` instead of ``data``.

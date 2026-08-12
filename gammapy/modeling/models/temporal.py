@@ -1095,6 +1095,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         f0=_f0_default,
         f1=_f1_default,
         f2=_f2_default,
+        **kwargs,
     ):
         """Read phasecurve model table from FITS file.
 
@@ -1107,6 +1108,9 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
             Filename with path.
         normalize : bool, optional
             Flag to normalize phase curve integral over phase to 1. Default is True.
+        **kwargs : dict
+            Keyword arguments passed to the class constructor (e.g. the `scale`
+            parameter can be passed here).
         """
         filename = str(make_path(path))
 
@@ -1119,6 +1123,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
             f0=f0,
             f1=f1,
             f2=f2,
+            **kwargs,
         )
 
     @staticmethod
@@ -1215,7 +1220,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
             ph_max
         ) - self._interpolator.antiderivative()(0)
         start_integral = self._interpolator.antiderivative()(1)
-        start_integral -= self._interpolator.antiderivative()(ph_min)
+        start_integral = start_integral - self._interpolator.antiderivative()(ph_min)
 
         # Divide by Jacobian (here we neglect variations of frequency during the integration period)
         total = (phase_integral + start_integral + end_integral) / frequency
@@ -1233,6 +1238,9 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         filename = data["temporal"]["filename"]
         normalize = data["temporal"].get("normalize", True)
         kwargs = {par.name: par for par in params}
+        if scale := data["temporal"].get("scale"):
+            kwargs["scale"] = scale
+
         return cls.read(filename, normalize, **kwargs)
 
     def to_dict(self, full_output=False):

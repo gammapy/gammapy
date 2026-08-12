@@ -271,7 +271,7 @@ def test_run_pwl(fpe_pwl, tmpdir):
     assert_allclose(actual, [1.216227, 1.035472, 1.316878], rtol=1e-2)
 
     actual = table["norm_sensitivity"].data
-    assert_allclose(actual, [0.15901235, 0.13117017, 0.55880332], rtol=1e-2)
+    assert_allclose(actual, [0.265929, 0.217676, 0.579713], rtol=1e-2)
 
     actual = table["sqrt_ts"].data
     assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-2)
@@ -320,11 +320,11 @@ def test_run_pwl(fpe_pwl, tmpdir):
     # test datasets stat
     fp_dataset = FluxPointsDataset(data=fp, models=fp.reference_model)
     fp_dataset.stat_type = "chi2"
-    assert_allclose(fp_dataset.stat_sum(), 3.82374, rtol=1e-4)
+    assert_allclose(fp_dataset.stat_sum_likelihood(), 3.82374, rtol=1e-4)
     fp_dataset.stat_type = "profile"
-    assert_allclose(fp_dataset.stat_sum(), 3.790053, rtol=1e-4)
+    assert_allclose(fp_dataset.stat_sum_likelihood(), 3.790053, rtol=1e-4)
     fp_dataset.stat_type = "distrib"
-    assert_allclose(fp_dataset.stat_sum(), 3.783325, rtol=1e-4)
+    assert_allclose(fp_dataset.stat_sum_likelihood(), 3.783325, rtol=1e-4)
 
 
 def test_run_ecpl(fpe_ecpl, tmpdir):

@@ -274,10 +274,10 @@ def test_map_dataset_weight(sky_model, geom, geom_etrue):
 
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit
-    assert_allclose(dataset.stat_sum(), 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 12824.506311)
 
     dataset.mask_fit = dataset.mask_fit * 3.0
-    assert_allclose(dataset.stat_sum(), 3.0 * 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 3.0 * 12824.506311)
 
     dataset = get_map_dataset(geom, geom_etrue, weighted=True)
     assert dataset.stat_type == "cash_weighted"
@@ -287,10 +287,10 @@ def test_map_dataset_weight(sky_model, geom, geom_etrue):
 
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit
-    assert_allclose(dataset.stat_sum(), 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 12824.506311)
 
     dataset.mask_fit = dataset.mask_fit * 3.0
-    assert_allclose(dataset.stat_sum(), 3.0 * 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 3.0 * 12824.506311)
 
     dataset = get_map_dataset(geom, geom_etrue, weighted=True)
     assert dataset.stat_type == "cash_weighted"
@@ -300,7 +300,7 @@ def test_map_dataset_weight(sky_model, geom, geom_etrue):
 
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit * 3.0
-    assert_allclose(dataset.stat_sum(), 3.0 * 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 3.0 * 12824.506311)
 
 
 def test_map_dataset_name():
@@ -880,7 +880,7 @@ def test_prior_stat_sum(sky_model, geom, geom_etrue):
     uniformprior = UniformPrior(min=0, max=1, weight=1)
 
     datasets.models.parameters["amplitude"].prior = uniformprior
-    assert_allclose(datasets._stat_sum_likelihood(), 12825.9370, rtol=1e-3)
+    assert_allclose(datasets.stat_sum_likelihood(), 12825.9370, rtol=1e-3)
     assert_allclose(datasets.stat_sum(), 12825.9370, rtol=1e-3)
 
     datasets.models.parameters["amplitude"].value = -1e-12
@@ -1495,11 +1495,15 @@ def test_map_dataset_on_off_to_asimov(images):
     dataset = get_map_dataset_onoff(images)
 
     npred_sum = dataset.npred().data.sum()
-
     asimov_dataset = dataset._to_asimov_dataset()
     counts_asimov = asimov_dataset.counts.data.sum()
+    assert_allclose(npred_sum, counts_asimov, rtol=1e-3)
 
-    assert_allclose(npred_sum, counts_asimov)
+    dataset.counts = None
+    asimov_dataset1 = dataset._to_asimov_dataset()
+    counts_asimov1 = asimov_dataset1.counts.data.sum()
+    assert_allclose(npred_sum, counts_asimov1, rtol=1e-3)
+    assert asimov_dataset1.counts_off == dataset.counts_off
 
 
 @requires_data()

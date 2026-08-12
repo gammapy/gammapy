@@ -1,0 +1,43 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://gammapy.org/gammapy/schemas/maps/hpxgeom-1.0.0"
+
+title: |
+  Represents HpxGeom.
+
+description: |
+  Support the serialization of HpxGeom which is a geometry class for HEALPix maps.
+
+
+type: object
+properties:
+  nside:
+    tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
+    description: |
+        HEALPix NSIDE parameter defining pixel resolution.
+  nest:
+    type: boolean
+    description: |
+      Indexing scheme, True for NESTED ordering, False for RING ordering.
+  frame:
+    type: string
+    enum: [icrs, galactic]
+    description: |
+      Coordinate system.
+  region:
+    type: string
+    description: |
+      Spatial geometry for partial-sky maps.
+  axes:
+    tag: "asdf://gammapy.org/gammapy/tags/maps/mapaxes-1.0.0"
+    description: |
+       Axes for non-spatial dimensions.
+  ipix:
+    tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
+    description: |
+      Explicit pixel indices for partial-sky maps.
+
+required: [nside]
+additionalProperties: false
+...
