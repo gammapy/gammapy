@@ -51,31 +51,40 @@ from gammapy.maps import WcsGeom, WcsNDMap
 #
 # The following dark matter profiles are currently implemented. Each model
 # can be scaled to a given density at a certain distance. These parameters
-# are controlled by `~gammapy.astro.darkmatter.profiles.DMProfile.LOCAL_DENSITY` and
-# `~gammapy.astro.darkmatter.profiles.DMProfile.DISTANCE_GC`
+# are controlled by `~gammapy.astro.darkmatter.profiles.DMProfile.LOCAL_DENSITY`
 #
 
-profiles.DMProfile.__subclasses__()
-radii = np.logspace(-3, 2, 100) * u.kpc
+profile_classes = [
+    profiles.NFWProfile,
+    profiles.EinastoProfile,
+    profiles.IsothermalProfile,
+    profiles.BurkertProfile,
+    profiles.MooreProfile,
+]
 
-for profile in profiles.DMProfile.__subclasses__():
-    p = profile()
-    p.scale_to_local_density()
-    plt.plot(
-        radii.to("kpc"),
-        p(radii).to("GeV cm-3"),
-        label=p.__class__.__name__,
-    )
+profile_labels = {
+    profiles.NFWProfile: "NFW",
+    profiles.EinastoProfile: "Einasto",
+    profiles.IsothermalProfile: "Isothermal",
+    profiles.BurkertProfile: "Burkert",
+    profiles.MooreProfile: "Moore",
+}
+
+for profile_class in profile_classes:
+    p = profile_class()
+    p.scale_to_local_density(10 * u.kpc)
+    radii = np.logspace(-3, 2, 100) * u.kpc
+    plt.plot(radii, p(radii), label=profile_labels[profile_class])
+
 
 plt.loglog()
 plt.xlabel("Radius [kpc]")
 plt.ylabel(r"Density [GeV cm$^{-3}$]")
-plt.axvline(8.5, linestyle="dashed", color="black", label="local density")
+plt.axvline(8.33, linestyle="dashed", color="black", label="local density")
 plt.legend()
 plt.show()
 
 print("LOCAL_DENSITY:", profiles.DMProfile.LOCAL_DENSITY)
-print("DISTANCE_GC:", profiles.DMProfile.DISTANCE_GC)
 
 
 ######################################################################
@@ -92,15 +101,10 @@ profile = profiles.NFWProfile(r_s=20 * u.kpc)
 ######################################################################
 # Adopt standard values used in H.E.S.S.
 
-profiles.DMProfile.DISTANCE_GC = 8.5 * u.kpc
-profiles.DMProfile.LOCAL_DENSITY = 0.39 * u.Unit("GeV / cm3")
-
-profile.scale_to_local_density()
-
 position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
 geom = WcsGeom.create(binsz=0.05, skydir=position, width=3.0, frame="galactic")
 
-jfactory = JFactory(geom=geom, profile=profile, distance=profiles.DMProfile.DISTANCE_GC)
+jfactory = JFactory(geom=geom, profile=profile, distance=10 * u.kpc, rmax=4 * u.kpc)
 jfact = jfactory.compute_jfactor()
 
 jfact_map = WcsNDMap(geom=geom, data=jfact.value, unit=jfact.unit)
@@ -113,8 +117,8 @@ plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
-# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg
-#  band around the plane
+# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band
+# around the plane
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")
@@ -151,8 +155,9 @@ total_jfact = u.Quantity(float(total_jfact.value), unit=total_jfact.unit)
 jfactory = JFactory(
     geom=geom,
     profile=profile,
-    distance=profiles.DMProfile.DISTANCE_GC,
+    distance=10 * u.kpc,
     annihilation=False,
+    rmax=4 * u.kpc,
 )
 jfact_decay = jfactory.compute_jfactor()
 
@@ -164,8 +169,8 @@ plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
-# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg
-# band around the plane
+# 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band
+# around the plane
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")
@@ -256,8 +261,8 @@ flux_map = WcsNDMap(
 plt.figure()
 ax = flux_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(
-    f"Flux [{flux_map.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')}, \
-        channel={fluxes.channel}"
+    f"Flux [{int_flux.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')}, \
+          channel={fluxes.channel}"
 )
 plt.show()
 
