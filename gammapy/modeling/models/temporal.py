@@ -1166,7 +1166,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
             ph_max
         ) - self._interpolator.antiderivative()(0)
         start_integral = self._interpolator.antiderivative()(1)
-        start_integral -= self._interpolator.antiderivative()(ph_min)
+        start_integral = start_integral - self._interpolator.antiderivative()(ph_min)
 
         # Divide by Jacobian (here we neglect variations of frequency during the integration period)
         total = (phase_integral + start_integral + end_integral) / frequency
