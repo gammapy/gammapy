@@ -559,7 +559,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
 
     @deprecated_renamed_argument(
-        ["method", "values_scale"], [None, None], ["2.1", "2.1"]
+        ["method", "values_scale"], [None, None], ["2.2", "2.2"]
     )
     def __init__(
         self,
@@ -569,7 +569,6 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         method=None,
         values_scale=None,
         interp_kwargs=None,
-        fill_value=None,
     ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
@@ -591,11 +590,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         interp_kwargs.setdefault("method", "linear")
 
         if self.is_energy_dependent:
-            interp_kwargs["values_scale"] = "log"
-            interp_kwargs["fill_value"] = -np.inf
+            interp_kwargs.setdefault("values_scale", "log")
+            interp_kwargs.setdefault("fill_value", -np.inf)
         else:
-            interp_kwargs["values_scale"] = "lin"
-            interp_kwargs["fill_value"] = 0
+            interp_kwargs.setdefault("values_scale", "lin")
+            interp_kwargs.setdefault("fill_value", 0)
 
         # TODO: remove these two if tests with deprecation
         if method:
@@ -634,7 +633,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         return self.map.geom.has_energy_axis
 
     @classmethod
-    def from_table(cls, table, filename=None):
+    def from_table(cls, table, filename=None, interp_kwargs=None):
         """Create a template model from an astropy table.
 
         Parameters
@@ -643,6 +642,12 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             Table containing the template model.
         filename : str, optional
             Name of input file. Default is None.
+        interp_kwargs : dict, optional
+            Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
+            For energy independent models the default arguments are
+                {'method': 'linear', 'values_scale':'lin', 'fill_value': 0}.
+            For energy-dependent models the default arguments are
+                {'method': 'linear', 'values_scale':'log', 'fill_value': -np.inf}.
 
         Returns
         -------
@@ -668,7 +673,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         axes = [time_axis]
         m = RegionNDMap.create(region=None, axes=axes, data=table["NORM"])
 
-        return cls(m, t_ref=t_ref, filename=filename)
+        return cls(m, t_ref=t_ref, filename=filename, interp_kwargs=interp_kwargs)
 
     @classmethod
     def read(
