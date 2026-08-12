@@ -1893,7 +1893,7 @@ class MapDataset(Dataset):
 
         stat_sum = np.nan
         if self.counts is not None and self.models is not None:
-            stat_sum = self.stat_sum()
+            stat_sum = self.stat_sum_likelihood()
 
         info["stat_sum"] = float(stat_sum)
 
@@ -2892,8 +2892,11 @@ class MapDatasetOnOff(MapDataset):
         )
 
     def _to_asimov_dataset(self):
-        """Create Asimov dataset from the current models."""
-        npred = self.npred()
+        """Create Asimov dataset from the current models.
+        Uses the nominal background (alpha * counts_off) instead of the
+        profiled background estimate."""
+
+        npred = self.npred_signal() + self.background
         data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
         npred.data = data.astype("float")
 
@@ -3204,7 +3207,7 @@ class MapDatasetOnOff(MapDataset):
         info["acceptance_off"] = float(acceptance_off)
         info["alpha"] = float(alpha)
 
-        info["stat_sum"] = self.stat_sum()
+        info["stat_sum"] = self.stat_sum_likelihood()
         return info
 
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):

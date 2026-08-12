@@ -5,17 +5,20 @@ import inspect
 import logging
 from collections.abc import Sequence
 from enum import Enum
+
+import astropy.units as u
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy
-import astropy.units as u
 from astropy.io import fits
 from astropy.table import Column, Table, hstack
 from astropy.time import Time
 from astropy.utils import lazyproperty
-import matplotlib.pyplot as plt
+
 from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
+
 from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
 
 __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
@@ -1218,7 +1221,7 @@ class MapAxis:
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa", "gadf-dl3", "gtpsf"}
+        format : {"ogip", "ogip-sherpa", "gtpsf"}
             Format specification. Default is "ogip".
 
         Returns
@@ -1251,23 +1254,6 @@ class MapAxis:
                 table["e_ref"] = self.center
                 table["e_min"] = self.edges_min
                 table["e_max"] = self.edges_max
-        elif format == "gadf-dl3":
-            from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
-
-            if self.name == "energy":
-                column_prefix = "ENERG"
-            else:
-                for column_prefix, spec in IRF_DL3_AXES_SPECIFICATION.items():
-                    if spec["name"] == self.name:
-                        break
-
-            if self.node_type == "edges":
-                edges_hi, edges_lo = edges[:-1], edges[1:]
-            else:
-                edges_hi, edges_lo = self.center, self.center
-
-            table[f"{column_prefix}_LO"] = edges_hi[np.newaxis]
-            table[f"{column_prefix}_HI"] = edges_lo[np.newaxis]
         elif format == "gtpsf":
             if self.name == "energy_true":
                 table["Energy"] = self.center.to("MeV")
@@ -1979,7 +1965,7 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}  # noqa E501
+        format : {"gadf", "fgst-ccube", "fgst-template", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}  # noqa E501
             Format to use. Default is "gadf".
 
         Returns
@@ -1987,14 +1973,7 @@ class MapAxes(Sequence):
         table : `~astropy.table.Table`
             Table with axis data.
         """
-        if format == "gadf-dl3":
-            tables = []
-
-            for ax in self:
-                tables.append(ax.to_table(format=format))
-
-            table = hstack(tables)
-        elif format in ["gadf", "fgst-ccube", "fgst-template"]:
+        if format in ["gadf", "fgst-ccube", "fgst-template"]:
             table = Table()
             table["CHANNEL"] = np.arange(np.prod(self.shape))
 

@@ -15,7 +15,7 @@ jobs:
           pip install eossr
 
       - name: Check out a copy of the repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Check whether the citation metadata from CITATION.cff is valid
         uses: citation-file-format/cffconvert-github-action@2.0.0
@@ -50,7 +50,7 @@ jobs:
           path: '.zenodo.json'
 
       - name: commit changes
-        uses: stefanzweifel/git-auto-commit-action@v7.1.0
+        uses: stefanzweifel/git-auto-commit-action@v7.2.0
         if: success()
         with:
           commit_author: GitHub Actions <actions@github.com>

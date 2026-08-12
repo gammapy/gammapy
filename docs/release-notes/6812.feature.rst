@@ -1,0 +1,1 @@
+Deprecate `gammapy.datasets.Dataset.stat_sum` and make `gammapy.datasets.Dataset.stat_sum_likelihood` and `gammapy.datasets.Datasets.stat_sum_likelihood` public.

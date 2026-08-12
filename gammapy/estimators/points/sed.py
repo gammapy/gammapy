@@ -338,7 +338,7 @@ class FluxCollectionEstimator:
     ----------
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the flux point bins.
-    models : `~gammapy.modeling.Models` or list
+    models : `~gammapy.modeling.models.Models` or list
         Source models for which the flux points are computed (others are frozen).
     n_sigma : float, optional
         Number of sigma to use for asymmetric error computation. Must be a positive value.
@@ -360,9 +360,12 @@ class FluxCollectionEstimator:
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
             * "errn-errp": estimate asymmetric errors on flux.
+
         Fit solver computes upper limits if sqrt(TS) < n_sigma_ul.
         Sampler solver always compute errn-errp and ul.
     """
+
+    tag = "FluxCollectionEstimator"
 
     def __init__(
         self,
@@ -502,10 +505,10 @@ class FluxCollectionEstimator:
     @staticmethod
     def _compute_ts(datasets, param):
         """Test statistic against no source as null hypothesis."""
-        cash = datasets._stat_sum_likelihood()
+        cash = datasets.stat_sum_likelihood()
         with Parameters([param]).restore_status():
             param.value = 0
-            cash0 = datasets._stat_sum_likelihood()
+            cash0 = datasets.stat_sum_likelihood()
         return cash0 - cash
 
     def _run_fit(self, fp_datasets, spectral_models):
@@ -609,8 +612,8 @@ class FluxCollectionEstimator:
         if len(datasets) == 0:
             raise ValueError("datasets cannot be empty")
 
-        if not datasets.is_all_same_geom:
-            raise ValueError("Inconsistent geometries between datasets")
+        if not datasets.energy_axes_are_aligned:
+            raise ValueError("Energy axes are not aligned between datasets")
 
         for d in datasets:
             d.npred()  # precompute npred
@@ -681,7 +684,9 @@ class FluxCollectionEstimator:
             dnde_dict = {}
             for model_idx, m in enumerate(self.models):
                 dnde_dict[m.name] = []
-                dnde_ref = fp_dict["flux_points"][m.name]["dnde_ref"].squeeze()
+                dnde_ref = np.atleast_1d(
+                    fp_dict["flux_points"][m.name]["dnde_ref"].squeeze()
+                )
                 for dnde, fp in zip(dnde_ref, fp_results):
                     points = fp["solver_results"]["weighted_samples"]["points"]
                     dnde_dict[m.name].append(dnde * points[:, model_idx])
@@ -942,6 +947,6 @@ class RegularizedFluxPointsEstimator(Estimator):
         return dict(
             flux_points=fp_dict,
             models=models,
-            stat_sum_likelihood=datasets._stat_sum_likelihood(),
-            stat_sum_penalty=datasets.stat_sum() - datasets._stat_sum_likelihood(),
+            stat_sum_likelihood=datasets.stat_sum_likelihood(),
+            stat_sum_penalty=datasets.stat_sum() - datasets.stat_sum_likelihood(),
         )

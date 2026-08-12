@@ -734,7 +734,7 @@ class SimpleMapDataset:
         """Predicted number of counts."""
         return self.background + norm * self.model
 
-    def stat_sum(self, norm):
+    def stat_sum_likelihood(self, norm):
         """Statistics sum."""
         return self._cash_sum_compiled(self.counts, self.npred(norm))
 
@@ -857,8 +857,8 @@ class BrentqFluxEstimator(Estimator):
         with np.errstate(invalid="ignore", divide="ignore"):
             norm_err = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
 
-        stat = dataset.stat_sum(norm=norm)
-        stat_null = dataset.stat_sum(norm=0)
+        stat = dataset.stat_sum_likelihood(norm=norm)
+        stat_null = dataset.stat_sum_likelihood(norm=0)
 
         return {
             "norm": norm,
@@ -876,7 +876,7 @@ class BrentqFluxEstimator(Estimator):
         norm_err = result["norm_err"]
 
         def ts_diff(x):
-            return (stat_best + n_sigma**2) - dataset.stat_sum(x)
+            return (stat_best + n_sigma**2) - dataset.stat_sum_likelihood(x)
 
         if positive:
             min_norm = norm
@@ -1042,8 +1042,8 @@ class BrentqFluxEstimator(Estimator):
         with np.errstate(invalid="ignore", divide="ignore"):
             norm_err = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
 
-        stat = dataset.stat_sum(norm=norm)
-        stat_null = dataset.stat_sum(norm=0)
+        stat = dataset.stat_sum_likelihood(norm=norm)
+        stat_null = dataset.stat_sum_likelihood(norm=0)
 
         return {
             "norm": norm,
@@ -1090,7 +1090,7 @@ class BrentqFluxEstimator(Estimator):
         norm = result["norm"]
         result["npred"] = dataset.npred(norm=norm).sum()
         result["npred_excess"] = result["npred"] - dataset.npred(norm=0).sum()
-        result["stat"] = dataset.stat_sum(norm=norm)
+        result["stat"] = dataset.stat_sum_likelihood(norm=norm)
 
         return result
 

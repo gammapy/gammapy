@@ -7,7 +7,7 @@ on:
 
 jobs:
   build_wheels:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v2
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@8c8bb6c6c962542921f993d47d26df38dccd50b1 # v3.0.2
     with:
       upload_to_pypi: false
       targets: |
