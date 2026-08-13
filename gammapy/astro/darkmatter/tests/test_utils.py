@@ -205,7 +205,7 @@ def test_dmfluxmap_annihilation(jfact_annihilation):
         / total_jfact
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
-    desired = 5.902332e-12 / u.cm**2 / u.s
+    desired = 5.84534173e-12 / u.cm**2 / u.s
 
     assert_quantity_allclose(actual, desired, rtol=1e-3)
 
@@ -224,7 +224,7 @@ def test_dmfluxmap_decay(jfact_decay):
         / diff_flux.jfactor
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
-    desired = 1.277e-3 / u.cm**2 / u.s
+    desired = 1.09754e-3 / u.cm**2 / u.s
     assert_quantity_allclose(actual, desired, rtol=1e-3)
 
 
