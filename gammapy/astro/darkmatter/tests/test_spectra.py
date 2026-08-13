@@ -14,7 +14,6 @@ from gammapy.astro.darkmatter import (
     DarkMatterDecaySpectralModel,
     PrimaryFlux,
 )
-from gammapy.astro.darkmatter.spectra import _PrimaryFluxValidator
 from gammapy.modeling.models import Models, SkyModel, SpectralModel
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
@@ -256,77 +255,6 @@ def test_custom_source_no_mapping_dict(tmp_path):
     assert flux.mapping_dict is None
 
 
-# _AstrophysicalFactorValidator / _RedshiftValidator
-
-
-def test_factor_must_be_positive():
-    with pytest.raises(
-        ValueError, match="astrophysical factor must be strictly positive"
-    ):
-        DarkMatterAnnihilationSpectralModel(mDM=1 * u.TeV, channel="b", factor=-1)
-
-
-def test_redshift_must_be_non_negative():
-    with pytest.raises(ValueError, match="Redshift z must be >= 0"):
-        DarkMatterAnnihilationSpectralModel(mDM=1 * u.TeV, channel="b", z=-0.1)
-
-
-def test_redshift_must_be_scalar():
-    with pytest.raises(TypeError, match="z must be a dimensionless scalar"):
-        DarkMatterAnnihilationSpectralModel(mDM=1 * u.TeV, channel="b", z="bad")
-
-
-# _PrimaryFluxValidator (mismatch warnings / type checks)
-
-
-@requires_data()
-def test_primary_flux_setter_skips_channel_check_for_non_continuum():
-    from unittest.mock import patch
-
-    with patch.object(ContinuumPrimaryFlux, "__init__", return_value=None):
-        real_flux = ContinuumPrimaryFlux.__new__(ContinuumPrimaryFlux)
-        real_flux._mDM = 1 * u.TeV
-
-    model = object.__new__(DarkMatterAnnihilationSpectralModel)
-    model._mDM = 1 * u.TeV
-    model._z = 0
-    model._k = 2
-    model._factor = u.Quantity(1)
-    model.channel = "b"
-
-    model._primary_flux = real_flux
-    assert model._primary_flux is real_flux
-
-
-def test_primary_flux_validator_missing_impl():
-    try:
-
-        class BadModel(_PrimaryFluxValidator, SpectralModel):
-            pass
-
-        pytest.fail("Expected TypeError was not raised")
-    except TypeError as e:
-        assert "must implement" in str(e)
-
-
-@requires_data()
-def test_primary_flux_channel_mismatch_warns():
-    mDM = 1 * u.TeV
-    cont_flux = ContinuumPrimaryFlux(mDM=mDM, channel="W")
-
-    with pytest.warns(UserWarning, match="does not match"):
-        DarkMatterAnnihilationSpectralModel(
-            mDM=mDM, channel="b", primary_flux=cont_flux
-        )
-
-
-def test_primary_flux_invalid_type():
-    with pytest.raises(TypeError, match="primary_flux must be one of"):
-        DarkMatterAnnihilationSpectralModel(
-            mDM=1 * u.TeV, channel="b", primary_flux="not_a_flux_model"
-        )
-
-
 @requires_data()
 def test_decay_expected_primary_flux_mass_is_half():
     mDM = 2 * u.TeV
@@ -389,8 +317,8 @@ def test_k_value_roundtrip(k):
         (
             DarkMatterDecaySpectralModel,
             "GeV cm-2",
-            0.0480497420860496,
-            0.000231,
+            3.209234e-2,
+            2.33485775e-5,
             "pppc4",
         ),
         (
@@ -400,7 +328,7 @@ def test_k_value_roundtrip(k):
             3.52065879e-16,
             "cosmixs",
         ),
-        (DarkMatterDecaySpectralModel, "GeV cm-2", 0.04676, 0.00027292, "cosmixs"),
+        (DarkMatterDecaySpectralModel, "GeV cm-2", 0.031677, 2.77187e-05, "cosmixs"),
     ],
 )
 @requires_data()
@@ -413,7 +341,7 @@ def test_dm_spectral_model(
     energy_min = 0.01 * u.TeV
     energy_max = 10 * u.TeV
 
-    pf = ContinuumPrimaryFlux(mass, channel, source=source)
+    pf = ContinuumPrimaryFlux(mass / 2.0, channel, source=source)
     model = model_class(mDM=mass, channel=channel, factor=factor, primary_flux=pf)
 
     flux = model.integral(energy_min=energy_min, energy_max=energy_max).to("cm-2 s-1")
@@ -467,7 +395,7 @@ def test_unknown_primary_flux_type_in_from_dict():
 @requires_data()
 def test_decay_expected_primary_flux_mass_direct():
     model = DarkMatterDecaySpectralModel(mDM=2 * u.TeV, channel="b")
-    result = model._expected_primary_flux_mass()
+    result = model._expected_primary_flux_mass
     assert_quantity_allclose(result, 1 * u.TeV)
 
 

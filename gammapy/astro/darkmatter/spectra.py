@@ -30,118 +30,6 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Validator mixins
-# ---------------------------------------------------------------------------
-
-
-class _PrimaryFluxValidator:
-    """Primary flux validator for DM spectral models.
-
-    Concrete subclasses must implement ``_expected_primary_flux_mass``.
-    """
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        has_impl = any(
-            "_expected_primary_flux_mass" in base.__dict__
-            for base in cls.__mro__
-            if base is not _PrimaryFluxValidator
-        )
-        if not has_impl:
-            raise TypeError(
-                f"Class '{cls.__name__}' must implement '_expected_primary_flux_mass'."
-            )
-
-    @property
-    def _valid_primary_flux_types(self):
-        return (ContinuumPrimaryFlux,)
-
-    @property
-    def primary_flux(self):
-        """Primary flux model."""
-        return self._primary_flux
-
-    @primary_flux.setter
-    def primary_flux(self, value):
-        if not isinstance(value, self._valid_primary_flux_types):
-            raise TypeError(
-                f"primary_flux must be one of "
-                f"{[t.__name__ for t in self._valid_primary_flux_types]}, "
-                f"got: {type(value).__name__}"
-            )
-
-        actual = u.Quantity(value.mDM)
-        expected = self._expected_primary_flux_mass()
-        rel_diff = abs((actual - expected) / expected).decompose().value
-        if rel_diff > 0.01:
-            warnings.warn(
-                f"primary_flux.mDM ({actual}) does not match the expected "
-                f"mass ({expected}). Results may be inconsistent.",
-                UserWarning,
-                stacklevel=2,
-            )
-
-        if hasattr(self, "channel") and value.channel != self.channel:
-            warnings.warn(
-                f"primary_flux.channel ('{value.channel}') does not match "
-                f"the model channel ('{self.channel}'). "
-                "Make sure this is intentional.",
-                UserWarning,
-                stacklevel=2,
-            )
-        self._primary_flux = value
-
-    def _expected_primary_flux_mass(self):
-        """Expected mass for the primary flux.
-
-        Returns mDM for annihilation, mDM/2 for decay.
-        Must be implemented in every concrete subclass.
-        """
-        raise NotImplementedError(
-            "_expected_primary_flux_mass must be implemented in subclasses."
-        )
-
-
-class _AstrophysicalFactorValidator:
-    """Astrophysical factor validator for primary flux models."""
-
-    @property
-    def factor(self):
-        """Astrophysical Factor."""
-        return self._factor
-
-    @factor.setter
-    def factor(self, value):
-        if u.Quantity(value).value <= 0:
-            raise ValueError("The astrophysical factor must be strictly positive.")
-        self._factor = u.Quantity(value)
-
-
-class _RedshiftValidator:
-    """Redshift validator for DM spectral models."""
-
-    @property
-    def z(self):
-        """Source redshift (must be >= 0)."""
-        return self._z
-
-    @z.setter
-    def z(self, value):
-        try:
-            z_val = float(value)
-        except (TypeError, ValueError, u.UnitConversionError):
-            raise TypeError(f"z must be a dimensionless scalar, got: {type(value)!r}")
-        if z_val < 0:
-            raise ValueError(f"Redshift z must be >= 0, got: {z_val}.")
-        self._z = z_val
-
-
-# ---------------------------------------------------------------------------
-# Primary flux models
-# ---------------------------------------------------------------------------
-
-
 class ContinuumPrimaryFlux(TemplateNDSpectralModel):
     """Continuum gamma-ray spectrum from dark matter annihilation.
 
@@ -181,10 +69,6 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
         ``{actual_column_name: expected_column_name}``, and must cover the
         mandatory columns ``"mDM"`` and ``"Log[10,x]"``.
 
-    Warns
-    -----
-    UserWarning
-        If ``source`` is ``None``; defaults to ``"pppc4"``.
 
     Notes
     -----
@@ -643,12 +527,62 @@ PRIMARY_FLUX_REGISTRY = {cls.tag[0]: cls for cls in (ContinuumPrimaryFlux, Prima
 # ---------------------------------------------------------------------------
 
 
-class DarkMatterAnnihilationSpectralModel(
-    _AstrophysicalFactorValidator,
-    _RedshiftValidator,
-    _PrimaryFluxValidator,
-    SpectralModel,
-):
+class DarkMatterMixin:
+    def _validate_init(
+        self, mDM, channel, factor, z, primary_flux, source, mapping_dict
+    ):
+        """Init and validate inputs"""
+
+        if z < 0:
+            raise ValueError(f"Redshift z must be >= 0, got: {self._z}.")
+        if u.Quantity(factor).value <= 0:
+            raise ValueError("The astrophysical factor must be strictly positive.")
+
+        self._z = z
+        self._mDM = u.Quantity(mDM)
+        self._channel = channel
+        self._factor = u.Quantity(factor)
+        self.source = source
+        self.mapping_dict = mapping_dict
+        if primary_flux:
+            primary_flux.channel = channel
+            primary_flux.mDM = self._expected_primary_flux_mass
+        else:
+            primary_flux = ContinuumPrimaryFlux(
+                self._expected_primary_flux_mass,
+                channel=self.channel,
+                source=self.source,
+                mapping_dict=self.mapping_dict,
+            )
+        self._primary_flux = primary_flux
+
+    @property
+    def mDM(self):
+        """Dark matter mass."""
+        return self._mDM
+
+    @property
+    def factor(self):
+        """Astrophysical Factor."""
+        return self._factor
+
+    @property
+    def z(self):
+        """Source redshift (must be >= 0)."""
+        return self._z
+
+    @property
+    def primary_flux(self):
+        """Primary flux model."""
+        return self._primary_flux
+
+    @property
+    def channel(self):
+        """Channel of the default primary flux spectrum."""
+        return self._channel
+
+
+class DarkMatterAnnihilationSpectralModel(SpectralModel, DarkMatterMixin):
     r"""Dark matter annihilation spectral model.
 
     Computes the differential gamma-ray flux expected from dark matter
@@ -675,9 +609,7 @@ class DarkMatterAnnihilationSpectralModel(
     mDM : `~astropy.units.Quantity`
         Dark matter particle mass.
     channel : str
-        Annihilation channel for the primary flux spectrum (used to build
-        the default `ContinuumPrimaryFlux` if ``primary_flux`` is not
-        given), e.g. ``"b"`` for bb̄. See
+        Annihilation channel for the primary flux spectrum e.g. ``"b"`` for bb̄. See
         `ContinuumPrimaryFlux.channel_registry` for available channels.
     scale : float, optional
         Dimensionless normalization parameter applied multiplicatively to
@@ -699,35 +631,6 @@ class DarkMatterAnnihilationSpectralModel(
         Primary photon spectrum per annihilation event. Must be an
         instance of `ContinuumPrimaryFlux`. If not provided, a default
         `ContinuumPrimaryFlux` is constructed using ``mDM`` and ``channel``.
-
-    Warns
-    -----
-    UserWarning
-        If ``primary_flux.mDM`` does not match ``mDM`` within 1% relative
-        tolerance.
-    UserWarning
-        If ``primary_flux`` is a `ContinuumPrimaryFlux` whose ``channel``
-        does not match ``channel``.
-        Type of dark matter particle (k:2 Majorana, k:4 Dirac). Default is 2.
-    source : str or Table, optional
-        Data source for the spectra. Options are:
-
-        * ``"pppc4"`` (default): Cirelli et al. 2011.
-        * ``"cosmixs"``: Cirelli et al. 2024.
-        * A path to a custom file: Any format readable by `astropy.table.Table.read`
-        (e.g., .ecsv, .fits, .csv, .dat).
-        * An Astropy Table that read the desired path
-
-
-        If a custom file path is provided, it must contain 'mDM' (mass of dark
-        matter particle) and 'Log[10,x]' (energy) columns, plus columns named after
-        the requested annihilation/decay channels (see the documentation).
-    mapping_dict : dict, optional
-        Mapping dictionary to map the columns of the custom source file to the expected
-        column names. This is only needed if a file as a spectra source is provided
-        and the column names in the file do not match the expected names. The dictionary
-        should have the format {actual_column_name_in_file:expected_column_name}.
-        An example of the expected columns can be found in the documentation.
 
     Examples
     --------
@@ -769,16 +672,10 @@ class DarkMatterAnnihilationSpectralModel(
         source=None,
         mapping_dict=None,
     ):
-        self.k = k
-        self.z = z
-        self.mDM = u.Quantity(mDM)
-        self.channel = channel
-        self.factor = u.Quantity(factor)
-        self.primary_flux = primary_flux or ContinuumPrimaryFlux(
-            self._expected_primary_flux_mass(), channel=self.channel
-        )
-        self.source = source
-        self.mapping_dict = mapping_dict
+        if k not in (2, 4):
+            raise ValueError(f"k must be 2 (Majorana) or 4 (Dirac), got: {k}.")
+        self._k = k
+        self._validate_init(mDM, channel, factor, z, primary_flux, source, mapping_dict)
         super().__init__(scale=scale)
 
     def evaluate(self, energy, scale):
@@ -908,12 +805,7 @@ class DarkMatterAnnihilationSpectralModel(
         """DM particle type (2: Majorana, 4: Dirac)."""
         return self._k
 
-    @k.setter
-    def k(self, value):
-        if value not in (2, 4):
-            raise ValueError(f"k must be 2 (Majorana) or 4 (Dirac), got: {value}.")
-        self._k = value
-
+    @property
     def _expected_primary_flux_mass(self):
         """Expected primary flux mass for annihilation.
 
@@ -928,12 +820,7 @@ class DarkMatterAnnihilationSpectralModel(
         return self.mDM
 
 
-class DarkMatterDecaySpectralModel(
-    _AstrophysicalFactorValidator,
-    _RedshiftValidator,
-    _PrimaryFluxValidator,
-    SpectralModel,
-):
+class DarkMatterDecaySpectralModel(SpectralModel, DarkMatterMixin):
     r"""Dark matter decay spectral model.
 
     Computes the differential gamma-ray flux expected from the decay of
@@ -959,8 +846,7 @@ class DarkMatterDecaySpectralModel(
     mDM : `~astropy.units.Quantity`
         Dark matter particle mass.
     channel : str
-        Decay channel for the primary flux spectrum (used to build the
-        default `ContinuumPrimaryFlux` if ``primary_flux`` is not given),
+        Decay channel for the primary flux spectrum,
         e.g. ``"b"`` for bb̄. See `ContinuumPrimaryFlux.channel_registry`
         for available channels.
     scale : float, optional
@@ -980,15 +866,6 @@ class DarkMatterDecaySpectralModel(
         `ContinuumPrimaryFlux`. If not provided, a default
         `ContinuumPrimaryFlux` is constructed using ``mDM / 2`` (the energy
         scale relevant for two-body decay products) and ``channel``.
-
-    Warns
-    -----
-    UserWarning
-        If ``primary_flux.mDM`` does not match the expected mass
-        (``mDM / 2``) within 1% relative tolerance.
-    UserWarning
-        If ``primary_flux`` is a `ContinuumPrimaryFlux` whose ``channel``
-        does not match ``channel``.
 
     Examples
     --------
@@ -1030,15 +907,7 @@ class DarkMatterDecaySpectralModel(
         source=None,
         mapping_dict=None,
     ):
-        self.z = z
-        self.mDM = u.Quantity(mDM)
-        self.channel = channel
-        self.factor = u.Quantity(factor)
-        self.primary_flux = primary_flux or ContinuumPrimaryFlux(
-            self._expected_primary_flux_mass(), channel=self.channel
-        )
-        self.source = source
-        self.mapping_dict = mapping_dict
+        self._validate_init(mDM, channel, factor, z, primary_flux, source, mapping_dict)
         super().__init__(scale=scale)
 
     def evaluate(self, energy, scale):
@@ -1163,6 +1032,7 @@ class DarkMatterDecaySpectralModel(
 
         return cls(scale=scale, primary_flux=primary_flux, **data)
 
+    @property
     def _expected_primary_flux_mass(self):
         """Expected primary flux mass for decay.
 
