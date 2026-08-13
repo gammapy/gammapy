@@ -544,8 +544,9 @@ class DarkMatterMixin:
         self._factor = u.Quantity(factor)
         self.source = source
         self.mapping_dict = mapping_dict
-        if primary_flux:
-            primary_flux.channel = channel
+        if primary_flux is not None:
+            if hasattr(primary_flux, "channel"):
+                primary_flux.channel = channel
             primary_flux.mDM = self._expected_primary_flux_mass
         else:
             primary_flux = ContinuumPrimaryFlux(
