@@ -135,8 +135,8 @@ class RegionGeom(Geom):
     @property
     def is_regular(self):
         """"""
-        if hasattr(self.region, "radius"):
-            return np.isscalar(self.region.radius.value)
+        if hasattr(self.region, "is_regular"):
+            return self.region.is_regular
         return True
 
     @property
