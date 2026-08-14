@@ -15,6 +15,7 @@ from astropy.coordinates import SkyCoord, Angle
 from regions import (
     CircleSkyRegion,
     EllipseSkyRegion,
+    RegionBoundingBox,
     Regions,
     RegionMeta,
     RegionVisual,
@@ -23,6 +24,8 @@ from regions import (
 from astropy.wcs import WCS
 
 from gammapy.utils.regions import (
+    CirclePixelRegionArray,
+    CircleSkyRegionArray,
     SphericalCircleSkyRegion,
     compound_region_center,
     region_circle_to_ellipse,
@@ -35,8 +38,9 @@ from gammapy.utils.regions import (
     make_grid_rectangle_sky_regions,
 )
 
-from gammapy.maps import WcsGeom
+from gammapy.maps import WcsGeom, MapAxis, RegionGeom, RegionNDMap
 from gammapy.utils.testing import requires_data
+from gammapy.data import EventList
 
 
 def test_compound_region_center():
@@ -244,3 +248,118 @@ def test_make_grid_rectangle_sky_regions():
     assert_allclose(regions[0].center.b, -0.343 * u.deg, atol=1e-2)
     assert_allclose(regions[0].width, 4.0 * u.deg, rtol=1e-3)
     assert_allclose(regions[0].height, 2.0 * u.deg, rtol=1e-3)
+
+
+def make_test_wcs():
+    wcs = WCS(naxis=2)
+    wcs.wcs.crpix = [100, 100]
+    wcs.wcs.cdelt = [-0.1, 0.1]
+    wcs.wcs.crval = [0, 0]
+    wcs.wcs.ctype = ["RA---CAR", "DEC--CAR"]
+    return wcs
+
+
+def test_circle_sky_region_array_to_pixel():
+    center = SkyCoord(0, 0, unit="deg")
+    radius = [0.1, 0.2] * u.deg
+
+    region = CircleSkyRegionArray(center=center, radius=radius)
+
+    pixel_region = region.to_pixel(make_test_wcs())
+
+    assert isinstance(pixel_region, CirclePixelRegionArray)
+
+    # 0.1 deg / 0.1 deg/pix = 1 pix
+    assert_allclose(pixel_region.radius, [1.0, 2.0])
+
+
+def test_circle_pixel_region_array():
+    # bounding box
+    region = CirclePixelRegionArray(
+        center=PixCoord(x=10, y=20),
+        radius=np.array([1, 3, 2]),
+    )
+
+    bbox = region.bounding_box
+
+    expected = RegionBoundingBox.from_float(
+        xmin=7,
+        xmax=13,
+        ymin=17,
+        ymax=23,
+    )
+
+    assert bbox == expected
+
+    # area
+    radius = np.array([1, 2, 3])
+
+    region = CirclePixelRegionArray(
+        center=PixCoord(x=0, y=0),
+        radius=radius,
+    )
+
+    area = region.area
+
+    expected = np.pi * radius**2
+
+    assert area.shape == (3, 1, 1)
+    assert_allclose(area[:, 0, 0], expected)
+
+    # single_radius
+    region = CirclePixelRegionArray(
+        center=PixCoord(x=0, y=0),
+        radius=np.array([2]),
+    )
+
+    area = region.area
+
+    assert area.shape == (1, 1, 1)
+    assert_allclose(area[0, 0, 0], np.pi * 4)
+
+
+@requires_data()
+def test_array_valued_regions():
+    radius = [1, 2, 3, 4] * u.deg
+
+    radius = radius.reshape((-1, 1, 1))
+
+    circle = CircleSkyRegionArray(
+        center=SkyCoord(83.63 * u.deg, 22.01 * u.deg),
+        radius=radius,
+    )
+
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=4)
+
+    region_geom = RegionGeom.create(
+        region=circle,
+        axes=[axis],
+    )
+
+    assert_allclose(region_geom.center_skydir.ra, (83.63 * u.deg))
+    assert_allclose(region_geom.center_skydir.dec, (22.01 * u.deg))
+
+    assert region_geom.center_pix == (0.0, 0.0, 1.5)
+    assert_allclose(
+        region_geom.solid_angle().flatten(),
+        [0.00095698, 0.00382794, 0.00861285, 0.01531174] * u.sr,
+        rtol=1e-5,
+    )
+    assert_allclose(region_geom.width, [8.2, 8.2] * u.deg)
+
+    events = EventList.read(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
+
+    # Reference events per energy bin
+    expected = []
+    for (e_min, e_max), radius in zip(axis.iter_by_edges, circle.radius.flat):
+        events_selected = events.select_energy(energy_range=(e_min, e_max))
+        region = CircleSkyRegion(center=circle.center, radius=radius)
+        events_selected = events_selected.select_region(regions=region)
+        expected.append(len(events_selected.table))
+
+    counts = RegionNDMap.from_geom(geom=region_geom)
+    counts.fill_events(events)
+    assert_allclose(counts.data.flatten(), expected)
+    assert counts.data.shape == (4, 1, 1)
