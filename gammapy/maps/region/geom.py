@@ -3,6 +3,7 @@ import copy
 import logging
 from gammapy.utils.cache import cachemethod
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
@@ -134,7 +135,7 @@ class RegionGeom(Geom):
     @property
     def is_regular(self):
         """"""
-        return np.isscalar(self.region.radius)
+        return np.isscalar(self.region.radius.value)
 
     @property
     def binsz_wcs(self):
@@ -257,7 +258,7 @@ class RegionGeom(Geom):
             return np.ones(coords.skycoord.shape, dtype=bool)
 
         if not self.is_regular:
-            idx = self.axes.coord_to_idx(coords)
+            idx = self.axes.coord_to_idx(coords)[0]
             cls = self.region.__class__
             region = cls(
                 center=self.region.center, radius=self.region.radius[idx].squeeze()
@@ -434,7 +435,7 @@ class RegionGeom(Geom):
             )
         else:
             width = self.width
-        wcs_geom_region = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape)
+        wcs_geom_region = WcsGeom(wcs=self.wcs)
         wcs_geom = wcs_geom_region.cutout(position=self.center_skydir, width=width)
         wcs_geom = wcs_geom.to_cube(self.axes)
         return wcs_geom
@@ -489,7 +490,7 @@ class RegionGeom(Geom):
         weights = weights.data[mask]
 
         # Get coordinates
-        coords = wcs_geom.get_coord(sparse=True)
+        coords = wcs_geom.get_coord(sparse=True).apply_mask(mask)
         return coords, weights
 
     def to_binsz(self, binsz):
@@ -583,7 +584,7 @@ class RegionGeom(Geom):
         if self.region is None:
             pix = (0, 0)
         else:
-            in_region = self.contains(coords.skycoord)
+            in_region = self.contains(coords)
 
             x = np.zeros(in_region.shape)
             x[~in_region] = np.nan
