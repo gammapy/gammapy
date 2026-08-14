@@ -18,7 +18,6 @@ from astropy.table import Table
 from gammapy.utils.scripts import make_path
 from regions import (
     CircleAnnulusSkyRegion,
-    CirclePixelRegion,
     CircleSkyRegion,
     CirclePixelRegion,
     CompoundSkyRegion,
@@ -633,6 +632,7 @@ class CircleSkyRegionArray(CircleSkyRegion):
     """Circle sky region with array support for radius"""
 
     radius = ArrayQuantityLength("radius")
+    is_regular = False
 
     def to_pixel(self, wcs):
         center, pixscale, _ = pixel_scale_angle_at_skycoord(self.center, wcs)
@@ -644,6 +644,7 @@ class CirclePixelRegionArray(CirclePixelRegion):
     """Pixel sky region with array support for radius"""
 
     radius = ArrayLength("radius")
+    is_regular = False
 
     @property
     def bounding_box(self):
