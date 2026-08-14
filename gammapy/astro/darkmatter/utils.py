@@ -84,18 +84,17 @@ class JFactory:
         rmax = self.rmax
 
         if distance < rmax:
+            integral = self._integrate_los_branch(impact, distance, rmax, ndecade)
             if separation < np.pi / 2:
-                return 2 * self._integrate_los_branch(
+                integral += 2 * self._integrate_los_branch(
                     impact, impact, distance, ndecade
-                ) + self._integrate_los_branch(impact, distance, rmax, ndecade)
-
-            return self._integrate_los_branch(impact, distance, rmax, ndecade)
+                )
+            return integral
 
         if separation < np.pi / 2 and impact < rmax:
             return 2 * self._integrate_los_branch(impact, impact, rmax, ndecade)
 
-        integral_unit = u.Unit("GeV2 cm-5") if self.annihilation else u.Unit("GeV cm-2")
-        return 0 * integral_unit
+        return 0 * u.Unit("GeV2 cm-5" if self.annihilation else "GeV cm-2")
 
     def compute_differential_jfactor(self, ndecade=1e4):
         r"""Compute differential J-Factor.

@@ -1,10 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from unittest.mock import patch
 import numpy as np
-import html
 import astropy.units as u
 import pytest
-from numpy.testing import assert_allclose
 
 from gammapy.astro.darkmatter import (
     DarkMatterAnnihilationSpectralModel,
@@ -14,7 +11,6 @@ from gammapy.astro.darkmatter import (
     add_factor_prior,
 )
 from gammapy.maps import WcsGeom
-from gammapy.modeling import Parameter
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
@@ -92,8 +88,9 @@ def test_compute_differential_jfactor_outside_halo_no_intersection():
     assert np.all(jfactor[separation >= max_intersection_angle] == 0)
 
 
-def test_integrate_los_geometric_path_length(geom):
-    cases = [
+@pytest.mark.parametrize(
+    ("name", "distance", "rmax", "separation"),
+    [
         ("inside_toward", 1, 2, 30),
         ("inside_perpendicular", 1, 2, 90),
         ("inside_away", 1, 2, 120),
@@ -102,58 +99,56 @@ def test_integrate_los_geometric_path_length(geom):
         ("outside_intersects", 10, 2, 5),
         ("outside_misses", 10, 2, 30),
         ("outside_away", 10, 2, 120),
-    ]
-
+    ],
+)
+def test_integrate_los_geometric_path_length(
+    geom,
+    name,
+    distance,
+    rmax,
+    separation,
+):
     density = 1 * u.GeV / u.cm**3
 
     def constant_profile(radius):
         return np.ones(np.shape(radius)) * density
 
-    for name, distance, rmax, separation in cases:
-        jfactory = JFactory(
-            geom=geom,
-            profile=constant_profile,
-            distance=distance * u.kpc,
-            rmax=rmax * u.kpc,
-        )
+    jfactory = JFactory(
+        geom=geom,
+        profile=constant_profile,
+        distance=distance * u.kpc,
+        rmax=rmax * u.kpc,
+    )
 
-        theta = np.deg2rad(separation)
-        impact = jfactory.distance * np.sin(theta)
+    theta = np.deg2rad(separation)
+    impact = jfactory.distance * np.sin(theta)
 
-        actual = jfactory._integrate_los(
-            impact=impact,
-            separation=theta,
-            ndecade=10000,
-        )
+    actual = jfactory._integrate_los(
+        impact=impact,
+        separation=theta,
+        ndecade=10000,
+    )
 
-        discriminant = jfactory.rmax**2 - impact**2
+    discriminant = jfactory.rmax**2 - impact**2
 
-        if discriminant <= 0 * u.kpc**2:
+    if discriminant <= 0 * u.kpc**2:
+        path_length = 0 * u.kpc
+    else:
+        root = np.sqrt(discriminant)
+        los_center = jfactory.distance * np.cos(theta)
+        los_min = los_center - root
+        los_max = los_center + root
+
+        if np.isclose(los_max.to_value(u.kpc), 0, atol=1e-12) or los_max < 0 * u.kpc:
             path_length = 0 * u.kpc
+        elif los_min <= 0 * u.kpc:
+            path_length = los_max
         else:
-            root = np.sqrt(discriminant)
-            los_center = jfactory.distance * np.cos(theta)
-            los_min = los_center - root
-            los_max = los_center + root
+            path_length = los_max - los_min
 
-            if (
-                np.isclose(los_max.to_value(u.kpc), 0, atol=1e-12)
-                or los_max < 0 * u.kpc
-            ):
-                path_length = 0 * u.kpc
-            elif los_min <= 0 * u.kpc:
-                path_length = los_max
-            else:
-                path_length = los_max - los_min
+    expected = density**2 * path_length
 
-        expected = density**2 * path_length
-
-        assert_quantity_allclose(
-            actual,
-            expected,
-            rtol=1e-5,
-            err_msg=f"Failed for geometry: {name}",
-        )
+    assert_quantity_allclose(actual, expected, rtol=1e-5)
 
 
 def test_integrate_los_branch_zero_impact_positive_radius():
