@@ -3,7 +3,6 @@ import copy
 import logging
 from gammapy.utils.cache import cachemethod
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
@@ -23,6 +22,7 @@ from regions import (
     Regions,
     SkyRegion,
 )
+import matplotlib.pyplot as plt
 
 from gammapy.utils.regions import (
     compound_region_center,
@@ -482,7 +482,7 @@ class RegionGeom(Geom):
         """
         wcs_geom = self.to_wcs_geom()
 
-        weights = wcs_geom.region_weights(
+        weights = wcs_geom.to_image().region_weights(
             regions=[self.region], oversampling_factor=factor
         )
 
