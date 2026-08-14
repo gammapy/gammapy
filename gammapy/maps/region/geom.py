@@ -135,7 +135,9 @@ class RegionGeom(Geom):
     @property
     def is_regular(self):
         """"""
-        return np.isscalar(self.region.radius.value)
+        if hasattr(self.region, "radius"):
+            return np.isscalar(self.region.radius.value)
+        return True
 
     @property
     def binsz_wcs(self):
