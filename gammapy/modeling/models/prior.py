@@ -389,7 +389,7 @@ class LogNormalPrior(Prior):
         Median of the distribution (i.e. mean of log(value) is log(mu)).
         Default is 1.
     sigma : float, optional
-        Standard deviation of log10(value).
+        Standard deviation of log(value).
         Default is 1.
     """
 
