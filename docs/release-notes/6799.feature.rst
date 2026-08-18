@@ -1,0 +1,1 @@
+Add a Log Normal prior, usable for example to constrain the Dark Matter Astrophysical Factor nuisance parameter.

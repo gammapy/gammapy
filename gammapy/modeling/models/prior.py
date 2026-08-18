@@ -401,10 +401,10 @@ class LogNormalPrior(Prior):
     @staticmethod
     def evaluate(value, mu, sigma):
         """Evaluate the log-normal prior (gaussian in log10(value))."""
-        rv = lognorm(s=sigma * np.log(10), scale=mu)
+        rv = lognorm(s=sigma, scale=mu)
         return -2 * rv.logpdf(value)
 
     @property
     def _random_variable(self):
         """Return random variable object for prior."""
-        return lognorm(s=self.sigma.value * np.log(10), scale=self.mu.value)
+        return lognorm(s=self.sigma.value, scale=self.mu.value)

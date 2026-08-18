@@ -190,5 +190,5 @@ def add_factor_prior(model, sigma, mu=1.0):
         The same model instance, with the prior attached, for chaining.
     """
     model.scale.frozen = False
-    model.scale.prior = LogNormalPrior(mu=mu, sigma=sigma)
+    model.scale.prior = LogNormalPrior(mu=mu, sigma=sigma * np.log(10))
     return model
