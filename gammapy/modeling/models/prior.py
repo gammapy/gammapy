@@ -381,12 +381,12 @@ class SamplesKDEPrior(Prior):
 
 
 class LogNormalPrior(Prior):
-    """Log-normal prior: gaussian in log10(value).
+    """Log-normal prior: gaussian in log(value).
 
     Parameters
     ----------
     mu : float, optional
-        Median of the distribution (i.e. mean of log10(value) is log10(mu)).
+        Median of the distribution (i.e. mean of log(value) is log(mu)).
         Default is 1.
     sigma : float, optional
         Standard deviation of log10(value).
@@ -400,7 +400,7 @@ class LogNormalPrior(Prior):
 
     @staticmethod
     def evaluate(value, mu, sigma):
-        """Evaluate the log-normal prior (gaussian in log10(value))."""
+        """Evaluate the log-normal prior (gaussian in log(value))."""
         rv = lognorm(s=sigma, scale=mu)
         return -2 * rv.logpdf(value)
 
