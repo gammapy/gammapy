@@ -381,7 +381,9 @@ class SamplesKDEPrior(Prior):
 
 
 class LogNormalPrior(Prior):
-    """Log-normal prior: gaussian in log(value).
+    """Log-normal prior.
+    
+    Equivalent to a gaussian prior on the log of the parameter i.e. log(value).
 
     Parameters
     ----------
