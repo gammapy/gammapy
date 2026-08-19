@@ -132,7 +132,9 @@ class JFactory:
         .. math::
             r_\perp = D \sin\theta.
 
-        If the observer is inside the integration radius
+        The integration is split into two regions:
+        
+        1.  :math:`D < r_{\max}`: the observer is inside the integration radius
         (:math:`D < r_{\max}`), directions with
         :math:`\theta < \pi / 2` cross the inner radial interval twice,
         while directions with :math:`\theta \geq \pi / 2` contain only
