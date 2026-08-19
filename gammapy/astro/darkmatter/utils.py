@@ -133,18 +133,16 @@ class JFactory:
             r_\perp = D \sin\theta.
 
         The integration is split into two regions:
-        
-        1.  :math:`D < r_{\max}`: the observer is inside the integration radius
-        (:math:`D < r_{\max}`), directions with
-        :math:`\theta < \pi / 2` cross the inner radial interval twice,
-        while directions with :math:`\theta \geq \pi / 2` contain only
+
+        1. :math:`D < r_{\max}`: the observer is inside the integration radius.
+        Directions with :math:`\theta < \pi / 2` cross the inner radial interval
+        twice, while directions with :math:`\theta \geq \pi / 2` contain only
         the outward branch.
 
-        If the observer is outside the integration radius
-        (:math:`D \geq r_{\max}`), the line of sight contributes only when
-        it points toward the halo and intersects the integration sphere,
-        i.e. when :math:`\theta < \pi / 2` and
-        :math:`r_\perp < r_{\max}`.
+        2. :math:`D \geq r_{\max}`: the observer is outside the integration radius.
+        The line of sight contributes only when it points toward the halo and
+        intersects the integration sphere, i.e. when :math:`\theta < \pi / 2`
+        and :math:`r_\perp < r_{\max}`.
 
         Each radial branch is evaluated using
 
@@ -152,9 +150,9 @@ class JFactory:
             \mathrm dl =
             \frac{r}{\sqrt{r^2-r_\perp^2}}\,\mathrm dr.
 
-        The apparent singularity at :math:`r=r_\perp` is integrable and is
-        removed numerically with the substitution
-        :math:`r=r_\perp\cosh t`.
+        The apparent singularity at :math:`r = r_\perp` is integrable. To avoid
+        evaluating it directly, each radial branch is integrated with the
+        substitution :math:`r = r_\perp\cosh t`.
         """
         separation = self.geom.separation(self.geom.center_skydir).rad
         impact = u.Quantity(
