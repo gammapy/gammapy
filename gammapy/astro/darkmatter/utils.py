@@ -127,7 +127,7 @@ class JFactory:
 
         where :math:`D` is the observer-to-halo-center distance and
         :math:`l \geq 0` is the physical forward line-of-sight coordinate.
-        The impact parameter of the corresponding infinite line is
+        The impact parameter of the corresponding infinite line is given by:
 
         .. math::
             r_\perp = D \sin\theta.
