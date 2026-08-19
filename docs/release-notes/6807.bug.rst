@@ -1,0 +1,1 @@
+Fix parsing of the `scale` parameter when read from a dictionary in `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel`.

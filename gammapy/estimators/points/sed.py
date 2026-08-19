@@ -53,6 +53,9 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     The method is also described in the `Fermi-LAT catalog paper <https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A>`__
     or the `H.E.S.S. Galactic Plane Survey paper <https://ui.adsabs.harvard.edu/abs/2018A%26A...612A...1H>`__
 
+    By default, points below 2-sigma detection will be considered as upper limits. This can be configured
+    on-the-fly on the resultant `FluxPoints` object by setting the ``sqrt_ts_threshold_ul``.
+
     Parameters
     ----------
     source : str or int
@@ -65,7 +68,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Default is 2.
     n_sigma_sensitivity : float, optional
         Sigma to use for sensitivity computation. Must be a positive value.
-        Default is 5.
+        Default is same as 'n_sigma_ul'.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
@@ -136,22 +139,27 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         )
 
         fp = estimator.run(dataset)
+
+        #change the limit for calling a point a ul
+        fp.sqrt_ts_threshold_ul = 3
+
         print(fp)
 
     .. testoutput::
 
         FluxPoints
         ----------
-
+        <BLANKLINE>
           geom                   : RegionGeom
           axes                   : ['lon', 'lat', 'energy']
           shape                  : (1, 1, 6)
-          quantities             : ['norm', 'norm_err', 'ts', 'npred', 'npred_excess', 'stat', 'stat_null', 'counts', 'success']
+          quantities             : ['norm', 'norm_err', 'ts', 'npred', 'npred_excess', 'stat', 'stat_null', 'counts', 'success', 'is_ul']
           ref. model             : pl
           n_sigma                : 1
-          n_sigma_ul             : 2
-          sqrt_ts_threshold_ul   : 2
+          ...
+          sqrt_ts_threshold_ul   : 3
           sed type init          : likelihood
+        <BLANKLINE>
     """
 
     tag = "FluxPointsEstimator"
@@ -207,6 +215,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             "n_sigma": self.n_sigma,
             "n_sigma_ul": self.n_sigma_ul,
             "sed_type_init": "likelihood",
+            "n_sigma_sensitivity": self.n_sigma_sensitivity,
         }
 
         rows = parallel.run_multiprocessing(
@@ -329,7 +338,7 @@ class FluxCollectionEstimator:
     ----------
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the flux point bins.
-    models : `~gammapy.modeling.Models` or list
+    models : `~gammapy.modeling.models.Models` or list
         Source models for which the flux points are computed (others are frozen).
     n_sigma : float, optional
         Number of sigma to use for asymmetric error computation. Must be a positive value.
@@ -351,6 +360,7 @@ class FluxCollectionEstimator:
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
             * "errn-errp": estimate asymmetric errors on flux.
+
         Fit solver computes upper limits if sqrt(TS) < n_sigma_ul.
         Sampler solver always compute errn-errp and ul.
     """
@@ -495,10 +505,10 @@ class FluxCollectionEstimator:
     @staticmethod
     def _compute_ts(datasets, param):
         """Test statistic against no source as null hypothesis."""
-        cash = datasets._stat_sum_likelihood()
+        cash = datasets.stat_sum_likelihood()
         with Parameters([param]).restore_status():
             param.value = 0
-            cash0 = datasets._stat_sum_likelihood()
+            cash0 = datasets.stat_sum_likelihood()
         return cash0 - cash
 
     def _run_fit(self, fp_datasets, spectral_models):
@@ -937,6 +947,6 @@ class RegularizedFluxPointsEstimator(Estimator):
         return dict(
             flux_points=fp_dict,
             models=models,
-            stat_sum_likelihood=datasets._stat_sum_likelihood(),
-            stat_sum_penalty=datasets.stat_sum() - datasets._stat_sum_likelihood(),
+            stat_sum_likelihood=datasets.stat_sum_likelihood(),
+            stat_sum_penalty=datasets.stat_sum() - datasets.stat_sum_likelihood(),
         )

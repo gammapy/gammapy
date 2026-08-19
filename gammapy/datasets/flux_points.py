@@ -342,7 +342,7 @@ class FluxPointsDataset(Dataset):
 
         stat = np.nan
         if self.data is not None and self.models is not None:
-            stat = self.stat_sum()
+            stat = self.stat_sum_likelihood()
         str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
 
         # model section

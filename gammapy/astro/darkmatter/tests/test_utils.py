@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from unittest.mock import patch
 import numpy as np
+import html
 import astropy.units as u
 import pytest
 from numpy.testing import assert_allclose
@@ -27,7 +28,8 @@ def jfact_annihilation(geom):
     jfactory = JFactory(
         geom=geom,
         profile=profiles.NFWProfile(),
-        distance=profiles.DMProfile.DISTANCE_GC,
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
     )
     return jfactory.compute_jfactor()
 
@@ -37,8 +39,9 @@ def jfact_decay(geom):
     jfactory = JFactory(
         geom=geom,
         profile=profiles.NFWProfile(),
-        distance=profiles.DMProfile.DISTANCE_GC,
+        distance=8.33 * u.kpc,
         annihilation=False,
+        rmax=1 * u.kpc,
     )
     return jfactory.compute_jfactor()
 
@@ -46,9 +49,9 @@ def jfact_decay(geom):
 @pytest.fixture
 def dm_decay_model():
     return DarkMatterDecaySpectralModel(
-        mass=5000 * u.Unit("GeV"),
+        mDM=5000 * u.Unit("GeV"),
         channel="b",
-        jfactor=3.41e19 * u.Unit("GeV cm-2"),
+        factor=3.41e19 * u.Unit("GeV cm-2"),
     )
 
 
@@ -59,7 +62,8 @@ def test_compute_differential_jfactor_large_separation():
     jfactory = JFactory(
         geom=geom,
         profile=profiles.NFWProfile(),
-        distance=profiles.DMProfile.DISTANCE_GC,
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
     )
 
     jfactor = jfactory.compute_differential_jfactor(ndecade=100)
@@ -74,7 +78,8 @@ def test_integrate_los_branch_zero_impact_positive_radius():
     jfactory = JFactory(
         geom=geom,
         profile=profile,
-        distance=profiles.DMProfile.DISTANCE_GC,
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
     )
 
     radius_min = 1 * u.kpc
@@ -83,7 +88,15 @@ def test_integrate_los_branch_zero_impact_positive_radius():
     actual = jfactory._integrate_los_branch(
         0 * u.kpc, radius_min, radius_max, ndecade=100
     )
-    desired = profile.integral(radius_min, radius_max, 0, 100, True)
+
+    desired = profile.integral(
+        rmin=radius_min,
+        rmax=radius_max,
+        separation=0,
+        ndecade=100,
+        squared=True,
+        distance=8.33 * u.kpc,
+    )
 
     assert_quantity_allclose(actual, desired)
 
@@ -100,7 +113,7 @@ def test_dmfluxmap_annihilation(jfact_annihilation):
     )
 
     diff_flux = DarkMatterAnnihilationSpectralModel(
-        mass=massDM, channel=channel, jfactor=total_jfact
+        mDM=massDM, channel=channel, factor=total_jfact
     )
     int_flux = (
         diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
@@ -108,7 +121,7 @@ def test_dmfluxmap_annihilation(jfact_annihilation):
         / total_jfact
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
-    desired = 5.96827647e-12 / u.cm**2 / u.s
+    desired = 5.902332e-12 / u.cm**2 / u.s
 
     assert_quantity_allclose(actual, desired, rtol=1e-3)
 
@@ -120,14 +133,14 @@ def test_dmfluxmap_decay(jfact_decay):
     massDM = 1 * u.TeV
     channel = "W"
 
-    diff_flux = DarkMatterDecaySpectralModel(mass=massDM, channel=channel)
+    diff_flux = DarkMatterDecaySpectralModel(mDM=massDM, channel=channel)
     int_flux = (
         jfact_decay
         * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
-        / diff_flux.jfactor
+        / diff_flux.factor
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
-    desired = 1.6796e-3 / u.cm**2 / u.s
+    desired = 1.277e-3 / u.cm**2 / u.s
     assert_quantity_allclose(actual, desired, rtol=1e-3)
 
 
@@ -157,11 +170,11 @@ def test_custom_mu(dm_decay_model):
 def test_jfactor_unaffected(dm_decay_model):
     """The nominal factor attribute itself should remain untouched;
     only `scale` should carry the nuisance treatment."""
-    jfactor_before = dm_decay_model.jfactor
+    factor_before = dm_decay_model.factor
 
     add_factor_prior(dm_decay_model, sigma=0.2)
 
-    assert dm_decay_model.jfactor == jfactor_before
+    assert dm_decay_model.factor == factor_before
 
 
 @requires_data()
