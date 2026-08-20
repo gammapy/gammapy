@@ -233,6 +233,8 @@ jfactory = JFactory(
     profile=draco_profile,  # Chosen density profile
     distance=distance_dwarf_draco,  # Target distance
     annihilation=True,  # Set if it is annihilation (true) or decay (false)
+    rmax=1
+    * u.kpc,  # Physical size of the dark matter halo in kpc. We set 1 just as an example
 )
 
 # Computation of the J factor
@@ -276,6 +278,7 @@ dfactory = JFactory(
     profile=draco_profile,
     distance=distance_dwarf_draco,
     annihilation=False,  # Set for decay
+    rmax=1 * u.kpc,
 )
 
 # Compute D factor
@@ -625,6 +628,7 @@ jfactory_dec = JFactory(
     profile=draco_profile,
     distance=distance_dwarf_draco,
     annihilation=False,
+    rmax=1 * u.kpc,
 )
 dfact_draco = jfactory_dec.compute_jfactor()
 
