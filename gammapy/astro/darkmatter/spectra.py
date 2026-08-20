@@ -524,85 +524,11 @@ class PrimaryFlux(ContinuumPrimaryFlux):
 PRIMARY_FLUX_REGISTRY = {cls.tag[0]: cls for cls in (ContinuumPrimaryFlux, PrimaryFlux)}
 
 # ---------------------------------------------------------------------------
-# Spectral models
+# Spectral model
 # ---------------------------------------------------------------------------
 
 
-class DarkMatterMixin:
-    def _validate_init(
-        self, mDM, channel, factor, z, primary_flux, source, mapping_dict, annihilation
-    ):
-        """Init and validate inputs"""
-        self._annihilation = annihilation
-        if z < 0:
-            raise ValueError(f"Redshift z must be >= 0, got: {z}.")
-        if u.Quantity(factor).value <= 0:
-            raise ValueError("The astrophysical factor must be strictly positive.")
-        self._z = z
-        self._mDM = u.Quantity(mDM)
-        self._channel = channel
-        self._factor = u.Quantity(factor)
-        self.source = source
-        self.mapping_dict = mapping_dict
-        if primary_flux is not None:
-            if hasattr(primary_flux, "channel"):
-                primary_flux.channel = channel
-            primary_flux.mDM = self._expected_primary_flux_mass
-        else:
-            primary_flux = ContinuumPrimaryFlux(
-                self._expected_primary_flux_mass,
-                channel=self.channel,
-                source=self.source,
-                mapping_dict=self.mapping_dict,
-            )
-        self._primary_flux = primary_flux
-
-    @property
-    def annihilation(self):
-        """Annihilation/Decay flag"""
-        return self._annihilation
-
-    @property
-    def mDM(self):
-        """Dark matter mass."""
-        return self._mDM
-
-    @property
-    def factor(self):
-        """Astrophysical Factor."""
-        return self._factor
-
-    @property
-    def z(self):
-        """Source redshift (must be >= 0)."""
-        return self._z
-
-    @property
-    def primary_flux(self):
-        """Primary flux model."""
-        return self._primary_flux
-
-    @property
-    def channel(self):
-        """Channel of the default primary flux spectrum."""
-        return self._channel
-
-    @property
-    def _expected_primary_flux_mass(self):
-        """Expected primary flux mass for annihilation.
-
-        Returns
-        -------
-        mass : `~astropy.units.Quantity`
-            Equal to ``mDM``, since in annihilation each dark matter
-            particle pair has a total rest energy of ``2 * mDM``, shared
-            between two particles, and the primary flux tables are indexed
-            by the per-particle mass ``mDM``.
-        """
-        return self._mDM if self._annihilation else self._mDM / 2
-
-
-class DarkMatterSpectralModel(SpectralModel, DarkMatterMixin):
+class DarkMatterSpectralModel(SpectralModel):
     r"""Dark matter spectral model.
 
     Computes the differential gamma-ray flux expected from dark matter
@@ -732,16 +658,90 @@ class DarkMatterSpectralModel(SpectralModel, DarkMatterMixin):
         mapping_dict=None,
         annihilation=True,
     ):
-        if annihilation:
+        self._annihilation = annihilation
+
+        if self._annihilation:
             if k not in (2, 4):
                 raise ValueError(f"k must be 2 (Majorana) or 4 (Dirac), got: {k}.")
             self._k = k
         else:
             self._k = None
-        self._validate_init(
-            mDM, channel, factor, z, primary_flux, source, mapping_dict, annihilation
-        )
+
+        if z < 0:
+            raise ValueError(f"Redshift z must be >= 0, got: {z}.")
+
+        if u.Quantity(factor).value <= 0:
+            raise ValueError("The astrophysical factor must be strictly positive.")
+
+        self._z = z
+        self._mDM = u.Quantity(mDM)
+        self._channel = channel
+        self._factor = u.Quantity(factor)
+        self.source = source
+        self.mapping_dict = mapping_dict
+        if primary_flux is not None:
+            if hasattr(primary_flux, "channel"):
+                primary_flux.channel = channel
+            primary_flux.mDM = self._expected_primary_flux_mass
+        else:
+            primary_flux = ContinuumPrimaryFlux(
+                self._expected_primary_flux_mass,
+                channel=self.channel,
+                source=self.source,
+                mapping_dict=self.mapping_dict,
+            )
+        self._primary_flux = primary_flux
+
         super().__init__(scale=scale)
+
+    @property
+    def annihilation(self):
+        """Annihilation/Decay flag"""
+        return self._annihilation
+
+    @property
+    def mDM(self):
+        """Dark matter mass."""
+        return self._mDM
+
+    @property
+    def factor(self):
+        """Astrophysical Factor."""
+        return self._factor
+
+    @property
+    def z(self):
+        """Source redshift (must be >= 0)."""
+        return self._z
+
+    @property
+    def primary_flux(self):
+        """Primary flux model."""
+        return self._primary_flux
+
+    @property
+    def channel(self):
+        """Channel of the default primary flux spectrum."""
+        return self._channel
+
+    @property
+    def k(self):
+        """DM particle type (2: Majorana, 4: Dirac)."""
+        return self._k
+
+    @property
+    def _expected_primary_flux_mass(self):
+        """Expected primary flux mass for annihilation.
+
+        Returns
+        -------
+        mass : `~astropy.units.Quantity`
+            Equal to ``mDM``, since in annihilation each dark matter
+            particle pair has a total rest energy of ``2 * mDM``, shared
+            between two particles, and the primary flux tables are indexed
+            by the per-particle mass ``mDM``.
+        """
+        return self._mDM if self._annihilation else self._mDM / 2
 
     def evaluate(self, energy, scale):
         """Evaluate the dark matter annihilation differential flux.
@@ -881,16 +881,15 @@ class DarkMatterSpectralModel(SpectralModel, DarkMatterMixin):
             scale=scale, primary_flux=primary_flux, annihilation=annihilation, **data
         )
 
-    @property
-    def k(self):
-        """DM particle type (2: Majorana, 4: Dirac)."""
-        return self._k
-
 
 @deprecated("2.2", alternative="DarkMatterSpectralModel")
 class DarkMatterAnnihilationSpectralModel(DarkMatterSpectralModel):
     scale = Parameter("scale", 1, unit="", interp="log")
     tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
+
+    def __init__(self, *args, **kwargs):
+        kwargs["annihilation"] = True
+        super().__init__(*args, **kwargs)
 
 
 @deprecated("2.2", alternative="DarkMatterSpectralModel")
