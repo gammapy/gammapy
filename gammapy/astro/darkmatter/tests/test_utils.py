@@ -152,7 +152,7 @@ def test_prior_attached(dm_decay_model):
 
     prior = dm_decay_model.scale.prior
     assert prior is not None
-    assert prior.sigma.value == pytest.approx(0.2)
+    assert prior.sigma.value == pytest.approx(0.2 * np.log(10))
     assert prior.mu.value == pytest.approx(1.0)
 
 
@@ -163,7 +163,7 @@ def test_custom_mu(dm_decay_model):
 
     prior = dm_decay_model.scale.prior
     assert prior.mu.value == pytest.approx(0.5)
-    assert prior.sigma.value == pytest.approx(0.15)
+    assert prior.sigma.value == pytest.approx(0.15 * np.log(10))
 
 
 @requires_data()
