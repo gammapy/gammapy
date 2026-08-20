@@ -552,10 +552,10 @@ class DarkMatterSpectralModel(SpectralModel):
 
     For decay, the flux is computed as:
 
-        .. math::
-            \frac{\mathrm d \phi}{\mathrm d E} =
-            \frac{\Gamma}{4\pi m_{\mathrm{DM}}}
-            \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
+    .. math::
+        \frac{\mathrm d \phi}{\mathrm d E} =
+        \frac{\Gamma}{4\pi m_{\mathrm{DM}}}
+        \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
 
     where :math:`\Gamma = 1/\tau` is the decay rate (inverse lifetime),
     :math:`m_{\mathrm{DM}}` is the dark matter mass,
@@ -819,7 +819,7 @@ class DarkMatterSpectralModel(SpectralModel):
 
     @classmethod
     def from_dict(cls, data):
-        """Construct a `DarkMatterAnnihilationSpectralModel` from a dictionary.
+        """Construct a `DarkMatterSpectralModel` from a dictionary.
 
         Reconstructs the ``primary_flux`` sub-model using the registry of
         known primary flux types, extracts the ``scale`` parameter value
@@ -836,7 +836,7 @@ class DarkMatterSpectralModel(SpectralModel):
 
         Returns
         -------
-        model : `DarkMatterAnnihilationSpectralModel`
+        model : `DarkMatterSpectralModel`
             New instance reconstructed from ``data``.
         """
         data = copy.deepcopy(data["spectral"])

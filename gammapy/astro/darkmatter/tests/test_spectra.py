@@ -315,6 +315,15 @@ def test_k_value_roundtrip(k):
     assert new_model.k == k
 
 
+def test_invalid_factor():
+    with pytest.raises(
+        ValueError, match="The astrophysical factor must be strictly positive."
+    ):
+        DarkMatterSpectralModel(
+            mDM=1 * u.TeV, channel="b", factor=-1 * u.Unit("GeV2 cm-5")
+        )
+
+
 # Full spectral models (annihilation / decay) with default ContinuumPrimaryFlux
 
 
