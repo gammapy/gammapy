@@ -18,6 +18,7 @@ from gammapy.utils.interpolation import (
     ScaledRegularGridInterpolator,
     interpolation_scale,
 )
+from gammapy.utils.metadata import add_creator_metadata
 from gammapy.utils.scripts import make_path
 
 from .io import (
@@ -582,7 +583,7 @@ class IRF(metaclass=abc.ABCMeta):
         name = IRF_DL3_HDU_SPECIFICATION[self.tag]["extname"]
         return fits.BinTableHDU(self.to_table(format=format), name=name)
 
-    def to_hdulist(self, format="gadf-dl3"):
+    def to_hdulist(self, format="gadf-dl3", creation=None):
         """
         Write the HDU list.
 
@@ -590,16 +591,38 @@ class IRF(metaclass=abc.ABCMeta):
         ----------
         format : {"gadf-dl3"}, optional
             Format specification. Default is "gadf-dl3".
+        creation : `~gammapy.utils.metadata.CreatorMetaData`, optional
+            Creation metadata to add to the file. If None, default metadata is added.
+            Default is None.
+
+        Returns
+        -------
+        hdulist : `~astropy.io.fits.HDUList`
+            IRF in HDU list format.
+
         """
         hdu = self.to_table_hdu(format=format)
-        return fits.HDUList([fits.PrimaryHDU(), hdu])
+        hdus = [fits.PrimaryHDU(), hdu]
+        add_creator_metadata([hd.header for hd in hdus], creation)
 
-    def write(self, filename, *args, **kwargs):
+        return fits.HDUList(hdus)
+
+    def write(self, filename, *args, creation=None, **kwargs):
         """Write IRF to fits.
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
+
+        Parameters
+        ----------
+        filename : str
+            Filename.
+        creation : `~gammapy.utils.metadata.CreatorMetaData`, optional
+            Creation metadata to add to the file. If None, default metadata is added.
+            Default is None.
         """
-        self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
+        self.to_hdulist(creation=creation).writeto(
+            str(make_path(filename)), *args, **kwargs
+        )
 
     def pad(self, pad_width, axis_name, **kwargs):
         """Pad IRF along a given axis.
