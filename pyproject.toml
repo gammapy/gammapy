@@ -104,6 +104,10 @@ test_notebooks = [
     "jupyter_client",
     "ipykernel"
 ]
+validation = [
+    "psrecord",
+    "healpy",
+]
 
 [tool.setuptools.packages.find]
 include = ["gammapy*"]
