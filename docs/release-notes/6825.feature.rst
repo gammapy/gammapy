@@ -1,0 +1,1 @@
+Creation of class `~gammapy.astro.darkmatter.DarkMatterSpectralModel` as the unification of `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel` and `~gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`. The new class has a parameter `annihilation` to set the type of dark matter process.

@@ -4,8 +4,7 @@ import astropy.units as u
 import pytest
 
 from gammapy.astro.darkmatter import (
-    DarkMatterAnnihilationSpectralModel,
-    DarkMatterDecaySpectralModel,
+    DarkMatterSpectralModel,
     JFactory,
     profiles,
     add_factor_prior,
@@ -44,10 +43,11 @@ def jfact_decay(geom):
 
 @pytest.fixture
 def dm_decay_model():
-    return DarkMatterDecaySpectralModel(
+    return DarkMatterSpectralModel(
         mDM=5000 * u.Unit("GeV"),
         channel="b",
         factor=3.41e19 * u.Unit("GeV cm-2"),
+        annihilation=False,
     )
 
 
@@ -191,9 +191,7 @@ def test_dmfluxmap_annihilation(jfact_annihilation):
         float(jfact_annihilation.mean().value), unit=jfact_annihilation.unit
     )
 
-    diff_flux = DarkMatterAnnihilationSpectralModel(
-        mDM=massDM, channel=channel, factor=total_jfact
-    )
+    diff_flux = DarkMatterSpectralModel(mDM=massDM, channel=channel, factor=total_jfact)
     int_flux = (
         diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
         * jfact_annihilation
@@ -212,7 +210,7 @@ def test_dmfluxmap_decay(jfact_decay):
     massDM = 1 * u.TeV
     channel = "W"
 
-    diff_flux = DarkMatterDecaySpectralModel(mDM=massDM, channel=channel)
+    diff_flux = DarkMatterSpectralModel(mDM=massDM, channel=channel, annihilation=False)
     int_flux = (
         jfact_decay
         * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)

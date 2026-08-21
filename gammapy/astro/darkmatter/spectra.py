@@ -23,6 +23,7 @@ from gammapy.utils.table import table_map_columns
 
 __all__ = [
     "ContinuumPrimaryFlux",
+    "DarkMatterSpectralModel",
     "DarkMatterAnnihilationSpectralModel",
     "DarkMatterDecaySpectralModel",
     "PrimaryFlux",
@@ -523,18 +524,152 @@ class PrimaryFlux(ContinuumPrimaryFlux):
 PRIMARY_FLUX_REGISTRY = {cls.tag[0]: cls for cls in (ContinuumPrimaryFlux, PrimaryFlux)}
 
 # ---------------------------------------------------------------------------
-# Spectral models
+# Spectral model
 # ---------------------------------------------------------------------------
 
 
-class DarkMatterMixin:
-    def _validate_init(
-        self, mDM, channel, factor, z, primary_flux, source, mapping_dict
+class DarkMatterSpectralModel(SpectralModel):
+    r"""Dark matter spectral model.
+
+    Computes the differential gamma-ray flux expected from dark matter
+    annihilation or decay in a region with a given  astrophysical factor, combining the
+    thermally averaged annihilation cross-section or particle decay lifetime, the chosen primary
+    particle-physics spectrum, and a fit-time normalization scale.
+
+    For annihilation, the gamma-ray flux is computed as:
+
+    .. math::
+        \frac{\mathrm d \phi}{\mathrm d E} =
+        \frac{\langle \sigma\nu \rangle}{4\pi k m^2_{\mathrm{DM}}}
+        \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
+
+    where :math:`\langle \sigma\nu \rangle` is the thermal relic
+    cross-section, :math:`k` accounts for the dark matter particle type
+    (Majorana or Dirac), :math:`m_{\mathrm{DM}}` is the dark matter mass,
+    :math:`\mathrm dN/\mathrm dE` is the primary photon spectrum per
+    annihilation, and :math:`J(\Delta\Omega)` is the astrophysical
+    J-factor.
+
+    For decay, the flux is computed as:
+
+    .. math::
+        \frac{\mathrm d \phi}{\mathrm d E} =
+        \frac{\Gamma}{4\pi m_{\mathrm{DM}}}
+        \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
+
+    where :math:`\Gamma = 1/\tau` is the decay rate (inverse lifetime),
+    :math:`m_{\mathrm{DM}}` is the dark matter mass,
+    :math:`\mathrm dN/\mathrm dE` is the primary photon spectrum per decay,
+    and :math:`J(\Delta\Omega)` is the astrophysical D-factor (here denoted
+    generically as the astrophysical factor).
+
+    Parameters
+    ----------
+    mDM : `~astropy.units.Quantity`
+        Dark matter particle mass.
+    channel : str
+        Annihilation/Decay channel for the primary flux spectrum e.g. ``"b"`` for bb̄. See
+        `ContinuumPrimaryFlux.channel_registry` for available channels.
+    scale : float, optional
+        Dimensionless normalization parameter applied multiplicatively to
+        the predicted flux, intended to be left free in spectral fits.
+        Default is 1.
+    factor : `~astropy.units.Quantity`, optional
+        Astrophysical factor (integrated squared dark matter density
+        along the line of sight and over the solid angle), needed when a
+        `~gammapy.modeling.models.PointSpatialModel` is used for the
+        spatial component. Default is 1 (dimensionless).
+    z : float, optional
+        Redshift of the source. The primary flux is evaluated at the
+        redshifted energy ``energy * (1 + z)``. Default is 0.
+    k : int, optional
+        Only used in the case of annihilation. Dark matter particle type: ``2`` for Majorana particles (which are
+        their own antiparticles, giving a factor of 2 in the annihilation
+        rate) or ``4`` for Dirac particles. Default is 2.
+    primary_flux : primary flux model, optional
+        Primary photon spectrum per annihilation event. Must be an
+        instance of `ContinuumPrimaryFlux`. If not provided, a default
+        `ContinuumPrimaryFlux` is constructed using ``mDM`` and ``channel``.
+    source : str, optional
+            Data source for the spectral tables. Options are:
+
+            * ``"pppc4"`` (default): Cirelli et al. (2011, 2016) PPPC4DMID
+                tables.
+            * ``"cosmixs"``: Cirelli et al. (2024) / CosmiXs tables.
+            * A path to a custom file readable by `astropy.table.Table.read`
+                (extensions ``.dat``, ``.txt``, ``.csv``, or ``.ecsv``).
+
+            If a custom file path is provided, it must contain ``"mDM"`` and
+            ``"Log[10,x]"`` columns (after applying ``mapping_dict`` if given),
+            plus columns named after the requested annihilation channel(s)
+            using the internal channel registry naming convention.
+    mapping_dict : dict, optional
+        Mapping dictionary used to rename the columns of a custom source
+        file to the expected internal column names. Only used when
+        ``source`` is a custom file path. Format is
+        ``{actual_column_name: expected_column_name}``, and must cover the
+        mandatory columns ``"mDM"`` and ``"Log[10,x]"``.
+    annihilation : bool
+        Boolean value indicating if the dark matter spectral model comes from an
+        annihilation or decay scenario. Default is True, which indicates annihilation.
+
+    Examples
+    --------
+    This is how to instantiate a `DarkMatterSpectralModel`::
+
+        >>> import astropy.units as u
+        >>> from gammapy.astro.darkmatter import DarkMatterSpectralModel
+
+        >>> channel = "b"
+        >>> mDM = 5000*u.Unit("GeV")
+        >>> factor = 3.41e19 * u.Unit("GeV2 cm-5")
+        >>> modelDM = DarkMatterSpectralModel(mDM=mDM,
+          channel=channel, factor=factor, annihilation=True)  # noqa: E501
+
+    References
+    ----------
+    .. [1] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
+       Cookbook for Dark Matter Indirect Detection"
+       <http://www.marcocirelli.net/PPPC4DMID.html>`_
+    """
+
+    THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
+    """Thermally averaged annihilation cross-section."""
+
+    LIFETIME_AGE_OF_UNIVERSE = 4.3e17 * u.Unit("s")
+    """Use age of univserse as lifetime"""
+
+    scale = Parameter("scale", 1, unit="", interp="log")
+    tag = ["DarkMatterSpectralModel", "dm-spectralmodel"]
+
+    @deprecated_renamed_argument("mass", "mDM", "2.2")
+    @deprecated_renamed_argument("jfactor", "factor", "2.2")
+    def __init__(
+        self,
+        mDM,
+        channel,
+        *,
+        scale=scale.quantity,
+        factor=1,
+        z=0,
+        k=2,
+        primary_flux=None,
+        source=None,
+        mapping_dict=None,
+        annihilation=True,
     ):
-        """Init and validate inputs"""
+        self._annihilation = annihilation
+
+        if self._annihilation:
+            if k not in (2, 4):
+                raise ValueError(f"k must be 2 (Majorana) or 4 (Dirac), got: {k}.")
+            self._k = k
+        else:
+            self._k = None
 
         if z < 0:
-            raise ValueError(f"Redshift z must be >= 0, got: {self._z}.")
+            raise ValueError(f"Redshift z must be >= 0, got: {z}.")
+
         if u.Quantity(factor).value <= 0:
             raise ValueError("The astrophysical factor must be strictly positive.")
 
@@ -556,6 +691,13 @@ class DarkMatterMixin:
                 mapping_dict=self.mapping_dict,
             )
         self._primary_flux = primary_flux
+
+        super().__init__(scale=scale)
+
+    @property
+    def annihilation(self):
+        """Annihilation/Decay flag"""
+        return self._annihilation
 
     @property
     def mDM(self):
@@ -582,110 +724,35 @@ class DarkMatterMixin:
         """Channel of the default primary flux spectrum."""
         return self._channel
 
+    @property
+    def k(self):
+        """DM particle type (2: Majorana, 4: Dirac)."""
+        return self._k
 
-class DarkMatterAnnihilationSpectralModel(SpectralModel, DarkMatterMixin):
-    r"""Dark matter annihilation spectral model.
+    @property
+    def _expected_primary_flux_mass(self):
+        """Expected primary flux mass for annihilation.
 
-    Computes the differential gamma-ray flux expected from dark matter
-    annihilation in a region with a given J-factor, combining the
-    thermally averaged annihilation cross-section, the chosen primary
-    particle-physics spectrum, and a fit-time normalization scale.
-
-    The gamma-ray flux is computed as:
-
-    .. math::
-        \frac{\mathrm d \phi}{\mathrm d E} =
-        \frac{\langle \sigma\nu \rangle}{4\pi k m^2_{\mathrm{DM}}}
-        \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
-
-    where :math:`\langle \sigma\nu \rangle` is the thermal relic
-    cross-section, :math:`k` accounts for the dark matter particle type
-    (Majorana or Dirac), :math:`m_{\mathrm{DM}}` is the dark matter mass,
-    :math:`\mathrm dN/\mathrm dE` is the primary photon spectrum per
-    annihilation, and :math:`J(\Delta\Omega)` is the astrophysical
-    J-factor.
-
-    Parameters
-    ----------
-    mDM : `~astropy.units.Quantity`
-        Dark matter particle mass.
-    channel : str
-        Annihilation channel for the primary flux spectrum e.g. ``"b"`` for bb̄. See
-        `ContinuumPrimaryFlux.channel_registry` for available channels.
-    scale : float, optional
-        Dimensionless normalization parameter applied multiplicatively to
-        the predicted flux, intended to be left free in spectral fits.
-        Default is 1.
-    factor : `~astropy.units.Quantity`, optional
-        Astrophysical J-factor (integrated squared dark matter density
-        along the line of sight and over the solid angle), needed when a
-        `~gammapy.modeling.models.PointSpatialModel` is used for the
-        spatial component. Default is 1 (dimensionless).
-    z : float, optional
-        Redshift of the source. The primary flux is evaluated at the
-        redshifted energy ``energy * (1 + z)``. Default is 0.
-    k : int, optional
-        Dark matter particle type: ``2`` for Majorana particles (which are
-        their own antiparticles, giving a factor of 2 in the annihilation
-        rate) or ``4`` for Dirac particles. Default is 2.
-    primary_flux : primary flux model, optional
-        Primary photon spectrum per annihilation event. Must be an
-        instance of `ContinuumPrimaryFlux`. If not provided, a default
-        `ContinuumPrimaryFlux` is constructed using ``mDM`` and ``channel``.
-
-    Examples
-    --------
-    This is how to instantiate a `DarkMatterAnnihilationSpectralModel`::
-
-        >>> import astropy.units as u
-        >>> from gammapy.astro.darkmatter import DarkMatterAnnihilationSpectralModel
-
-        >>> channel = "b"
-        >>> mDM = 5000*u.Unit("GeV")
-        >>> factor = 3.41e19 * u.Unit("GeV2 cm-5")
-        >>> modelDM = DarkMatterAnnihilationSpectralModel(mDM=mDM,
-          channel=channel, factor=factor)  # noqa: E501
-
-    References
-    ----------
-    .. [1] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
-       Cookbook for Dark Matter Indirect Detection"
-       <http://www.marcocirelli.net/PPPC4DMID.html>`_
-    """
-
-    THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
-    """Thermally averaged annihilation cross-section."""
-
-    scale = Parameter("scale", 1, unit="", interp="log")
-    tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
-
-    @deprecated_renamed_argument("mass", "mDM", "2.2")
-    @deprecated_renamed_argument("jfactor", "factor", "2.2")
-    def __init__(
-        self,
-        mDM,
-        channel,
-        scale=scale.quantity,
-        factor=1,
-        z=0,
-        k=2,
-        primary_flux=None,
-        source=None,
-        mapping_dict=None,
-    ):
-        if k not in (2, 4):
-            raise ValueError(f"k must be 2 (Majorana) or 4 (Dirac), got: {k}.")
-        self._k = k
-        self._validate_init(mDM, channel, factor, z, primary_flux, source, mapping_dict)
-        super().__init__(scale=scale)
+        Returns
+        -------
+        mass : `~astropy.units.Quantity`
+            Equal to ``mDM``, since in annihilation each dark matter
+            particle pair has a total rest energy of ``2 * mDM``, shared
+            between two particles, and the primary flux tables are indexed
+            by the per-particle mass ``mDM``.
+        """
+        return self._mDM if self._annihilation else self._mDM / 2
 
     def evaluate(self, energy, scale):
         """Evaluate the dark matter annihilation differential flux.
 
-        Computes
+        For annihilation, computes:
         ``flux = scale * factor * THERMAL_RELIC_CROSS_SECTION
         * primary_flux(energy * (1 + z)) / k / mDM**2 / (4 * pi)``.
 
+        For decay, computes:
+        ``flux = scale * factor * primary_flux(energy * (1 + z))
+        / LIFETIME_AGE_OF_UNIVERSE / mDM / (4 * pi)``.
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
@@ -698,24 +765,34 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel, DarkMatterMixin):
         flux : `~astropy.units.Quantity`
             Differential gamma-ray flux per unit energy.
         """
-        flux = (
-            scale
-            * self.factor
-            * self.THERMAL_RELIC_CROSS_SECTION
-            * self.primary_flux(energy=energy * (1 + self.z))
-            / self.k
-            / self.mDM
-            / self.mDM
-            / (4 * np.pi)
-        )
-        return flux
+        if self.annihilation:
+            return (
+                scale
+                * self.factor
+                * self.THERMAL_RELIC_CROSS_SECTION
+                * self.primary_flux(energy=energy * (1 + self.z))
+                / self.k
+                / self.mDM
+                / self.mDM
+                / (4 * np.pi)
+            )
+        else:
+            return (
+                scale
+                * self.factor
+                * self.primary_flux(energy=energy * (1 + self.z))
+                / self.LIFETIME_AGE_OF_UNIVERSE
+                / self.mDM
+                / (4 * np.pi)
+            )
 
     def to_dict(self, full_output=False):
         """Serialize the model to a dictionary.
 
         Extends the base `~gammapy.modeling.models.SpectralModel.to_dict`
-        output with ``channel``, ``mDM``, ``factor``, ``z``, ``k``, and the
-        serialized ``primary_flux`` (via its own `to_dict`).
+        output with ``channel``, ``mDM``, ``factor``, ``z``, ``k``, the
+        serialized ``primary_flux`` (via its own `to_dict`), ``source``, ``mapping_dict``
+        and ``annihilation``.
 
         Parameters
         ----------
@@ -738,11 +815,12 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel, DarkMatterMixin):
         data["spectral"]["primary_flux"] = self.primary_flux.to_dict()
         data["spectral"]["source"] = self.source
         data["spectral"]["mapping_dict"] = self.mapping_dict
+        data["spectral"]["annihilation"] = self.annihilation
         return data
 
     @classmethod
     def from_dict(cls, data):
-        """Construct a `DarkMatterAnnihilationSpectralModel` from a dictionary.
+        """Construct a `DarkMatterSpectralModel` from a dictionary.
 
         Reconstructs the ``primary_flux`` sub-model using the registry of
         known primary flux types, extracts the ``scale`` parameter value
@@ -759,10 +837,12 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel, DarkMatterMixin):
 
         Returns
         -------
-        model : `DarkMatterAnnihilationSpectralModel`
+        model : `DarkMatterSpectralModel`
             New instance reconstructed from ``data``.
         """
         data = copy.deepcopy(data["spectral"])
+        model_type = data.get("type", "")
+        default_annihilation = "Decay" not in model_type
         data.pop("type")
 
         _RENAMED_FIELDS = {"mass": "mDM", "jfactor": "factor"}
@@ -797,252 +877,29 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel, DarkMatterMixin):
 
         data.pop("source", None)
         data.pop("mapping_dict", None)
+        annihilation = data.pop("annihilation", default_annihilation)
         parameters = data.pop("parameters")
         scale = next(p["value"] for p in parameters if p["name"] == "scale")
-        return cls(scale=scale, primary_flux=primary_flux, **data)
-
-    @property
-    def k(self):
-        """DM particle type (2: Majorana, 4: Dirac)."""
-        return self._k
-
-    @property
-    def _expected_primary_flux_mass(self):
-        """Expected primary flux mass for annihilation.
-
-        Returns
-        -------
-        mass : `~astropy.units.Quantity`
-            Equal to ``mDM``, since in annihilation each dark matter
-            particle pair has a total rest energy of ``2 * mDM``, shared
-            between two particles, and the primary flux tables are indexed
-            by the per-particle mass ``mDM``.
-        """
-        return self.mDM
+        return cls(
+            scale=scale, primary_flux=primary_flux, annihilation=annihilation, **data
+        )
 
 
-class DarkMatterDecaySpectralModel(SpectralModel, DarkMatterMixin):
-    r"""Dark matter decay spectral model.
-
-    Computes the differential gamma-ray flux expected from the decay of
-    dark matter particles in a region with a given D-factor, combining the
-    decay lifetime, the chosen primary particle-physics spectrum, and a
-    fit-time normalization scale.
-
-    The gamma-ray flux is computed as:
-
-    .. math::
-        \frac{\mathrm d \phi}{\mathrm d E} =
-        \frac{\Gamma}{4\pi m_{\mathrm{DM}}}
-        \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
-
-    where :math:`\Gamma = 1/\tau` is the decay rate (inverse lifetime),
-    :math:`m_{\mathrm{DM}}` is the dark matter mass,
-    :math:`\mathrm dN/\mathrm dE` is the primary photon spectrum per decay,
-    and :math:`J(\Delta\Omega)` is the astrophysical D-factor (here denoted
-    generically as the astrophysical factor).
-
-    Parameters
-    ----------
-    mDM : `~astropy.units.Quantity`
-        Dark matter particle mass.
-    channel : str
-        Decay channel for the primary flux spectrum,
-        e.g. ``"b"`` for bb̄. See `ContinuumPrimaryFlux.channel_registry`
-        for available channels.
-    scale : float, optional
-        Dimensionless normalization parameter applied multiplicatively to
-        the predicted flux, intended to be left free in spectral fits.
-        Default is 1.
-    factor : `~astropy.units.Quantity`, optional
-        Astrophysical D-factor (integrated dark matter density along the
-        line of sight and over the solid angle), needed when a
-        `~gammapy.modeling.models.PointSpatialModel` is used for the
-        spatial component. Default is 1 (dimensionless).
-    z : float, optional
-        Redshift of the source. The primary flux is evaluated at the
-        redshifted energy ``energy * (1 + z)``. Default is 0.
-    primary_flux : primary flux model, optional
-        Primary photon spectrum per decay event. Must be an instance of
-        `ContinuumPrimaryFlux`. If not provided, a default
-        `ContinuumPrimaryFlux` is constructed using ``mDM / 2`` (the energy
-        scale relevant for two-body decay products) and ``channel``.
-
-    Examples
-    --------
-    This is how to instantiate a `DarkMatterDecaySpectralModel`::
-
-        >>> import astropy.units as u
-        >>> from gammapy.astro.darkmatter import DarkMatterDecaySpectralModel
-
-        >>> channel = "b"
-        >>> mDM = 5000*u.Unit("GeV")
-        >>> factor = 3.41e19 * u.Unit("GeV cm-2")
-        >>> modelDM = DarkMatterDecaySpectralModel(mDM=mDM,
-        channel=channel, factor=factor)
-
-    References
-    ----------
-    .. [1] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
-       Cookbook for Dark Matter Indirect Detection"
-       <http://www.marcocirelli.net/PPPC4DMID.html>`_
-    """
-
-    LIFETIME_AGE_OF_UNIVERSE = 4.3e17 * u.Unit("s")
-    """Use age of univserse as lifetime"""
-
+@deprecated("2.2", alternative="DarkMatterSpectralModel")
+class DarkMatterAnnihilationSpectralModel(DarkMatterSpectralModel):
     scale = Parameter("scale", 1, unit="", interp="log")
+    tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
 
+    def __init__(self, *args, **kwargs):
+        kwargs["annihilation"] = True
+        super().__init__(*args, **kwargs)
+
+
+@deprecated("2.2", alternative="DarkMatterSpectralModel")
+class DarkMatterDecaySpectralModel(DarkMatterSpectralModel):
+    scale = Parameter("scale", 1, unit="", interp="log")
     tag = ["DarkMatterDecaySpectralModel", "dm-decay"]
 
-    @deprecated_renamed_argument("mass", "mDM", "2.2")
-    @deprecated_renamed_argument("jfactor", "factor", "2.2")
-    def __init__(
-        self,
-        mDM,
-        channel,
-        scale=scale.quantity,
-        factor=1,
-        z=0,
-        primary_flux=None,
-        source=None,
-        mapping_dict=None,
-    ):
-        self._validate_init(mDM, channel, factor, z, primary_flux, source, mapping_dict)
-        super().__init__(scale=scale)
-
-    def evaluate(self, energy, scale):
-        """Evaluate the dark matter decay differential flux.
-
-        Computes
-        ``flux = scale * factor * primary_flux(energy * (1 + z))
-        / LIFETIME_AGE_OF_UNIVERSE / mDM / (4 * pi)``.
-
-        Parameters
-        ----------
-        energy : `~astropy.units.Quantity`
-            Energy values (array-like) at which to evaluate the flux.
-        scale : float
-            Current value of the ``scale`` normalization parameter.
-        Returns
-        -------
-        flux : `~astropy.units.Quantity`
-            Differential gamma-ray flux per unit energy.
-        """
-        flux = (
-            scale
-            * self.factor
-            * self.primary_flux(energy=energy * (1 + self.z))
-            / self.LIFETIME_AGE_OF_UNIVERSE
-            / self.mDM
-            / (4 * np.pi)
-        )
-        return flux
-
-    def to_dict(self, full_output=False):
-        """Serialize the model to a dictionary.
-
-        Extends the base `~gammapy.modeling.models.SpectralModel.to_dict`
-        output with ``channel``, ``mDM``, ``factor``, ``z``, and the
-        serialized ``primary_flux`` (via its own `to_dict`). The ``scale``
-        and ``lifetime`` parameters are included via the base class's
-        ``parameters`` serialization.
-
-        Parameters
-        ----------
-        full_output : bool, optional
-            Passed through to the parent class's `to_dict`. Default is
-            False.
-
-        Returns
-        -------
-        data : dict
-            Dictionary representation suitable for round-tripping via
-            `from_dict`.
-        """
-        data = super().to_dict(full_output=full_output)
-        data["spectral"]["channel"] = self.channel
-        data["spectral"]["mDM"] = self.mDM.to_string()
-        data["spectral"]["factor"] = self.factor.to_string()
-        data["spectral"]["z"] = self.z
-        data["spectral"]["primary_flux"] = self.primary_flux.to_dict()
-        data["spectral"]["source"] = self.source
-        data["spectral"]["mapping_dict"] = self.mapping_dict
-        return data
-
-    @classmethod
-    def from_dict(cls, data):
-        """Construct a `DarkMatterDecaySpectralModel` from a dictionary.
-
-        Reconstructs the ``primary_flux`` sub-model using the registry of
-        known primary flux types, extracts the ``scale`` and ``lifetime``
-        parameter values (with units) from the serialized parameter list,
-        and passes the remaining fields through to the constructor.
-
-        Parameters
-        ----------
-        data : dict
-            Dictionary with a top-level ``"spectral"`` key, as produced by
-            `to_dict`, containing ``mDM``, ``channel``, ``factor``, ``z``,
-            ``primary_flux``, and ``parameters`` (including ``scale`` and
-            ``lifetime``).
-
-        Returns
-        -------
-        model : `DarkMatterDecaySpectralModel`
-            New instance reconstructed from ``data``.
-        """
-        data = copy.deepcopy(data["spectral"])
-        data.pop("type")
-
-        _RENAMED_FIELDS = {"mass": "mDM", "jfactor": "factor"}
-        for old_name, new_name in _RENAMED_FIELDS.items():
-            if old_name in data:
-                warnings.warn(
-                    f"The '{old_name}' field is deprecated since v2.2 and will "
-                    f"be removed in a future version. Use '{new_name}' instead. "
-                    f"This serialized model appears to use the old format.",
-                    GammapyDeprecationWarning,
-                )
-                data[new_name] = data.pop(old_name)
-
-        pf_data = data.pop("primary_flux", None)
-
-        if pf_data is None:
-            # Old format
-            primary_flux = ContinuumPrimaryFlux(
-                data.get("mDM", data.get("mass")),
-                channel=data["channel"],
-                source=data.get("source"),
-                mapping_dict=data.get("mapping_dict"),
-            )
-        else:
-            pf_cls = PRIMARY_FLUX_REGISTRY.get(pf_data["type"])
-            if pf_cls is None:
-                raise ValueError(
-                    f"Unknown primary_flux type: '{pf_data['type']}'. "
-                    f"Available: {list(PRIMARY_FLUX_REGISTRY.keys())}"
-                )
-            primary_flux = pf_cls.from_dict(pf_data)
-
-        data.pop("source", None)
-        data.pop("mapping_dict", None)
-
-        parameters = data.pop("parameters")
-        scale = next(p["value"] for p in parameters if p["name"] == "scale")
-
-        return cls(scale=scale, primary_flux=primary_flux, **data)
-
-    @property
-    def _expected_primary_flux_mass(self):
-        """Expected primary flux mass for decay.
-
-        Returns
-        -------
-        mass : `~astropy.units.Quantity`
-            Equal to ``mDM / 2``, since a decaying dark matter particle of
-            mass ``mDM`` produces two-body final states each carrying
-            roughly half the rest energy, and the primary flux tables are
-            indexed by this per-product mass scale.
-        """
-        return self.mDM / 2
+    def __init__(self, *args, **kwargs):
+        kwargs["annihilation"] = False
+        super().__init__(*args, **kwargs)

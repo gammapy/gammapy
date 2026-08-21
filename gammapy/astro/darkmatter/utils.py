@@ -203,7 +203,7 @@ def add_factor_prior(model, sigma, mu=1.0):
 
     Parameters
     ----------
-    model : `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel` or `~gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`
+    model : `~gammapy.astro.darkmatter.DarkMatterSpectralModel`
         Model whose ``scale`` parameter will get the prior attached.
         ``scale`` is unfrozen as part of this call.
     sigma : float
@@ -214,7 +214,7 @@ def add_factor_prior(model, sigma, mu=1.0):
 
     Returns
     -------
-    model : `DarkMatterAnnihilationSpectralModel` or `DarkMatterDecaySpectralModel`
+    model : `DarkMatterSpectralModel`
         The same model instance, with the prior attached, for chaining.
     """
     model.scale.frozen = False
