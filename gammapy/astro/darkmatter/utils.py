@@ -5,7 +5,7 @@ import html
 
 import astropy.units as u
 from gammapy.modeling.models.prior import (
-    GaussianPrior,
+    LogNormalPrior,
 )
 import numpy as np
 
@@ -78,6 +78,24 @@ class JFactory:
 
         return np.trapezoid(values, t)
 
+    def _integrate_los(self, impact, separation, ndecade):
+        """Integrate the physical forward line of sight."""
+        distance = self.distance
+        rmax = self.rmax
+
+        if distance < rmax:
+            integral = self._integrate_los_branch(impact, distance, rmax, ndecade)
+            if separation < np.pi / 2:
+                integral += 2 * self._integrate_los_branch(
+                    impact, impact, distance, ndecade
+                )
+            return integral
+
+        if separation < np.pi / 2 and impact < rmax:
+            return 2 * self._integrate_los_branch(impact, impact, rmax, ndecade)
+
+        return 0 * u.Unit("GeV2 cm-5" if self.annihilation else "GeV cm-2")
+
     def compute_differential_jfactor(self, ndecade=1e4):
         r"""Compute differential J-Factor.
 
@@ -102,46 +120,47 @@ class JFactory:
 
         Notes
         -----
-        The line-of-sight (LoS) integral should include both the near and far
-        sides of the halo. To account for this, the integration is split into
-        two regions:
-
-        1. :math:`[r_\perp, r_{\max}]` - from the observer to the source,
-           counted twice to include contributions from both near and far sides.
-        2. :math:`[r_{\max}, 4 r_{\max}]` - from the source to infinity.
-           The upper limit is truncated at :math:`4 r_{\max}` because
-           contributions beyond this are negligible.
-
-        Hence, the effective integration domain is:
+        The line-of-sight geometry is defined by
 
         .. math::
-            2 \times [r_\perp, r_{\max}] \;+\; [r_{\max}, 4 r_{\max}].
+            r(l)^2 = D^2 + l^2 - 2 D l \cos\theta,
 
-        The impact parameter is given by:
-
-        .. math::
-            r_\perp = r_{\max} \sin \theta.
-
-        The LoS integral is converted into radial branches with:
+        where :math:`D` is the observer-to-halo-center distance and
+        :math:`l \geq 0` is the physical forward line-of-sight coordinate.
+        The impact parameter of the corresponding infinite line is given by:
 
         .. math::
-            \mathrm dl = \frac{r}{\sqrt{r^2 - r_\perp^2}} \, \mathrm dr.
+            r_\perp = D \sin\theta.
+
+        The integration is split into two regions:
+
+        1. :math:`D < r_{\max}`: the observer is inside the integration radius.
+        Directions with :math:`\theta < \pi / 2` cross the inner radial interval
+        twice, while directions with :math:`\theta \geq \pi / 2` contain only
+        the outward branch.
+
+        2. :math:`D \geq r_{\max}`: the observer is outside the integration radius.
+        The line of sight contributes only when it points toward the halo and
+        intersects the integration sphere, i.e. when :math:`\theta < \pi / 2`
+        and :math:`r_\perp < r_{\max}`.
+
+        Each radial branch is evaluated using
+
+        .. math::
+            \mathrm dl =
+            \frac{r}{\sqrt{r^2-r_\perp^2}}\,\mathrm dr.
 
         The apparent singularity at :math:`r = r_\perp` is integrable. To avoid
         evaluating it directly, each radial branch is integrated with the
-        substitution :math:`r = r_\perp \cosh t`.
+        substitution :math:`r = r_\perp\cosh t`.
         """
         separation = self.geom.separation(self.geom.center_skydir).rad
         impact = u.Quantity(
             value=np.sin(separation) * self.distance, unit=self.distance.unit
         )
-        rmax = self.rmax
         val = [
-            (
-                2 * self._integrate_los_branch(impact_i, impact_i, rmax, ndecade)
-                + self._integrate_los_branch(impact_i, rmax, 4 * rmax, ndecade)
-            )
-            for impact_i in impact.ravel()
+            self._integrate_los(impact_i, separation_i, ndecade)
+            for impact_i, separation_i in zip(impact.ravel(), separation.ravel())
         ]
         integral_unit = u.Unit("GeV2 cm-5") if self.annihilation else u.Unit("GeV cm-2")
         jfact = u.Quantity(val).to(integral_unit).reshape(impact.shape)
@@ -171,7 +190,7 @@ class JFactory:
 
 
 def add_factor_prior(model, sigma, mu=1.0):
-    """Attach a Gaussian nuisance prior on ``scale`` for J/D-factor uncertainty.
+    """Attach a Log Normal nuisance prior on ``scale`` for J/D-factor uncertainty.
 
     The J/D-factor is kept fixed at its nominal value; the associated
     uncertainty is instead expressed as an equivalent prior on ``scale``,
@@ -199,5 +218,5 @@ def add_factor_prior(model, sigma, mu=1.0):
         The same model instance, with the prior attached, for chaining.
     """
     model.scale.frozen = False
-    model.scale.prior = GaussianPrior(mu=mu, sigma=sigma)
+    model.scale.prior = LogNormalPrior(mu=mu, sigma=sigma * np.log(10))
     return model
