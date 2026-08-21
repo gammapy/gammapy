@@ -790,8 +790,9 @@ class DarkMatterSpectralModel(SpectralModel):
         """Serialize the model to a dictionary.
 
         Extends the base `~gammapy.modeling.models.SpectralModel.to_dict`
-        output with ``channel``, ``mDM``, ``factor``, ``z``, ``k``, and the
-        serialized ``primary_flux`` (via its own `to_dict`).
+        output with ``channel``, ``mDM``, ``factor``, ``z``, ``k``, the
+        serialized ``primary_flux`` (via its own `to_dict`), ``source``, ``mapping_dict``
+        and ``annihilation``.
 
         Parameters
         ----------
@@ -840,6 +841,8 @@ class DarkMatterSpectralModel(SpectralModel):
             New instance reconstructed from ``data``.
         """
         data = copy.deepcopy(data["spectral"])
+        model_type = data.get("type", "")
+        default_annihilation = "Decay" not in model_type
         data.pop("type")
 
         _RENAMED_FIELDS = {"mass": "mDM", "jfactor": "factor"}
@@ -874,7 +877,7 @@ class DarkMatterSpectralModel(SpectralModel):
 
         data.pop("source", None)
         data.pop("mapping_dict", None)
-        annihilation = data.pop("annihilation", True)
+        annihilation = data.pop("annihilation", default_annihilation)
         parameters = data.pop("parameters")
         scale = next(p["value"] for p in parameters if p["name"] == "scale")
         return cls(

@@ -599,3 +599,40 @@ def test_dm_decay_from_dict_missing_primary_flux_key_custom_source():
     data["spectral"].pop("primary_flux", None)
     new_model = DarkMatterSpectralModel.from_dict(data)
     assert new_model.primary_flux.source == "cosmixs"
+
+
+@requires_data()
+def test_backward_compat_old_annihilation_dict_via_registry():
+    """Test for serialization of an annihilation dict that was serialized before the
+    'annihilation' field existed (old DarkMatterDecaySpectralModel format, pre-unification).
+    """
+    model = DarkMatterSpectralModel(mDM=1 * u.TeV, channel="b", k=2)
+    data = model.to_dict()
+    data["spectral"]["type"] = "DarkMatterAnnihilationSpectralModel"
+    data["spectral"].pop("annihilation", None)
+
+    new_model = DarkMatterSpectralModel.from_dict(data)
+
+    assert new_model.annihilation is True
+    assert new_model.k == 2
+    assert_quantity_allclose(new_model.mDM, model.mDM)
+    assert new_model.channel == model.channel
+
+
+@requires_data()
+def test_backward_compat_old_decay_dict_direct_base_class():
+    """Test for serialization of a decay dict that was serialized before the
+    'annihilation' field existed (old DarkMatterDecaySpectralModel format, pre-unification).
+    """
+    model = DarkMatterSpectralModel(mDM=1 * u.TeV, channel="b", annihilation=False)
+    data = model.to_dict()
+    data["spectral"]["type"] = "DarkMatterDecaySpectralModel"
+    data["spectral"].pop("annihilation", None)
+    data["spectral"].pop("k", None)
+
+    new_model = DarkMatterSpectralModel.from_dict(data)
+
+    assert new_model.annihilation is False
+    assert new_model.k is None
+    assert_quantity_allclose(new_model.mDM, model.mDM)
+    assert new_model.channel == model.channel
