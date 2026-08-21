@@ -10,8 +10,8 @@ without a WCS (see "sky and pixel regions" in PIG 10), or some HEALPix integrati
 """
 
 import operator
+
 import numpy as np
-from scipy.optimize import Bounds, minimize
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -19,6 +19,7 @@ from gammapy.utils.scripts import make_path
 from regions import (
     CircleAnnulusSkyRegion,
     CircleSkyRegion,
+    CirclePixelRegion,
     CompoundSkyRegion,
     EllipseSkyRegion,
     RectangleSkyRegion,
@@ -26,6 +27,9 @@ from regions import (
     PolygonSkyRegion,
     PolygonPixelRegion,
 )
+from regions.core import RegionBoundingBox
+from regions.core.attributes import RegionAttribute
+from scipy.optimize import Bounds, minimize
 
 from regions.core.pixcoord import PixCoord
 from regions.core.metadata import RegionMeta, RegionVisual
@@ -601,3 +605,58 @@ def extract_bright_star_regions(
         )
 
     return Regions(regions)
+
+
+class ArrayQuantityLength(RegionAttribute):
+    """
+    Descriptor class for `~regions.SkyRegion`, which takes a scalar
+    `~astropy.units.Quantity` object.
+    """
+
+    def _validate(self, value):
+        if not isinstance(value, u.Quantity):
+            raise ValueError(f"The {self.name} must be an astropy  `Quantity object`")
+
+
+class ArrayLength(RegionAttribute):
+    """
+    Descriptor class for `~regions.PixelRegion`, which takes a scalar
+    python/numpy number.
+    """
+
+    def _validate(self, value):
+        pass
+
+
+class CircleSkyRegionArray(CircleSkyRegion):
+    """Circle sky region with array support for radius"""
+
+    radius = ArrayQuantityLength("radius")
+    is_regular = False
+
+    def to_pixel(self, wcs):
+        center, pixscale, _ = pixel_scale_angle_at_skycoord(self.center, wcs)
+        radius = (self.radius / pixscale).to(u.pix).value
+        return CirclePixelRegionArray(center, radius, self.meta, self.visual)
+
+
+class CirclePixelRegionArray(CirclePixelRegion):
+    """Pixel sky region with array support for radius"""
+
+    radius = ArrayLength("radius")
+    is_regular = False
+
+    @property
+    def bounding_box(self):
+        """Bounding box (`~regions.RegionBoundingBox`)."""
+        radius = np.atleast_1d(self.radius).max()
+        xmin = self.center.x - radius
+        xmax = self.center.x + radius
+        ymin = self.center.y - radius
+        ymax = self.center.y + radius
+        return RegionBoundingBox.from_float(xmin, xmax, ymin, ymax)
+
+    @property
+    def area(self):
+        # Extra axes to match dimensions from a RegionGeom
+        return super().area[:, np.newaxis, np.newaxis]

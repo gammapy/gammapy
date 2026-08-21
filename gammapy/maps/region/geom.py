@@ -23,12 +23,14 @@ from regions import (
     SkyRegion,
 )
 import matplotlib.pyplot as plt
+
 from gammapy.utils.regions import (
     compound_region_center,
     compound_region_to_regions,
     regions_to_compound_region,
 )
 from gammapy.visualization.utils import ARTIST_TO_LINE_PROPERTIES
+
 from ..axes import MapAxes
 from ..coord import MapCoord
 from ..core import Map
@@ -82,7 +84,6 @@ class RegionGeom(Geom):
 
     """
 
-    is_regular = True
     is_allsky = False
     is_hpx = False
     is_region = True
@@ -130,6 +131,13 @@ class RegionGeom(Geom):
             return self.region.center.frame.name
         except AttributeError:
             return wcs_to_celestial_frame(self.wcs).name
+
+    @property
+    def is_regular(self):
+        """"""
+        if hasattr(self.region, "is_regular"):
+            return self.region.is_regular
+        return True
 
     @property
     def binsz_wcs(self):
@@ -251,7 +259,16 @@ class RegionGeom(Geom):
         if self.is_all_point_sky_regions:
             return np.ones(coords.skycoord.shape, dtype=bool)
 
-        return self.region.contains(coords.skycoord, self.wcs)
+        if not self.is_regular:
+            idx = self.axes.coord_to_idx(coords)[0]
+            cls = self.region.__class__
+            region = cls(
+                center=self.region.center, radius=self.region.radius[idx].squeeze()
+            )
+        else:
+            region = self.region
+
+        return region.contains(coords.skycoord, self.wcs)
 
     def contains_wcs_pix(self, pix):
         """Check if a given WCS pixel coordinate is contained in the region.
@@ -569,12 +586,12 @@ class RegionGeom(Geom):
         if self.region is None:
             pix = (0, 0)
         else:
-            in_region = self.contains(coords.skycoord)
+            in_region = self.contains(coords)
 
-            x = np.zeros(coords.skycoord.shape)
+            x = np.zeros(in_region.shape)
             x[~in_region] = np.nan
 
-            y = np.zeros(coords.skycoord.shape)
+            y = np.zeros(in_region.shape)
             y[~in_region] = np.nan
 
             pix = (x, y)
