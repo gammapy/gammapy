@@ -33,9 +33,10 @@ commands in the terminal:
 
 .. note::
 
-   To avoid some installation issues, ``sherpa`` is not part of the environment
-   file provided. You can nevertheless install ``sherpa`` in your environment using
-   ``python -m pip install sherpa``.
+   ``sherpa`` is not part of the environment file provided because it is built
+   from source via pip and needs extra build tools. If required, install it with
+   ``python -m pip install sherpa`` after making the build tools available, e.g.
+   ``conda install -c conda-forge bison flex make``.
 
 Once the environment has been created you can activate it using:
 
