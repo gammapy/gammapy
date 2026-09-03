@@ -1,14 +1,27 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from typing import ClassVar, Literal, Optional
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import AltAz, SkyCoord
 from astropy.io import fits
 from astropy.time import Time
+import astropy.units as u
 from pydantic import ValidationError
+from gammapy.irf import (
+    Background3D,
+    EDispKernel,
+    EffectiveAreaTable2D,
+    EnergyDependentMultiGaussPSF,
+    EnergyDispersion2D,
+    RadMax2D,
+    PSF3D,
+)
+from gammapy.maps import MapAxis
 from gammapy.utils.metadata import (
     METADATA_FITS_KEYS,
     CreatorMetaData,
+    add_creator_metadata,
     MetaData,
     ObsInfoMetaData,
     PointingInfoMetaData,
@@ -253,3 +266,82 @@ def test_subclass_to_from_header():
     # no new attributes allowed
     with pytest.raises(ValidationError):
         test_meta.extra = 3
+
+
+REQUIRED_KEYWORDS = {
+    "creator": ["CREATOR", "CREATED"],
+    # "obs_info": ["TELESCOP", "INSTRUME"],
+    # "pointing": ["RA_PNT", "DEC_PNT"],
+    # "target":   ["OBJECT"],
+    # "time_info":["TSTART", "TSTOP"],
+}
+
+
+class TestMetaDataPropagation:
+    def setup_method(self):
+        # IRF products
+        energy_axis_true = MapAxis.from_energy_bounds(
+            "1 TeV", "10 TeV", nbin=9, name="energy_true"
+        )
+        energy_axis = energy_axis_true.copy(name="energy")  # reco, for bkg / rad_max
+        offset_axis = MapAxis.from_bounds(
+            0, 1, nbin=3, unit="deg", name="offset", node_type="edges"
+        )
+        migra_axis = MapAxis.from_bounds(0, 3, nbin=3, name="migra", node_type="edges")
+        fov_lon_axis = MapAxis.from_bounds(-6, 6, nbin=10, unit="deg", name="fov_lon")
+        fov_lat_axis = MapAxis.from_bounds(-6, 6, nbin=10, unit="deg", name="fov_lat")
+        rad_axis = MapAxis.from_bounds(
+            0, 1, nbin=10, unit="deg", name="rad", node_type="edges"
+        )
+        aeff = EffectiveAreaTable2D(
+            axes=[energy_axis_true, offset_axis], data=np.random.rand(9, 3), unit="m2"
+        )
+        edisp = EnergyDispersion2D(
+            axes=[energy_axis_true, migra_axis, offset_axis],
+            data=np.random.rand(9, 3, 3),
+        )
+        edisp_kernel = EDispKernel.from_diagonal_response(energy_axis_true, energy_axis)
+        bkg = Background3D(
+            axes=[energy_axis, fov_lon_axis, fov_lat_axis],
+            data=np.random.rand(9, 10, 10),
+            unit="s-1 MeV-1 sr-1",
+        )
+        rad_max = RadMax2D(
+            axes=[energy_axis, offset_axis], data=np.random.rand(9, 3), unit="deg"
+        )
+        psf = PSF3D(
+            axes=[energy_axis_true, offset_axis, rad_axis],
+            data=np.random.rand(9, 3, 10),
+            unit="sr-1",
+        )
+
+        # TO-DO: Data, datasets, maps products
+
+        self.products = {
+            "aeff_2d": (aeff, {"creator"}),
+            "edisp_2d": (edisp, {"creator"}),
+            "edisp_kernel": (edisp_kernel, {"creator"}),
+            "bkg_3d": (bkg, {"creator"}),
+            "rad_max_2d": (rad_max, {"creator"}),
+            "psf": (psf, {"creator"}),
+        }
+
+    def test_add_metadata(self):
+        header = self.products["aeff_2d"][0].to_table_hdu().header
+        add_creator_metadata(header)
+        assert header["CREATOR"].startswith("Gammapy")
+        creation = CreatorMetaData(date="2022-01-01", creator="Test", origin="CTA")
+        add_creator_metadata(header, creation)
+        assert header["CREATOR"] == "Test"
+
+    def test_metadata_propagation(self):
+        missing = []
+        for label, (product, containers) in self.products.items():
+            header = product.to_hdulist()[0].header
+            for tag in containers:
+                for key in REQUIRED_KEYWORDS[tag]:
+                    if key not in header:
+                        missing.append(f"{label}: {key} ({tag})")
+            if "creator" in containers:
+                assert header["CREATOR"].startswith("Gammapy")
+        assert not missing, "Missing metadata keywords:\n" + "\n".join(missing)
