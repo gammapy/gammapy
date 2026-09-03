@@ -1,0 +1,48 @@
+*** Basic info ***
+
+Catalog row index (zero-based) : 2
+Source name          : 4FHL J0006.0+7319e
+Associations     : SNR G119.5+10.2
+ASSOC_PROB_BAY   : 0.800
+ASSOC_PROB_LR    : --
+Class            : spp
+TeVCat flag      : N/A
+
+*** Other info ***
+
+Test statistic (50 GeV - 2 TeV)  : 41.700
+Npred                            : 48.2
+
+*** Position info ***
+
+RA                   : 1.520 deg
+DEC                  : 73.320 deg
+GLON                 : 119.639 deg
+GLAT                 : 10.739 deg
+
+Error on position (68%) : 0.0000 deg
+ROI number           : 139
+
+*** Extended source information ***
+
+Model form       : RadialGaussian
+Model semimajor  : 0.8500 deg
+Model semiminor  : 0.8500 deg
+Position angle   : 0.0000 deg
+Spatial filename : --
+
+
+*** Spectral fit info ***
+
+Power-law spectral index         : 2.130 +- 0.260
+Integral flux (50 GeV - 2 TeV)   : 4.52e-11 +- 9.51e-12 cm-2 s-1
+Energy flux (50 GeV - 2 TeV)     : 1.22e-11 +- 3.48e-12 erg cm-2 s-1
+
+*** Spectral points ***
+
+ e_min   e_max       flux     flux_errn   flux_errp    flux_ul   is_ul sqrt_ts
+  GeV     GeV    1 / (s cm2) 1 / (s cm2) 1 / (s cm2) 1 / (s cm2)              
+------- -------- ----------- ----------- ----------- ----------- ----- -------
+ 50.000  171.000   3.432e-11   8.308e-12   8.308e-12         nan False   5.413
+171.000  585.000   6.354e-12   3.420e-12   3.420e-12         nan False   2.536
+585.000 2000.000   3.506e-12   2.124e-12   2.124e-12         nan False   2.788

@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from gammapy.catalog.fermi import SourceCatalog4FHL
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -196,6 +197,23 @@ SOURCES_3FHL = [
         spec_type=LogParabolaSpectralModel,
         dnde=u.Quantity(2.056998292908196e-12, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(4.219030630302381e-13, "cm-2 s-1 GeV-1"),
+    ),
+]
+
+SOURCES_4FHL = [
+    dict(
+        idx=0,
+        name="4FHL J0001.4-4153",
+        spec_type=PowerLawSpectralModel,
+        dnde=u.Quantity(2.991882700606988e-11, "cm-2 s-1 TeV-1"),
+        dnde_err=u.Quantity(1.6055167161665306e-11, "cm-2 s-1 TeV-1"),
+    ),
+    dict(
+        idx=4,
+        name="4FHL J0008.1+4710",
+        spec_type=PowerLawSpectralModel,
+        dnde=u.Quantity(1.1902616024831138e-11, "cm-2 s-1 TeV-1"),
+        dnde_err=u.Quantity(8.2541000867628e-12, "cm-2 s-1 TeV-1"),
     ),
 ]
 
@@ -717,6 +735,82 @@ class TestFermi3FHLObject:
 
 
 @requires_data()
+class TestFermi4FHLObject:
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog4FHL()
+        cls.source_name = "4FHL J0001.4-4153"  # first entry in the catalog
+        cls.source = cls.cat[cls.source_name]
+
+    def test_name(self):
+        assert self.source.name == self.source_name
+
+    def test_row_index(self):
+        assert self.source.row_index == 0
+
+    def test_data(self):
+        assert_allclose(self.source.data["Signif_Avg"], 168.64082)
+
+    def test_str(self):
+        actual = str(self.cat["4FHL J0006.0+7319e"])  # an extended source
+
+        with open(get_pkg_data_filename("data/4fhl_J0006.0+7319e.txt")) as fh:
+            expected = fh.read()
+
+        assert actual == expected
+
+    def test_position(self):
+        position = self.source.position
+        assert_allclose(position.ra.deg, 0.350, atol=1e-3)
+        assert_allclose(position.dec.deg, -41.884, atol=1e-3)
+
+    @pytest.mark.parametrize("ref", SOURCES_4FHL, ids=lambda _: _["name"])
+    def test_spectral_model(self, ref):
+        model = self.cat[ref["idx"]].spectral_model()
+
+        dnde, dnde_errn, dnde_errp = model.evaluate_error(100 * u.GeV)
+        dnde_err = (dnde_errn + dnde_errp) / 2.0
+        # bad but we could also remove the test on dnde_err as its not derived in the same way
+
+        assert isinstance(model, ref["spec_type"])
+        assert_quantity_allclose(dnde, ref["dnde"], rtol=5e-2)
+        assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=5e-2)
+
+    @pytest.mark.parametrize("ref", SOURCES_4FHL, ids=lambda _: _["name"])
+    def test_spatial_model(self, ref):
+        model = self.cat[ref["idx"]].spatial_model()
+        assert model.frame == "icrs"
+
+        model = self.cat["4FHL J0001.4-4153"].spatial_model()
+        pos_err = model.position_error
+        assert_allclose(0.5 * pos_err.height.value, 0.152134, rtol=1e-4)
+        assert_allclose(0.5 * pos_err.width.value, 0.152134, rtol=1e-4)
+        assert_allclose(model.position.ra.value, pos_err.center.ra.value)
+        assert_allclose(model.position.dec.value, pos_err.center.dec.value)
+
+    @pytest.mark.parametrize("ref", SOURCES_4FHL, ids=lambda _: _["name"])
+    def test_sky_model(self, ref):
+        self.cat[ref["idx"]].sky_model()
+
+    def test_flux_points(self):
+        flux_points = self.source.flux_points
+
+        assert flux_points.energy_axis.nbin == 3
+        assert flux_points.norm_ul
+
+        desired = [4.67781803e-12, 1.75178524e-12, 0.00000000e00]
+        assert_allclose(flux_points.flux.data[:, 0, 0], desired, rtol=1e-3)
+
+    def test_alias(self):
+        for name in [
+            "2MASS J00013275-4155252",
+            "4FGL J0001.6-4156",
+            "3FHL J0001.9-4155",
+        ]:
+            assert self.cat[name].row_index == 0
+
+
+@requires_data()
 class TestFermi2PCObject:
     @classmethod
     def setup_class(cls):
@@ -973,6 +1067,26 @@ class TestSourceCatalog3FHL:
 
     def test_main_table(self):
         assert len(self.cat.table) == 1556
+
+    def test_extended_sources(self):
+        table = self.cat.extended_sources_table
+        assert len(table) == 55
+
+    def test_to_models(self):
+        mask = self.cat.table["GLAT"].quantity > 80 * u.deg
+        subcat = self.cat[mask]
+        models = subcat.to_models()
+        assert len(models) == 17
+
+
+@requires_data()
+class TestSourceCatalog4FHL:
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog4FHL()
+
+    def test_main_table(self):
+        assert len(self.cat.table) == 673
 
     def test_extended_sources(self):
         table = self.cat.extended_sources_table
