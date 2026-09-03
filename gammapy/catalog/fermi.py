@@ -1358,6 +1358,179 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         return model
 
 
+class SourceCatalogObject4FHL(SourceCatalogObjectFermiBase):
+    """One source from the Fermi-LAT 4FHL catalog."""
+
+    asso = ["ASSOC", "4FGL", "2FHL", "3FHL", "TeV"]
+    _energy_edges = u.Quantity([50, 171, 585, 2000], "GeV")
+    _energy_edges_suffix = ["50_171", "171_585", "585_2000"]
+    energy_range = u.Quantity([0.05, 2], "TeV")
+    """Energy range used for the catalog."""
+
+    def _info_more(self):
+        d = self.data
+        ss = "\n*** Other info ***\n\n"
+        ss += "{:<32s} : {:.3f}\n".format("Test statistic (50 GeV - 2 TeV)", d["TS"])
+        ss += "{:<32s} : {:.1f}\n".format("Npred", d["Npred"])
+        return ss
+
+    def _info_position(self):
+        d = self.data
+        ss = "\n*** Position info ***\n\n"
+        ss += "{:<20s} : {:.3f}\n".format("RA", d["RAJ2000"])
+        ss += "{:<20s} : {:.3f}\n".format("DEC", d["DEJ2000"])
+        ss += "{:<20s} : {:.3f}\n".format("GLON", d["GLON"])
+        ss += "{:<20s} : {:.3f}\n".format("GLAT", d["GLAT"])
+        ss += "\n"
+        ss += "{:<20s} : {:.4f}\n".format("Error on position (68%)", d["Pos_err_68"])
+        ss += "{:<20s} : {:.0f}\n".format("ROI number", d["ROI"])
+        return ss
+
+    def _info_spectral_fit(self):
+        d = self.data
+        ss = "\n*** Spectral fit info ***\n\n"
+        fmt = "{:<32s} : {:.3f} +- {:.3f}\n"
+        ss += fmt.format("Power-law spectral index", d["PL_Index"], d["Unc_PL_Index"])
+        ss += "{:<32s} : {:.3} +- {:.3} {}\n".format(
+            "Integral flux (50 GeV - 2 TeV)",
+            d["Flux50"].value,
+            d["Unc_Flux50"].value,
+            "cm-2 s-1",
+        )
+        ss += "{:<32s} : {:.3} +- {:.3} {}\n".format(
+            "Energy flux (50 GeV - 2 TeV)",
+            d["Energy_Flux50"].value,
+            d["Unc_Energy_Flux50"].value,
+            "erg cm-2 s-1",
+        )
+        return ss
+
+    @property
+    def is_pointlike(self):
+        """Whether the source is pointlike (4FHL marks extended sources with a trailing 'e')."""
+        return self.data["Source_Name"].strip()[-1] != "e"
+
+    def spatial_model(self):
+        d = self.data
+        ra, dec = d["RAJ2000"], d["DEJ2000"]
+
+        if self.is_pointlike:
+            model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
+        else:
+            de = self.data_extended
+            morph_type = de["Model_Form"].strip()
+            e = (1 - (de["Model_SemiMinor"] / de["Model_SemiMajor"]) ** 2.0) ** 0.5
+            sigma = de["Model_SemiMajor"]
+            phi = de["Model_PosAng"]
+            if morph_type == "Disk":
+                model = DiskSpatialModel(
+                    lon_0=ra,
+                    lat_0=dec,
+                    r_0=de["Model_SemiMajor"],
+                    e=e,
+                    phi=phi,
+                    frame="icrs",
+                )
+            elif morph_type in ["Map", "Ring"]:
+                filename = de["Spatial_Filename"].strip() + ".gz"
+                path = make_path(
+                    "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/"
+                )
+                model = TemplateSpatialModel.read(path / filename)
+            elif morph_type == "2D Gaussian":
+                model = GaussianSpatialModel(
+                    lon_0=ra, lat_0=dec, sigma=sigma, e=e, phi=phi, frame="icrs"
+                )
+            else:
+                raise ValueError(f"Invalid spatial model: {morph_type!r}")
+        self._set_spatial_errors(model)
+        return model
+
+    def spectral_model(self):
+        d = self.data
+        model = Model.create(
+            "PowerLaw2SpectralModel",
+            "spectral",
+            amplitude=d["Flux50"],
+            emin=self.energy_range[0],
+            emax=self.energy_range[1],
+            index=d["PL_Index"],
+        )
+        model.parameters["amplitude"].error = d["Unc_Flux50"]
+        model.parameters["index"].error = d["Unc_PL_Index"]
+        return model
+
+    @property
+    def flux_points_table(self):
+        d = self.data
+
+        table = Table()
+        table.meta.update(self.flux_points_meta)
+
+        table["e_min"] = self._energy_edges[:-1]
+        table["e_max"] = self._energy_edges[1:]
+
+        flux = []
+        flux_err = []
+        flux_ul = []
+        sqrt_ts = []
+        is_ul = []
+
+        flux_unit = u.Unit("cm-2 s-1")
+
+        for suffix in self._energy_edges_suffix:
+            f = d[f"Flux{suffix}GeV"]
+            f_unc = d[f"Unc_Flux{suffix}GeV"]
+            ts = d[f"Sqrt_TS{suffix}GeV"]
+
+            # Check whether the flux itself is masked
+            masked = np.ma.is_masked(f)
+
+            # 4FHL: sqrt(TS) < 2 is considered a non-detection
+            undetected = masked or ts < 2
+
+            is_ul.append(undetected)
+
+            # Extract plain numerical values
+            if np.ma.is_masked(ts):
+                sqrt_ts.append(0.0)
+            else:
+                sqrt_ts.append(float(ts))
+
+            if undetected:
+                # Flux is set to zero for an upper-limit bin
+                flux.append(0.0)
+
+                # Unc_Flux contains the upper-limit value
+                if np.ma.is_masked(f_unc):
+                    flux_ul.append(np.nan)
+                else:
+                    flux_ul.append(f_unc.to_value(flux_unit))
+
+                flux_err.append(np.nan)
+            else:
+                flux.append(f.to_value(flux_unit))
+                flux_err.append(f_unc.to_value(flux_unit))
+                flux_ul.append(np.nan)
+
+        table["flux"] = u.Quantity(flux, flux_unit)
+        table["flux_errn"] = u.Quantity(flux_err, flux_unit)
+        table["flux_errp"] = u.Quantity(flux_err, flux_unit)
+        table["flux_ul"] = u.Quantity(flux_ul, flux_unit)
+
+        table["is_ul"] = np.asarray(is_ul, dtype=bool)
+        table["sqrt_ts"] = np.asarray(sqrt_ts)
+
+        return table
+
+    def _get_flux_values(self, prefix, unit="cm-2 s-1"):
+        values = [self.data[prefix + _ + "GeV"] for _ in self._energy_edges_suffix]
+        return u.Quantity(values, unit)
+
+    def _get_sqrt_ts(self):
+        return [self.data["Sqrt_TS" + _ + "GeV"] for _ in self._energy_edges_suffix]
+
+
 class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
     """One source from the 2PC catalog."""
 
@@ -2036,6 +2209,40 @@ class SourceCatalog3FHL(SourceCatalog):
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
         self.rois = Table.read(filename, hdu="ROIs")
         self.energy_bounds_table = Table.read(filename, hdu="EnergyBounds")
+
+
+class SourceCatalog4FHL(SourceCatalog):
+    """Fermi-LAT 4FHL source catalog.
+
+    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/4FHL/4FHL_v1.pdf
+    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/4FHL/
+
+    One source is represented by `~gammapy.catalog.SourceCatalogObject4FHL`.
+    """
+
+    tag = "4fhl"
+    description = "LAT fourth high-energy source catalog"
+    source_object_class = SourceCatalogObject4FHL
+
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v14.fit"):
+        filename = make_path(filename)
+
+        with warnings.catch_warnings():  # ignore FITS units warnings
+            warnings.simplefilter("ignore", u.UnitsWarning)
+            table = Table.read(filename, hdu="4FHL Source Catalog")
+
+        table_standardise_units_inplace(table)
+
+        source_name_key = "Source_Name"
+        source_name_alias = ("ASSOC", "4FGL", "2FHL", "3FHL", "TeV")
+        super().__init__(
+            table=table,
+            source_name_key=source_name_key,
+            source_name_alias=source_name_alias,
+        )
+
+        self.extended_sources_table = Table.read(filename, hdu="Extended Sources")
+        self.rois = Table.read(filename, hdu="ROIs")
 
 
 class SourceCatalog2PC(SourceCatalog):
