@@ -24,6 +24,7 @@ from gammapy.modeling.models import (
     SuperExpCutoffPowerLaw4FGLSpectralModel,
 )
 from gammapy.utils.gauss import Gauss2DPDF
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     assert_time_allclose,
@@ -164,24 +165,6 @@ SOURCES_3FGL = [
     ),
 ]
 
-SOURCES_2FHL = [
-    dict(
-        idx=221,
-        name="2FHL J1445.1-0329",
-        str_ref_file="data/2fhl_j1445.1-0329.txt",
-        spec_type=PowerLaw2SpectralModel,
-        dnde=u.Quantity(1.065463448091757e-10, "cm-2 s-1 TeV-1"),
-        dnde_err=u.Quantity(4.9691205387540815e-11, "cm-2 s-1 TeV-1"),
-    ),
-    dict(
-        idx=134,
-        name="2FHL J0822.6-4250e",
-        str_ref_file="data/2fhl_j0822.6-4250e.txt",
-        spec_type=LogParabolaSpectralModel,
-        dnde=u.Quantity(2.46548351696472e-10, "cm-2 s-1 TeV-1"),
-        dnde_err=u.Quantity(9.771755529198772e-11, "cm-2 s-1 TeV-1"),
-    ),
-]
 
 SOURCES_3FHL = [
     dict(
@@ -578,90 +561,6 @@ class TestFermi3FGLObject:
 
 
 @requires_data()
-class TestFermi2FHLObject:
-    @classmethod
-    def setup_class(cls):
-        cls.cat = SourceCatalog2FHL()
-        # Use 2FHL J0534.5+2201 (Crab) as a test source
-        cls.source_name = "2FHL J0534.5+2201"
-        cls.source = cls.cat[cls.source_name]
-
-    def test_name(self):
-        assert self.source.name == self.source_name
-
-    def test_position(self):
-        position = self.source.position
-        assert_allclose(position.ra.deg, 83.634102, atol=1e-3)
-        assert_allclose(position.dec.deg, 22.0215, atol=1e-3)
-
-    @pytest.mark.parametrize("ref", SOURCES_2FHL, ids=lambda _: _["name"])
-    def test_str(self, ref):
-        actual = str(self.cat[ref["idx"]])
-
-        with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
-            expected = fh.read()
-
-        assert actual == expected
-
-    def test_spectral_model(self):
-        model = self.source.spectral_model()
-        energy = u.Quantity(100, "GeV")
-        desired = u.Quantity(6.8700477298e-12, "cm-2 GeV-1 s-1")
-        assert_quantity_allclose(model(energy), desired)
-
-    def test_flux_points(self):
-        # test flux point on  PKS 2155-304
-        src = self.cat["PKS 2155-304"]
-        flux_points = src.flux_points
-        actual = flux_points.flux.quantity[:, 0, 0]
-        desired = [2.866363e-10, 6.118736e-11, 3.257970e-16] * u.Unit("cm-2 s-1")
-        assert_quantity_allclose(actual, desired)
-
-        actual = flux_points.flux_ul.quantity[:, 0, 0]
-        desired = [np.nan, np.nan, 1.294092e-11] * u.Unit("cm-2 s-1")
-        assert_quantity_allclose(actual, desired, rtol=1e-3)
-
-    def test_spatial_model(self):
-        model = self.cat[221].spatial_model()
-        assert "PointSpatialModel" in model.tag
-        assert model.frame == "icrs"
-        p = model.parameters
-        assert_allclose(p["lon_0"].value, 221.281998, rtol=1e-5)
-        assert_allclose(p["lat_0"].value, -3.4943, rtol=1e-5)
-
-        model = self.cat["2FHL J1304.5-4353"].spatial_model()
-        pos_err = model.position_error
-        scale = Gauss2DPDF().containment_radius(0.95) / Gauss2DPDF().containment_radius(
-            0.68
-        )
-        assert_allclose(pos_err.height.value, 2 * 0.041987 * scale, rtol=1e-4)
-        assert_allclose(pos_err.width.value, 2 * 0.041987 * scale, rtol=1e-4)
-        assert_allclose(model.position.ra.value, pos_err.center.ra.value)
-        assert_allclose(model.position.dec.value, pos_err.center.dec.value)
-
-        model = self.cat[97].spatial_model()
-        assert "GaussianSpatialModel" in model.tag
-        assert model.frame == "icrs"
-        p = model.parameters
-        assert_allclose(p["lon_0"].value, 94.309998, rtol=1e-5)
-        assert_allclose(p["lat_0"].value, 22.58, rtol=1e-5)
-        assert_allclose(p["sigma"].value, 0.27)
-
-        model = self.cat[134].spatial_model()
-        assert "DiskSpatialModel" in model.tag
-        assert model.frame == "icrs"
-        p = model.parameters
-        assert_allclose(p["lon_0"].value, 125.660004, rtol=1e-5)
-        assert_allclose(p["lat_0"].value, -42.84, rtol=1e-5)
-        assert_allclose(p["r_0"].value, 0.37)
-
-        model = self.cat[256].spatial_model()
-        assert "TemplateSpatialModel" in model.tag
-        assert model.frame == "fk5"
-        assert model.normalize
-
-
-@requires_data()
 class TestFermi3FHLObject:
     @classmethod
     def setup_class(cls):
@@ -1042,24 +941,6 @@ class TestSourceCatalog3FGL:
 
 
 @requires_data()
-class TestSourceCatalog2FHL:
-    @classmethod
-    def setup_class(cls):
-        cls.cat = SourceCatalog2FHL()
-
-    def test_main_table(self):
-        assert len(self.cat.table) == 360
-
-    def test_extended_sources(self):
-        table = self.cat.extended_sources_table
-        assert len(table) == 25
-
-    def test_crab_alias(self):
-        for name in ["Crab", "3FGL J0534.5+2201i", "1FHL J0534.5+2201"]:
-            assert self.cat[name].row_index == 85
-
-
-@requires_data()
 class TestSourceCatalog3FHL:
     @classmethod
     def setup_class(cls):
@@ -1137,3 +1018,8 @@ class TestSourceCatalog3PC:
         subcat = self.cat[mask]
         models = subcat.to_models()
         assert len(models) == 17
+
+
+def test_deprecation_2FHL():
+    with pytest.warns(GammapyDeprecationWarning):
+        SourceCatalog2FHL()
