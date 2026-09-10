@@ -7,7 +7,7 @@ from .sed import (
     FluxPointsEstimator,
     RegularizedFluxPointsEstimator,
 )
-from .sensitivity import SensitivityEstimator
+from .sensitivity import SensitivityEstimator, JointSensitivityEstimator
 
 __all__ = [
     "FluxCollectionEstimator",
@@ -17,4 +17,5 @@ __all__ = [
     "LightCurveEstimator",
     "RegularizedFluxPointsEstimator",
     "SensitivityEstimator",
+    "JointSensitivityEstimator",
 ]
