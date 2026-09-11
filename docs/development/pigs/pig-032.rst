@@ -1,16 +1,27 @@
 . include:: ../../references.txt
 
-.. _pig-025:
+.. _pig-032:
 
 ***************************************
 PIG 25 - Metadata container for Gammapy
 ***************************************
 
+<<<<<<< HEAD
 * Author: Régis Terrier
 * Created: April 14th, 2023
 * Accepted: July 10th, 2023
 * Status: Accepted
 * Discussion: `GH 4491`_
+=======
+**************************
+PIG 032 - Unbinned Dataset
+**************************
+
+* Author: Giacomo D'Amico, Julia Djuvsland, Tim Unbehaun (in alphabetical order)
+* Created: ``2022-05-09``
+* Status: Withdrawn ``2026-09-11``
+* Discussion: 
+>>>>>>> 4831eab2f (edits)
 
 Abstract
 ========
