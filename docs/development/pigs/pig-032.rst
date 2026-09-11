@@ -1,10 +1,10 @@
 .. include:: ../../references.txt
 
-.. _pig-025:
+.. _pig-032:
 
 
 **************************
-PIG 025 - Unbinned Dataset
+PIG 032 - Unbinned Dataset
 **************************
 
 * Author: Giacomo D'Amico, Julia Djuvsland, Tim Unbehaun (in alphabetical order)
