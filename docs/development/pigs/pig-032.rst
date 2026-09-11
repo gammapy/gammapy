@@ -16,8 +16,9 @@ Abstract
 ========
 
 Our goal is to be able to perform an unbinned analysis using Gammapy.
-To this end we like to propose to add a new EventDataset class with a dedicated fit
-statistic and an EventDatasetEvaluator to compute the differential model prediction (flux) at each event's reconstructed coordinates.
+To this end we like to propose to add a new EventDataset class with a
+dedicated fit statistic and an EventDatasetEvaluator to compute the
+differential model prediction (flux) at each event's reconstructed coordinates.
 
 Motivation
 ==========
