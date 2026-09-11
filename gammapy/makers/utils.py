@@ -854,9 +854,13 @@ def _get_fov_coord(
     if use_offset:
         fov_frame_origin = SkyCoord(0 * u.deg, 0 * u.deg, frame=fov_frame)
         if isinstance(fov_frame, FoVICRSFrame) or (len(fov_frame.obstime.shape) == 0):
-            coords["offset"] = skycoord.separation(fov_frame_origin)
+            coords["offset"] = fov_frame_origin.separation(
+                skycoord, origin_mismatch="ignore"
+            )
         else:
-            coords["offset"] = np.moveaxis(skycoord.separation(fov_frame_origin), -1, 0)
+            coords["offset"] = np.moveaxis(
+                fov_frame_origin.separation(skycoord, origin_mismatch="ignore"), -1, 0
+            )
     else:
         sign = -1.0 if reverse_lon else 1.0
 
