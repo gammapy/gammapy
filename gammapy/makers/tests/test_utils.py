@@ -880,7 +880,7 @@ def test_get_fov_coords():
     # Check that pixel centers end up at correct offsets
     # after letting the sky drift away from the starting position
     fov_frame = FoVAltAzFrame(
-        origin=fov_origin, location=location, obstime=time_start + 4.303333 * u.minute
+        origin=fov_origin, location=location, obstime=time_start + 4.303264 * u.minute
     )
     center_sep = 0.5
     sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
@@ -892,7 +892,7 @@ def test_get_fov_coords():
 
     # Check that pixel centers end up at correct offsets
     # after letting the sky drift away from the starting position
-    obs_times = time_start + np.linspace(0, 4.303333, 2) * u.minute
+    obs_times = time_start + np.linspace(0, 4.303264, 2) * u.minute
     fov_frame = FoVAltAzFrame(origin=fov_origin, location=location, obstime=obs_times)
     center_sep = 0.5
     sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
