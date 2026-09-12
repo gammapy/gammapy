@@ -1,0 +1,77 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://gammapy.org/gammapy/schemas/datasets/mapdataset-1.0.0"
+title: |
+  Represents MapDataset.
+
+description: |
+    Support the serialization of MapDataset which bundles binned counts, IRFs, and masks for likelihood fitting.
+
+type: object
+properties:
+  counts:
+    anyOf:
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/regionndmap-1.0.0"
+    description: |
+      Observed counts cube.
+  exposure:
+      anyOf:
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0"
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0"
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/regionndmap-1.0.0"
+      description: |
+        Exposure cube.
+  background:
+      anyOf:
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0"
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0"
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/regionndmap-1.0.0"
+      description: |
+         Background cube.
+  mask_fit:
+      anyOf:
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0"
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0"
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/regionndmap-1.0.0"
+      description: |
+        Mask applied to the fit likelihood.
+  mask_safe:
+      anyOf:
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0"
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0"
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/regionndmap-1.0.0"
+      description: |
+        Mask defining the safe data range.
+  psf:
+    anyOf:
+      - tag: "asdf://gammapy.org/gammapy/tags/irf/psfmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/irf/recopsfmap-1.0.0"
+    description: |
+      PSF map used to model the point-spread function.
+  edisp:
+    anyOf:
+      - tag: "asdf://gammapy.org/gammapy/tags/irf/edispmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/irf/edispkernelmap-1.0.0"
+    description: |
+      Energy dispersion map or kernel map.
+  gti:
+    tag: "asdf://gammapy.org/gammapy/tags/data/gti-1.0.0"
+    description: |
+      GTI of the observation, or union of GTIs if it's a stacked observation.
+  meta_table:
+    tag: "tag:astropy.org:astropy/table/table-1.*"
+    description: |
+      Table listing information on observations used to create the dataset.
+  name:
+    type: string
+    description: |
+      Name of the dataset.
+  meta:
+    type: object
+    description: |
+      Associated metadata container.
+additionalProperties: false
+...
