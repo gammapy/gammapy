@@ -7,6 +7,8 @@ via an ``entry-point`` in the ``pyproject.toml`` file.
 from asdf.extension import ManifestExtension
 
 from .converters.data.gti import GTIConverter
+from .converters.datasets.map import MapDatasetConverter, MapDatasetOnOffConverter
+
 from .converters.maps.axes import (
     LabelMapAxisConverter,
     MapAxesConverter,
@@ -34,6 +36,8 @@ GAMMAPY_CONVERTERS = [
     GTIConverter(),
     MapAxisConverter(),
     MapAxesConverter(),
+    MapDatasetConverter(),
+    MapDatasetOnOffConverter(),
     TimeMapAxisConverter(),
     LabelMapAxisConverter(),
     HpxGeomConverter(),
