@@ -1,1 +1,1 @@
-Add ASDF serialization support for `~gammapy.dataset.MapDataset` and `~gammapy.dataset.MapDatasetOnOff`.
+Add ASDF serialization support for `~gammapy.datasets.MapDataset` and `~gammapy.datasets.MapDatasetOnOff`.
