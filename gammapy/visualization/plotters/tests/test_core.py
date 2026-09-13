@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import matplotlib
-from gammapy.visualization import BasePlotter
+from gammapy.visualization.plotters import BasePlotter
 
 
 class SubClassPlotter(BasePlotter):
