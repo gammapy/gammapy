@@ -2233,7 +2233,7 @@ class SourceCatalog4FHL(SourceCatalog):
     description = "LAT fourth high-energy source catalog"
     source_object_class = SourceCatalogObject4FHL
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v14.fit"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v14.fit.gz"):
         filename = make_path(filename)
 
         with warnings.catch_warnings():  # ignore FITS units warnings
