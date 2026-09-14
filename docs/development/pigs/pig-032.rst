@@ -9,7 +9,7 @@ PIG 32 - Unbinned Dataset
 
 * Author: Giacomo D'Amico, Julia Djuvsland, Tim Unbehaun (in alphabetical order)
 * Created: ``2022-05-09``
-* Status: Withdrawn ``2026-09-11``
+* Status: Withdrawn ``2026-09-14``
 * Discussion: `GH 4253`_
 
 Abstract
@@ -143,7 +143,7 @@ EventDataset:  Inherits from gammapy.Datasets.Dataset
 * Models: `~gammapy.modeling.models.SkyModel` for the background,
   `~gammapy.modeling.models.FoVBackgroundModel`
 * unbinned likelihood (stat_sum):
-  :math:`-2 \\log \\mathcal{L} =  2 N_{pred} - 2 \\sum_{i} \\log \\phi( E_i, \\vec{r}_i )`
+  `$-2 \\log \\mathcal{L} =  2 N_{pred} - 2 \\sum_{i} \\log \\phi( E_i, \\vec{r}_i )$`
 * Binned Dataset functionality: create, downsample (the IRFs), pad, plotting, .to and .from methods, ...
 * No need for slices
 * Mask in reconstructed coordinates ``WcsNDMap``
