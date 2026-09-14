@@ -28,3 +28,11 @@ tags:
   schema_uri: asdf://gammapy.org/gammapy/schemas/maps/maps-1.0.0
 - tag_uri: asdf://gammapy.org/gammapy/tags/data/gti-1.0.0
   schema_uri: asdf://gammapy.org/gammapy/schemas/data/gti-1.0.0
+- tag_uri: asdf://gammapy.org/gammapy/tags/irf/psfmap-1.0.0
+  schema_uri: asdf://gammapy.org/gammapy/schemas/irf/psfmap-1.0.0
+- tag_uri: asdf://gammapy.org/gammapy/tags/irf/recopsfmap-1.0.0
+  schema_uri: asdf://gammapy.org/gammapy/schemas/irf/recopsfmap-1.0.0
+- tag_uri: asdf://gammapy.org/gammapy/tags/irf/edispmap-1.0.0
+  schema_uri: asdf://gammapy.org/gammapy/schemas/irf/edispmap-1.0.0
+- tag_uri: asdf://gammapy.org/gammapy/tags/irf/edispkernelmap-1.0.0
+  schema_uri: asdf://gammapy.org/gammapy/schemas/irf/edispkernelmap-1.0.0

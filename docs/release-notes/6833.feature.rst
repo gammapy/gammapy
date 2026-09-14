@@ -1,0 +1,1 @@
+Add ASDF serialization support for `~gammapy.irf.PSFMap`, `~gammapy.irf.RecoPSFMap`, `~gammapy.irf.EDispMap`, `~gammapy.irf.EDispKernelMap`.

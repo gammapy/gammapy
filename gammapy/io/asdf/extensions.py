@@ -26,6 +26,9 @@ from .converters.maps.ndmap import (
     WcsNDMapConverter,
 )
 
+from .converters.irf.psf.map import PSFMapConverter, RecoPSFMapConverter
+from .converters.irf.edisp.map import EDispMapConverter, EDispKernelMapConverter
+
 GAMMAPY_CONVERTERS = [
     MapsConverter(),
     GTIConverter(),
@@ -39,6 +42,10 @@ GAMMAPY_CONVERTERS = [
     HpxNDMapConverter(),
     RegionNDMapConverter(),
     WcsNDMapConverter(),
+    PSFMapConverter(),
+    RecoPSFMapConverter(),
+    EDispMapConverter(),
+    EDispKernelMapConverter(),
 ]
 
 GAMMAPY_EXTENSIONS = [
