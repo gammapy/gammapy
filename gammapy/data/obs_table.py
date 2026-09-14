@@ -25,10 +25,13 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        table : `astropy.table.Table'
+        table : `~astropy.table.Table', optional
             Astropy table to initialize observation table.
-        meta : ~dict
-            Dictionary of metadata to update the `table` object.
+        copy : bool, optional
+            Copy the input column data and make a deep copy of the input meta.
+            Default is False.
+        meta : dict, optional
+            Dictionary of metadata to update the ``table`` object.
         """
         if data is not None and isinstance(data, Table):
             warnings.warn(
@@ -273,7 +276,7 @@ class ObservationTable(Table):
         keywords in the **selection** dictionary under the **type** key.
 
         - ``sky_circle`` is a circular region centered in the coordinate
-           marked by the **lon** and **lat** keywords, and radius **radius**
+          marked by the **lon** and **lat** keywords, and radius **radius**
 
         - ``time_box`` is a 1D selection criterion acting on the observation
           start time (**TSTART**); the interval is set via the
