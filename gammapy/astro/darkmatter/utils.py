@@ -96,6 +96,29 @@ class JFactory:
 
         return 0 * u.Unit("GeV2 cm-5" if self.annihilation else "GeV cm-2")
 
+    def _integrate_central_pixel(self, ndecade):
+        """Estimate the pixel-averaged line-of-sight integral at the halo center."""
+        central_geom = self.geom.to_image().cutout(
+            position=self.geom.center_skydir,
+            width=self.geom.pixel_scales,
+        )
+        # Use an even factor so no subpixel center coincides with the halo center.
+        subgeom = central_geom.upsample(2)
+
+        separation = subgeom.separation(self.geom.center_skydir).rad
+        impact = u.Quantity(
+            value=np.sin(separation) * self.distance,
+            unit=self.distance.unit,
+        )
+
+        values = [
+            self._integrate_los(impact_i, separation_i, ndecade)
+            for impact_i, separation_i in zip(impact.ravel(), separation.ravel())
+        ]
+        values = u.Quantity(values).reshape(impact.shape)
+
+        return (values * subgeom.solid_angle()).sum() / central_geom.solid_angle().sum()
+
     def compute_differential_jfactor(self, ndecade=1e4):
         r"""Compute differential J-Factor.
 
@@ -159,7 +182,9 @@ class JFactory:
             value=np.sin(separation) * self.distance, unit=self.distance.unit
         )
         val = [
-            self._integrate_los(impact_i, separation_i, ndecade)
+            self._integrate_central_pixel(ndecade)
+            if separation_i == 0
+            else self._integrate_los(impact_i, separation_i, ndecade)
             for impact_i, separation_i in zip(impact.ravel(), separation.ravel())
         ]
         integral_unit = u.Unit("GeV2 cm-5") if self.annihilation else u.Unit("GeV cm-2")

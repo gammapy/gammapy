@@ -68,6 +68,37 @@ def test_compute_differential_jfactor_large_separation():
     assert np.all(np.isfinite(jfactor.value))
 
 
+@pytest.mark.parametrize("annihilation", [True, False])
+def test_compute_differential_jfactor_central_pixel(annihilation):
+    geom = WcsGeom.create(
+        skydir=(0, 0),
+        npix=3,
+        binsz=0.05,
+        frame="galactic",
+    )
+
+    jfactory = JFactory(
+        geom=geom,
+        profile=profiles.NFWProfile(),
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
+        annihilation=annihilation,
+    )
+
+    diff_jfactor = jfactory.compute_differential_jfactor(ndecade=100)
+    jfactor = jfactory.compute_jfactor(ndecade=100)
+
+    center = (1, 1)
+
+    assert geom.separation(geom.center_skydir)[center] == 0 * u.deg
+    assert np.isfinite(diff_jfactor[center].value)
+    assert np.isfinite(jfactor[center].value)
+    assert_quantity_allclose(
+        jfactor[center],
+        diff_jfactor[center] * geom.solid_angle()[center],
+    )
+
+
 def test_compute_differential_jfactor_outside_halo_no_intersection():
     geom = WcsGeom.create(skydir=(0, 0), width=(120, 2), binsz=1, frame="galactic")
     separation = geom.separation(geom.center_skydir)
