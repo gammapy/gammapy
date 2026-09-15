@@ -1,3 +1,5 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+
 import pytest
 import numpy as np
 from astropy import units as u
@@ -10,7 +12,7 @@ def test_rad_max_plotter():
     offset_axis = MapAxis.from_bounds(0, 1, nbin=2, unit="deg", name="offset")
     
     data = np.ones((2, 2)) * 0.1 * u.deg
-
+    
     rad_max = RadMax2D(
         axes=[energy_axis, offset_axis],
         data=data,

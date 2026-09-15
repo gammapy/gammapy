@@ -1,3 +1,5 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
