@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from gammapy.catalog.fermi import SourceCatalog4FHL
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -23,6 +24,7 @@ from gammapy.modeling.models import (
     SuperExpCutoffPowerLaw4FGLSpectralModel,
 )
 from gammapy.utils.gauss import Gauss2DPDF
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     assert_time_allclose,
@@ -163,24 +165,6 @@ SOURCES_3FGL = [
     ),
 ]
 
-SOURCES_2FHL = [
-    dict(
-        idx=221,
-        name="2FHL J1445.1-0329",
-        str_ref_file="data/2fhl_j1445.1-0329.txt",
-        spec_type=PowerLaw2SpectralModel,
-        dnde=u.Quantity(1.065463448091757e-10, "cm-2 s-1 TeV-1"),
-        dnde_err=u.Quantity(4.9691205387540815e-11, "cm-2 s-1 TeV-1"),
-    ),
-    dict(
-        idx=134,
-        name="2FHL J0822.6-4250e",
-        str_ref_file="data/2fhl_j0822.6-4250e.txt",
-        spec_type=LogParabolaSpectralModel,
-        dnde=u.Quantity(2.46548351696472e-10, "cm-2 s-1 TeV-1"),
-        dnde_err=u.Quantity(9.771755529198772e-11, "cm-2 s-1 TeV-1"),
-    ),
-]
 
 SOURCES_3FHL = [
     dict(
@@ -196,6 +180,23 @@ SOURCES_3FHL = [
         spec_type=LogParabolaSpectralModel,
         dnde=u.Quantity(2.056998292908196e-12, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(4.219030630302381e-13, "cm-2 s-1 GeV-1"),
+    ),
+]
+
+SOURCES_4FHL = [
+    dict(
+        idx=0,
+        name="4FHL J0001.4-4153",
+        spec_type=PowerLawSpectralModel,
+        dnde=u.Quantity(2.991882700606988e-11, "cm-2 s-1 TeV-1"),
+        dnde_err=u.Quantity(1.6055167161665306e-11, "cm-2 s-1 TeV-1"),
+    ),
+    dict(
+        idx=4,
+        name="4FHL J0008.1+4710",
+        spec_type=PowerLawSpectralModel,
+        dnde=u.Quantity(1.1902616024831138e-11, "cm-2 s-1 TeV-1"),
+        dnde_err=u.Quantity(8.2541000867628e-12, "cm-2 s-1 TeV-1"),
     ),
 ]
 
@@ -560,90 +561,6 @@ class TestFermi3FGLObject:
 
 
 @requires_data()
-class TestFermi2FHLObject:
-    @classmethod
-    def setup_class(cls):
-        cls.cat = SourceCatalog2FHL()
-        # Use 2FHL J0534.5+2201 (Crab) as a test source
-        cls.source_name = "2FHL J0534.5+2201"
-        cls.source = cls.cat[cls.source_name]
-
-    def test_name(self):
-        assert self.source.name == self.source_name
-
-    def test_position(self):
-        position = self.source.position
-        assert_allclose(position.ra.deg, 83.634102, atol=1e-3)
-        assert_allclose(position.dec.deg, 22.0215, atol=1e-3)
-
-    @pytest.mark.parametrize("ref", SOURCES_2FHL, ids=lambda _: _["name"])
-    def test_str(self, ref):
-        actual = str(self.cat[ref["idx"]])
-
-        with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
-            expected = fh.read()
-
-        assert actual == expected
-
-    def test_spectral_model(self):
-        model = self.source.spectral_model()
-        energy = u.Quantity(100, "GeV")
-        desired = u.Quantity(6.8700477298e-12, "cm-2 GeV-1 s-1")
-        assert_quantity_allclose(model(energy), desired)
-
-    def test_flux_points(self):
-        # test flux point on  PKS 2155-304
-        src = self.cat["PKS 2155-304"]
-        flux_points = src.flux_points
-        actual = flux_points.flux.quantity[:, 0, 0]
-        desired = [2.866363e-10, 6.118736e-11, 3.257970e-16] * u.Unit("cm-2 s-1")
-        assert_quantity_allclose(actual, desired)
-
-        actual = flux_points.flux_ul.quantity[:, 0, 0]
-        desired = [np.nan, np.nan, 1.294092e-11] * u.Unit("cm-2 s-1")
-        assert_quantity_allclose(actual, desired, rtol=1e-3)
-
-    def test_spatial_model(self):
-        model = self.cat[221].spatial_model()
-        assert "PointSpatialModel" in model.tag
-        assert model.frame == "icrs"
-        p = model.parameters
-        assert_allclose(p["lon_0"].value, 221.281998, rtol=1e-5)
-        assert_allclose(p["lat_0"].value, -3.4943, rtol=1e-5)
-
-        model = self.cat["2FHL J1304.5-4353"].spatial_model()
-        pos_err = model.position_error
-        scale = Gauss2DPDF().containment_radius(0.95) / Gauss2DPDF().containment_radius(
-            0.68
-        )
-        assert_allclose(pos_err.height.value, 2 * 0.041987 * scale, rtol=1e-4)
-        assert_allclose(pos_err.width.value, 2 * 0.041987 * scale, rtol=1e-4)
-        assert_allclose(model.position.ra.value, pos_err.center.ra.value)
-        assert_allclose(model.position.dec.value, pos_err.center.dec.value)
-
-        model = self.cat[97].spatial_model()
-        assert "GaussianSpatialModel" in model.tag
-        assert model.frame == "icrs"
-        p = model.parameters
-        assert_allclose(p["lon_0"].value, 94.309998, rtol=1e-5)
-        assert_allclose(p["lat_0"].value, 22.58, rtol=1e-5)
-        assert_allclose(p["sigma"].value, 0.27)
-
-        model = self.cat[134].spatial_model()
-        assert "DiskSpatialModel" in model.tag
-        assert model.frame == "icrs"
-        p = model.parameters
-        assert_allclose(p["lon_0"].value, 125.660004, rtol=1e-5)
-        assert_allclose(p["lat_0"].value, -42.84, rtol=1e-5)
-        assert_allclose(p["r_0"].value, 0.37)
-
-        model = self.cat[256].spatial_model()
-        assert "TemplateSpatialModel" in model.tag
-        assert model.frame == "fk5"
-        assert model.normalize
-
-
-@requires_data()
 class TestFermi3FHLObject:
     @classmethod
     def setup_class(cls):
@@ -714,6 +631,82 @@ class TestFermi3FHLObject:
     def test_crab_alias(self):
         for name in ["Crab Nebula", "3FHL J0534.5+2201", "3FGL J0534.5+2201i"]:
             assert self.cat[name].row_index == 352
+
+
+@requires_data()
+class TestFermi4FHLObject:
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog4FHL()
+        cls.source_name = "4FHL J0001.4-4153"  # first entry in the catalog
+        cls.source = cls.cat[cls.source_name]
+
+    def test_name(self):
+        assert self.source.name == self.source_name
+
+    def test_row_index(self):
+        assert self.source.row_index == 0
+
+    def test_data(self):
+        assert_allclose(self.source.data["Signif_Avg"], 168.64082)
+
+    def test_str(self):
+        actual = str(self.cat["4FHL J0006.0+7319e"])  # an extended source
+
+        with open(get_pkg_data_filename("data/4fhl_J0006.0+7319e.txt")) as fh:
+            expected = fh.read()
+
+        assert actual == expected
+
+    def test_position(self):
+        position = self.source.position
+        assert_allclose(position.ra.deg, 0.350, atol=1e-3)
+        assert_allclose(position.dec.deg, -41.884, atol=1e-3)
+
+    @pytest.mark.parametrize("ref", SOURCES_4FHL, ids=lambda _: _["name"])
+    def test_spectral_model(self, ref):
+        model = self.cat[ref["idx"]].spectral_model()
+
+        dnde, dnde_errn, dnde_errp = model.evaluate_error(100 * u.GeV)
+        dnde_err = (dnde_errn + dnde_errp) / 2.0
+        # bad but we could also remove the test on dnde_err as its not derived in the same way
+
+        assert isinstance(model, ref["spec_type"])
+        assert_quantity_allclose(dnde, ref["dnde"], rtol=5e-2)
+        assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=5e-2)
+
+    @pytest.mark.parametrize("ref", SOURCES_4FHL, ids=lambda _: _["name"])
+    def test_spatial_model(self, ref):
+        model = self.cat[ref["idx"]].spatial_model()
+        assert model.frame == "icrs"
+
+        model = self.cat["4FHL J0001.4-4153"].spatial_model()
+        pos_err = model.position_error
+        assert_allclose(0.5 * pos_err.height.value, 0.152134, rtol=1e-4)
+        assert_allclose(0.5 * pos_err.width.value, 0.152134, rtol=1e-4)
+        assert_allclose(model.position.ra.value, pos_err.center.ra.value)
+        assert_allclose(model.position.dec.value, pos_err.center.dec.value)
+
+    @pytest.mark.parametrize("ref", SOURCES_4FHL, ids=lambda _: _["name"])
+    def test_sky_model(self, ref):
+        self.cat[ref["idx"]].sky_model()
+
+    def test_flux_points(self):
+        flux_points = self.source.flux_points
+
+        assert flux_points.energy_axis.nbin == 3
+        assert flux_points.norm_ul
+
+        desired = [4.67781803e-12, 1.75178524e-12, 0.00000000e00]
+        assert_allclose(flux_points.flux.data[:, 0, 0], desired, rtol=1e-3)
+
+    def test_alias(self):
+        for name in [
+            "2MASS J00013275-4155252",
+            "4FGL J0001.6-4156",
+            "3FHL J0001.9-4155",
+        ]:
+            assert self.cat[name].row_index == 0
 
 
 @requires_data()
@@ -948,24 +941,6 @@ class TestSourceCatalog3FGL:
 
 
 @requires_data()
-class TestSourceCatalog2FHL:
-    @classmethod
-    def setup_class(cls):
-        cls.cat = SourceCatalog2FHL()
-
-    def test_main_table(self):
-        assert len(self.cat.table) == 360
-
-    def test_extended_sources(self):
-        table = self.cat.extended_sources_table
-        assert len(table) == 25
-
-    def test_crab_alias(self):
-        for name in ["Crab", "3FGL J0534.5+2201i", "1FHL J0534.5+2201"]:
-            assert self.cat[name].row_index == 85
-
-
-@requires_data()
 class TestSourceCatalog3FHL:
     @classmethod
     def setup_class(cls):
@@ -973,6 +948,26 @@ class TestSourceCatalog3FHL:
 
     def test_main_table(self):
         assert len(self.cat.table) == 1556
+
+    def test_extended_sources(self):
+        table = self.cat.extended_sources_table
+        assert len(table) == 55
+
+    def test_to_models(self):
+        mask = self.cat.table["GLAT"].quantity > 80 * u.deg
+        subcat = self.cat[mask]
+        models = subcat.to_models()
+        assert len(models) == 17
+
+
+@requires_data()
+class TestSourceCatalog4FHL:
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog4FHL()
+
+    def test_main_table(self):
+        assert len(self.cat.table) == 673
 
     def test_extended_sources(self):
         table = self.cat.extended_sources_table
@@ -1023,3 +1018,8 @@ class TestSourceCatalog3PC:
         subcat = self.cat[mask]
         models = subcat.to_models()
         assert len(models) == 17
+
+
+def test_deprecation_2FHL():
+    with pytest.warns(GammapyDeprecationWarning):
+        SourceCatalog2FHL()
