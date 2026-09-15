@@ -211,11 +211,10 @@ def test_map_background_2d(bkg_2d, fixed_pointing_info):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
 
     obstime = Time("2020-01-01T20:00:00")
-    skydir = fixed_pointing_info.get_icrs(obstime).galactic
+    skydir = fixed_pointing_info.get_icrs(obstime)
     geom = WcsGeom.create(
-        npix=(3, 3), binsz=4, axes=[axis], skydir=skydir, frame="galactic"
+        npix=(3, 3), binsz=4.0, axes=[axis], skydir=skydir.galactic, frame="galactic"
     )
-
     bkg = make_map_background_irf(
         pointing=skydir,
         ontime="42 s",
