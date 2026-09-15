@@ -380,6 +380,9 @@ class ParameterEstimator(Estimator):
         if not isinstance(datasets, DatasetsActor):
             datasets = Datasets(datasets)
         parameter = datasets.parameters[parameter]
+        parameter._conf_n_sigma = max(
+            self.n_sigma, self.n_sigma_ul, self.n_sigma_sensitivity
+        )
 
         with datasets.parameters.restore_status():
             if not self.reoptimize:
