@@ -75,7 +75,7 @@ class NestedModelSelection:
         cache = self._apply_null_hypothesis(datasets)
         stat_null = datasets.stat_sum()
         self._restore_status(datasets, cache)
-        return stat_null - stat
+        return np.clip(stat_null - stat, 0, None)
 
     def ts_asimov(self, datasets):
         """Perform the alternative hypothesis testing in the Asimov dataset.
