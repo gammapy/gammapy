@@ -185,6 +185,6 @@ Things that would need implementing:
 Decision
 ========
 Given the lack of activity, it has been decided to withdraw the PIG.
-The case for unbinned analysis, this draft PIG provides interesting use cases and design discussion. The exact design will require further iterations.
+The case for unbinned analysis is clear and this draft PIG provides interesting use cases and design discussions. The exact design will require further iterations.
 
 .. _GH 4253: https://github.com/gammapy/gammapy/pull/4253
