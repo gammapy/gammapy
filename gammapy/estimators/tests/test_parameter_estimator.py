@@ -103,9 +103,6 @@ def test_parameter_estimator_no_data(crab_datasets_1d, pwl_model):
     assert np.all(np.isnan(result["stat_scan"]))
 
 
-# gammapy/estimators/tests/test_parameter_estimator.py (or wherever you'd rather keep it)
-
-
 def test_parameter_sensitivity_estimator_negative_excess():
     """Test for issue #6719"""
     energy_axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=1, name="energy")
