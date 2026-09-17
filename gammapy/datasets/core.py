@@ -491,6 +491,8 @@ class Datasets(collections.abc.MutableSequence):
             The current implementation of this write function automatically
             assumes the format is in 'gadf'. To write in other formats one
             should rather write each `~gammapy.datasets.Dataset` separately.
+            Previous implementation meant that the default setting for
+            `~gammapy.datasets.SpectrumDataset` was 'ogip'.
 
         Parameters
         ----------
