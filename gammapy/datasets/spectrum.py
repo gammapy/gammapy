@@ -469,7 +469,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         following the GADF specifications, or as per the OGIP format.
         For OGIP formats specs, see `OGIPDatasetWriter`.
 
-            .. note::
+        .. note::
 
             Since Gammapy v2.1 the default format of this function
             changed from 'ogip' to 'gadf'.
