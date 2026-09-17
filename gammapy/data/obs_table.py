@@ -25,7 +25,7 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        table : `~astropy.table.Table', optional
+        table : `~astropy.table.Table`, optional
             Astropy table to initialize observation table.
         copy : bool, optional
             Copy the input column data and make a deep copy of the input meta.
