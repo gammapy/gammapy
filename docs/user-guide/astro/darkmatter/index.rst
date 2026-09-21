@@ -27,9 +27,8 @@ A dark matter analysis in Gammapy combines two ingredients:
 
 - **Spectral distribution** -- the expected differential gamma-ray flux per
   annihilation/decay channel, described by
-  `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel` and
-  `~gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`. The underlying
-  tabulated spectra, via `~gammapy.astro.darkmatter.PrimaryFlux`, can be
+  `~gammapy.astro.darkmatter.DarkMatterSpectralModel`. The underlying
+  tabulated spectra, via `~gammapy.astro.darkmatter.ContinuumPrimaryFlux`, can be
   sourced from PPPC4DMID, from CosmiXs, or from a custom user-provided table,
   covering a wide range of masses and channels.
 
