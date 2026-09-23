@@ -1019,7 +1019,7 @@ class TestSourceCatalog3PC:
         models = subcat.to_models()
         assert len(models) == 17
 
-
+@requires_data()
 def test_deprecation_2FHL():
     with pytest.warns(GammapyDeprecationWarning):
         SourceCatalog2FHL()
