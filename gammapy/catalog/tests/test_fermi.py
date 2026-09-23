@@ -187,16 +187,16 @@ SOURCES_4FHL = [
     dict(
         idx=0,
         name="4FHL J0001.4-4153",
-        spec_type=PowerLawSpectralModel,
+        spec_type=PowerLaw2SpectralModel,
         dnde=u.Quantity(2.991882700606988e-11, "cm-2 s-1 TeV-1"),
         dnde_err=u.Quantity(1.6055167161665306e-11, "cm-2 s-1 TeV-1"),
     ),
     dict(
         idx=4,
         name="4FHL J0008.1+4710",
-        spec_type=PowerLawSpectralModel,
+        spec_type=PowerLaw2SpectralModel,
         dnde=u.Quantity(1.1902616024831138e-11, "cm-2 s-1 TeV-1"),
-        dnde_err=u.Quantity(8.2541000867628e-12, "cm-2 s-1 TeV-1"),
+        dnde_err=u.Quantity(1.3002770988173156e-11, "cm-2 s-1 TeV-1"),
     ),
 ]
 
@@ -648,7 +648,7 @@ class TestFermi4FHLObject:
         assert self.source.row_index == 0
 
     def test_data(self):
-        assert_allclose(self.source.data["Signif_Avg"], 168.64082)
+        assert_allclose(self.source.data["Sqrt_TS171_585GeV"], 2.3451383)
 
     def test_str(self):
         actual = str(self.cat["4FHL J0006.0+7319e"])  # an extended source
@@ -977,7 +977,7 @@ class TestSourceCatalog4FHL:
         mask = self.cat.table["GLAT"].quantity > 80 * u.deg
         subcat = self.cat[mask]
         models = subcat.to_models()
-        assert len(models) == 17
+        assert len(models) == 14
 
 
 @requires_data()
@@ -1018,6 +1018,7 @@ class TestSourceCatalog3PC:
         subcat = self.cat[mask]
         models = subcat.to_models()
         assert len(models) == 17
+
 
 @requires_data()
 def test_deprecation_2FHL():
