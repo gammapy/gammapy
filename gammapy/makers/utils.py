@@ -791,6 +791,9 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
      exposure : `~gammapy.maps.Map`
         Effective livetime.
     """
+    from gammapy.makers.map import MapDatasetMaker
+
+    maker = MapDatasetMaker()
     livetime = Map.from_geom(geom, unit=u.hr)
     for obs in observations:
         if offset_max is None:
@@ -802,11 +805,9 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
         offset = coords.skycoord.separation(obs.get_pointing_icrs(obs.tmid))
         mask = offset < offset_max
 
-        exposure = make_map_exposure_true_energy(
-            pointing=obs.get_pointing_icrs(obs.tmid),
-            livetime=obs.observation_live_time_duration,
-            aeff=obs.aeff,
-            geom=geom_obs,
+        exposure = maker.make_exposure(
+            geom_obs,
+            obs,
             use_region_center=True,
         )
 
