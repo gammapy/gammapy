@@ -18,6 +18,7 @@ from .points import (
     SensitivityEstimator,
 )
 from .profile import ImageProfile, ImageProfileEstimator
+from .resolvedestimator import ResolvedEstimator
 
 __all__ = [
     "ASmoothMapEstimator",
@@ -39,6 +40,7 @@ __all__ = [
     "TSMapEstimator",
     "EnergyDependentMorphologyEstimator",
     "FluxMetaData",
+    "ResolvedEstimator",
 ]
 
 
