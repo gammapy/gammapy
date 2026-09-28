@@ -1,1 +1,1 @@
-Enhancement of the Dark Matter module tutorials.
+Add a new tutoial showing detailed Dark Matter analysis

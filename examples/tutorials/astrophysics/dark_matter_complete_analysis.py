@@ -9,9 +9,7 @@ we recommend first working through the introductory and the Dark Matter
 Basics and Data handling tutorials.
 
 In this example we perform a **3D analysis** — using both spatial and
-spectral information, as opposed to a 1D (spectral-only) analysis (heck
-the ‘Dark Matter Data Handling with Gammapy’ tutorial for further
-details about these approaches).
+spectral information, as opposed to a 1D (spectral-only) analysis.
 
 To perform a dark matter analysis, we need to fit the data with a model
 that includes both the background and the dark matter signal component.
@@ -38,8 +36,8 @@ signal. A non-detection gives an **upper limit** on ⟨σv⟩: the DM
 particles annihilate *at most* this efficiently.
 
 In Gammapy’s
-:class:`~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`,
-⟨σv⟩ is encoded through a dimensionless **`scale`** parameter:
+:class:`~gammapy.astro.darkmatter.DarkMatterSpectralModel`, ⟨σv⟩ is
+encoded through a dimensionless **`scale`** parameter:
 
 .. math:: \text{scale} = \frac{\langle\sigma v\rangle}{\langle\sigma v\rangle_{\rm ref}}
 
@@ -67,7 +65,7 @@ non-detection gives a **lower limit** on τ_χ: the DM particle must live
 *at least* this long.
 
 In Gammapy’s
-:class:`~gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`, the
+:class:`~gammapy.astro.darkmatter.DarkMatterSpectralModel`, the
 lifetime is encoded through the same **`scale`** parameter, but now it
 multiplies the **decay rate** (inverse lifetime):
 
@@ -111,10 +109,11 @@ In this way, the steps/sections followed in this tutorial are:
 
 **Prerequisites**
 
-- Understanding of the Dark Matter basics, see the tutorial ‘Dark Matter
-  Indirect Detection with Gammapy: Basics’
-- Familiarity with the Dark Matter Data handling, check the tutorial
-  ‘Dark Matter Data Handling with Gammapy’
+- If you are new to Dark Matter, please see the tutorial
+  :doc:`/tutorials/astrophysics/dark_matter_basics`
+- If you are new to Gammapy, please check
+  :doc:`/tutorials/analysis-3d/index` and
+  :doc:`/tutorials/analysis-1d/index`
 
 """
 
@@ -165,21 +164,18 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 # the data follows an Einasto profile and we are going to study the case
 # of Decay with channel b.
 #
-# **For further detail in this step or if you want to use Real Data please
-# check the tutorial ‘Dark Matter Data Handling with Gammapy’.**
-#
 
 # We obtain the data
 dataset = MapDataset.read("$GAMMAPY_DATA/datasets/empty-dl4/empty-dl4.fits.gz")
 
-dataset.meta_table
+print(dataset.meta_table)
 
 
 ######################################################################
-# We can see that only one observation is on the dataset, so we are not
-# going to perform any data selection or reduction (see the tutorial in
-# the Dark Matter Data Handling how to do it). The observation pointing is
-# towards M87, so we are going to take it as a reference.
+# In this case we are analysing a DL4 product, where the data is already
+# filtered and binned, but in the case of using other formats (i.e., DL3),
+# we have the option of performing any data selection or reduction that we
+# may need (i.e. set the energy bounds, specific observtion selection…).
 #
 
 # We set our target position. In this case we use the same as in the dataset, since we only have one observation. Let's pretend we are interested on that source
@@ -188,19 +184,12 @@ target_pos = SkyCoord(
 )
 target_dist = 16400 * u.kpc
 
-# Set energy bounds
-energy_edges = np.logspace(-1, 1.5, 15)
-# The reconstructed energy axis, used for the final map and counts (i.e. what the telescope measures).
-# In this case we use the same for true and reco, but it depends on your energy range study.
-energy_reco = MapAxis.from_edges(energy_edges, unit="TeV", name="energy", interp="log")
-
 # Geometry map we are going to work with
 geom = WcsGeom.create(
     binsz=0.1,  # Pixel size
     skydir=target_pos,  # Sky position of the target, center of the map
     width=3.0,  # Width of the map (i.e 3x3 map)
     frame="icrs",  # Coordinates system
-    axes=[energy_reco],
 )
 
 
@@ -269,26 +258,9 @@ dataset.peek()
 #
 # To verify that our dataset contains no dark matter signal, we perform a
 # **likelihood ratio test** between two hypotheses (`Wilks, S.,
-# 1938 <https://projecteuclid.org/journals/annals-of-mathematical-statistics/volume-9/issue-1/The-Large-Sample-Distribution-of-the-Likelihood-Ratio-for-Testing/10.1214/aoms/1177732360.full>`__):
-#
-# - **H₀ (background-only):** the dataset is described by the background
-#   model alone
-# - **H₁ (signal + background):** a dark matter spectral component is
-#   included
-#
-# We fit both models to the dataset and compute the Test Statistic - the
-# fitting technical details will be explained in the next sections:
-#
-# .. math:: \text{TS} = -2\ln\frac{\mathcal{L}(\text{H}_0)}{\mathcal{L}(\text{H}_1)} = \text{stat}_{H_0} - \text{stat}_{H_1}
-#
-# For the case of one degree of freedom (i.e. a single free parameter
-# between :math:`H_0` and :math:`H_1`, as is the case here with
-# `scale`), Wilks’ theorem gives :math:`\text{TS} \sim \chi^2_1`, so
-# :math:`\sqrt{\text{TS}}` approximates the detection significance in
-# Gaussian sigmas — a value of TS = 25 corresponds to a :math:`5\sigma`
-# detection. The brighter the injected signal, the larger the TS. Under
-# the background-only hypothesis, we expect **TS ≈ 0**, meaning the fitter
-# finds no evidence for a dark matter signal in the data.
+# 1938 <https://projecteuclid.org/journals/annals-of-mathematical-statistics/volume-9/issue-1/The-Large-Sample-Distribution-of-the-Likelihood-Ratio-for-Testing/10.1214/aoms/1177732360.full>`__).
+# See :doc:`/user-guide/stats/index` for more details about this
+# statistical procedure.
 #
 # Gammapy’s `Fit` class provides a unified interface to several
 # optimization backends; by default it uses
@@ -306,9 +278,10 @@ dataset.peek()
 # likelihood between the observed (or simulated) counts and the model
 # prediction. All other parameters remain fixed at their assumed values.
 #
-# Not all model parameters are varied during the fit: each parameter can
-# be set as **free** or **frozen**, and free parameters can further be
-# given **bounds** (min/max values) to keep the fit within a physically
+# Not all model parameters are varied during the fit (see
+# :doc:`/tutorials/details/models`): each parameter can be set as
+# **free** or **frozen**, and free parameters can further be given
+# **bounds** (min/max values) to keep the fit within a physically
 # meaningful range. Typically, the background normalization is left free
 # to absorb residual mismatches between the assumed and true background
 # level, while the spectral shape parameters (e.g. the DM mass or the
@@ -360,66 +333,8 @@ print(f"TS = {TS:.4f}")
 # verify this result.
 #
 
-fig_peek, axs = plt.subplots(2, 2, figsize=(7, 7))
-
-img_1 = axs[0, 0].imshow(
-    np.sum(dataset.counts.data, axis=0),
-    extent=(10.0 + 0.0, -10.0 + 0.0, 10.0 + 0.0, -10.0 + 0.0),
-    origin="lower",
-    cmap="YlOrBr",
-)
-axs[0, 0].set_title("Counts")
-divider = make_axes_locatable(axs[0, 0])
-cax = divider.append_axes("right", size="5%", pad=0.05)
-cbar_1 = fig_peek.colorbar(img_1, cax=cax, orientation="vertical")
-
-img_2 = axs[0, 1].imshow(
-    np.sum(dataset.background.data, axis=0),
-    extent=(10.0 + 0.0, -10.0 + 0.0, 10.0 + 0.0, -10.0 + 0.0),
-    origin="lower",
-    cmap="YlOrBr",
-)
-axs[0, 1].set_title("Background")
-divider = make_axes_locatable(axs[0, 1])
-cax = divider.append_axes("right", size="5%", pad=0.05)
-cbar_2 = fig_peek.colorbar(img_2, cax=cax, orientation="vertical")
-
-img_3 = axs[1, 0].imshow(
-    np.sum(dataset.counts.data, axis=0) - np.sum(dataset.background.data, axis=0),
-    extent=(10.0 + 0.0, -10.0 + 0.0, 10.0 + 0.0, -10.0 + 0.0),
-    origin="lower",
-    cmap="YlOrBr",
-)
-axs[1, 0].set_title("Excess")
-divider = make_axes_locatable(axs[1, 0])
-cax = divider.append_axes("right", size="5%", pad=0.05)
-cbar_3 = fig_peek.colorbar(img_3, cax=cax, orientation="vertical")
-
-img_4 = axs[1, 1].imshow(
-    np.sum(dataset.exposure.data, axis=0),
-    extent=(10.0 + 0.0, -10.0 + 0.0, 10.0 + 0.0, -10.0 + 0.0),
-    origin="lower",
-    cmap="YlOrBr",
-)
-axs[1, 1].set_title("Exposure")
-
-divider = make_axes_locatable(axs[1, 1])
-cax = divider.append_axes("right", size="5%", pad=0.05)
-cbar_4 = fig_peek.colorbar(img_4, cax=cax, orientation="vertical")
-cbar_4.ax.set_ylabel(r"m$^2$")
-
-fig_peek.subplots_adjust(wspace=0.45, hspace=0.2)
-
-plt.plot()
-
-# Let's check the spectrum and the different contributions
-spec, axs = plt.subplots(1, 1, figsize=(6, 4))
-dataset.counts.get_spectrum().plot(label="Total counts")
-dataset.npred_background().get_spectrum().plot(label="BKG counts")
-
-axs.set_ylabel("Counts", fontsize=12)
-axs.legend()
-plt.plot()
+dataset_to_spectrum = dataset.to_spectrum_dataset(sky_reg)
+dataset_to_spectrum.peek()
 
 
 ######################################################################
@@ -440,6 +355,11 @@ dataset.plot_residuals_spatial(
     vmax=5,
     add_cbar=True,
 )
+
+
+######################################################################
+#
+#
 
 # Spectral residuals (residual counts vs energy)
 dataset.plot_residuals_spectral(
