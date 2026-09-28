@@ -381,3 +381,22 @@ plt.show()
 
 result = fit.run(datasets=[dataset_simulated])
 print(result.models.to_parameters_table())
+
+######################################################################
+# Sometimes, it might be useful to use pre-existing observations of a certain region to
+# predict additional observation time required for your science case. For example, you may
+# want to see how well the spectral curvature can be constrained with 10x the observation time.
+# Or, you may want to simulate different sources depending on this observation.
+# For a quick look, you may use `~gammapy.datasets.MapDatasetOnOff.reset_livetime` to scale
+# the irfs and background
+
+dataset = datasets.stack_reduce()
+print(f"Current livetime: {dataset.exposure.meta['livetime'].to(u.h)}")
+dataset_new = dataset_simulated.reset_livetime(new_livetime=6 * u.h)
+
+########################################################################
+# We have a new dataset with 6h of livetime. You can now simulate spectra
+# with it as described in the previous section. Note that this will give you a
+# rough idea only, as we are just scaling the off counts. If you have additional
+# off measurements, you can use them instead.
+#
