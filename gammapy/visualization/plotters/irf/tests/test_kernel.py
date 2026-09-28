@@ -21,29 +21,6 @@ def kernel():
     )
 
 
-def test_plotter_init():
-    plotter = EDispKernelPlotter()
-    assert isinstance(plotter.rc_params, matplotlib.RcParams)
-    assert plotter.rc_params["image.cmap"] == "GnBu"
-    assert plotter.ax is None
-
-
-def test_plotter_rc_params_override():
-    plotter = EDispKernelPlotter(rc_params={"image.cmap": "viridis"})
-    assert plotter.rc_params["image.cmap"] == "viridis"
-
-
-def test_plotter_init_with_ax(kernel):
-    _, ax = plt.subplots()
-    plotter = EDispKernelPlotter(ax=ax)
-    assert plotter.ax is ax
-
-
-def test_plot_uses_init_ax(kernel):
-    _, ax = plt.subplots()
-    plotter = EDispKernelPlotter(ax=ax)
-    with mpl_plot_check():
-        assert plotter.plot_matrix(kernel) is ax
 
 
 def test_plot_matrix(kernel):

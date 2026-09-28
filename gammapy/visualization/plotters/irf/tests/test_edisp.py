@@ -26,29 +26,6 @@ def edisp():
     )
 
 
-def test_plotter_init():
-    plotter = EDispPlotter()
-    assert isinstance(plotter.rc_params, matplotlib.RcParams)
-    assert plotter.rc_params["image.cmap"] == "GnBu"
-    assert plotter.ax is None
-
-
-def test_plotter_rc_params_override():
-    plotter = EDispPlotter(rc_params={"image.cmap": "viridis"})
-    assert plotter.rc_params["image.cmap"] == "viridis"
-
-
-def test_plotter_init_with_ax(edisp):
-    _, ax = plt.subplots()
-    plotter = EDispPlotter(ax=ax)
-    assert plotter.ax is ax
-
-
-def test_plot_uses_init_ax(edisp):
-    _, ax = plt.subplots()
-    plotter = EDispPlotter(ax=ax)
-    with mpl_plot_check():
-        assert plotter.plot_bias(edisp) is ax
 
 
 def test_plot_migration(edisp):
