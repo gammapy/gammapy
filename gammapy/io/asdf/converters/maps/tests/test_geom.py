@@ -192,7 +192,7 @@ tested_read_hpxgeom_examples = [
             data: [8]
           region: DISK(110.,75.,10.)
           """,
-        "truth": HpxGeom(
+        "truth": dict(
             nside=8,
             nest=False,
             frame="galactic",
@@ -212,7 +212,7 @@ tested_read_hpxgeom_examples = [
             data: [6, 15, 16, 28, 29]
           region: explicit
           """,
-        "truth": HpxGeom(
+        "truth": dict(
             nside=8,
             nest=False,
             frame="galactic",
@@ -229,7 +229,7 @@ tested_read_hpxgeom_examples = [
           nside: !core/ndarray-1.1.0
             data: [8]
           """,
-        "truth": HpxGeom(nside=8, nest=True, region=None, axes=None),
+        "truth": dict(nside=8, nest=True, region=None, axes=None),
     },
     {
         "example": """!<asdf://gammapy.org/gammapy/tags/maps/hpxgeom-1.0.0>
@@ -247,7 +247,7 @@ tested_read_hpxgeom_examples = [
           nside: !core/ndarray-1.1.0
             data: [4, 8]
           """,
-        "truth": HpxGeom(
+        "truth": dict(
             nside=np.array([4, 8]),
             nest=True,
             frame="icrs",
@@ -284,7 +284,7 @@ def test_hpx_geom_read_examples(example):
     buff = yaml_to_asdf(f"example: {example['example'].strip()}")
 
     if example.get("truth") is not None:
-        truth = example["truth"]
+        truth = HpxGeom(**example["truth"])
         with asdf.open(buff) as af:
             result = af["example"]
             if truth.nside.size > 1:
