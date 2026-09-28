@@ -17,45 +17,14 @@ class EDispKernelPlotter(BasePlotter):
     methods that receive the `~gammapy.irf.EDispKernel` to plot as an
     argument. It keeps no reference to a data object.
 
-    This plotter reimplements the plotting methods of
-    `~gammapy.irf.EDispKernel` (i.e. `plot_matrix`, `plot_bias` and `peek`)
-    following PIG 31. The original plotting code in `~gammapy.irf.EDispKernel`
-    is left untouched for now and will be replaced by this plotter after v2.2.
-
     Parameters
     ----------
-    ax : `~matplotlib.axes.Axes`, optional
-        Default matplotlib axes on which to draw the plot. If None, the
-        current axes of the figure is used instead. Default is None.
     rc_params : dict, optional
         Mapping of `matplotlib.rcParams` keys to values. Entries are validated
         when set and applied while plotting. Default is None.
     """
 
-    def __init__(self, ax=None, rc_params=None):
-        super().__init__(rc_params=rc_params)
-        self.ax = ax
-        self.rc_params = {"image.cmap": "GnBu"}
-        if rc_params:
-            self.rc_params = rc_params
 
-    def _get_axes(self, ax):
-        """Resolve the axes to draw on.
-
-        Parameters
-        ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes. If None, the axes given on init are used, and
-            fall back to the current axes of the figure.
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`
-            Matplotlib axes.
-        """
-        if ax is None:
-            ax = self.ax if self.ax is not None else plt.gca()
-        return ax
 
     def plot_matrix(
         self,
@@ -89,12 +58,13 @@ class EDispKernelPlotter(BasePlotter):
             Matplotlib axes.
         """
         with self._rc_context(), quantity_support():
+            kwargs.setdefault("cmap", "GnBu")
             norm = PowerNorm(gamma=0.5, vmin=0, vmax=1)
             kwargs.setdefault("norm", norm)
 
             kwargs_colorbar = kwargs_colorbar or {}
 
-            ax = self._get_axes(ax)
+            ax = plt.gca() if ax is None else ax
 
             energy_axis_true = kernel.axes["energy_true"]
             energy_axis = kernel.axes["energy"]
@@ -132,7 +102,7 @@ class EDispKernelPlotter(BasePlotter):
             Matplotlib axes.
         """
         with self._rc_context(), quantity_support():
-            ax = self._get_axes(ax)
+            ax = plt.gca() if ax is None else ax
 
             energy = kernel.axes["energy_true"].center
             bias = kernel.get_bias(energy)

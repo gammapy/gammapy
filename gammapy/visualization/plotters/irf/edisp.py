@@ -20,46 +20,14 @@ class EDispPlotter(BasePlotter):
     methods that receive the `~gammapy.irf.EnergyDispersion2D` to plot as an
     argument. It keeps no reference to a data object.
 
-    This plotter reimplements the plotting methods of
-    `~gammapy.irf.EnergyDispersion2D` (i.e. `plot_migration`, `plot_bias` and
-    `peek`) following PIG 31. The original plotting code in
-    `~gammapy.irf.EnergyDispersion2D` is left untouched for now and will be
-    replaced by this plotter after v2.2.
-
     Parameters
     ----------
-    ax : `~matplotlib.axes.Axes`, optional
-        Default matplotlib axes on which to draw the plot. If None, the
-        current axes of the figure is used instead. Default is None.
     rc_params : dict, optional
         Mapping of `matplotlib.rcParams` keys to values. Entries are validated
         when set and applied while plotting. Default is None.
     """
 
-    def __init__(self, ax=None, rc_params=None):
-        super().__init__(rc_params=rc_params)
-        self.ax = ax
-        self.rc_params = {"image.cmap": "GnBu"}
-        if rc_params:
-            self.rc_params = rc_params
 
-    def _get_axes(self, ax):
-        """Resolve the axes to draw on.
-
-        Parameters
-        ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes. If None, the axes given on init are used, and
-            fall back to the current axes of the figure.
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`
-            Matplotlib axes.
-        """
-        if ax is None:
-            ax = self.ax if self.ax is not None else plt.gca()
-        return ax
 
     def plot_migration(self, edisp, ax=None, offset=None, energy_true=None, **kwargs):
         """Plot energy dispersion for given offset and true energy.
@@ -83,7 +51,7 @@ class EDispPlotter(BasePlotter):
             Matplotlib axes.
         """
         with self._rc_context(), quantity_support():
-            ax = self._get_axes(ax)
+            ax = plt.gca() if ax is None else ax
 
             if offset is None:
                 offset = edisp._default_offset
@@ -145,6 +113,7 @@ class EDispPlotter(BasePlotter):
             Matplotlib axes.
         """
         with self._rc_context(), quantity_support():
+            kwargs.setdefault("cmap", "GnBu")
             kwargs.setdefault("norm", PowerNorm(gamma=0.5))
 
             kwargs_colorbar = kwargs_colorbar or {}
