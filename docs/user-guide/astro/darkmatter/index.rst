@@ -21,7 +21,7 @@ analysis pipeline with real code, see the tutorials linked at the bottom of
 this page.
 
 Analysis components
-====================
+===================
 
 A dark matter analysis in Gammapy combines two ingredients:
 
@@ -53,8 +53,9 @@ modeling and fitting workflow, turning a halo and a particle physics
 scenario into a ready-to-fit spectral model.
 
 Using gammapy.astro.darkmatter
-================================
+==============================
 
-.. minigallery:: gammapy.astro.darkmatter
+.. minigallery::
+  ../examples/tutorials/astrophysics/astro_dark_matter.py
 
 .. _CLUMPY: http://lpsc.in2p3.fr/clumpy/
