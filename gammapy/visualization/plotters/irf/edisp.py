@@ -118,7 +118,7 @@ class EDispPlotter(BasePlotter):
 
             kwargs_colorbar = kwargs_colorbar or {}
 
-            ax = self._get_axes(ax)
+            ax = plt.gca() if ax is None else ax
 
             if offset is None:
                 offset = edisp._default_offset
