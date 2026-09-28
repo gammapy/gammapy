@@ -11,6 +11,7 @@ from regions import (
     PointSkyRegion,
     RectangleSkyRegion,
 )
+from gammapy.utils.testing import requires_dependency
 
 asdf = pytest.importorskip("asdf")
 pytest.importorskip("asdf.testing")
@@ -139,6 +140,7 @@ tested_hpx_geom = [
 ]
 
 
+@requires_dependency("healpy")
 @pytest.mark.parametrize(
     ("nside", "nested", "frame", "region", "axes"), tested_hpx_geom
 )
@@ -161,6 +163,7 @@ def test_hpxgeom_roundtrip(nside, nested, frame, region, axes, tmp_path):
             assert result.region == geom.region
 
 
+@requires_dependency("healpy")
 def test_hpxgeom_roundtrip_tuple_region(tmp_path):
     file_path = tmp_path / "test.asdf"
     geom = HpxGeom(
@@ -275,6 +278,7 @@ tested_read_hpxgeom_examples = [
 ]
 
 
+@requires_dependency("healpy")
 @pytest.mark.parametrize("example", tested_read_hpxgeom_examples)
 def test_hpx_geom_read_examples(example):
     buff = yaml_to_asdf(f"example: {example['example'].strip()}")
