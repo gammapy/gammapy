@@ -344,19 +344,19 @@ def test_prior_attached(dm_decay_model):
     centered on mu=1 by default (i.e. the nominal factor value)."""
     add_factor_prior(dm_decay_model, sigma=0.2)
 
-    prior = dm_decay_model.scale.prior
+    prior = dm_decay_model.factor.prior
     assert prior is not None
     assert prior.sigma.value == pytest.approx(0.2 * np.log(10))
-    assert prior.mu.value == pytest.approx(1.0)
+    assert prior.mu.value == pytest.approx(3.41e19)
 
 
 @requires_data()
 def test_custom_mu(dm_decay_model):
     """A custom `mu` should be respected instead of the default 1.0."""
-    add_factor_prior(dm_decay_model, sigma=0.15, mu=0.5)
+    add_factor_prior(dm_decay_model, sigma=0.15)
 
-    prior = dm_decay_model.scale.prior
-    assert prior.mu.value == pytest.approx(0.5)
+    prior = dm_decay_model.factor.prior
+    assert prior.mu.value == pytest.approx(3.41e19)
     assert prior.sigma.value == pytest.approx(0.15 * np.log(10))
 
 
