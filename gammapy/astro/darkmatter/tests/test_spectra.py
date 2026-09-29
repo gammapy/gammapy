@@ -17,6 +17,8 @@ from gammapy.astro.darkmatter import (
 )
 from gammapy.modeling.models import Models, SkyModel, SpectralModel
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
+from gammapy.astro.darkmatter.utils import add_factor_prior
+from gammapy.modeling.models import LogNormalPrior
 
 
 # ContinuumPrimaryFlux
@@ -129,6 +131,41 @@ def test_continuum_to_from_dict_roundtrip():
     assert new_flux.source == flux.source
 
 
+def _to_old_format(data):
+    """Rewrite a serialized model in the pre-Parameter format."""
+    spec = data["spectral"]
+    spec["mass"] = spec.pop("mDM")
+    pars = spec["parameters"]
+    f = next(p for p in pars if p["name"] == "factor")
+    pars.remove(f)
+    spec["jfactor"] = u.Quantity(f["value"], f.get("unit", "")).to_string()
+    return data
+
+
+@requires_data()
+@pytest.mark.parametrize(
+    "annihilation, unit", [(True, "GeV2 cm-5"), (False, "GeV cm-2")]
+)
+def test_from_dict_old_field_names(annihilation, unit):
+    model = DarkMatterSpectralModel(
+        mDM=1 * u.TeV,
+        channel="b",
+        factor=3.41e19 * u.Unit(unit),
+        annihilation=annihilation,
+    )
+    data = _to_old_format(model.to_dict())
+
+    with pytest.warns(GammapyDeprecationWarning) as record:
+        new_model = DarkMatterSpectralModel.from_dict(data)
+
+    messages = [str(w.message) for w in record]
+    assert any("'mass'" in m for m in messages)
+    assert any("'jfactor'" in m for m in messages)
+    assert_quantity_allclose(new_model.factor.quantity, model.factor.quantity)
+    assert_quantity_allclose(new_model.mDM, model.mDM)
+    assert new_model.channel == model.channel
+
+
 def test_custom_source_file_empty(tmp_path):
     empty_file = tmp_path / "empty_spectra.dat"
     empty_file.touch()
@@ -179,14 +216,6 @@ def test_dm_spectral_model_custom_io(tmp_path):
     sky_model = SkyModel(spectral_model=model, name="skymodel_custom")
     models = Models([sky_model])
 
-    sky_model = SkyModel(spectral_model=model, name="skymodel_custom")
-    print("SkyModel OK")
-
-    data = model.to_dict()
-    print(next(p for p in data["spectral"]["parameters"] if p["name"] == "factor"))
-    loaded = DarkMatterSpectralModel.from_dict(data)
-    print(loaded.factor.quantity, loaded(1 * u.TeV).unit)
-
     filename = tmp_path / "model_custom.yaml"
     models.write(filename, overwrite=True)
     new_models = Models.read(filename)
@@ -195,6 +224,7 @@ def test_dm_spectral_model_custom_io(tmp_path):
     assert loaded_model.primary_flux.source == str(custom_file)
     # mapping_dict is not serialized by ContinuumPrimaryFlux.to_dict
     assert loaded_model.primary_flux.mapping_dict is None
+    assert loaded_model.factor.unit == model.factor.unit
 
 
 def test_dm_annihilation_custom_errors(tmp_path):
@@ -287,21 +317,6 @@ def test_decay_expected_primary_flux_mass_is_half():
     assert_quantity_allclose(model.primary_flux.mDM, mDM / 2)
 
 
-def warnings_should_not_warn(category):
-    import contextlib
-
-    @contextlib.contextmanager
-    def _cm():
-        with pytest.warns(None) as record:
-            yield
-        for w in record:
-            assert not issubclass(w.category, category), (
-                f"Unexpected warning: {w.message}"
-            )
-
-    return _cm()
-
-
 def test_negative_redshift():
     with pytest.raises(ValueError, match="Redshift z must be >= 0"):
         DarkMatterSpectralModel(mDM=1 * u.TeV, channel="b", z=-1)
@@ -365,14 +380,7 @@ def test_dm_spectral_model(
 
     flux = model.integral(energy_min=energy_min, energy_max=energy_max).to("cm-2 s-1")
 
-    if annihilation is False:
-        dnde = model.evaluate(energy=1 * u.TeV, scale=1, factor=factor).to(
-            "cm-2 s-1 TeV-1"
-        )
-    else:
-        dnde = model.evaluate(energy=1 * u.TeV, scale=1, factor=factor).to(
-            "cm-2 s-1 TeV-1"
-        )
+    dnde = model.evaluate(energy=1 * u.TeV, scale=1, factor=factor).to("cm-2 s-1 TeV-1")
 
     sky_model = SkyModel(spectral_model=model, name="skymodel")
     models = Models([sky_model])
@@ -549,7 +557,7 @@ def test_dm_decay_from_dict_missing_primary_flux_and_old_field_names():
 @requires_data()
 def test_dm_annihilation_from_dict_missing_primary_flux_and_old_field_names():
     """Dict with both no 'primary_flux' key AND old field names ('mass' instead of 'mDM')."""
-    model = DarkMatterSpectralModel(mDM=1 * u.TeV, channel="b", annihilation=False)
+    model = DarkMatterSpectralModel(mDM=1 * u.TeV, channel="b", annihilation=True)
     data = model.to_dict()
     data["spectral"].pop("primary_flux", None)
     data["spectral"]["mass"] = data["spectral"].pop("mDM")
@@ -644,3 +652,63 @@ def test_backward_compat_old_decay_dict_direct_base_class():
     assert new_model.k is None
     assert_quantity_allclose(new_model.mDM, model.mDM)
     assert new_model.channel == model.channel
+
+
+@requires_data()
+def test_factor_wrong_unit_raises():
+    with pytest.raises(u.UnitConversionError, match="factor must be convertible"):
+        DarkMatterSpectralModel(
+            mDM=1 * u.TeV,
+            channel="b",
+            factor=3.41e19 * u.Unit("GeV cm-2"),
+            annihilation=True,
+        )
+
+
+@requires_data()
+def test_factor_prior_roundtrip(tmp_path):
+    model = DarkMatterSpectralModel(
+        mDM=1 * u.TeV, channel="b", factor=3.41e19 * u.Unit("GeV2 cm-5")
+    )
+    add_factor_prior(model, sigma=0.3)
+    model.factor.min = model.factor.value / 10
+    model.factor.max = model.factor.value * 10
+
+    filename = tmp_path / "model.yaml"
+    Models([SkyModel(spectral_model=model, name="dm")]).write(filename)
+    loaded = Models.read(filename)[0].spectral_model
+
+    assert loaded.factor.unit == model.factor.unit
+    assert_allclose(loaded.factor.value, model.factor.value)
+    assert not loaded.factor.frozen
+    assert_allclose(loaded.factor.min, model.factor.min)
+    assert_allclose(loaded.factor.max, model.factor.max)
+
+    assert isinstance(loaded.factor.prior, LogNormalPrior)
+    assert_allclose(loaded.factor.prior.mu.value, model.factor.value)
+    assert_allclose(loaded.factor.prior.sigma.value, 0.3 * np.log(10))
+    assert loaded.scale.prior is None
+    assert not loaded.scale.frozen
+
+
+def test_dm_spectral_model_generic_primary_flux():
+    """Any spectral model returning dN/dE can be used as primary flux."""
+    from gammapy.modeling.models import TemplateSpectralModel
+
+    energy = np.geomspace(1, 1000, 20) * u.GeV
+    values = 1e-3 * (energy / u.GeV) ** -1.5 / u.GeV
+    pf = TemplateSpectralModel(energy=energy, values=values)
+
+    model = DarkMatterSpectralModel(
+        mDM=1 * u.TeV,
+        channel="b",
+        factor=3.41e19 * u.Unit("GeV2 cm-5"),
+        primary_flux=pf,
+    )
+
+    assert model.primary_flux is pf
+    assert not hasattr(pf, "mDM")
+
+    flux = model(10 * u.GeV)
+    assert flux.unit.is_equivalent("cm-2 s-1 TeV-1")
+    assert flux.value > 0
