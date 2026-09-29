@@ -7,7 +7,7 @@ import astropy.units as u
 from gammapy.irf import EnergyDispersion2D
 from gammapy.maps import MapAxis
 from gammapy.utils.testing import mpl_plot_check
-from gammapy.visualization.plotters.irf.edisp import EDispPlotter
+from gammapy.visualization.plotters.irf import EDispPlotter
 
 
 @pytest.fixture(scope="module")
@@ -24,8 +24,6 @@ def edisp():
         bias=0,
         sigma=0.1,
     )
-
-
 
 
 def test_plot_migration(edisp):
@@ -53,6 +51,13 @@ def test_plot_bias_colorbar(edisp):
     plotter = EDispPlotter()
     with mpl_plot_check():
         plotter.plot_bias(edisp, add_cbar=True)
+
+
+def test_plot_bias_custom(edisp):
+    plotter = EDispPlotter()
+    with mpl_plot_check():
+        ax = plotter.plot_bias(edisp, offset=0 * u.deg)
+    assert ax is not None
 
 
 def test_peek(edisp):

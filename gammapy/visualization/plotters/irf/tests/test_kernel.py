@@ -6,7 +6,7 @@ import pytest
 from gammapy.irf import EDispKernel
 from gammapy.maps import MapAxis
 from gammapy.utils.testing import mpl_plot_check
-from gammapy.visualization.plotters.irf.kernel import EDispKernelPlotter
+from gammapy.visualization.plotters.irf import EDispKernelPlotter
 
 
 @pytest.fixture(scope="module")
@@ -19,8 +19,6 @@ def kernel():
         sigma=0.1,
         bias=0,
     )
-
-
 
 
 def test_plot_matrix(kernel):
