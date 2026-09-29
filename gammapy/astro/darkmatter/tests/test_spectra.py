@@ -324,6 +324,7 @@ def test_k_value_roundtrip(k):
     assert new_model.k == k
 
 
+@requires_data()
 def test_invalid_factor():
     with pytest.raises(ValueError, match="factor must be positive"):
         DarkMatterSpectralModel(
