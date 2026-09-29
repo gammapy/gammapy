@@ -1,4 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import warnings
+
 import numpy as np
 import astropy.units as u
 import pytest
@@ -16,6 +18,11 @@ from gammapy.utils.testing import assert_quantity_allclose, requires_data
 @pytest.fixture(scope="session")
 def geom():
     return WcsGeom.create(binsz=0.5, npix=10)
+
+
+@pytest.fixture
+def central_geom():
+    return WcsGeom.create(skydir=(0, 0), npix=3, binsz=0.05, frame="galactic")
 
 
 @pytest.fixture(scope="session")
@@ -68,35 +75,114 @@ def test_compute_differential_jfactor_large_separation():
     assert np.all(np.isfinite(jfactor.value))
 
 
-@pytest.mark.parametrize("annihilation", [True, False])
-def test_compute_differential_jfactor_central_pixel(annihilation):
-    geom = WcsGeom.create(
-        skydir=(0, 0),
-        npix=3,
-        binsz=0.05,
-        frame="galactic",
-    )
-
+@pytest.mark.parametrize(
+    ("annihilation", "expected"),
+    [
+        (
+            True,
+            2.775992151519749e27 * u.Unit("GeV2 cm-5 sr-1"),
+        ),
+        (
+            False,
+            9.936881967248796e23 * u.Unit("GeV cm-2 sr-1"),
+        ),
+    ],
+)
+def test_compute_differential_jfactor_central_pixel(
+    central_geom,
+    annihilation,
+    expected,
+):
     jfactory = JFactory(
-        geom=geom,
+        geom=central_geom,
         profile=profiles.NFWProfile(),
         distance=8.33 * u.kpc,
         rmax=1 * u.kpc,
         annihilation=annihilation,
     )
 
-    diff_jfactor = jfactory.compute_differential_jfactor(ndecade=100)
-    jfactor = jfactory.compute_jfactor(ndecade=100)
+    with pytest.warns(UserWarning, match="pixel center coincides with the halo center"):
+        diff_jfactor = jfactory.compute_differential_jfactor(ndecade=100)
 
-    center = (1, 1)
+    assert_quantity_allclose(diff_jfactor[1, 1], expected, rtol=1e-6)
 
-    assert geom.separation(geom.center_skydir)[center] == 0 * u.deg
-    assert np.isfinite(diff_jfactor[center].value)
-    assert np.isfinite(jfactor[center].value)
-    assert_quantity_allclose(
-        jfactor[center],
-        diff_jfactor[center] * geom.solid_angle()[center],
+
+def test_compute_differential_jfactor_central_pixel_max_subdivision(central_geom):
+    jfactory = JFactory(
+        geom=central_geom,
+        profile=profiles.NFWProfile(),
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
     )
+
+    with pytest.warns(UserWarning) as warnings_record:
+        diff_jfactor = jfactory.compute_differential_jfactor(
+            ndecade=100,
+            central_pixel_max_subdivision=np.int64(4),
+        )
+
+    assert any(
+        "maximum subdivision factor" in str(item.message) for item in warnings_record
+    )
+
+    expected = 2.4977898557104927e27 * u.Unit("GeV2 cm-5 sr-1")
+    assert_quantity_allclose(diff_jfactor[1, 1], expected, rtol=1e-6)
+
+
+def test_compute_jfactor_central_pixel(monkeypatch, central_geom):
+    jfactory = JFactory(
+        geom=central_geom,
+        profile=profiles.NFWProfile(),
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
+    )
+
+    factors = []
+    original_upsample = WcsGeom.upsample
+
+    def record_upsample(self, factor, *args, **kwargs):
+        factors.append(factor)
+        return original_upsample(self, factor, *args, **kwargs)
+
+    monkeypatch.setattr(WcsGeom, "upsample", record_upsample)
+    with pytest.warns(UserWarning, match="pixel center coincides with the halo center"):
+        jfactor = jfactory.compute_jfactor(
+            ndecade=100,
+            central_pixel_rtol=0.06,
+            central_pixel_max_subdivision=8,
+        )
+
+    expected_jfactor = 2.0113971909309723e21 * u.Unit("GeV2 cm-5")
+    assert_quantity_allclose(jfactor[1, 1], expected_jfactor, rtol=1e-6)
+    assert factors == [2, 4, 8]
+
+
+def test_compute_differential_jfactor_no_central_pixel_warning(geom):
+    jfactory = JFactory(
+        geom=geom,
+        profile=profiles.NFWProfile(),
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
+    )
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        jfactory.compute_differential_jfactor(ndecade=100)
+
+
+@pytest.mark.parametrize("central_pixel_max_subdivision", [2, 6, 4.0])
+def test_jfactory_invalid_max_subdivision(geom, central_pixel_max_subdivision):
+    jfactory = JFactory(
+        geom=geom,
+        profile=profiles.NFWProfile(),
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
+    )
+
+    with pytest.raises(ValueError, match="power of two"):
+        jfactory.compute_differential_jfactor(
+            central_pixel_max_subdivision=central_pixel_max_subdivision,
+        )
 
 
 def test_compute_differential_jfactor_outside_halo_no_intersection():
