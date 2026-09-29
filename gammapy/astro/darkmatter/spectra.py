@@ -583,6 +583,7 @@ class DarkMatterSpectralModel(SpectralModel):
         along the line of sight and over the solid angle), needed when a
         `~gammapy.modeling.models.PointSpatialModel` is used for the
         spatial component. Default is 1 (dimensionless) and in a frozen form.
+        Tehe expected units are GeV2 cm-5 for annihilation and GeV cm-2 in the case of decay.
     z : float, optional
         Redshift of the source. The primary flux is evaluated at the
         redshifted energy ``energy * (1 + z)``. Default is 0.
@@ -763,6 +764,7 @@ class DarkMatterSpectralModel(SpectralModel):
         For decay, computes:
         ``flux = scale * factor * primary_flux(energy * (1 + z))
         / LIFETIME_AGE_OF_UNIVERSE / mDM / (4 * pi)``.
+
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
