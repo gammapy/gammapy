@@ -583,7 +583,7 @@ class DarkMatterSpectralModel(SpectralModel):
         along the line of sight and over the solid angle), needed when a
         `~gammapy.modeling.models.PointSpatialModel` is used for the
         spatial component. Default is 1 (dimensionless) and in a frozen form.
-        Tehe expected units are GeV2 cm-5 for annihilation and GeV cm-2 in the case of decay.
+        The expected units are GeV2 cm-5 for annihilation and GeV cm-2 in the case of decay.
     z : float, optional
         Redshift of the source. The primary flux is evaluated at the
         redshifted energy ``energy * (1 + z)``. Default is 0.
@@ -642,7 +642,7 @@ class DarkMatterSpectralModel(SpectralModel):
     """Thermally averaged annihilation cross-section."""
 
     LIFETIME_AGE_OF_UNIVERSE = 4.3e17 * u.Unit("s")
-    """Use age of univserse as lifetime"""
+    """Use age of universe as lifetime"""
 
     scale = Parameter("scale", 1, unit="", interp="log")
     factor = Parameter("factor", 1, unit="", interp="log", frozen=True)
