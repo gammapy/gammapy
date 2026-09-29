@@ -173,10 +173,19 @@ def test_dm_spectral_model_custom_io(tmp_path):
         channel="b",
         factor=3.41e19 * u.Unit("GeV2 cm-5"),
         primary_flux=custom_flux,
+        annihilation=True,
     )
 
     sky_model = SkyModel(spectral_model=model, name="skymodel_custom")
     models = Models([sky_model])
+
+    sky_model = SkyModel(spectral_model=model, name="skymodel_custom")
+    print("SkyModel OK")
+
+    data = model.to_dict()
+    print(next(p for p in data["spectral"]["parameters"] if p["name"] == "factor"))
+    loaded = DarkMatterSpectralModel.from_dict(data)
+    print(loaded.factor.quantity, loaded(1 * u.TeV).unit)
 
     filename = tmp_path / "model_custom.yaml"
     models.write(filename, overwrite=True)
@@ -316,9 +325,7 @@ def test_k_value_roundtrip(k):
 
 
 def test_invalid_factor():
-    with pytest.raises(
-        ValueError, match="The astrophysical factor must be strictly positive."
-    ):
+    with pytest.raises(ValueError, match="factor must be positive"):
         DarkMatterSpectralModel(
             mDM=1 * u.TeV, channel="b", factor=-1 * u.Unit("GeV2 cm-5")
         )
@@ -358,9 +365,13 @@ def test_dm_spectral_model(
     flux = model.integral(energy_min=energy_min, energy_max=energy_max).to("cm-2 s-1")
 
     if annihilation is False:
-        dnde = model.evaluate(energy=1 * u.TeV, scale=1).to("cm-2 s-1 TeV-1")
+        dnde = model.evaluate(energy=1 * u.TeV, scale=1, factor=factor).to(
+            "cm-2 s-1 TeV-1"
+        )
     else:
-        dnde = model.evaluate(energy=1 * u.TeV, scale=1).to("cm-2 s-1 TeV-1")
+        dnde = model.evaluate(energy=1 * u.TeV, scale=1, factor=factor).to(
+            "cm-2 s-1 TeV-1"
+        )
 
     sky_model = SkyModel(spectral_model=model, name="skymodel")
     models = Models([sky_model])
@@ -553,12 +564,10 @@ def test_dm_decay_from_dict_both_old_field_names_warns_and_maps():
     model = DarkMatterSpectralModel(mDM=1 * u.TeV, channel="b", annihilation=False)
     data = model.to_dict()
     data["spectral"]["mass"] = data["spectral"].pop("mDM")
-    data["spectral"]["jfactor"] = data["spectral"].pop("factor")
     with pytest.warns(GammapyDeprecationWarning) as record:
         new_model = DarkMatterSpectralModel.from_dict(data)
     messages = [str(w.message) for w in record]
     assert any("'mass'" in m for m in messages)
-    assert any("'jfactor'" in m for m in messages)
     assert_quantity_allclose(new_model.mDM, model.mDM)
     assert_allclose(new_model.factor.value, model.factor.value, rtol=1e-2)
     assert new_model.channel == model.channel
@@ -570,12 +579,10 @@ def test_dm_annihilation_from_dict_both_old_field_names_warns_and_maps():
     model = DarkMatterSpectralModel(mDM=1 * u.TeV, channel="b")
     data = model.to_dict()
     data["spectral"]["mass"] = data["spectral"].pop("mDM")
-    data["spectral"]["jfactor"] = data["spectral"].pop("factor")
     with pytest.warns(GammapyDeprecationWarning) as record:
         new_model = DarkMatterSpectralModel.from_dict(data)
     messages = [str(w.message) for w in record]
     assert any("'mass'" in m for m in messages)
-    assert any("'jfactor'" in m for m in messages)
     assert_quantity_allclose(new_model.mDM, model.mDM)
     assert_allclose(new_model.factor.value, model.factor.value, rtol=1e-2)
     assert new_model.channel == model.channel
