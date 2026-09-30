@@ -17,7 +17,7 @@ from gammapy.utils.metadata import (
     ObsInfoMetaData,
     PointingInfoMetaData,
 )
-from gammapy.utils.testing import assert_time_allclose
+from gammapy.utils.testing import assert_time_allclose, requires_data
 
 asdf = pytest.importorskip("asdf")
 pytest.importorskip("asdf.testing")
@@ -115,6 +115,7 @@ def test_mapdataset_roundtrip(tmp_path):
         )
         assert list(result.meta_table["OBS_ID"]) == list(dataset.meta_table["OBS_ID"])
         assert result.models is None
+        assert result.stat_type == dataset.stat_type
 
 
 def test_mapdataset_roundtrip_region_geom(tmp_path):
@@ -251,6 +252,7 @@ def test_mapdatasetonoff_roundtrip(tmp_path):
         assert list(result.meta_table["OBS_ID"]) == list(dataset.meta_table["OBS_ID"])
         assert_allclose(result.meta_table["LIVETIME"], dataset.meta_table["LIVETIME"])
         assert result.models is None
+        assert result.stat_type == dataset.stat_type
 
 
 def test_mapdatasetonoff_roundtrip_hpx_geom(tmp_path):
@@ -271,3 +273,33 @@ def test_mapdatasetonoff_roundtrip_hpx_geom(tmp_path):
     with asdf.open(file_path) as af:
         result = af["dataset"]
         assert_allclose(result.counts.data, dataset.counts.data)
+
+
+@requires_data()
+def test_mapdataset_roundtrip_real_data(tmp_path):
+    file_path = tmp_path / "test.asdf"
+
+    dataset = MapDataset.read(
+        "$GAMMAPY_DATA/estimators/mock_DL4/dataset_energy_dependent.fits.gz"
+    )
+
+    with asdf.AsdfFile() as af:
+        af["dataset"] = dataset
+        af.write_to(file_path)
+
+    with asdf.open(file_path) as af:
+        result = af["dataset"]
+        assert_allclose(result.counts.data, dataset.counts.data)
+        assert_allclose(result.exposure.data, dataset.exposure.data)
+        assert_allclose(result.background.data, dataset.background.data)
+        assert_allclose(result.mask_safe.data, dataset.mask_safe.data)
+        assert result.mask_fit == dataset.mask_fit
+        assert_allclose(result.edisp.edisp_map.data, dataset.edisp.edisp_map.data)
+        assert_allclose(result.psf.psf_map.data, dataset.psf.psf_map.data)
+        assert result.name == dataset.name
+        assert_allclose(
+            result.gti.time_sum.to_value("s"), dataset.gti.time_sum.to_value("s")
+        )
+        assert result.meta_table == dataset.meta_table
+        assert result.models is None
+        assert result.stat_type == dataset.stat_type

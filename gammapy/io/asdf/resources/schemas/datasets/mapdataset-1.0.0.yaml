@@ -73,5 +73,9 @@ properties:
     type: object
     description: |
       Associated metadata container.
+  stat_type:
+    type: string
+    description: |
+      Statistic used for likelihood fitting.
 additionalProperties: false
 ...
