@@ -1,0 +1,1 @@
+Add `~gammapy.visualization.plotters.irf.EffectiveAreaPlotter` to provide plotting functionality for effective area following the new Plotters structure.

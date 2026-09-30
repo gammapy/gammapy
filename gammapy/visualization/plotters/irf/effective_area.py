@@ -18,7 +18,6 @@ class EffectiveAreaPlotter(BasePlotter):
         **kwargs,
     ):
         with self._rc_context():
-
             ax = plt.gca() if ax is None else ax
 
             energy = aeff.axes["energy_true"]
@@ -53,7 +52,6 @@ class EffectiveAreaPlotter(BasePlotter):
 
     def plot_offset_dependence(self, aeff, ax=None, energy=None, **kwargs):
         with self._rc_context():
-
             ax = plt.gca() if ax is None else ax
 
             if energy is None:
