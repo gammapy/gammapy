@@ -17,7 +17,11 @@ from gammapy.utils.metadata import (
     ObsInfoMetaData,
     PointingInfoMetaData,
 )
-from gammapy.utils.testing import assert_time_allclose, requires_data
+from gammapy.utils.testing import (
+    assert_time_allclose,
+    requires_data,
+    requires_dependency,
+)
 
 asdf = pytest.importorskip("asdf")
 pytest.importorskip("asdf.testing")
@@ -255,6 +259,7 @@ def test_mapdatasetonoff_roundtrip(tmp_path):
         assert result.stat_type == dataset.stat_type
 
 
+@requires_dependency("healpy")
 def test_mapdatasetonoff_roundtrip_hpx_geom(tmp_path):
     file_path = tmp_path / "test.asdf"
     energy_axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2, name="energy")
