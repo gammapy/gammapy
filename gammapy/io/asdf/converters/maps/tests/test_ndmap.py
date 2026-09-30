@@ -21,6 +21,8 @@ from gammapy.maps import (
     WcsGeom,
     WcsNDMap,
 )
+from gammapy.utils.testing import requires_dependency
+
 
 asdf = pytest.importorskip("asdf")
 pytest.importorskip("asdf.testing")
@@ -248,6 +250,7 @@ tested_partialsky_hpx_ndmap = [
 tested_hpx_ndmap = tested_allsky_hpx_ndmap + tested_partialsky_hpx_ndmap
 
 
+@requires_dependency("healpy")
 @pytest.mark.parametrize(
     ("nside", "nested", "frame", "region", "axes", "unit", "meta"), tested_hpx_ndmap
 )
@@ -266,6 +269,7 @@ def test_hpxndmap_roundtrip(nside, nested, frame, region, axes, unit, meta, tmp_
         assert result.meta == m.meta
 
 
+@requires_dependency("healpy")
 def test_hpxndmap_roundtrip_compressed(tmp_path):
     file_path = tmp_path / "test.asdf"
     geom = HpxGeom(
@@ -300,6 +304,7 @@ tested_hpx_ndmap_dtypes = [
 ]
 
 
+@requires_dependency("healpy")
 @pytest.mark.parametrize(
     ("dtype", "unit", "meta"),
     tested_hpx_ndmap_dtypes,
