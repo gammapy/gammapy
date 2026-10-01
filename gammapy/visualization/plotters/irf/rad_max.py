@@ -24,27 +24,27 @@ class RadMaxPlotter(BasePlotter):
     """
 
     def plot(self, rad_max, ax=None, **kwargs):
-          """Plot radial maximum values against energy.
-           
-          A separate line is drawn for each offset bin of the input
-          ``rad_max`` object.
-           
-          Parameters
-          ----------
-          rad_max : `~gammapy.irf.RadMax2D`
-              Radial maximum table to plot.
-          ax : `~matplotlib.axes.Axes`, optional
-              Matplotlib axes. If not provided, the axes passed at
-              initialization or the current axes are used.
-          **kwargs : dict
-              Keyword arguments forwarded to
-              `~matplotlib.axes.Axes.plot`.
-           
-          Returns
-          -------
-          ax : `~matplotlib.axes.Axes`
-              Matplotlib axes containing the plot.
-          """    
+        """Plot radial maximum values against energy.
+
+        A separate line is drawn for each offset bin of the input
+        ``rad_max`` object.
+
+        Parameters
+        ----------
+        rad_max : `~gammapy.irf.RadMax2D`
+            Radial maximum table to plot.
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. If not provided, the axes passed at
+            initialization or the current axes are used.
+        **kwargs : dict, optional
+            Keyword arguments forwarded to
+            `~matplotlib.axes.Axes.plot`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Matplotlib axes containing the plot.
+        """
         ax = plt.gca() if ax is None else ax
 
         energy_axis = rad_max.axes["energy"]
