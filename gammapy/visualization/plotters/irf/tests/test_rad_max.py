@@ -4,7 +4,8 @@ import pytest
 import numpy as np
 from astropy import units as u
 from gammapy.irf import RadMax2D
-from gammapy.visualization.plotters.irf import RadMaxPlotter
+from gammapy.visualization.plotters.irf.rad_max import RadMaxPlotter
+from gammapy.utils.testing import mpl_plot_check
 from gammapy.maps import MapAxis
 
 
@@ -21,6 +22,7 @@ def test_rad_max_plotter():
     )
 
     plotter = RadMaxPlotter()
-    ax = plotter.plot(rad_max=rad_max)
+    with mpl_plot_check():
+        ax = plotter.plot(rad_max=rad_max)
 
     assert ax is not None
