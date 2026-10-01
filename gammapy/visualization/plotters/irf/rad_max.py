@@ -6,19 +6,46 @@ from matplotlib.ticker import FormatStrFormatter
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.visualization.plotters.core import BasePlotter
 
-__all__ = [
-    "RadMaxPlotter",
-]
+__all__ = ["RadMaxPlotter"]
 
 
 class RadMaxPlotter(BasePlotter):
-    def __init__(self, ax=None, rc_params=None):
-        super().__init__(rc_params=rc_params)
-        self.ax = ax
+    """Plotter for `~gammapy.irf.RadMax2D` objects.
+
+    A plotter carries a local matplotlib configuration and exposes plotting
+    methods that receive the `~gammapy.irf.RadMax2D` to plot as an
+    argument. It keeps no reference to a data object.
+
+    Parameters
+    ----------
+    rc_params : dict, optional
+        Mapping of `matplotlib.rcParams` keys to values. Entries are
+        validated when set and applied while plotting. Default is None.
+    """
 
     def plot(self, rad_max, ax=None, **kwargs):
-        if ax is None:
-            ax = self.ax if self.ax is not None else plt.gca()
+          """Plot radial maximum values against energy.
+           
+          A separate line is drawn for each offset bin of the input
+          ``rad_max`` object.
+           
+          Parameters
+          ----------
+          rad_max : `~gammapy.irf.RadMax2D`
+              Radial maximum table to plot.
+          ax : `~matplotlib.axes.Axes`, optional
+              Matplotlib axes. If not provided, the axes passed at
+              initialization or the current axes are used.
+          **kwargs : dict
+              Keyword arguments forwarded to
+              `~matplotlib.axes.Axes.plot`.
+           
+          Returns
+          -------
+          ax : `~matplotlib.axes.Axes`
+              Matplotlib axes containing the plot.
+          """    
+        ax = plt.gca() if ax is None else ax
 
         energy_axis = rad_max.axes["energy"]
         offset_axis = rad_max.axes["offset"]
