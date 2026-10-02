@@ -16,6 +16,7 @@ from gammapy.modeling.models import (
     LogUniformPrior,
     SamplesKDEPrior,
     LogNormalPrior,
+    LogSpaceGaussianPrior,
 )
 from gammapy.utils.testing import assert_quantity_allclose
 
@@ -67,9 +68,19 @@ TEST_PRIORS = [
         prior_0=1.0 * u.Unit(""),
         prior_1=2.0 * u.Unit(""),
         val_at_0=0.45158269,
-        val_at_1=3.75968912,
+        val_at_1=3.759689,
         inverse_cdf_at_0=0,
         inverse_cdf_at_1=np.inf,
+    ),
+    dict(
+        name="logspacegaussian",
+        model=LogSpaceGaussianPrior(mu=1, sigma=0.5),
+        prior_0=1.0 * u.Unit(""),
+        prior_1=2.0 * u.Unit(""),
+        val_at_0=0.0,
+        val_at_1=1.9218120556728056,
+        inverse_cdf_at_0=None,
+        inverse_cdf_at_1=None,
     ),
 ]
 
@@ -82,10 +93,21 @@ def test_prior_evaluation(prior):
     assert_allclose(model(prior["prior_1"]), prior["val_at_1"], rtol=1e-7)
 
     # Test the inverse_cdf at specific points
+    if prior["inverse_cdf_at_0"] is None:
+        with pytest.raises(TypeError):
+            model._inverse_cdf(0)
+        return
+
     value_0 = model._inverse_cdf(0)
     value_1 = model._inverse_cdf(1)
     assert_allclose(value_0, prior["inverse_cdf_at_0"], rtol=1e-7)
     assert_allclose(value_1, prior["inverse_cdf_at_1"], rtol=1e-7)
+
+
+def test_logspacegaussian_no_random_variable():
+    prior = LogSpaceGaussianPrior(mu=1, sigma=0.5)
+    with pytest.raises(TypeError):
+        prior._inverse_cdf(0.5)
 
 
 @pytest.mark.parametrize("prior", TEST_PRIORS)
