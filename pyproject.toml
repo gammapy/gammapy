@@ -82,6 +82,7 @@ test = [
     "pytest",
     "docutils",
     "sphinx",
+    "pyvo"
 ]
 docs = [
     "astropy",
@@ -102,6 +103,10 @@ test_notebooks = [
     "jupytext",
     "jupyter_client",
     "ipykernel"
+]
+validation = [
+    "psrecord",
+    "healpy",
 ]
 
 [tool.setuptools.packages.find]

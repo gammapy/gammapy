@@ -22,6 +22,34 @@ The general procedure can be broken down into three major steps:
 Some steps differ between the bug fix and feature releases, and the two are detailed accordingly.
 
 
+Pre-release step
+-----------------
+
+Before starting the release procedure, run the ``license_checker`` script to verify that the
+license statement appears at the top of every Python file in the ``gammapy/`` directory.
+
+::
+
+  python dev/license_checker.py gammapy
+
+If any files are missing the license statement, they can be fixed automatically using the
+``-f`` (or ``--fix``) option.
+
+::
+
+  python dev/license_checker.py gammapy --fix
+
+Commit and push the changes:
+
+::
+
+  git checkout -b license_checker
+  git add <FILES>
+  git commit -S -m"Run license_checker"
+  git push origin license_checker
+
+Then open a pull request to merge these changes into ``main``.
+
 Bug fix releases
 ----------------
 
@@ -37,9 +65,9 @@ automatically counted in the next feature release.
 #. To create the changelog, towncrier is utilised on the relevant branch (eg: for a
    bugfix on the 2.0 release). The following workflow should be followed::
 
-    git checkout v2.0.x
-    towncrier build --version=<version> --keep
-    mv ``CHANGELOG.rst`` ``v2.0.x.rst``
+     git checkout v2.0.x
+     towncrier build --version=<version> --keep
+     mv ``CHANGELOG.rst`` ``v2.0.x.rst``
 
    * As we will create the changelog again for the major release, we should utilise the ``keep`` keyword,
      as to not delete the fragments.

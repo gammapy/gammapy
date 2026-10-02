@@ -2,10 +2,14 @@
 """Utilities to compute J-factor maps."""
 
 import html
-import numpy as np
-import astropy.units as u
 
-__all__ = ["JFactory"]
+import astropy.units as u
+from gammapy.modeling.models.prior import (
+    LogNormalPrior,
+)
+import numpy as np
+
+__all__ = ["JFactory", "add_factor_prior"]
 
 
 class JFactory:
@@ -22,16 +26,24 @@ class JFactory:
     profile : `~gammapy.astro.darkmatter.profiles.DMProfile`
         Dark matter profile.
     distance : `~astropy.units.Quantity`
-        Distance to convert angular scale of the map.
-    annihilation : bool, optional
+        Distance from the observer to the dark matter halo center,
+        used to compute the line-of-sight integration geometry.
+    annihilation : `~astropy.units.Quantity`, optional
         Decay or annihilation. Default is True.
+    rmax : `~astropy.units.Quantity`
+        Physical size of the dark matter halo (upper limit of the
+        line-of-sight integral). For extragalactic sources, this should
+        be set to the halo radius (~kpc), **not** the distance to the
+        source. Defaults to ``distance`` for backward compatibility,
+        which is only appropriate for Galactic sources.
     """
 
-    def __init__(self, geom, profile, distance, annihilation=True):
+    def __init__(self, geom, profile, distance, rmax, annihilation=True):
         self.geom = geom
         self.profile = profile
         self.distance = distance
         self.annihilation = annihilation
+        self.rmax = rmax
 
     def _repr_html_(self):
         try:
@@ -50,7 +62,7 @@ class JFactory:
 
         if impact.value == 0:
             return self.profile.integral(
-                radius_min, radius_max, 0, ndecade, self.annihilation
+                radius_min, radius_max, 0, ndecade, self.annihilation, self.distance
             )
 
         logmin = np.log10(radius_min.value)
@@ -65,6 +77,24 @@ class JFactory:
         values = self.profile(radius) ** exponent * radius
 
         return np.trapezoid(values, t)
+
+    def _integrate_los(self, impact, separation, ndecade):
+        """Integrate the physical forward line of sight."""
+        distance = self.distance
+        rmax = self.rmax
+
+        if distance < rmax:
+            integral = self._integrate_los_branch(impact, distance, rmax, ndecade)
+            if separation < np.pi / 2:
+                integral += 2 * self._integrate_los_branch(
+                    impact, impact, distance, ndecade
+                )
+            return integral
+
+        if separation < np.pi / 2 and impact < rmax:
+            return 2 * self._integrate_los_branch(impact, impact, rmax, ndecade)
+
+        return 0 * u.Unit("GeV2 cm-5" if self.annihilation else "GeV cm-2")
 
     def compute_differential_jfactor(self, ndecade=1e4):
         r"""Compute differential J-Factor.
@@ -90,46 +120,47 @@ class JFactory:
 
         Notes
         -----
-        The line-of-sight (LoS) integral should include both the near and far
-        sides of the halo. To account for this, the integration is split into
-        two regions:
-
-        1. :math:`[r_\perp, r_{\max}]` - from the observer to the source,
-           counted twice to include contributions from both near and far sides.
-        2. :math:`[r_{\max}, 4 r_{\max}]` - from the source to infinity.
-           The upper limit is truncated at :math:`4 r_{\max}` because
-           contributions beyond this are negligible.
-
-        Hence, the effective integration domain is:
+        The line-of-sight geometry is defined by
 
         .. math::
-            2 \times [r_\perp, r_{\max}] \;+\; [r_{\max}, 4 r_{\max}].
+            r(l)^2 = D^2 + l^2 - 2 D l \cos\theta,
 
-        The impact parameter is given by:
-
-        .. math::
-            r_\perp = r_{\max} \sin \theta.
-
-        The LoS integral is converted into radial branches with:
+        where :math:`D` is the observer-to-halo-center distance and
+        :math:`l \geq 0` is the physical forward line-of-sight coordinate.
+        The impact parameter of the corresponding infinite line is given by:
 
         .. math::
-            \mathrm dl = \frac{r}{\sqrt{r^2 - r_\perp^2}} \, \mathrm dr.
+            r_\perp = D \sin\theta.
+
+        The integration is split into two regions:
+
+        1. :math:`D < r_{\max}`: the observer is inside the integration radius.
+        Directions with :math:`\theta < \pi / 2` cross the inner radial interval
+        twice, while directions with :math:`\theta \geq \pi / 2` contain only
+        the outward branch.
+
+        2. :math:`D \geq r_{\max}`: the observer is outside the integration radius.
+        The line of sight contributes only when it points toward the halo and
+        intersects the integration sphere, i.e. when :math:`\theta < \pi / 2`
+        and :math:`r_\perp < r_{\max}`.
+
+        Each radial branch is evaluated using
+
+        .. math::
+            \mathrm dl =
+            \frac{r}{\sqrt{r^2-r_\perp^2}}\,\mathrm dr.
 
         The apparent singularity at :math:`r = r_\perp` is integrable. To avoid
         evaluating it directly, each radial branch is integrated with the
-        substitution :math:`r = r_\perp \cosh t`.
+        substitution :math:`r = r_\perp\cosh t`.
         """
         separation = self.geom.separation(self.geom.center_skydir).rad
         impact = u.Quantity(
             value=np.sin(separation) * self.distance, unit=self.distance.unit
         )
-        rmax = self.distance
         val = [
-            (
-                2 * self._integrate_los_branch(impact_i, impact_i, rmax, ndecade)
-                + self._integrate_los_branch(impact_i, rmax, 4 * rmax, ndecade)
-            )
-            for impact_i in impact.ravel()
+            self._integrate_los(impact_i, separation_i, ndecade)
+            for impact_i, separation_i in zip(impact.ravel(), separation.ravel())
         ]
         integral_unit = u.Unit("GeV2 cm-5") if self.annihilation else u.Unit("GeV cm-2")
         jfact = u.Quantity(val).to(integral_unit).reshape(impact.shape)
@@ -156,3 +187,36 @@ class JFactory:
         """
         diff_jfact = self.compute_differential_jfactor(ndecade)
         return diff_jfact * self.geom.to_image().solid_angle()
+
+
+def add_factor_prior(model, sigma, mu=1.0):
+    """Attach a Log Normal nuisance prior on ``scale`` for J/D-factor uncertainty.
+
+    The J/D-factor is kept fixed at its nominal value; the associated
+    uncertainty is instead expressed as an equivalent prior on ``scale``,
+    since the predicted flux depends only on the product
+    ``scale * jfactor``. Placing the prior directly on a second parameter
+    (e.g. ``log10_jfactor``) would make it perfectly degenerate with
+    ``scale``. This reparametrisation is a pure shift, so the prior
+    retains the same shape and ``sigma``, centered at ``scale = 1``
+    instead of at the nominal log10(J).
+
+    Parameters
+    ----------
+    model : `~gammapy.astro.darkmatter.DarkMatterSpectralModel`
+        Model whose ``scale`` parameter will get the prior attached.
+        ``scale`` is unfrozen as part of this call.
+    sigma : float
+        Uncertainty on log10(J) (or log10(D)), in dex.
+    mu : float, optional
+        Center of the prior, in units of ``scale``. Default is 1.0, i.e.
+        the nominal J/D-factor value.
+
+    Returns
+    -------
+    model : `DarkMatterSpectralModel`
+        The same model instance, with the prior attached, for chaining.
+    """
+    model.scale.frozen = False
+    model.scale.prior = LogNormalPrior(mu=mu, sigma=sigma * np.log(10))
+    return model

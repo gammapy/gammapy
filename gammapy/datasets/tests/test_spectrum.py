@@ -1205,7 +1205,7 @@ class TestFit:
         npred = dataset.npred().data
         assert_allclose(npred[5], 660.5171, rtol=1e-5)
 
-        stat_val = dataset.stat_sum()
+        stat_val = dataset.stat_sum_likelihood()
         assert_allclose(stat_val, -107346.5291, rtol=1e-5)
 
         self.source_model.parameters["index"].value = 1.12
@@ -1287,12 +1287,12 @@ def test_stat_sum():
     dataset = SpectrumDatasetOnOff.create(geom)
     dataset.counts_off = None
 
-    stat = dataset.stat_sum()
+    stat = dataset.stat_sum_likelihood()
     assert stat == 0
 
     dataset.mask_safe.data[0] = True
     with pytest.raises(AttributeError):
-        dataset.stat_sum()
+        dataset.stat_sum_likelihood()
 
 
 @requires_data("gammapy-data")
