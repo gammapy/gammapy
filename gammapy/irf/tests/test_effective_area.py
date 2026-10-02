@@ -60,7 +60,6 @@ def test_from_parametrization():
     with pytest.raises(ValueError):
         area2 = EffectiveAreaTable2D.from_parametrization(axis, "SWIFT")
 
-
 @requires_data()
 def test_plot(aeff):
     with mpl_plot_check():
