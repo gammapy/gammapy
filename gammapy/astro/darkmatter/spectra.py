@@ -583,7 +583,7 @@ class DarkMatterSpectralModel(SpectralModel):
         along the line of sight and over the solid angle), needed when a
         `~gammapy.modeling.models.PointSpatialModel` is used for the
         spatial component. Default is 1 (dimensionless) and in a frozen form.
-        The expected units are GeV2 cm-5 for annihilation and GeV cm-2 in the case of decay.
+        If a unit is given it should be convertible to GeV2 cm-5 for annihilation and GeV cm-2 in the case of decay.
     z : float, optional
         Redshift of the source. The primary flux is evaluated at the
         redshifted energy ``energy * (1 + z)``. Default is 0.
@@ -829,7 +829,7 @@ class DarkMatterSpectralModel(SpectralModel):
         serialized parameter list (including unit, bounds, frozen state and
         prior), and passes the remaining fields to the constructor.
 
-        Dictionaries in the old format, where the astrophysical factor was
+        Dictionaries in format of version<2.2, where the astrophysical factor was
         stored as a separate ``factor`` (or ``jfactor``) field, are still
         supported.
 
