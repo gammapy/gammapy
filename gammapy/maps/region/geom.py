@@ -727,6 +727,13 @@ class RegionGeom(Geom):
             HDU list.
 
         """
+
+        if not self.is_regular:
+            raise NotImplementedError(
+                "Serialization of irregular region {self.region.__class__.__name__}"
+                "is not supported"
+            )
+
         if hdu_bands is None:
             hdu_bands = "HDU_BANDS"
         if hdu_region is None:
