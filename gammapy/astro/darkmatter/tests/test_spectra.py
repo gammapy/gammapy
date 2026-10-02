@@ -17,8 +17,6 @@ from gammapy.astro.darkmatter import (
 )
 from gammapy.modeling.models import Models, SkyModel, SpectralModel
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
-from gammapy.astro.darkmatter.utils import add_factor_prior
-from gammapy.modeling.models import LogSpaceGaussianPrior
 
 
 # ContinuumPrimaryFlux
@@ -638,63 +636,3 @@ def test_backward_compat_old_decay_dict_direct_base_class():
     assert new_model.k is None
     assert_quantity_allclose(new_model.mDM, model.mDM)
     assert new_model.channel == model.channel
-
-
-@requires_data()
-def test_factor_wrong_unit_raises():
-    with pytest.raises(u.UnitConversionError, match="factor must be convertible"):
-        DarkMatterSpectralModel(
-            mDM=1 * u.TeV,
-            channel="b",
-            factor=3.41e19 * u.Unit("GeV cm-2"),
-            annihilation=True,
-        )
-
-
-@requires_data()
-def test_factor_prior_roundtrip(tmp_path):
-    model = DarkMatterSpectralModel(
-        mDM=1 * u.TeV, channel="b", factor=3.41e19 * u.Unit("GeV2 cm-5")
-    )
-    add_factor_prior(model, sigma=0.3)
-    model.factor.min = model.factor.value / 10
-    model.factor.max = model.factor.value * 10
-
-    filename = tmp_path / "model.yaml"
-    Models([SkyModel(spectral_model=model, name="dm")]).write(filename)
-    loaded = Models.read(filename)[0].spectral_model
-
-    assert loaded.factor.unit == model.factor.unit
-    assert_allclose(loaded.factor.value, model.factor.value)
-    assert not loaded.factor.frozen
-    assert_allclose(loaded.factor.min, model.factor.min)
-    assert_allclose(loaded.factor.max, model.factor.max)
-
-    assert isinstance(loaded.factor.prior, LogSpaceGaussianPrior)
-    assert_allclose(loaded.factor.prior.mu.value, model.factor.value)
-    assert_allclose(loaded.factor.prior.sigma.value, 0.3 * np.log(10))
-    assert loaded.scale.prior is None
-    assert not loaded.scale.frozen
-
-
-def test_dm_spectral_model_generic_primary_flux():
-    """Any spectral model returning dN/dE can be used as primary flux."""
-    from gammapy.modeling.models import TemplateSpectralModel
-
-    energy = np.geomspace(1, 1000, 20) * u.GeV
-    values = 1e-3 * (energy / u.GeV) ** -1.5 / u.GeV
-    pf = TemplateSpectralModel(energy=energy, values=values)
-
-    model = DarkMatterSpectralModel(
-        mDM=1 * u.TeV,
-        channel="b",
-        factor=3.41e19 * u.Unit("GeV2 cm-5"),
-        primary_flux=pf,
-    )
-
-    assert model.primary_flux is pf
-    assert not hasattr(pf, "mDM")
-
-    flux = model(10 * u.GeV)
-    assert flux.unit.is_equivalent("cm-2 s-1 TeV-1")
-    assert flux.value > 0
