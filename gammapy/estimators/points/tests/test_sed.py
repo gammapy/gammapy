@@ -7,8 +7,7 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from numpy.testing import assert_allclose
 
-from gammapy.data import Observation
-from gammapy.data.pointing import FixedPointingInfo
+from gammapy.data import Observation, FixedPointingInfo
 from gammapy.datasets import (
     Datasets,
     FluxPointsDataset,
@@ -20,7 +19,6 @@ from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.estimators.utils import get_rebinned_axis
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
-from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
@@ -73,9 +71,13 @@ def simulate_spectrum_dataset(model, random_state=0):
     geom_true = RegionGeom.create(
         region="icrs;circle(0, 0, 0.1)", axes=[energy_axis_true]
     )
-    exposure = make_map_exposure_true_energy(
-        pointing=SkyCoord("0d", "0d"), aeff=aeff, livetime=100 * u.h, geom=geom_true
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(fixed_icrs=SkyCoord("0d", "0d")),
+        location=EarthLocation(lon=0, lat=0),
+        livetime=100 * u.hour,
+        irfs={"aeff": aeff},
     )
+    exposure = MapDatasetMaker.make_exposure(geom=geom_true, observation=test_obs)
 
     mask_safe = RegionNDMap.from_geom(geom=geom, dtype=bool)
     mask_safe.data += True
