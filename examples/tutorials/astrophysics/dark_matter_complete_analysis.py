@@ -486,7 +486,7 @@ print(f"Number of points: {len(scale_par.scan_values)}")
 estimator = ParameterEstimator(
     n_sigma=1,  # level for symmetric error (1σ = 68%)
     n_sigma_ul=1.645,  # level for upper limit
-    n_sigma_sensitivity=5, # level for sensitivty
+    n_sigma_sensitivity=5, # level for sensitivity
     selection_optional=["ul", "scan", "sensitivity"],
     reoptimize=True,
 )
