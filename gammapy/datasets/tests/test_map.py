@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, EarthLocation
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
@@ -148,12 +148,15 @@ def get_exposure(geom_etrue):
     )
     aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
-    exposure_map = make_map_exposure_true_energy(
-        pointing=SkyCoord(1, 0.5, unit="deg", frame="galactic"),
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(
+            fixed_icrs=SkyCoord(1, 0.5, unit="deg", frame="galactic").icrs
+        ),
+        location=EarthLocation(lon=0, lat=0),
         livetime=1 * u.hr,
-        aeff=aeff,
-        geom=geom_etrue,
+        irfs={"aeff": aeff},
     )
+    exposure_map = MapDatasetMaker.make_exposure(geom=geom_etrue, observation=test_obs)
     return exposure_map
 
 
