@@ -1,0 +1,49 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://gammapy.org/gammapy/schemas/modeling/models-1.0.0"
+
+title: |
+  Represents Models.
+
+description: |
+  Support the serialization of Models which is a list of model components.
+
+
+type: object
+properties:
+  components:
+    description: |
+      List of model components.
+    type: array
+    items:
+      type: object
+      properties:
+        name:
+          type: string
+          description: |
+            Name of the model.
+        type:
+          type: string
+          description: |
+            Type of the model (e.g. SkyModel).
+        spectral:
+          type: object
+          description: |
+            Spectral model component.
+        spatial:
+           type: object
+           description: |
+             Spatial model component.
+        temporal:
+           type: object
+           description: |
+             Temporal model component.
+      required: [type]
+      additionalProperties: true
+  covariance_data:
+    tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
+    description: |
+      Covariance matrix.
+required: [components]
+additionalProperties: false

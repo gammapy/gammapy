@@ -36,3 +36,5 @@ tags:
   schema_uri: asdf://gammapy.org/gammapy/schemas/irf/edispmap-1.0.0
 - tag_uri: asdf://gammapy.org/gammapy/tags/irf/edispkernelmap-1.0.0
   schema_uri: asdf://gammapy.org/gammapy/schemas/irf/edispkernelmap-1.0.0
+- tag_uri: asdf://gammapy.org/gammapy/tags/modeling/models-1.0.0
+  schema_uri: asdf://gammapy.org/gammapy/schemas/modeling/models-1.0.0
