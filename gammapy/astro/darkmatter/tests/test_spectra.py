@@ -638,8 +638,6 @@ def test_backward_compat_old_decay_dict_direct_base_class():
     assert new_model.k is None
     assert_quantity_allclose(new_model.mDM, model.mDM)
     assert new_model.channel == model.channel
-<<<<<<< HEAD
-=======
 
 
 @requires_data()
@@ -700,4 +698,3 @@ def test_dm_spectral_model_generic_primary_flux():
     flux = model(10 * u.GeV)
     assert flux.unit.is_equivalent("cm-2 s-1 TeV-1")
     assert flux.value > 0
->>>>>>> c3fb96f343 (Update tests)
