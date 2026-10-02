@@ -1,0 +1,1 @@
+Dark Matter analysis - Change the Log Normal Prior to new parameter 'factor' instead of 'scale'.

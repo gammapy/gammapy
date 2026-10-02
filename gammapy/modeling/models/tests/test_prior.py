@@ -67,7 +67,7 @@ TEST_PRIORS = [
         prior_0=1.0 * u.Unit(""),
         prior_1=2.0 * u.Unit(""),
         val_at_0=0.45158269,
-        val_at_1=3.75968912,
+        val_at_1=2.37339476,
         inverse_cdf_at_0=0,
         inverse_cdf_at_1=np.inf,
     ),
