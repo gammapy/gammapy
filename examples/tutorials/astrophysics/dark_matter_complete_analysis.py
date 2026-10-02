@@ -483,10 +483,10 @@ print(f"Number of points: {len(scale_par.scan_values)}")
 
 # Find scale_ul: crossing at ΔTS = 2.71 on the right branch ────────────────
 # We interpolate only on the right side of the minimum (upper limit side)
-# By default uses a 5 sigma value for the sensitivity
 estimator = ParameterEstimator(
     n_sigma=1,  # level for symmetric error (1σ = 68%)
     n_sigma_ul=1.645,  # level for upper limit
+    n_sigma_sensitivity=5, # level for sensitivty
     selection_optional=["ul", "scan", "sensitivity"],
     reoptimize=True,
 )
