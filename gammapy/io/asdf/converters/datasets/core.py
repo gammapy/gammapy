@@ -8,7 +8,7 @@ def _sanitize_map_meta(m):
     if "is_pointlike" in m.meta:
         val = m.meta["is_pointlike"]
         if isinstance(val, u.Quantity):
-            m = m.copy()
+            m = m.copy(data=m.data, geom=m.geom, unit=m.unit)
             m.meta["is_pointlike"] = bool(val.value)
     return m
 
@@ -18,6 +18,7 @@ class DatasetConverter(Converter):
 
     dataset_class = None
     default_stat_type = None
+    metadata_class = None
     extra_fields = []
     common_fields = [
         "counts",
@@ -51,8 +52,6 @@ class DatasetConverter(Converter):
         return node
 
     def from_yaml_tree(self, node, tag, ctx):
-        from gammapy.datasets import MapDatasetMetaData
-
         kwargs = {}
         for field in self.common_fields + self.extra_fields:
             kwargs[field] = node.get(field)
@@ -63,7 +62,7 @@ class DatasetConverter(Converter):
 
         if meta_node is not None:
             try:
-                kwargs["meta"] = MapDatasetMetaData(**meta_node)
+                kwargs["meta"] = self.metadata_class(**meta_node)
             except Exception:
                 kwargs["meta"] = None
 
