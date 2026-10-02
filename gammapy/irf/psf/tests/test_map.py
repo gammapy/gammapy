@@ -5,7 +5,6 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord, EarthLocation
 from astropy.units import Unit
-from astropy.time import Time
 from gammapy.data import DataStore, Observation, FixedPointingInfo
 from gammapy.irf import PSF3D, EffectiveAreaTable2D, PSFMap, RecoPSFMap
 from gammapy.makers import MapDatasetMaker
@@ -89,8 +88,7 @@ def make_test_psfmap(size, shape="gauss"):
     test_obs = Observation.create(
         pointing=FixedPointingInfo(fixed_icrs=sky_dir),
         location=EarthLocation(lon=0, lat=0),
-        tstart=Time(50000, format="mjd"),
-        tstop=Time(50000, format="mjd") + livetime,
+        livetime=livetime,
         irfs={"aeff": aeff2d, "psf": psf},
     )
 
