@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord, EarthLocation
 from gammapy.data import FixedPointingInfo, Observation, observatory_locations
 from astropy.units import Unit
+from gammapy.data import Observation, FixedPointingInfo
 from gammapy.irf import (
     EDispKernel,
     EDispKernelMap,
