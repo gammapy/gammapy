@@ -89,6 +89,8 @@ def test_make_psf_map():
 def make_test_psfmap(size, shape="gauss"):
     psf = fake_psf3d(size, shape)
     aeff2d = fake_aeff2d()
+    livetime = 1 * u.hour
+    sky_dir = SkyCoord(0, 0, unit="deg")
 
     pointing = SkyCoord(0, 0, unit="deg")
     test_obs = Observation.create(
@@ -106,7 +108,7 @@ def make_test_psfmap(size, shape="gauss"):
     )
 
     geom = WcsGeom.create(
-        skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
+        skydir=sky_dir, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
     )
 
     return MapDatasetMaker.make_psf(geom, test_obs)
