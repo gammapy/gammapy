@@ -8,7 +8,7 @@ from astropy.units import Unit
 from gammapy.data import DataStore, Observation, FixedPointingInfo
 from gammapy.irf import PSF3D, EffectiveAreaTable2D, PSFMap, RecoPSFMap
 from gammapy.makers import MapDatasetMaker
-from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
+from gammapy.makers.utils import make_psf_map
 from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
