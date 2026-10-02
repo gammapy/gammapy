@@ -18,6 +18,7 @@ __all__ = [
     "Prior",
     "SamplesKDEPrior",
     "LogNormalPrior",
+    "LogSpaceGaussianPrior",
 ]
 
 log = logging.getLogger(__name__)
@@ -51,6 +52,7 @@ class Prior(ModelBase):
     - `UniformPrior`
     - `LogUniformPrior`
     - `LogNormalPrior`
+    - `LogSpaceGaussianPrior`
     """
 
     _unit = ""
@@ -405,6 +407,43 @@ class LogNormalPrior(Prior):
         """Evaluate the log-normal prior (gaussian in log(value))."""
         rv = lognorm(s=sigma, scale=mu)
         return -2 * rv.logpdf(value)
+
+    @property
+    def _random_variable(self):
+        """Return random variable object for prior."""
+        return lognorm(s=self.sigma.value, scale=self.mu.value)
+
+
+class LogSpaceGaussianPrior(Prior):
+    r"""Gaussian prior on the natural log of the parameter.
+
+    .. math::
+        -2 \log \mathcal{L} = \left(\frac{\ln(x) - \ln(\mu)}{\sigma}\right)^2
+
+    Unlike `LogNormalPrior`, this is not the log-normal density in ``x``:
+    it has no :math:`1/x` Jacobian, so the minimum is at ``mu``. It is
+    intended as a likelihood constraint on a measured quantity, e.g. a
+    J- or D-factor in a profile-likelihood analysis.
+
+    Parameters
+    ----------
+    mu : float, optional
+        Value at which the penalty is minimal. Default is 1.
+    sigma : float, optional
+        Standard deviation of ln(value), not of log10(value). For an
+        uncertainty quoted in dex, pass ``sigma_dex * np.log(10)``.
+        Default is 1.
+    """
+
+    tag = ["LogSpaceGaussianPrior"]
+    _type = "prior"
+    mu = PriorParameter(name="mu", value=1, unit="")
+    sigma = PriorParameter(name="sigma", value=1, unit="")
+
+    @staticmethod
+    def evaluate(value, mu, sigma):
+        """Evaluate the prior (gaussian in ln(value), no Jacobian)."""
+        return ((np.log(value) - np.log(mu)) / sigma) ** 2
 
     @property
     def _random_variable(self):
