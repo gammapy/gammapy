@@ -416,7 +416,7 @@ class LogNormalPrior(Prior):
     def evaluate(value, mu, sigma):
         """Evaluate -2 times the log-normal log-density at value."""
         rv = lognorm(s=sigma, scale=mu)
-        return -2 * (rv.logpdf(value) + np.log(value))
+        return -2 * rv.logpdf(value)
 
     @property
     def _random_variable(self):
