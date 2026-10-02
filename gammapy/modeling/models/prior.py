@@ -452,7 +452,7 @@ class LogSpaceGaussianPrior(Prior):
 
     @staticmethod
     def evaluate(value, mu, sigma):
-        """Evaluate the prior (gaussian in ln(value), no Jacobian)."""
+        """Evaluate a Gaussian prior in logarithmic parameter space."""
         return ((np.log(value) - np.log(mu)) / sigma) ** 2
 
     @property
