@@ -7,6 +7,7 @@ from gammapy.irf import EffectiveAreaTable2D
 from gammapy.maps import MapAxis
 from gammapy.utils.testing import (
     assert_quantity_allclose,
+    mpl_plot_check,
     requires_data,
 )
 
@@ -58,6 +59,17 @@ def test_from_parametrization():
 
     with pytest.raises(ValueError):
         area2 = EffectiveAreaTable2D.from_parametrization(axis, "SWIFT")
+
+@requires_data()
+def test_plot(aeff):
+    with mpl_plot_check():
+        aeff.plot()
+
+    with mpl_plot_check():
+        aeff.plot_energy_dependence()
+
+    with mpl_plot_check():
+        aeff.plot_offset_dependence()
 
 
 def test_to_table():
