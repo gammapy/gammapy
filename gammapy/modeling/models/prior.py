@@ -458,4 +458,7 @@ class LogSpaceGaussianPrior(Prior):
     @property
     def _random_variable(self):
         """Return random variable object for prior."""
-        return lognorm(s=self.sigma.value, scale=self.mu.value)
+        raise TypeError(
+            "LogSpaceGaussianPrior represents a Gaussian constraint in log-space "
+            "and does not define a probability density on the parameter itself."
+        )
