@@ -400,7 +400,7 @@ class LogNormalPrior(Prior):
     Parameters
     ----------
     mu : float, optional
-        Median of the distribution (i.e. mean of ln(value) is ln(mu)).
+        Median of the distribution.
         Default is 1.
     sigma : float, optional
         Standard deviation of ln(value), not of log10(value).
