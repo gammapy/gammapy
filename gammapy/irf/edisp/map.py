@@ -34,7 +34,6 @@ class EDispMap(IRFMap):
     Examples
     --------
     ::
-
         # Energy dispersion map for CTAO data
         import numpy as np
         from astropy import units as u
