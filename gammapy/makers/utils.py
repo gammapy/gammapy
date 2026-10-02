@@ -87,6 +87,7 @@ def _compute_rotation_time_steps(
     return Time(times)
 
 
+@deprecated("2.2", alternative="MapDatasetMaker.make_exposure")
 def make_map_exposure_true_energy(
     pointing, livetime, aeff, geom, use_region_center=True
 ):
