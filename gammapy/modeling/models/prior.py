@@ -440,8 +440,8 @@ class LogSpaceGaussianPrior(Prior):
     mu : float, optional
         Value at which the penalty is minimal. Default is 1.
     sigma : float, optional
-        Standard deviation of ln(value), not of log10(value). For an
-        uncertainty quoted in dex, pass ``sigma_dex * np.log(10)``.
+        Standard deviation of the natural logarithm of the value.
+        For an uncertainty quoted in dex, pass ``sigma_dex * np.log(10)``.
         Default is 1.
     """
 
