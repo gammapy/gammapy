@@ -16,6 +16,7 @@ from gammapy.modeling.models import (
     LogUniformPrior,
     SamplesKDEPrior,
     LogNormalPrior,
+    LogSpaceGaussianPrior,
 )
 from gammapy.utils.testing import assert_quantity_allclose
 
@@ -67,7 +68,17 @@ TEST_PRIORS = [
         prior_0=1.0 * u.Unit(""),
         prior_1=2.0 * u.Unit(""),
         val_at_0=0.45158269,
-        val_at_1=3.75968912,
+        val_at_1=3.759689,
+        inverse_cdf_at_0=0,
+        inverse_cdf_at_1=np.inf,
+    ),
+    dict(
+        name="logspacegaussian",
+        model=LogSpaceGaussianPrior(mu=1, sigma=0.5),
+        prior_0=1.0 * u.Unit(""),
+        prior_1=2.0 * u.Unit(""),
+        val_at_0=0.0,
+        val_at_1=1.921812055672,
         inverse_cdf_at_0=0,
         inverse_cdf_at_1=np.inf,
     ),
