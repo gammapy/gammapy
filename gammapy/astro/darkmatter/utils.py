@@ -5,7 +5,7 @@ import html
 
 import astropy.units as u
 from gammapy.modeling.models.prior import (
-    LogSpaceGaussianPrior,
+    LogNormalPrior,
 )
 import numpy as np
 
@@ -217,8 +217,6 @@ def add_factor_prior(model, sigma, mu=1.0):
     model : `DarkMatterSpectralModel`
         The same model instance, with the prior attached, for chaining.
     """
-    nominal = model.factor.value
-    model.factor.min = 0
-    model.factor.frozen = False
-    model.factor.prior = LogSpaceGaussianPrior(mu=nominal, sigma=sigma * np.log(10))
+    model.scale.frozen = False
+    model.scale.prior = LogNormalPrior(mu=mu, sigma=sigma * np.log(10))
     return model
