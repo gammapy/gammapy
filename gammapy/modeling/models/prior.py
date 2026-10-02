@@ -383,17 +383,27 @@ class SamplesKDEPrior(Prior):
 
 
 class LogNormalPrior(Prior):
-    """Log-normal prior.
-    
-    Equivalent to a gaussian prior on the log of the parameter i.e. log(value).
+    r"""Log-normal prior.
+
+    Log-normal probability density in the parameter value :math:`x`:
+
+    .. math::
+        -2 \log p(x) = \left(\frac{\ln(x) - \ln(\mu)}{\sigma}\right)^2
+                       + 2 \ln(x) + 2 \ln(\sigma) + \ln(2\pi)
+
+    The :math:`2 \ln(x)` term is the Jacobian of the change of variable
+    from :math:`\ln(x)` to :math:`x`, so the minimum is at the mode
+    :math:`\mu e^{-\sigma^2}`, not at ``mu``. This is the appropriate
+    density for a Bayesian prior on ``x``. For a gaussian constraint in
+    log space with its minimum at ``mu``, use `LogSpaceGaussianPrior`.
 
     Parameters
     ----------
     mu : float, optional
-        Median of the distribution (i.e. mean of log(value) is log(mu)).
+        Median of the distribution (i.e. mean of ln(value) is ln(mu)).
         Default is 1.
     sigma : float, optional
-        Standard deviation of log(value).
+        Standard deviation of ln(value), not of log10(value).
         Default is 1.
     """
 
@@ -404,7 +414,7 @@ class LogNormalPrior(Prior):
 
     @staticmethod
     def evaluate(value, mu, sigma):
-        """Evaluate the log-normal prior (gaussian in log(value))."""
+        """Evaluate -2 times the log-normal log-density at value."""
         rv = lognorm(s=sigma, scale=mu)
         return -2 * rv.logpdf(value)
 
