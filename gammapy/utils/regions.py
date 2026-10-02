@@ -35,6 +35,8 @@ from regions.core.pixcoord import PixCoord
 from regions.core.metadata import RegionMeta, RegionVisual
 
 __all__ = [
+    "CircleSkyRegionArray",
+    "CirclePixelRegionArray",
     "compound_region_to_regions",
     "make_concentric_annulus_sky_regions",
     "make_orthogonal_rectangle_sky_regions",
