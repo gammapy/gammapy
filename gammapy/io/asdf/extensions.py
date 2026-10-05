@@ -27,6 +27,7 @@ from .converters.maps.ndmap import (
     RegionNDMapConverter,
     WcsNDMapConverter,
 )
+from .converters.modeling.models.core import ModelsConverter
 
 from .converters.irf.psf.map import PSFMapConverter, RecoPSFMapConverter
 from .converters.irf.edisp.map import EDispMapConverter, EDispKernelMapConverter
@@ -36,6 +37,7 @@ GAMMAPY_CONVERTERS = [
     GTIConverter(),
     MapAxisConverter(),
     MapAxesConverter(),
+    ModelsConverter(),
     MapDatasetConverter(),
     MapDatasetOnOffConverter(),
     TimeMapAxisConverter(),
