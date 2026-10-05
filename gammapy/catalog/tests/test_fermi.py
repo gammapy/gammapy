@@ -974,10 +974,8 @@ class TestSourceCatalog4FHL:
         assert len(table) == 55
 
     def test_to_models(self):
-        mask = self.cat.table["GLAT"].quantity > 80 * u.deg
-        subcat = self.cat[mask]
-        models = subcat.to_models()
-        assert len(models) == 14
+        models = self.cat.to_models()
+        assert len(models) == len(self.cat.table)
 
 
 @requires_data()
