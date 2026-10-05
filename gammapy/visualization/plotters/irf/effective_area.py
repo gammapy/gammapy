@@ -8,6 +8,12 @@ from ..core import BasePlotter
 
 
 class EffectiveAreaPlotter(BasePlotter):
+    """Plotter for effective area data.
+
+    This plotter provides methods to visualize effective area data as a 2D
+    map and as a function of energy or offset.
+    """
+
     def plot(
         self,
         aeff,
@@ -17,6 +23,26 @@ class EffectiveAreaPlotter(BasePlotter):
         kwargs_colorbar=None,
         **kwargs,
     ):
+        """Plot effective area image.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        add_cbar : bool, optional
+            Add a colorbar to the plot. Default is True.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+        kwargs_colorbar : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+        kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Matplotlib axes.
+        """
         with self._rc_context():
             ax = plt.gca() if ax is None else ax
 
@@ -51,6 +77,22 @@ class EffectiveAreaPlotter(BasePlotter):
             return ax
 
     def plot_offset_dependence(self, aeff, ax=None, energy=None, **kwargs):
+        """Plot effective area versus offset for a given energy.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        energy : `~astropy.units.Quantity`
+            Energy.
+        **kwargs : dict
+            Keyword argument passed to `~matplotlib.pyplot.plot`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Matplotlib axes.
+        """
         with self._rc_context():
             ax = plt.gca() if ax is None else ax
 
@@ -80,6 +122,22 @@ class EffectiveAreaPlotter(BasePlotter):
             return ax
 
     def plot_energy_dependence(self, aeff, ax=None, offset=None, **kwargs):
+        """Plot effective area versus energy for a given offset.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        offset : list of `~astropy.coordinates.Angle`, optional
+            Offset. Default is None.
+        kwargs : dict
+            Forwarded to plt.plot().
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Matplotlib axes.
+        """
         with self._rc_context():
             ax = plt.gca() if ax is None else ax
 
@@ -102,6 +160,20 @@ class EffectiveAreaPlotter(BasePlotter):
             return ax
 
     def peek(self, aeff, figsize=(15, 5)):
+        """Quick-look summary plots.
+
+        This method creates a figure with two or three subplots:
+
+        * Energy dependence plot : effective area versus true energy for a given offset
+        * Offset dependence plot : effective area versus offset for a given energy
+        * Effective area 2D map
+
+        Parameters
+        ----------
+        figsize : tuple, optional
+            Size of the figure. Default is (15, 5).
+
+        """
         with self._rc_context():
             ncols = 2 if aeff.is_pointlike else 3
             _, axes = plt.subplots(nrows=1, ncols=ncols, figsize=figsize)
