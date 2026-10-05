@@ -10,8 +10,8 @@ from ..core import BasePlotter
 class EffectiveAreaPlotter(BasePlotter):
     """Plotter for effective area data.
 
-    This plotter provides methods to visualize effective area data as a 2D
-    map and as a function of energy or offset.
+    This plotter provides methods to visualize effective area data 
+    from the `~gammapy.irf.EffectiveAreaTable2D` class.
     """
 
     def plot(
