@@ -3,8 +3,9 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, EarthLocation
 from astropy.units import Unit
+from gammapy.data import Observation, FixedPointingInfo
 from gammapy.irf import (
     EDispKernel,
     EDispKernelMap,
@@ -12,7 +13,8 @@ from gammapy.irf import (
     EffectiveAreaTable2D,
     EnergyDispersion2D,
 )
-from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
+from gammapy.makers import MapDatasetMaker
+from gammapy.makers.utils import make_edisp_map
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.utils.scripts import make_path
@@ -33,6 +35,7 @@ def fake_aeff2d(area=1e6 * u.m**2):
 
 def make_edisp_map_test():
     pointing = SkyCoord(0, 0, unit="deg")
+    livetime = 1 * u.hour
 
     energy_axis_true = MapAxis.from_energy_edges(
         energy_edges=[0.2, 0.7, 1.5, 2.0, 10.0] * u.TeV,
@@ -56,8 +59,16 @@ def make_edisp_map_test():
     )
 
     aeff2d = fake_aeff2d()
+
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(fixed_icrs=pointing),
+        location=EarthLocation(lon=0, lat=0),
+        livetime=livetime,
+        irfs={"aeff": aeff2d, "edisp": edisp2d},
+    )
+
     exposure_geom = geom.squash(axis_name="migra")
-    exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
+    exposure_map = MapDatasetMaker.make_exposure(exposure_geom, test_obs)
 
     return make_edisp_map(edisp2d, pointing, geom, exposure_map)
 
