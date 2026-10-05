@@ -10,7 +10,7 @@ from ..core import BasePlotter
 class EffectiveAreaPlotter(BasePlotter):
     """Plotter for effective area data.
 
-    This plotter provides methods to visualize effective area data 
+    This plotter provides methods to visualize effective area data
     from the `~gammapy.irf.EffectiveAreaTable2D` class.
     """
 
@@ -27,6 +27,8 @@ class EffectiveAreaPlotter(BasePlotter):
 
         Parameters
         ----------
+        aeff : `~gammapy.irf.EffectiveAreaTable2D`
+            Effective area table
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         add_cbar : bool, optional
@@ -35,7 +37,7 @@ class EffectiveAreaPlotter(BasePlotter):
             Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
         kwargs_colorbar : dict, optional
             Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
-        kwargs : dict
+        kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
         Returns
@@ -81,11 +83,13 @@ class EffectiveAreaPlotter(BasePlotter):
 
         Parameters
         ----------
+        aeff : `~gammapy.irf.EffectiveAreaTable2D`
+            Effective area table
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         energy : `~astropy.units.Quantity`
             Energy.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword argument passed to `~matplotlib.pyplot.plot`.
 
         Returns
@@ -126,11 +130,13 @@ class EffectiveAreaPlotter(BasePlotter):
 
         Parameters
         ----------
+        aeff : `~gammapy.irf.EffectiveAreaTable2D`
+            Effective area table
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         offset : list of `~astropy.coordinates.Angle`, optional
             Offset. Default is None.
-        kwargs : dict
+        kwargs : dict, optional
             Forwarded to plt.plot().
 
         Returns
@@ -170,6 +176,8 @@ class EffectiveAreaPlotter(BasePlotter):
 
         Parameters
         ----------
+        aeff : `~gammapy.irf.EffectiveAreaTable2D`
+            Effective area table
         figsize : tuple, optional
             Size of the figure. Default is (15, 5).
 
