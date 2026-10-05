@@ -1427,7 +1427,7 @@ class SourceCatalogObject4FHL(SourceCatalogObjectFermiBase):
             e = (1 - (de["Model_SemiMinor"] / de["Model_SemiMajor"]) ** 2.0) ** 0.5
             sigma = de["Model_SemiMajor"]
             phi = de["Model_PosAng"]
-            if morph_type == "Disk":
+            if morph_type in ["Disk", "RadialDisk"]:
                 model = DiskSpatialModel(
                     lon_0=ra,
                     lat_0=dec,
@@ -1439,10 +1439,10 @@ class SourceCatalogObject4FHL(SourceCatalogObjectFermiBase):
             elif morph_type in ["Map", "Ring"]:
                 filename = de["Spatial_Filename"].strip() + ".gz"
                 path = make_path(
-                    "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/"
+                    "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_16years/Templates/"
                 )
                 model = TemplateSpatialModel.read(path / filename)
-            elif morph_type == "2D Gaussian":
+            elif morph_type in ["2D Gaussian", "RadialGaussian"]:
                 model = GaussianSpatialModel(
                     lon_0=ra, lat_0=dec, sigma=sigma, e=e, phi=phi, frame="icrs"
                 )
