@@ -153,6 +153,7 @@ class Parameter:
         self.scan_n_values = scan_n_values
         self.scan_n_sigma = scan_n_sigma
         self.prior = prior
+        self._conf_n_sigma = None
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -392,7 +393,8 @@ class Parameter:
         if not np.isnan(self.min):
             return self.min
         else:
-            min_ = self.value - self._step * self.scan_n_sigma
+            n_sigma = self._conf_n_sigma if self._conf_n_sigma else self.scan_n_sigma
+            min_ = self.value - self._step * n_sigma
             large_step = np.maximum(self._step, np.abs(self.value))
             min_ = np.minimum(min_, -large_step * 1e5)
             return min_
@@ -407,7 +409,8 @@ class Parameter:
         if not np.isnan(self.max):
             return self.max
         else:
-            max_ = self.value + self._step * self.scan_n_sigma
+            n_sigma = self._conf_n_sigma if self._conf_n_sigma else self.scan_n_sigma
+            max_ = self.value + self._step * n_sigma
             large_step = np.maximum(self._step, np.abs(self.value))
             max_ = np.maximum(max_, large_step * 1e5)
             return max_
