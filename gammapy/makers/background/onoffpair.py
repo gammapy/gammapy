@@ -106,7 +106,7 @@ class OnOffBackgroundMaker(Maker):
     into its OnOff counterpart by mirroring the OFF run's events into
     the ON pointing FoV frame and setting acceptances from livetime.
 
-    On-off pairs should be created beforehand by the user.
+    On-Off pairs should be created beforehand by the user.
 
     Parameters
     ----------
