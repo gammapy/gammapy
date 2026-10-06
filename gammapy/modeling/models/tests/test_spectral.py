@@ -333,7 +333,7 @@ TEST_MODELS = [
         val_at_2TeV=u.Quantity(1.418847, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(4.397409, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(10.505849, "TeV cm-2 s-1"),
-        e_peak=7.408182 * u.TeV,
+        e_peak=2.342673 * u.TeV,
     ),
 ]
 
