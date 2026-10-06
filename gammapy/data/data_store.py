@@ -84,6 +84,8 @@ class DataStore:
             self.obs_table = table.unique(obs_table, keys="OBS_ID")
         else:
             self.obs_table = None
+        self.validation = None
+        """Last `validate` result: {(OBS_ID, HDU_CLASS): ValidationReport}, or None."""
 
     def __str__(self):
         return self.info(show=False)
@@ -100,7 +102,9 @@ class DataStore:
         return np.unique(self.hdu_table["OBS_ID"].data)
 
     @classmethod
-    def from_file(cls, filename, hdu_hdu="HDU_INDEX", hdu_obs="OBS_INDEX"):
+    def from_file(
+        cls, filename, hdu_hdu="HDU_INDEX", hdu_obs="OBS_INDEX", validate=False
+    ):
         """Create a Datastore from a FITS file.
 
         The FITS file must contain both index files.
@@ -113,6 +117,9 @@ class DataStore:
             FITS HDU name or number for the HDU index table. Default is "HDU_INDEX".
         hdu_obs : str or int, optional
             FITS HDU name or number for the observation index table. Default is "OBS_INDEX".
+        validate : bool, optional
+            If True, run `DataStore.validate` with default options once, at creation.
+            Default is False.
 
         Returns
         -------
@@ -127,10 +134,15 @@ class DataStore:
         if hdu_obs:
             obs_table = ObservationTable.read(filename, hdu=hdu_obs, format="fits")
 
-        return cls(hdu_table=hdu_table, obs_table=obs_table)
+        data_store = cls(hdu_table=hdu_table, obs_table=obs_table)
+        if validate:
+            data_store.validate()
+        return data_store
 
     @classmethod
-    def from_dir(cls, base_dir, hdu_table_filename=None, obs_table_filename=None):
+    def from_dir(
+        cls, base_dir, hdu_table_filename=None, obs_table_filename=None, validate=False
+    ):
         """Create from a directory.
 
         Parameters
@@ -143,6 +155,9 @@ class DataStore:
         obs_table_filename : str or `~pathlib.Path`, optional
             Filename of the observation index file. May be specified either relative
             to `base_dir` or as an absolute path. If None, default is obs-index.fits.gz.
+        validate : bool, optional
+            If True, run `DataStore.validate` with default options once, at creation.
+            Default is False.
 
         Returns
         -------
@@ -185,7 +200,10 @@ class DataStore:
             log.debug(f"Reading {obs_table_filename}")
             obs_table = ObservationTable.read(obs_table_filename, format="fits")
 
-        return cls(hdu_table=hdu_table, obs_table=obs_table)
+        data_store = cls(hdu_table=hdu_table, obs_table=obs_table)
+        if validate:
+            data_store.validate()
+        return data_store
 
     @classmethod
     def from_events_files(cls, events_paths, irfs_paths=None):
@@ -588,6 +606,133 @@ class DataStore:
             filename = outdir / self.DEFAULT_OBS_TABLE
             subobstable.write(str(filename), format="fits", overwrite=overwrite)
 
+    def validate(
+        self, format="GADF", version=None, strict=False, obs_id=None, hdu_class=None
+    ):
+        """Check the data files against a data format specification (e.g. GADF).
+
+        Each HDU listed in the HDU index table is checked once, against the HDU
+        class declared in the index, with `~gammapy.io.fits.validation.FormatValidator`.
+        Only the FITS HDUs are read (each file opened once); no gammapy object
+        is built, so this is independent of, and much cheaper than, loading
+        the observations.
+
+        Parameters
+        ----------
+        format : str, optional
+            Data format to test against. Default is "GADF".
+        version : str, optional
+            Format version to test against. If None (default), each HDU is
+            tested against the version declared in its HDUVERS keyword.
+        strict : bool, optional
+            If True, raise a `ValueError` listing the non-compliant HDUs after
+            all HDUs were checked. Default is False.
+        obs_id : int or list of int, optional
+            Restrict to these observations. Default is None (all).
+        hdu_class : str or list of str, optional
+            Restrict to these HDU classes (e.g. "events", "aeff_2d"). Default is None (all).
+
+        Returns
+        -------
+        summary : `~astropy.table.Table`
+            One row per HDU: OBS_ID, HDU_CLASS, HDU_NAME, FILE, VERSION,
+            HEADER, TABLE ("OK", "FAIL" or "" when not applicable), N_ERRORS, ERRORS.
+            The full `~gammapy.io.fits.validation.ValidationReport` objects are stored in
+            ``self.validation``, keyed by (OBS_ID, HDU_CLASS).
+
+        Examples
+        --------
+        >>> from gammapy.data import DataStore
+        >>> data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+        >>> summary = data_store.validate(version="0.3", hdu_class="events")
+        >>> int((summary["N_ERRORS"] > 0).sum())
+        105
+        """
+        from gammapy.io.fits.validation import format_class_keys, validate_hdus
+
+        known = format_class_keys(format)
+        hdu_table = self.hdu_table
+        obs_ids = None if obs_id is None else set(np.atleast_1d(obs_id).tolist())
+        classes = None if hdu_class is None else set(np.atleast_1d(hdu_class).tolist())
+
+        selected = []  # (obs_id, HDULocation)
+        for idx in range(len(hdu_table)):
+            row_obs_id = int(hdu_table["OBS_ID"][idx])
+            location = hdu_table.location_info(idx)
+            if obs_ids is not None and row_obs_id not in obs_ids:
+                continue
+            if classes is not None and location.hdu_class not in classes:
+                continue
+            if location.hdu_class == "observation_metadata":
+                continue  # a view of the EVENTS header, validated with the events
+            selected.append((row_obs_id, location))
+
+        entries = [
+            (
+                location.path(),
+                location.hdu_name,
+                location.hdu_class.upper()
+                if location.hdu_class.upper() in known
+                else None,  # e.g. maps: resolve the class from the header
+            )
+            for _, location in selected
+        ]
+        reports = validate_hdus(entries, format=format, version=version)
+
+        def status(valid):
+            return "" if valid is None else ("OK" if valid else "FAIL")
+
+        rows = []
+        self.validation = {}
+        for (row_obs_id, location), report in zip(selected, reports):
+            self.validation[(row_obs_id, location.hdu_class)] = report
+            rows.append(
+                (
+                    row_obs_id,
+                    location.hdu_class,
+                    location.hdu_name,
+                    str(location.path(abs_path=False)),
+                    report.version,
+                    status(report.header_valid),
+                    status(report.table_valid),
+                    len(report.errors),
+                    "; ".join(report.errors),
+                )
+            )
+        names = (
+            "OBS_ID",
+            "HDU_CLASS",
+            "HDU_NAME",
+            "FILE",
+            "VERSION",
+            "HEADER",
+            "TABLE",
+            "N_ERRORS",
+            "ERRORS",
+        )
+        summary = (
+            table.Table(rows=rows, names=names) if rows else table.Table(names=names)
+        )
+
+        n_fail = int(np.sum(summary["N_ERRORS"] > 0)) if rows else 0
+        log.info(
+            "%s validation: %d/%d HDUs compliant (version: %s).",
+            format,
+            len(rows) - n_fail,
+            len(rows),
+            version or "declared HDUVERS",
+        )
+        if strict and n_fail:
+            failed = summary[summary["N_ERRORS"] > 0]
+            lines = [
+                f"  OBS_ID={r['OBS_ID']} {r['HDU_CLASS']}: {r['ERRORS']}"
+                for r in failed
+            ]
+            raise ValueError(
+                f"{n_fail} HDU(s) not compliant with {format}:\n" + "\n".join(lines)
+            )
+        return summary
+
     def check(self, checks="all"):
         """Check index tables and data files.
 
@@ -608,6 +753,7 @@ class DataStoreChecker(Checker):
         "hdu_table": "check_hdu_table",
         "observations": "check_observations",
         "consistency": "check_consistency",
+        "format": "check_format",
     }
 
     def __init__(self, data_store):
@@ -656,6 +802,18 @@ class DataStoreChecker(Checker):
                 "msg": "Inconsistent OBS_ID in obs and HDU index tables",
             }
         # TODO: obs table and events header should have the same times
+
+    def check_format(self):
+        """Check data files against the data format specification (default GADF)."""
+        self.data_store.validate()
+        for (obs_id, hdu_class), report in self.data_store.validation.items():
+            for msg in report.errors:
+                yield {
+                    "level": "error",
+                    "obs_id": obs_id,
+                    "hdu": hdu_class,
+                    "msg": msg,
+                }
 
     def check_observations(self):
         """Perform some sanity checks for all observations."""
