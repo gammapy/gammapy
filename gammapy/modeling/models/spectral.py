@@ -1984,12 +1984,13 @@ class LogParabola2SpectralModel(SpectralModel):
         This is the peak in E^2 x dN/dE and is given by:
 
         .. math::
-            E_{Peak} = E_{0} \exp{ (2 - \alpha) / (2 * \beta)}
+            E_{Peak} = \sqrt{E_{0} E_{\mathrm{s}}} \exp{ (2 - \alpha) / (2 * \beta)}
         """
         escale = self.escale.quantity
         alpha = self.alpha.quantity
         beta = self.beta.quantity
-        return escale * np.exp((2 - alpha) / (2 * beta))
+        reference = self.reference.quantity
+        return np.sqrt(escale * reference) * np.exp((2 - alpha) / (2 * beta))
 
 
 class LogParabolaNormSpectralModel(SpectralModel):
