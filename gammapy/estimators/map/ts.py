@@ -945,9 +945,7 @@ class BrentqFluxEstimator(Estimator):
 
         def sigma_diff(x):
             ts_asimov = dataset.stat_sum_asimov_null(x) - dataset.stat_sum_asimov(x)
-            return (
-                ts_to_sigma(ts_asimov, ts_asimov=ts_asimov) - self.n_sigma_sensitivity
-            )
+            return ts_to_sigma(ts_asimov, asimov=True) - self.n_sigma_sensitivity
 
         min_norm = norm / 1000.0
         max_norm = norm * 1000.0
