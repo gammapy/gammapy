@@ -1,27 +1,50 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Format validation of serialized data products.
 
-``DefinitionValidator`` checks one header (keywords) or one table (columns)
-against one definition ``{name: spec}``, as described in
-`gammapy.io.fits.registries`. It has no knowledge of data formats or versions.
+Checks a table, a header or a FITS HDU against the definitions registered for a
+data format in ``gammapy.io.fits.registries`` (``DATA_FORMATS_MODELS``):
 
-Table columns are checked through ``ColumnDescription`` objects, built from an
-in-memory table (``columns_from_table``) or from a FITS binary-table header
-(``columns_from_header``), in which case the table data is not read.
+* ``DefinitionValidator``: one header (keywords) or one table (columns) against
+  one definition, with no knowledge of data formats or versions;
+* ``FormatValidator``: resolves the HDU class and the definitions for
+  (format, version, class key), runs the header and column checks and returns a
+  ``ValidationReport``;
+* ``validate_hdus``: batch validation of HDUs in files, each file opened once.
+
+Validation works on the serialized representation and builds no Gammapy product.
+This module depends on ``gammapy.io.fits.registries`` only.
 """
 
+import logging
 import re
+from dataclasses import dataclass, field
 from typing import NamedTuple, Optional
 
 import numpy as np
 import astropy.units as u
+from astropy.io import fits
+
+from gammapy.io.fits.registries import (
+    DATA_FORMATS_MODELS,
+    DEFAULT_DATA_FORMAT,
+    DEFAULT_DATA_FORMAT_VERSION,
+)
+from gammapy.utils.scripts import make_path
 
 __all__ = [
     "ColumnDescription",
     "DefinitionValidator",
+    "FormatComplianceError",
+    "FormatValidator",
+    "ValidationReport",
     "columns_from_header",
     "columns_from_table",
+    "format_class_keys",
+    "header_definition",
+    "validate_hdus",
 ]
+
+log = logging.getLogger(__name__)
 
 # TFORMn: repeat count, type code and, for variable-length arrays, the element
 # type code, e.g. "6E", "1PE(100)"
@@ -368,3 +391,246 @@ class DefinitionValidator:
         }
         out.update({k: v for k, v in dict(header).items() if k not in out})
         return out
+
+
+# --------------- FORMAT VALIDATOR ---------------
+def _hdu_class_key(meta):
+    """Generic HDU class key. Format modules may register an override."""
+    key = meta.get("HDUCLAS4") or meta.get("HDUCLAS1") or meta.get("EXTNAME")
+    if key and "BANDS" in key:
+        return "BANDS"
+    return key.upper() if key else "UNKNOWN"
+
+
+def header_definition(format, version, class_key):
+    """Keyword definition for (format, version, HDU class key); None if none."""
+    headers = DATA_FORMATS_MODELS.get(format, {}).get("HEADER", {}).get(version, {})
+    return headers.get(class_key)
+
+
+@dataclass
+class ValidationReport:
+    """Outcome of validating one HDU against a (format, version).
+
+    ``table_errors`` is None when no table was checked (header-only HDU).
+    """
+
+    hdu: Optional[str]
+    format: str
+    version: str
+    header_errors: list = field(default_factory=list)
+    table_errors: Optional[list] = None
+
+    @property
+    def header_valid(self):
+        return not self.header_errors
+
+    @property
+    def table_valid(self):
+        return None if self.table_errors is None else not self.table_errors
+
+    @property
+    def valid(self):
+        return self.header_valid and self.table_valid is not False
+
+    @property
+    def errors(self):
+        return [f"header: {e}" for e in self.header_errors] + [
+            f"table: {e}" for e in (self.table_errors or [])
+        ]
+
+    def __str__(self):
+        status = "OK" if self.valid else "FAIL"
+        lines = [f"{self.hdu} ({self.format} v{self.version}): {status}"]
+        lines += [f"  - {e}" for e in self.errors]
+        return "\n".join(lines)
+
+
+class FormatComplianceError(ValueError):
+    """Raised by a strict `FormatValidator`; carries the full `ValidationReport`."""
+
+    def __init__(self, report):
+        self.report = report
+        super().__init__(str(report))
+
+
+class FormatValidator:
+    """Check a table / header against a data format specification.
+
+    Works on the serialized representation (an astropy ``Table`` and its
+    ``meta``, a plain header dict, or a FITS HDU), so it can be used
+    independently of any reader/writer.
+
+    Parameters
+    ----------
+    format : str
+        Registered data format, e.g. "GADF".
+    version : str or None
+        Format version to test against. If None, taken from each HDU's
+        HDUVERS, falling back to DEFAULT_DATA_FORMAT_VERSION.
+    strict : bool
+        If True, raise `FormatComplianceError` (after collecting all errors of
+        the HDU); otherwise log each error as a warning.
+    log_errors : bool
+        If False and not strict, errors are only stored in the report (for
+        batch validation, where the caller summarises).
+
+    Examples
+    --------
+    >>> validator = FormatValidator("GADF", "0.3")
+    >>> report = validator.validate(table, hdu="AEFF_2D")  # doctest: +SKIP
+    >>> report.valid, report.errors  # doctest: +SKIP
+    """
+
+    def __init__(
+        self,
+        format=DEFAULT_DATA_FORMAT,
+        version=DEFAULT_DATA_FORMAT_VERSION,
+        strict=False,
+        log_errors=True,
+    ):
+        if format not in DATA_FORMATS_MODELS:
+            raise ValueError(
+                f"Format {format!r} is not registered; known: {list(DATA_FORMATS_MODELS)}"
+            )
+        self.format = format
+        self.version = version
+        self.strict = strict
+        self.log_errors = log_errors
+        self._models = DATA_FORMATS_MODELS[format]
+
+    # ---- public API ----
+    def validate(self, table, hdu=None, meta=None):
+        """Validate an in-memory table: its columns and its header.
+
+        The header is ``table.meta`` unless ``meta`` is given. ``hdu`` is the HDU
+        class key (e.g. "EVENTS", "AEFF_2D"); if None it is resolved from the
+        header with the format's key resolver.
+        """
+        meta = dict(table.meta if meta is None else meta)
+        return self._finalize(self._check(meta, columns_from_table(table), hdu))
+
+    def validate_header(self, header, hdu=None):
+        """Validate a FITS header: its keywords and, for a binary table, its columns.
+
+        The columns are described by the ``TTYPEn`` / ``TFORMn`` / ``TDIMn`` /
+        ``TUNITn`` keywords, so the table data is not needed. For a header
+        without columns (image, primary), only the keywords are checked.
+        """
+        header = dict(header)
+        columns = columns_from_header(header) if "TFIELDS" in header else None
+        return self._finalize(self._check(header, columns, hdu))
+
+    def validate_meta(self, meta, hdu=None):
+        """Validate header keywords only."""
+        return self._finalize(self._check(dict(meta), None, hdu))
+
+    def validate_hdu(self, fits_hdu, hdu=None):
+        """Validate a FITS HDU from its header only; the data is not read."""
+        if fits_hdu.is_image:
+            hdu = hdu or "IMAGE"
+        return self.validate_header(fits_hdu.header, hdu=hdu)
+
+    # ---- checks ----
+    def _class_key(self, meta, hdu):
+        if hdu is not None:
+            return hdu.upper()
+        return self._models.get("HDU_CLASS_KEY", _hdu_class_key)(meta)
+
+    def _check(self, meta, columns, hdu):
+        version = self.version or _value(meta, "HDUVERS") or DEFAULT_DATA_FORMAT_VERSION
+        class_key = self._class_key(meta, hdu)
+        report = ValidationReport(hdu=class_key, format=self.format, version=version)
+        report.header_errors = self._check_header(meta, class_key, version)
+        if columns is not None:
+            report.table_errors = self._check_columns(columns, meta, class_key, version)
+        return report
+
+    def _check_header(self, meta, class_key, version):
+        definition = header_definition(self.format, version, class_key)
+        if definition is None:
+            return [f"No {self.format} v{version} header definition for {class_key!r}"]
+        errors = DefinitionValidator.from_dict(definition).check_header(meta)
+        for check in self._models.get("HEADER_CHECKS", []):
+            errors += check(meta, class_key, version)
+        return errors
+
+    def _check_columns(self, columns, meta, class_key, version):
+        definition = self._models.get("TABLE", {}).get(version, {}).get(class_key)
+        if definition is None:
+            return [f"No {self.format} v{version} table definition for {class_key!r}"]
+        return DefinitionValidator.from_dict(definition).check_columns(columns, meta)
+
+    def _finalize(self, report):
+        if report.errors:
+            if self.strict:
+                raise FormatComplianceError(report)
+            if not self.log_errors:
+                return report
+            for msg in report.errors:
+                log.warning("%s: %s", report.hdu, msg)
+        return report
+
+
+def format_class_keys(format):
+    """All HDU class keys the format defines (tables or headers, any version)."""
+    models = DATA_FORMATS_MODELS.get(format, {})
+    keys = set()
+    for registry in ("TABLE", "HEADER"):
+        for definitions in models.get(registry, {}).values():
+            keys |= set(definitions)
+    return keys
+
+
+def validate_hdus(entries, format=DEFAULT_DATA_FORMAT, version=None, checksum=False):
+    """Validate many HDUs in batch, opening each file only once.
+
+    No reader/writer or product is built: only the serialized HDUs are checked.
+
+    Parameters
+    ----------
+    entries : iterable of (filename, hdu, class_key)
+        ``hdu`` is the HDU name or index in the file; ``class_key`` the HDU
+        class to test against (e.g. "AEFF_2D"), or None to resolve it from the header.
+    format, version : str
+        Passed to `FormatValidator`; ``version=None`` uses each HDU's HDUVERS.
+    checksum : bool
+        Verify FITS checksums when opening the files.
+
+    Returns
+    -------
+    reports : list of `ValidationReport`
+        One per entry, same order. Files or HDUs that cannot be read give a
+        failed report carrying the IO error.
+    """
+    entries = list(entries)
+    validator = FormatValidator(format, version, strict=False, log_errors=False)
+    reports = [None] * len(entries)
+
+    def io_failure(key, hdu, msg):
+        return ValidationReport(
+            hdu=key or str(hdu),
+            format=format,
+            version=version or "?",
+            header_errors=[msg],
+        )
+
+    by_file = {}
+    for idx, (filename, hdu, key) in enumerate(entries):
+        by_file.setdefault(str(make_path(filename)), []).append((idx, hdu, key))
+
+    for filename, items in by_file.items():
+        try:
+            # only the headers are used: the data is never loaded
+            with fits.open(filename, memmap=True, checksum=checksum) as hdulist:
+                for idx, hdu, key in items:
+                    try:
+                        reports[idx] = validator.validate_hdu(hdulist[hdu], hdu=key)
+                    except (KeyError, IndexError, OSError, ValueError, TypeError) as e:
+                        reports[idx] = io_failure(
+                            key, hdu, f"cannot read HDU {hdu!r}: {e}"
+                        )
+        except OSError as e:
+            for idx, hdu, key in items:
+                reports[idx] = io_failure(key, hdu, f"cannot open {filename}: {e}")
+    return reports
