@@ -300,34 +300,34 @@ class JFactory:
         return diff_jfact * self.geom.to_image().solid_angle()
 
 
-def add_factor_prior(model, sigma, mu=1.0):
-    """Attach a Log Normal nuisance prior on ``scale`` for J/D-factor uncertainty.
+def add_factor_prior(model, sigma):
+    """Attach a log-normal nuisance prior to the astrophysical factor.
 
-    The J/D-factor is kept fixed at its nominal value; the associated
-    uncertainty is instead expressed as an equivalent prior on ``scale``,
-    since the predicted flux depends only on the product
-    ``scale * jfactor``. Placing the prior directly on a second parameter
-    (e.g. ``log10_jfactor``) would make it perfectly degenerate with
-    ``scale``. This reparametrisation is a pure shift, so the prior
-    retains the same shape and ``sigma``, centered at ``scale = 1``
-    instead of at the nominal log10(J).
+    The J/D-factor carries a multiplicative uncertainty of ``sigma`` dex from
+    the stellar-kinematics analysis. This function attaches the corresponding
+    log-normal prior to the ``factor`` parameter, which is unfrozen as part of
+    the call, and leaves ``scale`` free and unconstrained.
+
+    ``scale`` and ``factor`` are exactly degenerate: the predicted flux depends
+    only on their product. That degeneracy is inherent to the measurement, and
+    the prior is what curves the otherwise flat direction. Profiling over
+    ``factor`` at fixed ``scale`` is the standard way of marginalising this
+    nuisance (Ackermann et al. 2014).
 
     Parameters
     ----------
     model : `~gammapy.astro.darkmatter.DarkMatterSpectralModel`
-        Model whose ``scale`` parameter will get the prior attached.
-        ``scale`` is unfrozen as part of this call.
+        Model whose ``factor`` parameter will get the prior attached.
     sigma : float
-        Uncertainty on log10(J) (or log10(D)), in dex.
-    mu : float, optional
-        Center of the prior, in units of ``scale``. Default is 1.0, i.e.
-        the nominal J/D-factor value.
+        Uncertainty on log10 of the astrophysical factor, in dex.
 
     Returns
     -------
     model : `DarkMatterSpectralModel`
         The same model instance, with the prior attached, for chaining.
     """
-    model.scale.frozen = False
-    model.scale.prior = LogNormalPrior(mu=mu, sigma=sigma * np.log(10))
+    nominal = model.factor.value
+    model.factor.min = 0
+    model.factor.frozen = False
+    model.factor.prior = LogNormalPrior(mu=nominal, sigma=sigma * np.log(10))
     return model
