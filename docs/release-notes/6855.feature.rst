@@ -1,0 +1,1 @@
+Add `~gammapy.visualization.plotters.irf.EffectiveAreaPlotter` to provide plotting functionality for `~gammapy.irf.EffectiveAreaTable2D`
