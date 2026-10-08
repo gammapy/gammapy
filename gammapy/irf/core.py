@@ -408,6 +408,12 @@ class IRF(metaclass=abc.ABCMeta):
 
         """
         cumsum = self.cumsum(axis_name=axis_name)
+
+        if axis_name in kwargs:
+            axis = self.axes[axis_name]
+            coord = u.Quantity(kwargs[axis_name], axis.unit, copy=COPY_IF_NEEDED)
+            kwargs[axis_name] = np.clip(coord, axis.bounds[0], axis.bounds[1])
+
         return cumsum.evaluate(**kwargs)
 
     def normalize(self, axis_name):
