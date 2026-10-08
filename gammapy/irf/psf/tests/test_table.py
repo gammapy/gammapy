@@ -97,3 +97,65 @@ def test_psf_3d_plot_containment(psf_3d):
 def test_psf_3d_peek(psf_3d):
     with mpl_plot_check():
         psf_3d.peek()
+
+
+@pytest.fixture
+def psf_3d_synthetic():
+    energy_axis = MapAxis.from_energy_bounds(1, 10, 2, unit="TeV", name="energy_true")
+    offset_axis = MapAxis.from_bounds(0, 2, 2, unit="deg", name="offset")
+    rad_axis = MapAxis.from_bounds(0, 0.66, 30, unit="deg", name="rad")
+
+    sigma = 0.05 * u.deg
+    centers = rad_axis.center
+    psf_values = (1.0 / (2 * np.pi * sigma.to_value(u.rad) ** 2)) * np.exp(
+        -0.5 * (centers / sigma) ** 2
+    )
+
+    data = np.broadcast_to(
+        psf_values.value,
+        (energy_axis.nbin, offset_axis.nbin, rad_axis.nbin),
+    ) * u.Unit("sr-1")
+
+    psf = PSF3D(axes=[energy_axis, offset_axis, rad_axis], data=data)
+    psf.normalize()
+    return psf
+
+
+def test_psf_3d_containment(psf_3d_synthetic):
+    """Test PSF3D containment for radii beyond the tabulated range."""
+    c_inside = psf_3d_synthetic.containment(
+        rad=0.3 * u.deg, offset=1.0 * u.deg, energy_true=2.0 * u.TeV
+    )
+    assert 0 < c_inside < 1
+
+    c_max = psf_3d_synthetic.containment(
+        rad=0.66 * u.deg, offset=1.0 * u.deg, energy_true=2.0 * u.TeV
+    )
+    assert_allclose(c_max, 1.0, rtol=1e-5)
+
+    c_above = psf_3d_synthetic.containment(
+        rad=0.7 * u.deg, offset=1.0 * u.deg, energy_true=2.0 * u.TeV
+    )
+    assert_allclose(c_above, 1.0, rtol=1e-5)
+
+    c_far = psf_3d_synthetic.containment(
+        rad=10.0 * u.deg, offset=1.0 * u.deg, energy_true=2.0 * u.TeV
+    )
+    assert_allclose(c_far, 1.0, rtol=1e-5)
+
+    c_arr = psf_3d_synthetic.containment(
+        rad=[0.3, 0.66, 0.7, 1.0] * u.deg,
+        offset=1.0 * u.deg,
+        energy_true=2.0 * u.TeV,
+    )
+    assert_allclose(c_arr, [c_inside, 1.0, 1.0, 1.0], rtol=1e-5)
+
+    c_out_offset = psf_3d_synthetic.containment(
+        rad=0.7 * u.deg, offset=10.0 * u.deg, energy_true=2.0 * u.TeV
+    )
+    assert_allclose(c_out_offset, 0.0)
+
+    c_out_energy = psf_3d_synthetic.containment(
+        rad=0.7 * u.deg, offset=1.0 * u.deg, energy_true=1000.0 * u.TeV
+    )
+    assert_allclose(c_out_energy, 0.0)
