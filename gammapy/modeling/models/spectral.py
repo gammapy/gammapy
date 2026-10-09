@@ -2579,8 +2579,8 @@ class NaimaSpectralModel(SpectralModel):
             parameters.append(Parameter("B", B))
             parameters.append(Parameter("radius", radius, frozen=True))
 
-        # Append Emin and Emax to the fittable parameters
-        for name in ["Emin", "Emax"]:
+        # Append Eemin and Eemax to the fittable parameters
+        for name in ["Eemin", "Eemax"]:
             value = getattr(self.radiative_model, name)
             parameter = Parameter(name, value, frozen=True)
             parameters.append(parameter)
@@ -2657,6 +2657,9 @@ class NaimaSpectralModel(SpectralModel):
 
         if "B" in self.radiative_model.param_names:
             self.radiative_model.B = self.B.quantity
+
+        self.radiative_model.Eemin = self.Eemin.quantity
+        self.radiative_model.Eemax = self.Eemax.quantity
 
     def evaluate(self, energy, *args):
         """Evaluate the model.
