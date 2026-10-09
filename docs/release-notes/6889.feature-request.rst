@@ -1,0 +1,1 @@
+Add Eemin, Eemax/ Epmin, Epmax as fittable parameters to NaimaSpectralModels.
