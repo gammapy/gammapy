@@ -27,7 +27,7 @@ def test_continuum_primary_flux():
     with pytest.raises(ValueError):
         ContinuumPrimaryFlux(channel="Spam", mDM=1 * u.TeV)
 
-    primflux = ContinuumPrimaryFlux(channel="W", mDM=1 * u.TeV)
+    primflux = ContinuumPrimaryFlux(channel="W", mDM=1 * u.TeV, source="pppc4")
     actual = primflux(500 * u.GeV)
     desired = 9.3319318e-05 / u.GeV
     assert_quantity_allclose(actual, desired)
@@ -330,7 +330,7 @@ def test_invalid_factor():
 @pytest.mark.parametrize(
     "factor_unit, expected_flux, expected_dnde, source, annihilation",
     [
-        ("GeV2 cm-5", 6.19575457e-14, 2.97831615e-16, None, True),
+        ("GeV2 cm-5", 6.03197683e-14, 3.52065879e-16, None, True),
         ("GeV cm-2", 3.209234e-2, 2.33485775e-5, "pppc4", False),
         ("GeV2 cm-5", 6.03197683e-14, 3.52065879e-16, "cosmixs", True),
         ("GeV cm-2", 0.031677, 2.77187e-05, "cosmixs", False),

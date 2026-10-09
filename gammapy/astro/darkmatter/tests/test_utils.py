@@ -308,7 +308,9 @@ def test_dmfluxmap_annihilation(jfact_annihilation):
         float(jfact_annihilation.mean().value), unit=jfact_annihilation.unit
     )
 
-    diff_flux = DarkMatterSpectralModel(mDM=massDM, channel=channel, factor=total_jfact)
+    diff_flux = DarkMatterSpectralModel(
+        mDM=massDM, channel=channel, factor=total_jfact, source="pppc4"
+    )
     int_flux = (
         diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
         * jfact_annihilation
@@ -327,7 +329,9 @@ def test_dmfluxmap_decay(jfact_decay):
     massDM = 1 * u.TeV
     channel = "W"
 
-    diff_flux = DarkMatterSpectralModel(mDM=massDM, channel=channel, annihilation=False)
+    diff_flux = DarkMatterSpectralModel(
+        mDM=massDM, channel=channel, annihilation=False, source="pppc4"
+    )
     int_flux = (
         jfact_decay
         * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
