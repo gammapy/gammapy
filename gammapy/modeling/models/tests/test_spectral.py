@@ -1088,6 +1088,29 @@ class TestNaimaModel:
         )
         assert not radiative_model._memoize
 
+    def test_eemin_eemax(self):
+        import naima
+
+        particle_distribution = naima.models.ExponentialCutoffBrokenPowerLaw(
+            amplitude=2e33 / u.eV,
+            e_0=10 * u.TeV,
+            alpha_1=2.5,
+            alpha_2=2.7,
+            e_break=900 * u.GeV,
+            e_cutoff=10 * u.TeV,
+        )
+        radiative_model = naima.radiative.InverseCompton(
+            particle_distribution, seed_photon_fields=["CMB"]
+        )
+
+        model = NaimaSpectralModel(radiative_model)
+        model.Eemin.value = 1e-3
+        model.Eemax.value = 1e3
+
+        energy = np.logspace(-3, 3, 30) * u.TeV
+
+        assert_quantity_allclose(model(energy), radiative_model.flux(energy))
+
 
 class TestSpectralModelErrorPropagation:
     """Test spectral model error propagation.
