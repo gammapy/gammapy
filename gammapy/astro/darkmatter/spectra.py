@@ -64,7 +64,7 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
         plus columns named after the requested annihilation channel(s)
         using the internal channel registry naming convention.
 
-        Warning: From version>2.2, the default source has changed from ``"pppc4"`` to
+        Note: From version>2.2, the default source has changed from ``"pppc4"`` to
         ``"cosmixs"``. The PPPC4 tables are still available.
     mapping_dict : dict, optional
         Mapping dictionary used to rename the columns of a custom source
