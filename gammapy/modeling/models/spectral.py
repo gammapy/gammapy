@@ -2579,11 +2579,18 @@ class NaimaSpectralModel(SpectralModel):
             parameters.append(Parameter("B", B))
             parameters.append(Parameter("radius", radius, frozen=True))
 
-        # Append Eemin and Eemax to the fittable parameters
-        for name in ["Eemin", "Eemax"]:
-            value = getattr(self.radiative_model, name)
-            parameter = Parameter(name, value, frozen=True)
-            parameters.append(parameter)
+        # Append Eemin, Eemax / Epmin, Epmax to the fittable parameters
+        if "Eemin" in self.radiative_model.param_names:
+            for name in ["Eemin", "Eemax"]:
+                value = getattr(self.radiative_model, name)
+                parameter = Parameter(name, value, frozen=True)
+                parameters.append(parameter)
+
+        if "Epmin" in self.radiative_model.param_names:
+            for name in ["Epmin", "Epmax"]:
+                value = getattr(self.radiative_model, name)
+                parameter = Parameter(name, value, frozen=True)
+                parameters.append(parameter)
 
         self.default_parameters = Parameters(parameters)
         self.ssc_energy = np.logspace(-7, 9, 100) * u.eV
@@ -2658,8 +2665,13 @@ class NaimaSpectralModel(SpectralModel):
         if "B" in self.radiative_model.param_names:
             self.radiative_model.B = self.B.quantity
 
-        self.radiative_model.Eemin = self.Eemin.quantity
-        self.radiative_model.Eemax = self.Eemax.quantity
+        if "Eemin" in self.radiative_model.param_names:
+            self.radiative_model.Eemin = self.Eemin.quantity
+            self.radiative_model.Eemax = self.Eemax.quantity
+
+        if "Epmin" in self.radiative_model.param_names:
+            self.radiative_model.Epmin = self.Epmin.quantity
+            self.radiative_model.Epmax = self.Epmax.quantity
 
     def evaluate(self, energy, *args):
         """Evaluate the model.
