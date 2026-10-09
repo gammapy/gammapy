@@ -4,11 +4,13 @@ import html
 import logging
 from copy import deepcopy
 from enum import Enum
+
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Table, hstack
 from astropy.utils import lazyproperty
+
 from gammapy.maps import Map, MapAxes, MapAxis, RegionGeom
 from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.integrate import trapz_loglog
@@ -17,7 +19,13 @@ from gammapy.utils.interpolation import (
     interpolation_scale,
 )
 from gammapy.utils.scripts import make_path
-from .io import IRF_DL3_HDU_SPECIFICATION, IRF_MAP_HDU_SPECIFICATION, gadf_is_pointlike
+
+from .io import (
+    IRF_DL3_AXES_SPECIFICATION,
+    IRF_DL3_HDU_SPECIFICATION,
+    IRF_MAP_HDU_SPECIFICATION,
+    gadf_is_pointlike,
+)
 
 log = logging.getLogger(__name__)
 
@@ -493,6 +501,37 @@ class IRF(metaclass=abc.ABCMeta):
             fov_alignment=table.meta.get("FOVALIGN", "RADEC"),
         )
 
+    @staticmethod
+    def _irf_axes_to_table(axes, format="gadf-dl3"):
+        """Convert IRF axes to table."""
+        if format != "gadf-dl3":
+            raise ValueError(f"Not a valid supported format: '{format}'")
+
+        tables = []
+
+        for ax in axes:
+            table = Table()
+            edges = ax.edges
+
+            if ax.name == "energy":
+                column_prefix = "ENERG"
+            else:
+                for column_prefix, spec in IRF_DL3_AXES_SPECIFICATION.items():
+                    if spec["name"] == ax.name:
+                        break
+
+            if ax.node_type == "edges":
+                edges_hi, edges_lo = edges[:-1], edges[1:]
+            else:
+                edges_hi, edges_lo = ax.center, ax.center
+
+            table[f"{column_prefix}_LO"] = edges_hi[np.newaxis]
+            table[f"{column_prefix}_HI"] = edges_lo[np.newaxis]
+
+            tables.append(table)
+
+        return hstack(tables)
+
     def to_table(self, format="gadf-dl3"):
         """Convert to table.
 
@@ -506,25 +545,24 @@ class IRF(metaclass=abc.ABCMeta):
         table : `~astropy.table.Table`
             IRF data table.
         """
-        table = self.axes.to_table(format=format)
-
-        if format == "gadf-dl3":
-            table.meta = self.meta.copy()
-            spec = IRF_DL3_HDU_SPECIFICATION[self.tag]
-
-            table.meta.update(spec["mandatory_keywords"])
-
-            if "FOVALIGN" in table.meta:
-                table.meta["FOVALIGN"] = self.fov_alignment.value
-
-            if self.is_pointlike:
-                table.meta["HDUCLAS3"] = "POINT-LIKE"
-            else:
-                table.meta["HDUCLAS3"] = "FULL-ENCLOSURE"
-
-            table[spec["column_name"]] = self.quantity.T[np.newaxis]
-        else:
+        if format != "gadf-dl3":
             raise ValueError(f"Not a valid supported format: '{format}'")
+
+        table = self._irf_axes_to_table(self.axes, format=format)
+        table.meta = self.meta.copy()
+        spec = IRF_DL3_HDU_SPECIFICATION[self.tag]
+
+        table.meta.update(spec["mandatory_keywords"])
+
+        if "FOVALIGN" in table.meta:
+            table.meta["FOVALIGN"] = self.fov_alignment.value
+
+        if self.is_pointlike:
+            table.meta["HDUCLAS3"] = "POINT-LIKE"
+        else:
+            table.meta["HDUCLAS3"] = "FULL-ENCLOSURE"
+
+        table[spec["column_name"]] = self.quantity.T[np.newaxis]
 
         return table
 

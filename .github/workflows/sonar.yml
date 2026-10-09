@@ -49,7 +49,7 @@ jobs:
           cat $HOME/coverage/sonar_env
 
       - name: Checkout branch or tag
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         if: github.event.workflow_run.event != 'pull_request'
         with:
           repository: ${{ github.event.workflow_run.head_repository.full_name }}
@@ -58,7 +58,7 @@ jobs:
           clean: false
 
       - name: Checkout Pull Request commit
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         if: github.event.workflow_run.event == 'pull_request'
         with:
           repository: ${{ github.event.workflow_run.head_repository.full_name }}

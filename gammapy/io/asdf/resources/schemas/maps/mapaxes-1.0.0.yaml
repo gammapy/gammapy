@@ -1,0 +1,26 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id : "asdf://gammapy.org/gammapy/schemas/maps/mapaxes-1.0.0"
+
+title: |
+  Represents MapAxes.
+
+description: |
+     Support the serialization of MapAxes which is a list of map axis objects built into gammapy.
+
+type: object
+properties:
+  axes:
+    type: array
+    items:
+      anyOf:
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/mapaxis-1.0.0"
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/timemapaxis-1.0.0"
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/labelmapaxis-1.0.0"
+    description: |
+      List of map axis objects.
+
+required : [axes]
+additionalProperties: false
+...

@@ -1,0 +1,1 @@
+Added `~gammapy.astro.darkmatter.utils.add_factor_prior` helper function to support log-normal nuisance parameter treatment for astrophysical J-factors and D-factors.

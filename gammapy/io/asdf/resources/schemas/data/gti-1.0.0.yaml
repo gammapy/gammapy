@@ -1,0 +1,24 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://gammapy.org/gammapy/schemas/data/gti-1.0.0"
+
+title: |
+  Represents GTI.
+
+description: |
+   Support the serialization of GTI (Good Time Intervals).
+
+type: object
+properties:
+  table:
+    tag: "tag:astropy.org:astropy/table/table-1.*"
+    description: |
+      Table containing START/STOP columns.
+  reference_time:
+    tag: "tag:stsci.edu:asdf/time/time-1.*"
+    description: |
+        Reference time for the GTI intervals.
+required: [table]
+additionalProperties: false
+...

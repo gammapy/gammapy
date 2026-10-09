@@ -1,0 +1,34 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://gammapy.org/gammapy/schemas/irf/edispmap-1.0.0"
+
+title: |
+  Represents EDispMap.
+
+description: |
+     Support the serialization of EDispMap, which represents an energy
+     dispersion map with (migra, energy_true) axes.
+
+
+type: object
+properties:
+  edisp_map:
+    anyOf:
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/regionndmap-1.0.0"
+    description: |
+      Holds the energy dispersion probability values as a Map object,
+      with two non-spatial axes, in this order: migra and energy_true.
+  exposure_map:
+    anyOf:
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/regionndmap-1.0.0"
+    description: |
+          Optional field holding exposure-weighting values as a Map.
+
+required: [edisp_map]
+additionalProperties: false
+...

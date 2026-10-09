@@ -1,0 +1,32 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://gammapy.org/gammapy/schemas/maps/hpxndmap-1.0.0"
+
+title: |
+  Represents HpxNDMap.
+
+description: |
+  Support the serialization of HpxNDMap which represents a HEALPix map with any number of non-spatial dimensions.
+
+type: object
+properties:
+  geom:
+    tag: "asdf://gammapy.org/gammapy/tags/maps/hpxgeom-1.0.0"
+    description: |
+       HEALPix geometry object defining the spatial and non-spatial axes of the map.
+  data:
+    tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
+    description: |
+       N-dimensional numpy array to store map data values.
+  meta:
+    type: object
+    description: |
+      Dictionary to store meta data.
+  unit:
+    type: string
+    description: |
+      Unit of the map.
+required: [geom, data]
+additionalProperties: false
+...

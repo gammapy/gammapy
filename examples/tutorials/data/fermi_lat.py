@@ -444,11 +444,11 @@ print("Number of source models", len(models_4fgl_gc))
 # for all the sources we want to keep frozen).
 #
 
-sources_ouside_roi = models_4fgl_gc.select_mask(~mask_fit, use_evaluation_region=False)
-sources_inside_roi = Models([m for m in models_4fgl_gc if m not in sources_ouside_roi])
+sources_outside_roi = models_4fgl_gc.select_mask(~mask_fit, use_evaluation_region=False)
+sources_inside_roi = Models([m for m in models_4fgl_gc if m not in sources_outside_roi])
 
 geom_true = datasets[0].exposure.geom
-sources_outside_roi = sources_ouside_roi.to_template_sky_model(
+sources_outside_roi = sources_outside_roi.to_template_sky_model(
     geom_true, name="sources_outside"
 )
 
@@ -489,7 +489,7 @@ n_brightest = 3
 integrated_flux = u.Quantity(
     [m.spectral_model.integral(10 * u.GeV, 1 * u.TeV) for m in sources_inside_roi]
 )
-order = np.argsort(integrated_flux)
+order = np.argsort(integrated_flux)[::-1]
 selected_sources = Models([sources_inside_roi[int(ii)] for ii in order[:n_brightest]])
 
 print(selected_sources.names)

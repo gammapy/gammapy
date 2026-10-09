@@ -2,10 +2,16 @@
 """Utilities to compute J-factor maps."""
 
 import html
-import numpy as np
-import astropy.units as u
+import numbers
+import warnings
 
-__all__ = ["JFactory"]
+import astropy.units as u
+from gammapy.modeling.models.prior import (
+    LogNormalPrior,
+)
+import numpy as np
+
+__all__ = ["JFactory", "add_factor_prior"]
 
 
 class JFactory:
@@ -22,16 +28,24 @@ class JFactory:
     profile : `~gammapy.astro.darkmatter.profiles.DMProfile`
         Dark matter profile.
     distance : `~astropy.units.Quantity`
-        Distance to convert angular scale of the map.
-    annihilation : bool, optional
+        Distance from the observer to the dark matter halo center,
+        used to compute the line-of-sight integration geometry.
+    annihilation : `~astropy.units.Quantity`, optional
         Decay or annihilation. Default is True.
+    rmax : `~astropy.units.Quantity`
+        Physical size of the dark matter halo (upper limit of the
+        line-of-sight integral). For extragalactic sources, this should
+        be set to the halo radius (~kpc), **not** the distance to the
+        source. Defaults to ``distance`` for backward compatibility,
+        which is only appropriate for Galactic sources.
     """
 
-    def __init__(self, geom, profile, distance, annihilation=True):
+    def __init__(self, geom, profile, distance, rmax, annihilation=True):
         self.geom = geom
         self.profile = profile
         self.distance = distance
         self.annihilation = annihilation
+        self.rmax = rmax
 
     def _repr_html_(self):
         try:
@@ -39,7 +53,104 @@ class JFactory:
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
 
-    def compute_differential_jfactor(self, ndecade=1e4):
+    def _integrate_los_branch(self, impact, radius_min, radius_max, ndecade):
+        """Integrate one radial line-of-sight branch."""
+        exponent = 2 if self.annihilation else 1
+        unit = radius_max.unit
+
+        impact = impact.to(unit)
+        radius_min = radius_min.to(unit)
+        radius_max = radius_max.to(unit)
+
+        if impact.value == 0:
+            return self.profile.integral(
+                radius_min, radius_max, 0, ndecade, self.annihilation, self.distance
+            )
+
+        logmin = np.log10(radius_min.value)
+        logmax = np.log10(radius_max.value)
+        n = max(2, int((logmax - logmin) * ndecade))
+
+        t_min = np.arccosh(np.maximum((radius_min / impact).to_value(""), 1))
+        t_max = np.arccosh(np.maximum((radius_max / impact).to_value(""), 1))
+        t = np.linspace(t_min, t_max, n)
+
+        radius = impact * np.cosh(t)
+        values = self.profile(radius) ** exponent * radius
+
+        return np.trapezoid(values, t)
+
+    def _integrate_los(self, impact, separation, ndecade):
+        """Integrate the physical forward line of sight."""
+        distance = self.distance
+        rmax = self.rmax
+
+        if distance < rmax:
+            integral = self._integrate_los_branch(impact, distance, rmax, ndecade)
+            if separation < np.pi / 2:
+                integral += 2 * self._integrate_los_branch(
+                    impact, impact, distance, ndecade
+                )
+            return integral
+
+        if separation < np.pi / 2 and impact < rmax:
+            return 2 * self._integrate_los_branch(impact, impact, rmax, ndecade)
+
+        return 0 * u.Unit("GeV2 cm-5" if self.annihilation else "GeV cm-2")
+
+    def _integrate_central_pixel(self, ndecade, rtol, max_subdivision):
+        """Adaptively average the line-of-sight integral over the central pixel."""
+        central_geom = self.geom.to_image().cutout(
+            position=self.geom.center_skydir,
+            width=self.geom.pixel_scales,
+        )
+        parent_solid_angle = central_geom.solid_angle().sum()
+        previous = None
+
+        factor = 2
+        while factor <= max_subdivision:
+            # Even factors ensure no subpixel center coincides with the halo center.
+            subgeom = central_geom.upsample(factor)
+            separation = subgeom.separation(self.geom.center_skydir).rad
+            impact = u.Quantity(
+                value=np.sin(separation) * self.distance,
+                unit=self.distance.unit,
+            )
+
+            values = [
+                self._integrate_los(impact_i, separation_i, ndecade)
+                for impact_i, separation_i in zip(impact.ravel(), separation.ravel())
+            ]
+            values = u.Quantity(values).reshape(impact.shape)
+            current = (values * subgeom.solid_angle()).sum() / parent_solid_angle
+
+            if previous is not None:
+                relative_change = np.abs((current - previous) / current)
+                if relative_change < rtol:
+                    return current
+
+            previous = current
+            factor *= 2
+
+        warnings.warn(
+            "The requested central-pixel relative tolerance "
+            f"(central_pixel_rtol={rtol}) was not reached "
+            "before the maximum subdivision factor "
+            f"(central_pixel_max_subdivision={max_subdivision}). "
+            "Returning the finest estimate. Increase "
+            "central_pixel_max_subdivision if higher accuracy is required.",
+            UserWarning,
+            stacklevel=3,
+        )
+        return previous
+
+    def compute_differential_jfactor(
+        self,
+        ndecade=1e4,
+        *,
+        central_pixel_rtol=0.01,
+        central_pixel_max_subdivision=128,
+    ):
         r"""Compute differential J-Factor.
 
         .. math::
@@ -55,6 +166,13 @@ class JFactory:
         ndecade : float, optional
             Number of sampling points per decade in radius used for the numerical
             integration. Default is 1e4.
+        central_pixel_rtol : float, optional
+            Relative tolerance for adaptive refinement of the central pixel.
+            Default is 0.01.
+        central_pixel_max_subdivision : int, optional
+            Maximum subdivision factor for adaptive refinement of the central
+            pixel. Must be a power of two greater than or equal to 4. Default is
+            128.
 
         Returns
         -------
@@ -63,69 +181,92 @@ class JFactory:
 
         Notes
         -----
-        The line-of-sight (LoS) integral should include both the near and far
-        sides of the halo. To account for this, the integration is split into
-        two regions:
-
-        1. :math:`[r_{\min}, r_{\max}]` - from the observer to the source,
-           counted twice to include contributions from both near and far sides.
-        2. :math:`[r_{\max}, 4 r_{\max}]` - from the source to infinity.
-           The upper limit is truncated at :math:`4 r_{\max}` because
-           contributions beyond this are negligible.
-
-        Hence, the effective integration domain is:
+        The line-of-sight geometry is defined by
 
         .. math::
-            2 \times [r_{\min}, r_{\max}] \;+\; [r_{\max}, 4 r_{\max}].
+            r(l)^2 = D^2 + l^2 - 2 D l \cos\theta,
 
-        The LoS integral is converted into a radial integral over the profile through:
-
-        .. math::
-            r^2 = l^2 + r_{\max}^2 - 2 dl \cos \theta
-
-        Rearranging for the differential gives:
+        where :math:`D` is the observer-to-halo-center distance and
+        :math:`l \geq 0` is the physical forward line-of-sight coordinate.
+        The impact parameter of the corresponding infinite line is given by:
 
         .. math::
-            \mathrm dl = \frac{2 r}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr.
+            r_\perp = D \sin\theta.
 
-        This substitution allows the integral to be evaluated directly as
-        radial integrals using ``profile.integral``, giving
+        The integration is split into two regions:
+
+        1. :math:`D < r_{\max}`: the observer is inside the integration radius.
+        Directions with :math:`\theta < \pi / 2` cross the inner radial interval
+        twice, while directions with :math:`\theta \geq \pi / 2` contain only
+        the outward branch.
+
+        2. :math:`D \geq r_{\max}`: the observer is outside the integration radius.
+        The line of sight contributes only when it points toward the halo and
+        intersects the integration sphere, i.e. when :math:`\theta < \pi / 2`
+        and :math:`r_\perp < r_{\max}`.
+
+        Each radial branch is evaluated using
 
         .. math::
-            \int_0^{l_\mathrm{max}} \rho^2(r(l, \theta)) \, \mathrm dl
-            = 2 \int_{r_{\min}}^{r_{\max}} \frac{r \, \rho^2(r)}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr
-              + \int_{r_{\max}}^{4 r_{\max}} \frac{r \, \rho^2(r)}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr.
+            \mathrm dl =
+            \frac{r}{\sqrt{r^2-r_\perp^2}}\,\mathrm dr.
+
+        The apparent singularity at :math:`r = r_\perp` is integrable. To avoid
+        evaluating it directly, each radial branch is integrated with the
+        substitution :math:`r = r_\perp\cosh t`.
         """
-        separation = self.geom.separation(self.geom.center_skydir).rad
-        rmin = u.Quantity(
-            value=np.tan(separation) * self.distance, unit=self.distance.unit
-        )
-        rmax = self.distance
-        val = [
-            (
-                2
-                * self.profile.integral(
-                    _.value * u.kpc,
-                    rmax,
-                    np.arctan(_.value / self.distance.value),
-                    ndecade,
-                    self.annihilation,
-                )
-                + self.profile.integral(
-                    self.distance,
-                    4 * rmax,
-                    np.arctan(_.value / self.distance.value),
-                    ndecade,
-                    self.annihilation,
-                )
+        if not np.isfinite(central_pixel_rtol) or central_pixel_rtol <= 0:
+            raise ValueError("central_pixel_rtol must be a finite positive number.")
+
+        if (
+            not isinstance(central_pixel_max_subdivision, numbers.Integral)
+            or central_pixel_max_subdivision < 4
+            or central_pixel_max_subdivision & (central_pixel_max_subdivision - 1)
+        ):
+            raise ValueError(
+                "central_pixel_max_subdivision must be a power of two greater "
+                "than or equal to 4."
             )
-            for _ in rmin.ravel()
+
+        separation = self.geom.separation(self.geom.center_skydir).rad
+        impact = u.Quantity(
+            value=np.sin(separation) * self.distance, unit=self.distance.unit
+        )
+        zero_separation = separation == 0
+        if np.any(zero_separation):
+            warnings.warn(
+                "A pixel center coincides with the halo center, as can occur for "
+                "a centered map with an odd number of pixels. The central pixel "
+                "will be adaptively subdivided to avoid the zero-impact line of "
+                "sight. Consider using an even number of pixels if this special "
+                "treatment is not desired.",
+                UserWarning,
+                stacklevel=2,
+            )
+
+        val = [
+            self._integrate_central_pixel(
+                ndecade,
+                rtol=central_pixel_rtol,
+                max_subdivision=central_pixel_max_subdivision,
+            )
+            if is_zero_separation
+            else self._integrate_los(impact_i, separation_i, ndecade)
+            for impact_i, separation_i, is_zero_separation in zip(
+                impact.ravel(), separation.ravel(), zero_separation.ravel()
+            )
         ]
         integral_unit = u.Unit("GeV2 cm-5") if self.annihilation else u.Unit("GeV cm-2")
-        jfact = u.Quantity(val).to(integral_unit).reshape(rmin.shape)
+        jfact = u.Quantity(val).to(integral_unit).reshape(impact.shape)
         return jfact / u.steradian
 
-    def compute_jfactor(self, ndecade=1e4):
+    def compute_jfactor(
+        self,
+        ndecade=1e4,
+        *,
+        central_pixel_rtol=0.01,
+        central_pixel_max_subdivision=128,
+    ):
         r"""Compute astrophysical J-Factor.
 
         .. math::
@@ -138,11 +279,55 @@ class JFactory:
         ndecade : float, optional
             Number of sampling points per decade in radius used for the numerical
             integration. Default is 1e4.
+        central_pixel_rtol : float, optional
+            Relative tolerance for adaptive refinement of the central pixel.
+            Default is 0.01.
+        central_pixel_max_subdivision : int, optional
+            Maximum subdivision factor for adaptive refinement of the central
+            pixel. Must be a power of two greater than or equal to 4. Default is
+            128.
 
         Returns
         -------
         jfactor : `~astropy.units.Quantity`
             The j-factor.
         """
-        diff_jfact = self.compute_differential_jfactor(ndecade)
+        diff_jfact = self.compute_differential_jfactor(
+            ndecade,
+            central_pixel_rtol=central_pixel_rtol,
+            central_pixel_max_subdivision=central_pixel_max_subdivision,
+        )
         return diff_jfact * self.geom.to_image().solid_angle()
+
+
+def add_factor_prior(model, sigma, mu=1.0):
+    """Attach a Log Normal nuisance prior on ``scale`` for J/D-factor uncertainty.
+
+    The J/D-factor is kept fixed at its nominal value; the associated
+    uncertainty is instead expressed as an equivalent prior on ``scale``,
+    since the predicted flux depends only on the product
+    ``scale * jfactor``. Placing the prior directly on a second parameter
+    (e.g. ``log10_jfactor``) would make it perfectly degenerate with
+    ``scale``. This reparametrisation is a pure shift, so the prior
+    retains the same shape and ``sigma``, centered at ``scale = 1``
+    instead of at the nominal log10(J).
+
+    Parameters
+    ----------
+    model : `~gammapy.astro.darkmatter.DarkMatterSpectralModel`
+        Model whose ``scale`` parameter will get the prior attached.
+        ``scale`` is unfrozen as part of this call.
+    sigma : float
+        Uncertainty on log10(J) (or log10(D)), in dex.
+    mu : float, optional
+        Center of the prior, in units of ``scale``. Default is 1.0, i.e.
+        the nominal J/D-factor value.
+
+    Returns
+    -------
+    model : `DarkMatterSpectralModel`
+        The same model instance, with the prior attached, for chaining.
+    """
+    model.scale.frozen = False
+    model.scale.prior = LogNormalPrior(mu=mu, sigma=sigma * np.log(10))
+    return model

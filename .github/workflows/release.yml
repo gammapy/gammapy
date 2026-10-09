@@ -8,7 +8,7 @@ on:
 jobs:
   release-pypi:
     if: github.repository_owner == 'gammapy'
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v2
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v3
     with:
       targets: |
         - cp3*-manylinux_x86_64*
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Release
         uses: softprops/action-gh-release@v3
         with:
