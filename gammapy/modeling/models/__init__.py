@@ -14,9 +14,9 @@ from .prior import (
     GeneralizedGaussianPrior,
     Prior,
     UniformPrior,
-    LogUniformPrior,
     SamplesKDEPrior,
     LogNormalPrior,
+    LogUniformPrior,
 )
 from .spatial import (
     ConstantFluxSpatialModel,
