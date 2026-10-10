@@ -1,1 +1,0 @@
-Add LogSpaceGaussianPrior to the prior module. It is used in the add_factor_prior function to add a prior to the factor parameter of a DarkMatterSpectralModel.
