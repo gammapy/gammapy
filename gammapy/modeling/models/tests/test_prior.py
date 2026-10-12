@@ -163,11 +163,11 @@ def test_serialisation(prior, tmpdir):
     filename = str(tmpdir / "model_prior.yaml")
     models.write(filename)
 
-    if prior["name"] != "logspacegaussian":
-        loaded_models = Models.read(filename)
-        loaded_model = loaded_models[0]
-        loaded_prior = loaded_model.spectral_model.amplitude.prior
-        assert isinstance(loaded_prior, type(prior["model"]))
+    PRIOR_REGISTRY.append(LogSpaceGaussianPrior)
+    loaded_models = Models.read(filename)
+    loaded_model = loaded_models[0]
+    loaded_prior = loaded_model.spectral_model.amplitude.prior
+    assert isinstance(loaded_prior, type(prior["model"]))
 
 
 def test_uniform_prior_auto_syncs_bounds_when_unset():
