@@ -1,16 +1,23 @@
 r"""
-Dark Matter indirect search analysis with Gammapy
-=================================================
-
-This tutorial covers a full analysis pipeline for the indirect search of
-dark matter using Gammapy. We assume basic familiarity with Gammapy’s
-data structures and the Dark Matter module. If you are new to Gammapy,
-we recommend first working through the introductory and the Dark Matter
-Basics and Data handling tutorials.
+Dark Matter indirect detection with Gammapy: A complete analysis
+================================================================
 
 In this example we perform a **3D analysis** — using both spatial and
 spectral information, as opposed to a 1D (spectral-only) analysis.
 
+Prerequisites
+-------------
+- If you are new to Dark Matter, please see the tutorial
+  :doc:`/tutorials/astrophysics/dark_matter_basics`
+- If you are new to Gammapy, please check
+  :doc:`/tutorials/analysis-3d/index` and
+  :doc:`/tutorials/analysis-1d/index`
+
+Context
+-------
+
+This tutorial covers a full analysis pipeline for the indirect search of
+dark matter using Gammapy.
 To perform a dark matter analysis, we need to fit the data with a model
 that includes both the background and the dark matter signal component.
 Rather than fitting the physical parameters (e.g. the annihilation
@@ -19,9 +26,8 @@ cross-section :math:`\langle\sigma v\rangle` or the decay lifetime
 parameter**, that rescales the predicted dark matter signal. Depending
 on the DM model assumed, the constrained quantity is different.
 
---------------
-
-**Dark matter annihilation**
+Dark matter annihilation
+------------------------
 
 The expected gamma-ray flux from DM annihilation is:
 
@@ -37,19 +43,18 @@ particles annihilate *at most* this efficiently.
 
 In Gammapy’s
 :class:`~gammapy.astro.darkmatter.DarkMatterSpectralModel`, ⟨σv⟩ is
-encoded through a dimensionless **`scale`** parameter:
+encoded through a dimensionless ``scale`` parameter:
 
 .. math:: \text{scale} = \frac{\langle\sigma v\rangle}{\langle\sigma v\rangle_{\rm ref}}
 
 where :math:`\langle\sigma v\rangle_{\rm ref} \approx 3\times10^{-26}`
-cm³ s⁻¹ is the thermal relic value. An upper limit on `scale`
+cm³ s⁻¹ is the thermal relic value. An upper limit on ``scale``
 translates directly into an upper limit on ⟨σv⟩:
 
 .. math:: \langle\sigma v\rangle < \text{scale}_{\rm UL} \times \langle\sigma v\rangle_{\rm ref}
 
---------------
-
-**Dark matter decay**
+Dark matter decay
+-----------------
 
 The expected gamma-ray flux from DM decay is:
 
@@ -66,14 +71,14 @@ non-detection gives a **lower limit** on τ_χ: the DM particle must live
 
 In Gammapy’s
 :class:`~gammapy.astro.darkmatter.DarkMatterSpectralModel`, the
-lifetime is encoded through the same **`scale`** parameter, but now it
+lifetime is encoded through the same ``scale`` parameter, but now it
 multiplies the **decay rate** (inverse lifetime):
 
 .. math:: \text{scale} = \frac{1/\tau_\chi}{1/\tau_{\rm ref}} = \frac{\tau_{\rm ref}}{\tau_\chi}
 
 where :math:`\tau_{\rm ref}` is an internal reference value
 (`LIFETIME_AGE_OF_UNIVERSE` ≈ 4.3 × 10¹⁷ s). Because of the inverse
-relationship, an **upper** limit on `scale` becomes a **lower** limit
+relationship, an **upper** limit on ``scale`` becomes a **lower** limit
 on τ_χ:
 
 .. math:: \tau_\chi > \frac{\tau_{\rm ref}}{\text{scale}_{\rm UL}}
@@ -85,35 +90,31 @@ uncertainty, we can translate it directly into a constraint on
 relation above (`Bergström, L., et al.,
 1998 <https://arxiv.org/abs/astro-ph/9712318>`__).
 
-In this way, the steps/sections followed in this tutorial are:
 
-1. **Data.** We obtain and manage the data to be analyzed. In this case,
+Tutorial overview
+-----------------
+
+In this way, the steps followed in this tutorial are:
+
+- **Data.** We obtain and manage the data to be analyzed. In this case,
    this corresponds to a 3D dataset (spatial + spectral information).
-2. **Analysis of signal detection.** We perform a statistical test to
+- **Analysis of signal detection.** We perform a statistical test to
    determine whether the dataset contains a genuine signal or is
    compatible with background only, and outline the procedure to follow
    in each case.
-3. **Obtaining limits.**
+- **Obtaining limits.**
 
    - *No signal detected*: we derive upper limits on the dark matter
      cross-section (or decay lifetime).
    - *Signal detected*: we derive confidence intervals on the signal
      parameters.
 
-4. **Exclusion curve: scanning over masses.** We repeat the
+- **Exclusion curve: scanning over masses.** We repeat the
    limit-setting procedure over a grid of dark matter masses to build
    the exclusion curve.
-5. **Bands plot: uncertainty bands on the exclusion curve.** We compute
+- **Bands plot: uncertainty bands on the exclusion curve.** We compute
    the expected sensitivity and its uncertainty bands (1σ/2σ) around the
    exclusion curve, following the standard bands plot convention.
-
-**Prerequisites**
-
-- If you are new to Dark Matter, please see the tutorial
-  :doc:`/tutorials/astrophysics/dark_matter_basics`
-- If you are new to Gammapy, please check
-  :doc:`/tutorials/analysis-3d/index` and
-  :doc:`/tutorials/analysis-1d/index`
 
 """
 
@@ -147,18 +148,9 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 ######################################################################
-# Analysis of a Dark Matter source
-# --------------------------------
+# Obtain data
+# -----------
 #
-
-
-######################################################################
-# 1. Data
-# ~~~~~~~
-#
-
-
-######################################################################
 # For this tutorial we will use the data of a non-signal dataset provided
 # by the Gammapy database.. Additionally, we are going to consider that
 # the data follows an Einasto profile and we are going to study the case
@@ -172,32 +164,33 @@ print(dataset.meta_table)
 
 
 ######################################################################
-# In this case we are analysing a DL4 product, where the data is already
+# In this case, we are analysing a DL4 product, where the data is already
 # filtered and binned, but in the case of using other formats (i.e., DL3),
 # we have the option of performing any data selection or reduction that we
-# may need (i.e. set the energy bounds, specific observtion selection…).
+# may need (i.e. set the energy bounds, specific observation selection…).
 #
+# We set our target position. In this case we use the same as in the dataset,
+# since we only have one observation. Let's pretend we are interested on that source
 
-# We set our target position. In this case we use the same as in the dataset, since we only have one observation. Let's pretend we are interested on that source
 target_pos = SkyCoord(
     ra=187.27791666667 * u.deg, dec=2.55238888889 * u.deg, frame="icrs"
 )
 target_dist = 16400 * u.kpc
 
-# Geometry map we are going to work with
 geom = WcsGeom.create(
-    binsz=0.1,  # Pixel size
-    skydir=target_pos,  # Sky position of the target, center of the map
-    width=3.0,  # Width of the map (i.e 3x3 map)
-    frame="icrs",  # Coordinates system
+    binsz=0.1,
+    skydir=target_pos,
+    width=3.0,
+    frame="icrs",
 )
 
-
+######################################################################
 # DM Spatial distribution
 
 spatial_model = PointSpatialModel(
     lon_0=target_pos.ra, lat_0=target_pos.dec, frame="icrs"
 )
+######################################################################
 # DM spectral distribution
 
 # DM parameters: mass and channel
@@ -253,8 +246,8 @@ dataset.peek()
 
 
 ######################################################################
-# 2. Analysis of signal detection
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Analysis of signal detection
+# ----------------------------
 #
 # To verify that our dataset contains no dark matter signal, we perform a
 # **likelihood ratio test** between two hypotheses (`Wilks, S.,
@@ -339,7 +332,7 @@ dataset_to_spectrum.peek()
 
 ######################################################################
 # Residuals
-# ^^^^^^^^^
+# ~~~~~~~~~
 #
 # After fitting the model, it is important to check the residuals to
 # assess how well the model (source+background) describes the data.
@@ -375,11 +368,11 @@ dataset.plot_residuals_spectral(
 
 
 ######################################################################
-# 3. Obtaining limits
-# ~~~~~~~~~~~~~~~~~~~
+# Obtaining limits
+# ----------------
 #
 # The Profile Likelihood
-# ^^^^^^^^^^^^^^^^^^^^^^
+# ~~~~~~~~~~~~~~~~~~~~~~
 #
 # We use the **profile likelihood** to derive both upper limits and
 # confidence intervals. The idea is simple: we scan `scale` over a grid
@@ -452,8 +445,8 @@ dataset.plot_residuals_spectral(
 # :math:`\Delta\text{TS}`) values, from which the desired confidence limit
 # or interval can be read off.
 #
-# 3.1. No signal detected
-# ^^^^^^^^^^^^^^^^^^^^^^^
+# No signal detected
+# ~~~~~~~~~~~~~~~~~~
 #
 # We did not detect a signal, but we can still place a **constraint** on
 # the DM parameter of interest — we can exclude signal amplitudes large
@@ -486,7 +479,7 @@ print(f"Number of points: {len(scale_par.scan_values)}")
 estimator = ParameterEstimator(
     n_sigma=1,  # level for symmetric error (1σ = 68%)
     n_sigma_ul=1.645,  # level for upper limit
-    n_sigma_sensitivity=5, # level for sensitivity
+    n_sigma_sensitivity=5,  # level for sensitivity
     selection_optional=["ul", "scan", "sensitivity"],
     reoptimize=True,
 )
@@ -603,7 +596,7 @@ print(f"Sensitivity (no signal): {result['scale_sensitivity']:.3e}")
 # for the scan (i.e. scan_max…) and run again.
 #
 
-# Convert to physical limits ────────────────────────────────────────────────
+# Convert to physical limits
 
 # Decay: scale = τ_ref / τ_χ  →  τ_χ > τ_ref / scale_ul
 tau_ref = spectral_model.LIFETIME_AGE_OF_UNIVERSE  # ~4.3e17 s
@@ -649,8 +642,8 @@ print(f"  Lifetime lower limit (95% CL): {tau_lower_limit:.3e} s")
 
 
 ######################################################################
-# 3.2. Signal detected
-# ^^^^^^^^^^^^^^^^^^^^
+# Signal detected
+# ~~~~~~~~~~~~~~~
 #
 # If the fit above had returned **TS ≫ 0** (instead of TS ≈ 0), the
 # interpretation — and the quantity we report — would change. A one-sided
@@ -675,7 +668,7 @@ print(f"  Lifetime lower limit (95% CL): {tau_lower_limit:.3e} s")
 # above is the correct result to report.
 #
 
-# EXAMPLE ONLY — not executed in this tutorial (TS ≈ 0 here) ──────────────
+# EXAMPLE ONLY — not executed in this tutorial (TS ≈ 0 here)
 # This is what you would run instead of the one-sided UL block above,
 # if the fit had returned TS >> 0 (a real detection).
 idx_min = np.argmin(delta_ts)
@@ -709,8 +702,8 @@ for cl_label, delta_ts_threshold in [("68%", 1.0), ("95%", 3.84)]:
 
 
 ######################################################################
-# 4. Exclusion Curve: Scanning Over Masses
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Exclusion Curve: Scanning Over Masses
+# -------------------------------------
 #
 # So far we have derived an upper limit for a single DM mass. To build the
 # full **exclusion curve** — the standard output of a DM indirect
@@ -888,8 +881,8 @@ for cl_label, delta_ts_threshold in [("68%", 1.0), ("95%", 3.84)]:
 
 
 ######################################################################
-# 5. Bands Plot: Uncertainty Bands on the Exclusion Curve
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Bands Plot: Uncertainty Bands on the Exclusion Curve
+# ----------------------------------------------------
 #
 # The exclusion curve derived in the previous section is based on a
 # **single background realization**: a different Poisson fluctuation would
