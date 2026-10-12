@@ -1,6 +1,6 @@
 r"""
-Dark Matter Indirect Detection with Gammapy: Basics
-===================================================
+Dark Matter indirect detection with Gammapy: Modeling the Expected Signal
+=========================================================================
 
 Weakly Interacting Massive Particles (WIMPs) are among the most
 compelling candidates for Dark Matter (DM). If they exist, WIMPs can

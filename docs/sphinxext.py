@@ -67,8 +67,9 @@ TUTORIAL_SORT_DICT = {
     "ebl.py": 0,
     "energy_dependent_estimation.py": 1,
     "pulsar_analysis.py": 2,
+    "dark_matter_spectral_spatial.py": 3,
+    "dark_matter_basics.py": 4,
     "dark_matter_complete_analysis.py": 5,
-    "dark_matter_basics.py": 3,
     # scripts
     "survey_map.py": 0,
 }

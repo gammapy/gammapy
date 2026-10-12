@@ -56,6 +56,8 @@ Using gammapy.astro.darkmatter
 ==============================
 
 .. minigallery::
-  ../examples/tutorials/astrophysics/astro_dark_matter.py
+  ../examples/tutorials/astrophysics/dark_matter_spectral_spatial.py
+  ../examples/tutorials/astrophysics/dark_matter_basics.py
+  ../examples/tutorials/astrophysics/dark_matter_complete_analysis.py
 
 .. _CLUMPY: http://lpsc.in2p3.fr/clumpy/
