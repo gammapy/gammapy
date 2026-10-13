@@ -6,9 +6,7 @@ import numbers
 import warnings
 
 import astropy.units as u
-from gammapy.modeling.models.prior import (
-    LogNormalPrior,
-)
+from gammapy.modeling.models.prior import LogSpaceGaussianPrior
 import numpy as np
 
 __all__ = ["JFactory", "add_factor_prior"]
@@ -310,9 +308,9 @@ def add_factor_prior(model, sigma):
 
     ``scale`` and ``factor`` are exactly degenerate: the predicted flux depends
     only on their product. That degeneracy is inherent to the measurement, and
-    the prior is what curves the otherwise flat direction. Profiling over
-    ``factor`` at fixed ``scale`` is the standard way of marginalising this
-    nuisance (Ackermann et al. 2014).
+    the prior is what curves the otherwise flat direction. Profiling ``factor`` at
+    fixed ``scale`` is the standard treatment of this nuisance in a profile-likelihood analysis
+    (Ackermann et al. 2014).
 
     Parameters
     ----------
@@ -325,9 +323,13 @@ def add_factor_prior(model, sigma):
     -------
     model : `DarkMatterSpectralModel`
         The same model instance, with the prior attached, for chaining.
+
+    References
+    ----------
+    * Ackermann et al. (2014), Phys. Rev. D 89, 042001
     """
-    nominal = model.factor.value
-    model.factor.min = 0
+    nominal = model.factor.value if model.factor.value is not None else None
+    model.factor.min = np.finfo(float).tiny
     model.factor.frozen = False
-    model.factor.prior = LogNormalPrior(mu=nominal, sigma=sigma * np.log(10))
+    model.factor.prior = LogSpaceGaussianPrior(mu=nominal, sigma=sigma * np.log(10))
     return model
