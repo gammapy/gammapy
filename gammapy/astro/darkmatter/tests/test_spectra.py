@@ -18,7 +18,7 @@ from gammapy.astro.darkmatter import (
 from gammapy.modeling.models import Models, SkyModel, SpectralModel
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 from gammapy.astro.darkmatter.utils import add_factor_prior
-from gammapy.modeling.models import LogNormalPrior
+from gammapy.modeling.models.prior import LogSpaceGaussianPrior
 
 
 # ContinuumPrimaryFlux
@@ -684,7 +684,7 @@ def test_factor_prior_roundtrip(tmp_path):
     assert_allclose(loaded.factor.min, model.factor.min)
     assert_allclose(loaded.factor.max, model.factor.max)
 
-    assert isinstance(loaded.factor.prior, LogNormalPrior)
+    assert isinstance(loaded.factor.prior, LogSpaceGaussianPrior)
     assert_allclose(loaded.factor.prior.mu.value, model.factor.value)
     assert_allclose(loaded.factor.prior.sigma.value, 0.3 * np.log(10))
     assert loaded.scale.prior is None
