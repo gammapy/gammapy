@@ -1,6 +1,6 @@
 r"""
-Dark Matter indirect detection with Gammapy: Modeling the Expected Signal
-=========================================================================
+Dark Matter indirect detection: Modeling the Expected Signal
+============================================================
 
 Learn how to model gamma-ray signals from dark matter annihilation and decay.
 
