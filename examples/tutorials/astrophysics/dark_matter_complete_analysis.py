@@ -1,17 +1,16 @@
 r"""
-Dark Matter indirect detection with Gammapy: A complete analysis
-================================================================
+Dark Matter indirect detection: A complete analysis
+===================================================
 
-In this example we perform a **3D analysis** — using both spatial and
-spectral information, as opposed to a 1D (spectral-only) analysis.
+Perform a 3D dark matter analysis using spatial and spectral information.
 
 Prerequisites
 -------------
+- If you are new to Gammapy, please check
+  :doc:`/tutorials/analysis-1d/index` and
+  :doc:`/tutorials/analysis-3d/index`
 - If you are new to Dark Matter, please see the tutorial
   :doc:`/tutorials/astrophysics/dark_matter_basics`
-- If you are new to Gammapy, please check
-  :doc:`/tutorials/analysis-3d/index` and
-  :doc:`/tutorials/analysis-1d/index`
 
 Context
 -------
@@ -77,7 +76,7 @@ multiplies the **decay rate** (inverse lifetime):
 .. math:: \text{scale} = \frac{1/\tau_\chi}{1/\tau_{\rm ref}} = \frac{\tau_{\rm ref}}{\tau_\chi}
 
 where :math:`\tau_{\rm ref}` is an internal reference value
-(`LIFETIME_AGE_OF_UNIVERSE` ≈ 4.3 × 10¹⁷ s). Because of the inverse
+(``LIFETIME_AGE_OF_UNIVERSE`` ≈ 4.3 × 10¹⁷ s). Because of the inverse
 relationship, an **upper** limit on ``scale`` becomes a **lower** limit
 on τ_χ:
 
