@@ -41,8 +41,8 @@ annihilation cross section** ⟨σv⟩. A larger ⟨σv⟩ means a brighter
 signal. A non-detection gives an **upper limit** on ⟨σv⟩: the DM
 particles annihilate *at most* this efficiently.
 
-In Gammapy’s
-:class:`~gammapy.astro.darkmatter.DarkMatterSpectralModel`, ⟨σv⟩ is
+In the
+:class:`~gammapy.astro.darkmatter.DarkMatterSpectralModel` class, ⟨σv⟩ is
 encoded through a dimensionless ``scale`` parameter:
 
 .. math:: \text{scale} = \frac{\langle\sigma v\rangle}{\langle\sigma v\rangle_{\rm ref}}
@@ -69,8 +69,8 @@ signal — the opposite behaviour from the annihilation case. A
 non-detection gives a **lower limit** on τ_χ: the DM particle must live
 *at least* this long.
 
-In Gammapy’s
-:class:`~gammapy.astro.darkmatter.DarkMatterSpectralModel`, the
+In the
+:class:`~gammapy.astro.darkmatter.DarkMatterSpectralModel` class, the
 lifetime is encoded through the same ``scale`` parameter, but now it
 multiplies the **decay rate** (inverse lifetime):
 
@@ -94,27 +94,27 @@ relation above (`Bergström, L., et al.,
 Tutorial overview
 -----------------
 
-In this way, the steps followed in this tutorial are:
+The steps followed in this tutorial are:
 
 - **Data.** We obtain and manage the data to be analyzed. In this case,
-   this corresponds to a 3D dataset (spatial + spectral information).
+  this corresponds to a 3D dataset (spatial + spectral information).
 - **Analysis of signal detection.** We perform a statistical test to
-   determine whether the dataset contains a genuine signal or is
-   compatible with background only, and outline the procedure to follow
-   in each case.
+  determine whether the dataset contains a genuine signal or is
+  compatible with background only, and outline the procedure to follow
+  in each case.
 - **Obtaining limits.**
 
-   - *No signal detected*: we derive upper limits on the dark matter
-     cross-section (or decay lifetime).
-   - *Signal detected*: we derive confidence intervals on the signal
-     parameters.
+  - *No signal detected*: we derive upper limits on the dark matter
+    cross-section (or decay lifetime).
+  - *Signal detected*: we derive confidence intervals on the signal
+    parameters.
 
 - **Exclusion curve: scanning over masses.** We repeat the
-   limit-setting procedure over a grid of dark matter masses to build
-   the exclusion curve.
+  limit-setting procedure over a grid of dark matter masses to build
+  the exclusion curve.
 - **Bands plot: uncertainty bands on the exclusion curve.** We compute
-   the expected sensitivity and its uncertainty bands (1σ/2σ) around the
-   exclusion curve, following the standard bands plot convention.
+  the expected sensitivity and its uncertainty bands (1σ/2σ) around the
+  exclusion curve, following the standard bands plot convention.
 
 """
 
@@ -152,7 +152,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 # -----------
 #
 # For this tutorial we will use the data of a non-signal dataset provided
-# by the Gammapy database.. Additionally, we are going to consider that
+# by the Gammapy database. Additionally, we are going to consider that
 # the data follows an Einasto profile and we are going to study the case
 # of Decay with channel b.
 #
@@ -255,7 +255,7 @@ dataset.peek()
 # See :doc:`/user-guide/stats/index` for more details about this
 # statistical procedure.
 #
-# Gammapy’s `Fit` class provides a unified interface to several
+# The `~gammapy.modeling.Fit` class provides a unified interface to several
 # optimization backends; by default it uses
 # `iminuit <https://iminuit.readthedocs.io/>`__, a Python wrapper around
 # the MINUIT2 C++ library originally developed at CERN, the de facto
@@ -265,7 +265,7 @@ dataset.peek()
 # algorithms.
 #
 # During the fit, the optimizer adjusts all **free** parameters of the
-# model — the background normalization parameters (or `scale` (related
+# model — the background normalization parameters (or ``scale`` (related
 # to ⟨σv⟩ or 1/τ_χ, depending on whether we are studying annihilation or
 # decay) if you are making a signal study) — to maximize the Poisson
 # likelihood between the observed (or simulated) counts and the model
@@ -279,18 +279,18 @@ dataset.peek()
 # to absorb residual mismatches between the assumed and true background
 # level, while the spectral shape parameters (e.g. the DM mass or the
 # spectral channel) are kept fixed to the values under study, leaving only
-# the **`scale`** parameter (related to ⟨σv⟩ or 1/τ_χ, depending on
+# the ``scale`` parameter (related to ⟨σv⟩ or 1/τ_χ, depending on
 # whether we are studying annihilation or decay) free to vary. During the
 # fit, the optimizer adjusts all free parameters of the model to maximize
 # the Poisson likelihood between the observed (or simulated) counts and
 # the model prediction, while all fixed parameters remain at their assumed
 # values.
 #
-# Rather than performing the two fits by hand, we use Gammapy’s
-# `select_nested_models` function, which automates this
+# Rather than performing the two fits by hand, we use the
+# `~gammapy.modeling.select_nested_models` function, which automates this
 # nested-hypothesis test: it keeps the background and any other sources in
 # the field of view free and identical in both fits, and only freezes the
-# DM `scale` parameter to 0 for H0, restoring its original state
+# DM ``scale`` parameter to 0 for H0, restoring its original state
 # afterwards.
 #
 
