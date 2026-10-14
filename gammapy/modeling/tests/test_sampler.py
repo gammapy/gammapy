@@ -305,7 +305,7 @@ def test_sampler_options_unknown_raises(mock_routing_ultranest):
 @pytest.mark.parametrize(
     "name", ["param_names", "loglike", "transform", "step_sampler", "nsteps"]
 )
-def test_sampler_options_reserved_raises(mock_routing_ultranest, name):
+def test_sampler_options_gammapy_filled_args_raises(mock_routing_ultranest, name):
     with pytest.raises(ValueError, match="Unknown"):
         Sampler(backend="ultranest", options={name: None})
 
