@@ -174,23 +174,22 @@ print(datasets.models)
 # As for the `~gammapy.modeling.Fit` object, the `~gammapy.modeling.Sampler` object can receive
 # different backend (although just one is available for now).
 # The `~gammapy.modeling.Sampler` comes with “reasonable” default parameters, but you can
-# change them via the ``sampler_opts`` and ``run_opts`` dictionaries. They are passed
-# directly to the backend, using its own option names: ``sampler_opts`` go to the
-# sampler constructor and ``run_opts`` to its ``run`` method.
+# change them via the ``options`` dictionary, using the backend's own option names.
+# Gammapy passes each option to the backend sampler constructor or to its ``run`` method.
 # Here is a short description of the most relevant UltraNest options that you
 # could change :
 #
-# -  ``min_num_live_points`` (``run_opts``): minimum number of live points throughout the run.
+# -  ``min_num_live_points``: minimum number of live points throughout the run.
 #    More points allow to discover multiple peaks if existing, but is
 #    slower. To test the Prior boundaries and for debugging, a lower
 #    number (~100) can be used before a production run with more points
 #    (~400 or more).
-# -  ``frac_remain`` (``run_opts``): the cut-off condition for the integration, set by the maximum
+# -  ``frac_remain``: the cut-off condition for the integration, set by the maximum
 #    allowed fraction of posterior mass left in the live points vs the dead points. High
 #    values (e.g., 0.5) are faster and can be used if the posterior
 #    distribution is a relatively simple shape. A low value (1e-1, 1e-2)
 #    is optimal for finding peaks, but slower.
-# -  ``log_dir`` (``sampler_opts``): directory where the output files will be stored.
+# -  ``log_dir``: directory where the output files will be stored.
 #    If set to None, no files will be written. If set to a string, a directory
 #    will be created containing the ongoing status of the run and final results.
 #    For time consuming analysis, it is highly recommended to use that option to monitor
@@ -201,10 +200,13 @@ print(datasets.models)
 # automatically stop once a convergence criteria has been reached.
 #
 
-sampler_opts = {"log_dir": None}
-run_opts = {"min_num_live_points": 300, "frac_remain": 0.3}
+options = {
+    "min_num_live_points": 300,
+    "frac_remain": 0.3,
+    "log_dir": None,
+}
 
-sampler = Sampler(backend="ultranest", sampler_opts=sampler_opts, run_opts=run_opts)
+sampler = Sampler(backend="ultranest", options=options)
 
 
 ######################################################################

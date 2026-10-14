@@ -2,20 +2,27 @@
 """Sampler parameter classes."""
 
 import abc
+import inspect
 import warnings
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from .utils import _parse_datasets
 
 __all__ = ["Sampler", "SamplerLikelihood", "SamplerResult"]
 
+# Filled automatically with each backend class, keyed by its tag.
+SAMPLER_BACKENDS = {}
+
 
 class _SamplerBackend(abc.ABC):
     """Base class for the sampler backends.
 
+    Subclasses defining a ``tag`` are registered in ``SAMPLER_BACKENDS``.
+
     The options are passed to the backend library using its own keyword names:
     ``sampler_opts`` are forwarded to the sampler constructor and ``run_opts``
     to its ``run`` method. Options listed in ``gammapy_opts`` are handled by
-    Gammapy and never forwarded.
+    Gammapy and never forwarded. Options given in ``options`` are routed to the
+    constructor or to ``run`` by inspecting their signatures.
 
     Parameters
     ----------
@@ -23,17 +30,45 @@ class _SamplerBackend(abc.ABC):
         Options passed to the backend sampler constructor. Default is None.
     run_opts : dict, optional
         Options passed to the backend sampler run method. Default is None.
+    options : dict, optional
+        Options routed automatically to the constructor or the run method.
+        Default is None.
     """
 
     tag = None
     default_sampler_opts = {}
     default_run_opts = {}
     gammapy_opts = {}
+    # constructor arguments filled by Gammapy
+    reserved_opts = ()
+    # old option name: new option name
+    deprecated_opts = {}
 
-    def __init__(self, sampler_opts=None, run_opts=None):
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if cls.tag is not None:
+            if cls.tag in SAMPLER_BACKENDS:
+                raise ValueError(f"Sampler backend '{cls.tag}' is already registered.")
+            SAMPLER_BACKENDS[cls.tag] = cls
+
+    def __init__(self, sampler_opts=None, run_opts=None, options=None):
         sampler_opts = {} if sampler_opts is None else dict(sampler_opts)
         run_opts = {} if run_opts is None else dict(run_opts)
         sampler_opts, run_opts = self._handle_deprecated_opts(sampler_opts, run_opts)
+
+        if options:
+            routed_sampler_opts, routed_run_opts = self._route_options(options)
+            for routed, explicit in [
+                (routed_sampler_opts, sampler_opts),
+                (routed_run_opts, run_opts),
+            ]:
+                duplicates = set(routed) & set(explicit)
+                if duplicates:
+                    raise ValueError(
+                        f"Options {sorted(duplicates)} are given twice, "
+                        "in options and in sampler_opts or run_opts."
+                    )
+                explicit.update(routed)
 
         self._sampler = None
         self.sampler_opts = {
@@ -43,8 +78,78 @@ class _SamplerBackend(abc.ABC):
         }
         self.run_opts = {**self.default_run_opts, **run_opts}
 
+    @staticmethod
+    @abc.abstractmethod
+    def _import_sampler_class():
+        """Import and return the backend sampler class."""
+
     def _handle_deprecated_opts(self, sampler_opts, run_opts):
         return sampler_opts, run_opts
+
+    def _route_options(self, options):
+        """Split options between the sampler constructor and its run method.
+
+        The split uses the signatures of the backend sampler class, so it follows
+        the installed version of the backend library.
+        """
+        options = dict(options)
+        for old_name, new_name in self.deprecated_opts.items():
+            if old_name in options:
+                warnings.warn(
+                    f"The {self.tag} sampler option '{old_name}' is deprecated, "
+                    f"use '{new_name}' instead.",
+                    GammapyDeprecationWarning,
+                    stacklevel=4,
+                )
+                options.setdefault(new_name, options.pop(old_name))
+
+        sampler_class = self._import_sampler_class()
+        for function in [sampler_class.__init__, sampler_class.run]:
+            if self._has_var_keyword(function):
+                raise ValueError(
+                    f"The {self.tag} sampler accepts arbitrary keyword arguments, "
+                    "options cannot be routed automatically. "
+                    "Pass them in sampler_opts or run_opts instead."
+                )
+
+        init_names = self._parameter_names(sampler_class.__init__)
+        init_names = (init_names - set(self.reserved_opts)) | set(self.gammapy_opts)
+        run_names = self._parameter_names(sampler_class.run)
+
+        sampler_opts, run_opts = {}, {}
+        for key, value in options.items():
+            in_init, in_run = key in init_names, key in run_names
+            if in_init and in_run:
+                raise ValueError(
+                    f"Option '{key}' is accepted by both the {self.tag} sampler and "
+                    "its run method, pass it in sampler_opts or run_opts instead."
+                )
+            elif in_init:
+                sampler_opts[key] = value
+            elif in_run:
+                run_opts[key] = value
+            else:
+                raise ValueError(
+                    f"Unknown {self.tag} sampler option '{key}'. "
+                    f"Valid options are: {sorted(init_names | run_names)}."
+                )
+        return sampler_opts, run_opts
+
+    @staticmethod
+    def _has_var_keyword(function):
+        parameters = inspect.signature(function).parameters.values()
+        return any(par.kind == par.VAR_KEYWORD for par in parameters)
+
+    @staticmethod
+    def _parameter_names(function):
+        """Names of the keyword arguments of a function, without ``self``."""
+        parameters = inspect.signature(function).parameters
+        return {
+            name
+            for name, par in parameters.items()
+            if name != "self"
+            and par.kind in (par.POSITIONAL_OR_KEYWORD, par.KEYWORD_ONLY)
+        }
 
     def _forwarded_sampler_opts(self):
         """Sampler options without the ones handled by Gammapy."""
@@ -81,12 +186,20 @@ class _UltranestBackend(_SamplerBackend):
     default_sampler_opts = {"log_dir": None, "resume": "subfolder"}
     default_run_opts = {"min_num_live_points": 400, "frac_remain": 0.5}
     gammapy_opts = {"step_sampler": False, "nsteps": 10}
+    reserved_opts = ("param_names", "loglike", "transform")
+    deprecated_opts = {"live_points": "min_num_live_points"}
 
     # old sampler_opts name: new run_opts name
     _deprecated_sampler_opts = {
         "live_points": "min_num_live_points",
         "frac_remain": "frac_remain",
     }
+
+    @staticmethod
+    def _import_sampler_class():
+        import ultranest
+
+        return ultranest.ReactiveNestedSampler
 
     def _handle_deprecated_opts(self, sampler_opts, run_opts):
         for old_name, new_name in self._deprecated_sampler_opts.items():
@@ -96,15 +209,14 @@ class _UltranestBackend(_SamplerBackend):
                 f"The UltraNest sampler option '{old_name}' is deprecated, "
                 f"use run_opts={{'{new_name}': ...}} instead.",
                 GammapyDeprecationWarning,
+                stacklevel=4,
             )
             value = sampler_opts.pop(old_name)
             run_opts.setdefault(new_name, value)
         return sampler_opts, run_opts
 
     def build(self, parameters, like):
-        import ultranest
-
-        self._sampler = ultranest.ReactiveNestedSampler(
+        self._sampler = self._import_sampler_class()(
             parameters.names,
             like.fcn,
             transform=parameters._prior_inverse_cdf,
@@ -138,11 +250,16 @@ class _NautilusBackend(_SamplerBackend):
     tag = "nautilus"
     default_sampler_opts = {"n_live": 2000, "filepath": None, "resume": True}
     default_run_opts = {"f_live": 0.01, "n_eff": 2000, "verbose": True}
+    reserved_opts = ("prior", "likelihood", "n_dim")
 
-    def build(self, parameters, like):
+    @staticmethod
+    def _import_sampler_class():
         import nautilus
 
-        self._sampler = nautilus.Sampler(
+        return nautilus.Sampler
+
+    def build(self, parameters, like):
+        self._sampler = self._import_sampler_class()(
             prior=parameters._prior_inverse_cdf,
             likelihood=like.fcn,
             n_dim=len(parameters),
@@ -178,22 +295,17 @@ class _NautilusBackend(_SamplerBackend):
         self._sampler.print_status()
 
 
-SAMPLER_BACKENDS = {
-    "ultranest": _UltranestBackend,
-    "nautilus": _NautilusBackend,
-}
-
-
 class Sampler:
     """Sampler class.
 
     The sampler class provides a uniform interface to multiple sampler backends.
     Currently available: "ultranest" and "nautilus".
 
-    The options are passed directly to the chosen backend, using the backend's own
-    keyword names: ``sampler_opts`` are forwarded to the backend sampler constructor
-    and ``run_opts`` to its ``run`` method. Options not given take the Gammapy
-    defaults listed below, otherwise the backend defaults apply.
+    Backend options are given in ``options``, with the backend's own names. Gammapy
+    passes each of them to the backend sampler constructor or to its ``run``
+    method, based on the signatures of the installed backend library. An unknown
+    option raises an error listing the valid ones. ``sampler_opts`` and ``run_opts``
+    remain available for explicit control.
 
     Parameters
     ----------
@@ -204,78 +316,31 @@ class Sampler:
         Nautilus uses neural-network-guided nested sampling. See the
         `Nautilus documentation <https://nautilus-sampler.readthedocs.io/>`__.
     sampler_opts : dict, optional
-        Options passed to the backend sampler constructor. See the full list of options for
-        `UltraNest <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler>`__
-        and `Nautilus <https://nautilus-sampler.readthedocs.io/en/latest/api.html#nautilus.Sampler>`__.
-        Default is None.
-
-        Gammapy defaults for "ultranest":
-
-        log_dir : str, optional
-            Where to store output files.
-            Default is None and no results are stored.
-        resume : str, optional
-            ‘overwrite’, overwrite previous data. ‘subfolder’, create a fresh subdirectory in `log_dir`.
-            ‘resume’ or True, continue previous run if available. Only works when dimensionality, transform or
-            likelihood are consistent.
-            Default is ‘subfolder’.
-
-        Additional options for "ultranest", handled by Gammapy and not forwarded:
-
-        step_sampler : bool, optional
-            Use a step sampler. This can be more efficient for higher dimensions (>10 or 15 parameters), but much
-            slower for lower dimensions.
-            Default is False.
-        nsteps : int, optional
-            Number of steps to take in each direction in the step sampler. Increase this number to get more
-            accurate results at the cost of more computation time.
-            Default is 10.
-
-        Gammapy defaults for "nautilus":
-
-        n_live : int, optional
-            Number of live points. Default is 2000.
-        filepath : str, optional
-            Path to the file where the sampler state is stored.
-            Default is None and no results are stored.
-        resume : bool, optional
-            Resume from a previous run stored in `filepath`. Default is True.
+        Options passed as is to the backend sampler constructor. Default is None.
     run_opts : dict, optional
-        Options passed to the backend sampler run method. See the full list of options for
-        `UltraNest <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler.run>`__
-        and `Nautilus <https://nautilus-sampler.readthedocs.io/en/latest/api.html#nautilus.Sampler.run>`__.
-        Default is None.
+        Options passed as is to the backend sampler run method. Default is None.
+    options : dict, optional
+        Backend options, routed automatically. Default is None. See the options of
+        `UltraNest <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler>`__
+        (constructor and ``run``) and of
+        `Nautilus <https://nautilus-sampler.readthedocs.io/en/latest/api.html#nautilus.Sampler>`__.
 
-        Gammapy defaults for "ultranest":
+        Gammapy defaults for "ultranest": ``log_dir=None``, ``resume="subfolder"``,
+        ``min_num_live_points=400``, ``frac_remain=0.5``. Gammapy also adds
+        ``step_sampler`` (default False) to use a slice step sampler with
+        ``nsteps`` steps (default 10), which can be more efficient above
+        ~10 parameters.
 
-        min_num_live_points : int, optional
-            Minimum number of live points used in the sampling. Increase this number to get more accurate results.
-            For more samples in the posterior increase this number or the ``min_ess`` parameter.
-            Default is 400 live points.
-        frac_remain : float, optional
-            Integrate until this fraction of the integral is left in the remainder. Set to a low number (1e-2 … 1e-5)
-            to make sure peaks are discovered. Set to a higher number (0.5) if you know the posterior is simple.
-            Default is 0.5.
-
-        Other noteworthy option for "ultranest":
-
-        min_ess : int, optional
-            Target number of effective posterior samples. Increase this number to get more accurate results.
-            UltraNest default is 400, but you may need to increase it to 1000 or more for complex posteriors.
-
-        Gammapy defaults for "nautilus":
-
-        f_live : float, optional
-            Maximum fraction of the evidence contained in the live set before the run stops.
-            Default is 0.01.
-        n_eff : int, optional
-            Minimum effective sample size. Default is 2000.
-        verbose : bool, optional
-            Print the status of the run. Default is True.
+        Gammapy defaults for "nautilus": ``n_live=2000``, ``filepath=None``,
+        ``resume=True``, ``f_live=0.01``, ``n_eff=2000``, ``verbose=True``.
 
     Examples
     --------
-    For a usage example, see :doc:`/tutorials/details/nested_sampling_Crab` tutorial.
+    >>> from gammapy.modeling import Sampler
+    >>> options = {"min_num_live_points": 300, "frac_remain": 0.3, "log_dir": None}
+    >>> sampler = Sampler(backend="ultranest", options=options)
+
+    For a complete usage example, see :doc:`/tutorials/details/nested_sampling_Crab` tutorial.
 
     Notes
     -----
@@ -286,13 +351,18 @@ class Sampler:
 
     # TODO: add "zeusmc", "emcee"
 
-    def __init__(self, backend="ultranest", sampler_opts=None, run_opts=None):
+    def __init__(
+        self, backend="ultranest", sampler_opts=None, run_opts=None, options=None
+    ):
         if backend not in SAMPLER_BACKENDS:
-            raise ValueError(f"Sampler {backend} is not supported.")
+            raise ValueError(
+                f"Sampler {backend} is not supported. "
+                f"Available backends are: {sorted(SAMPLER_BACKENDS)}."
+            )
 
         self.backend = backend
         self._backend = SAMPLER_BACKENDS[backend](
-            sampler_opts=sampler_opts, run_opts=run_opts
+            sampler_opts=sampler_opts, run_opts=run_opts, options=options
         )
 
     @property

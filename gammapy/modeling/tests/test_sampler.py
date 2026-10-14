@@ -8,7 +8,13 @@ from gammapy.utils.testing import requires_data
 from numpy.testing import assert_allclose
 from gammapy.modeling.models import SkyModel
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
-from gammapy.modeling.sampler import Sampler, SamplerLikelihood, SAMPLER_BACKENDS
+from gammapy.modeling.sampler import (
+    Sampler,
+    SamplerLikelihood,
+    SAMPLER_BACKENDS,
+    _SamplerBackend,
+    _UltranestBackend,
+)
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.modeling.models import (
     UniformPrior,
@@ -209,6 +215,145 @@ def test_sampler_nautilus_opts_forwarded(monkeypatch, sampler_parameters):
     }
     assert_allclose(result["posterior"]["mean"], [2.0, 3.0])
     assert sampler._backend.to_result(result).success
+
+
+def test_sampler_backends_registered():
+    assert set(SAMPLER_BACKENDS) == {"ultranest", "nautilus"}
+    assert SAMPLER_BACKENDS["ultranest"] is _UltranestBackend
+
+
+@pytest.fixture()
+def clean_registry():
+    registry = dict(SAMPLER_BACKENDS)
+    yield
+    SAMPLER_BACKENDS.clear()
+    SAMPLER_BACKENDS.update(registry)
+
+
+def test_sampler_backend_registration(clean_registry):
+    class DummyBackend(_UltranestBackend):
+        tag = "dummy"
+
+    assert SAMPLER_BACKENDS["dummy"] is DummyBackend
+    assert Sampler(backend="dummy").backend == "dummy"
+
+    with pytest.raises(ValueError, match="already registered"):
+
+        class DuplicateBackend(_UltranestBackend):
+            tag = "dummy"
+
+
+def test_sampler_backend_without_tag_not_registered(clean_registry):
+    class BaseBackend(_SamplerBackend):
+        pass
+
+    assert BaseBackend not in SAMPLER_BACKENDS.values()
+    assert set(SAMPLER_BACKENDS) == {"ultranest", "nautilus"}
+
+
+class _MockRoutingSampler:
+    """Backend sampler class with an explicit signature."""
+
+    def __init__(self, param_names, loglike, transform=None, log_dir=None, resume=None):
+        pass
+
+    def run(self, min_num_live_points=400, frac_remain=0.01, max_ncalls=None):
+        pass
+
+
+@pytest.fixture()
+def mock_routing_ultranest(monkeypatch):
+    def set_sampler_class(sampler_class=_MockRoutingSampler):
+        module = types.ModuleType("ultranest")
+        module.ReactiveNestedSampler = sampler_class
+        monkeypatch.setitem(sys.modules, "ultranest", module)
+
+    set_sampler_class()
+    return set_sampler_class
+
+
+def test_sampler_options_routing(mock_routing_ultranest):
+    options = {
+        "log_dir": "out",
+        "min_num_live_points": 100,
+        "max_ncalls": 10,
+        "step_sampler": True,
+    }
+    sampler = Sampler(backend="ultranest", options=options)
+
+    assert options == {
+        "log_dir": "out",
+        "min_num_live_points": 100,
+        "max_ncalls": 10,
+        "step_sampler": True,
+    }
+    assert sampler.sampler_opts == {
+        "log_dir": "out",
+        "resume": "subfolder",
+        "step_sampler": True,
+        "nsteps": 10,
+    }
+    assert sampler.run_opts == {
+        "min_num_live_points": 100,
+        "frac_remain": 0.5,
+        "max_ncalls": 10,
+    }
+
+
+def test_sampler_options_combined_with_explicit(mock_routing_ultranest):
+    sampler = Sampler(
+        backend="ultranest",
+        options={"log_dir": "out"},
+        run_opts={"max_ncalls": 10},
+    )
+    assert sampler.sampler_opts["log_dir"] == "out"
+    assert sampler.run_opts["max_ncalls"] == 10
+
+
+def test_sampler_options_unknown_raises(mock_routing_ultranest):
+    with pytest.raises(ValueError, match="Unknown ultranest sampler option 'nlive'"):
+        Sampler(backend="ultranest", options={"nlive": 10})
+
+
+@pytest.mark.parametrize("name", ["param_names", "loglike", "transform"])
+def test_sampler_options_reserved_raises(mock_routing_ultranest, name):
+    with pytest.raises(ValueError, match="Unknown"):
+        Sampler(backend="ultranest", options={name: None})
+
+
+def test_sampler_options_duplicate_raises(mock_routing_ultranest):
+    with pytest.raises(ValueError, match="given twice"):
+        Sampler(
+            backend="ultranest",
+            options={"log_dir": "a"},
+            sampler_opts={"log_dir": "b"},
+        )
+
+
+def test_sampler_options_collision_raises(mock_routing_ultranest):
+    class CollisionSampler(_MockRoutingSampler):
+        def run(self, resume=None):
+            pass
+
+    mock_routing_ultranest(CollisionSampler)
+    with pytest.raises(ValueError, match="accepted by both"):
+        Sampler(backend="ultranest", options={"resume": True})
+
+
+def test_sampler_options_var_keyword_raises(mock_routing_ultranest):
+    class VarKeywordSampler(_MockRoutingSampler):
+        def run(self, **kwargs):
+            pass
+
+    mock_routing_ultranest(VarKeywordSampler)
+    with pytest.raises(ValueError, match="cannot be routed automatically"):
+        Sampler(backend="ultranest", options={"log_dir": None})
+
+
+def test_sampler_options_deprecated(mock_routing_ultranest):
+    with pytest.warns(GammapyDeprecationWarning, match="live_points"):
+        sampler = Sampler(backend="ultranest", options={"live_points": 123})
+    assert sampler.run_opts["min_num_live_points"] == 123
 
 
 @pytest.mark.parametrize("backend", tested_backends)
