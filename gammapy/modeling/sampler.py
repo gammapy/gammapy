@@ -37,8 +37,9 @@ class _SamplerBackend(abc.ABC):
     tag = None
     default_sampler_opts = {}
     default_run_opts = {}
-    # constructor arguments filled by Gammapy
-    reserved_opts = ()
+    # backend constructor arguments that Gammapy fills from the datasets and models,
+    # excluded from the automatic options routing so that users cannot override them
+    gammapy_filled_args = ()
     # old option name: new option name
     deprecated_opts = {}
 
@@ -107,7 +108,7 @@ class _SamplerBackend(abc.ABC):
                 )
 
         init_names = self._parameter_names(sampler_class.__init__)
-        init_names -= set(self.reserved_opts)
+        init_names -= set(self.gammapy_filled_args)
         run_names = self._parameter_names(sampler_class.run)
 
         sampler_opts, run_opts = {}, {}
@@ -171,7 +172,7 @@ class _UltranestBackend(_SamplerBackend):
     tag = "ultranest"
     default_sampler_opts = {"log_dir": None, "resume": "subfolder"}
     default_run_opts = {"min_num_live_points": 400, "frac_remain": 0.5}
-    reserved_opts = ("param_names", "loglike", "transform")
+    gammapy_filled_args = ("param_names", "loglike", "transform")
     deprecated_opts = {"live_points": "min_num_live_points"}
 
     # old sampler_opts name: new run_opts name
@@ -224,7 +225,7 @@ class _NautilusBackend(_SamplerBackend):
     tag = "nautilus"
     default_sampler_opts = {"n_live": 2000, "filepath": None, "resume": True}
     default_run_opts = {"f_live": 0.01, "n_eff": 2000, "verbose": True}
-    reserved_opts = ("prior", "likelihood", "n_dim")
+    gammapy_filled_args = ("prior", "likelihood", "n_dim")
 
     @staticmethod
     def _import_sampler_class():
