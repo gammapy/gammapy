@@ -80,8 +80,6 @@ def test_sampler_ultranest_defaults():
     assert sampler.backend == "ultranest"
     assert sampler.sampler_opts["log_dir"] is None
     assert sampler.sampler_opts["resume"] == "subfolder"
-    assert sampler.sampler_opts["step_sampler"] is False
-    assert sampler.sampler_opts["nsteps"] == 10
     assert sampler.run_opts["min_num_live_points"] == 400
     assert_allclose(sampler.run_opts["frac_remain"], 0.5)
 
@@ -129,7 +127,6 @@ class _MockBackendSampler:
         self.init_args = args
         self.init_kwargs = kwargs
         self.run_kwargs = None
-        self.stepsampler = None
 
     def run(self, **kwargs):
         self.run_kwargs = kwargs
@@ -153,7 +150,7 @@ def sampler_parameters(models_sampler):
 def test_sampler_ultranest_opts_forwarded(mock_ultranest, sampler_parameters):
     sampler = Sampler(
         backend="ultranest",
-        sampler_opts={"vectorized": True, "nsteps": 5},
+        sampler_opts={"vectorized": True},
         run_opts={"max_ncalls": 10},
     )
     sampler._backend.build(*sampler_parameters)
@@ -163,9 +160,6 @@ def test_sampler_ultranest_opts_forwarded(mock_ultranest, sampler_parameters):
     assert init_kwargs["vectorized"] is True
     assert init_kwargs["resume"] == "subfolder"
     assert init_kwargs["log_dir"] is None
-    assert "step_sampler" not in init_kwargs
-    assert "nsteps" not in init_kwargs
-    assert sampler._sampler.stepsampler is None
 
     assert sampler._sampler.run_kwargs == {
         "min_num_live_points": 400,
@@ -277,7 +271,6 @@ def test_sampler_options_routing(mock_routing_ultranest):
         "log_dir": "out",
         "min_num_live_points": 100,
         "max_ncalls": 10,
-        "step_sampler": True,
     }
     sampler = Sampler(backend="ultranest", options=options)
 
@@ -285,14 +278,8 @@ def test_sampler_options_routing(mock_routing_ultranest):
         "log_dir": "out",
         "min_num_live_points": 100,
         "max_ncalls": 10,
-        "step_sampler": True,
     }
-    assert sampler.sampler_opts == {
-        "log_dir": "out",
-        "resume": "subfolder",
-        "step_sampler": True,
-        "nsteps": 10,
-    }
+    assert sampler.sampler_opts == {"log_dir": "out", "resume": "subfolder"}
     assert sampler.run_opts == {
         "min_num_live_points": 100,
         "frac_remain": 0.5,
@@ -315,7 +302,9 @@ def test_sampler_options_unknown_raises(mock_routing_ultranest):
         Sampler(backend="ultranest", options={"nlive": 10})
 
 
-@pytest.mark.parametrize("name", ["param_names", "loglike", "transform"])
+@pytest.mark.parametrize(
+    "name", ["param_names", "loglike", "transform", "step_sampler", "nsteps"]
+)
 def test_sampler_options_reserved_raises(mock_routing_ultranest, name):
     with pytest.raises(ValueError, match="Unknown"):
         Sampler(backend="ultranest", options={name: None})
