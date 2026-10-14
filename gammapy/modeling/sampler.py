@@ -20,8 +20,7 @@ class _SamplerBackend(abc.ABC):
 
     The options are passed to the backend library using its own keyword names:
     ``sampler_opts`` are forwarded to the sampler constructor and ``run_opts``
-    to its ``run`` method. Options listed in ``gammapy_opts`` are handled by
-    Gammapy and never forwarded. Options given in ``options`` are routed to the
+    to its ``run`` method. Options given in ``options`` are routed to the
     constructor or to ``run`` by inspecting their signatures.
 
     Parameters
@@ -38,7 +37,6 @@ class _SamplerBackend(abc.ABC):
     tag = None
     default_sampler_opts = {}
     default_run_opts = {}
-    gammapy_opts = {}
     # constructor arguments filled by Gammapy
     reserved_opts = ()
     # old option name: new option name
@@ -71,11 +69,7 @@ class _SamplerBackend(abc.ABC):
                 explicit.update(routed)
 
         self._sampler = None
-        self.sampler_opts = {
-            **self.default_sampler_opts,
-            **self.gammapy_opts,
-            **sampler_opts,
-        }
+        self.sampler_opts = {**self.default_sampler_opts, **sampler_opts}
         self.run_opts = {**self.default_run_opts, **run_opts}
 
     @staticmethod
@@ -113,7 +107,7 @@ class _SamplerBackend(abc.ABC):
                 )
 
         init_names = self._parameter_names(sampler_class.__init__)
-        init_names = (init_names - set(self.reserved_opts)) | set(self.gammapy_opts)
+        init_names -= set(self.reserved_opts)
         run_names = self._parameter_names(sampler_class.run)
 
         sampler_opts, run_opts = {}, {}
@@ -151,14 +145,6 @@ class _SamplerBackend(abc.ABC):
             and par.kind in (par.POSITIONAL_OR_KEYWORD, par.KEYWORD_ONLY)
         }
 
-    def _forwarded_sampler_opts(self):
-        """Sampler options without the ones handled by Gammapy."""
-        return {
-            key: value
-            for key, value in self.sampler_opts.items()
-            if key not in self.gammapy_opts
-        }
-
     @abc.abstractmethod
     def build(self, parameters, like):
         """Create the backend sampler and store it in ``self._sampler``."""
@@ -185,7 +171,6 @@ class _UltranestBackend(_SamplerBackend):
     tag = "ultranest"
     default_sampler_opts = {"log_dir": None, "resume": "subfolder"}
     default_run_opts = {"min_num_live_points": 400, "frac_remain": 0.5}
-    gammapy_opts = {"step_sampler": False, "nsteps": 10}
     reserved_opts = ("param_names", "loglike", "transform")
     deprecated_opts = {"live_points": "min_num_live_points"}
 
@@ -220,19 +205,8 @@ class _UltranestBackend(_SamplerBackend):
             parameters.names,
             like.fcn,
             transform=parameters._prior_inverse_cdf,
-            **self._forwarded_sampler_opts(),
+            **self.sampler_opts,
         )
-
-        if self.sampler_opts["step_sampler"]:
-            from ultranest.stepsampler import (
-                SliceSampler,
-                generate_mixture_random_direction,
-            )
-
-            self._sampler.stepsampler = SliceSampler(
-                nsteps=self.sampler_opts["nsteps"],
-                generate_direction=generate_mixture_random_direction,
-            )
 
     def run(self):
         return self._sampler.run(**self.run_opts)
@@ -263,7 +237,7 @@ class _NautilusBackend(_SamplerBackend):
             prior=parameters._prior_inverse_cdf,
             likelihood=like.fcn,
             n_dim=len(parameters),
-            **self._forwarded_sampler_opts(),
+            **self.sampler_opts,
         )
 
     def run(self):
@@ -326,10 +300,7 @@ class Sampler:
         `Nautilus <https://nautilus-sampler.readthedocs.io/en/latest/api.html#nautilus.Sampler>`__.
 
         Gammapy defaults for "ultranest": ``log_dir=None``, ``resume="subfolder"``,
-        ``min_num_live_points=400``, ``frac_remain=0.5``. Gammapy also adds
-        ``step_sampler`` (default False) to use a slice step sampler with
-        ``nsteps`` steps (default 10), which can be more efficient above
-        ~10 parameters.
+        ``min_num_live_points=400``, ``frac_remain=0.5``.
 
         Gammapy defaults for "nautilus": ``n_live=2000``, ``filepath=None``,
         ``resume=True``, ``f_live=0.01``, ``n_eff=2000``, ``verbose=True``.
