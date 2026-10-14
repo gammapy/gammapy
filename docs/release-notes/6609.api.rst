@@ -1,0 +1,4 @@
+The ``sampler_opts`` and ``run_opts`` of `~gammapy.modeling.Sampler` are now passed directly to the backend,
+using the backend's own option names: ``sampler_opts`` go to the backend sampler constructor and ``run_opts`` to its
+``run`` method. For the "ultranest" backend, ``live_points`` and ``frac_remain`` in ``sampler_opts`` are deprecated
+and replaced by ``min_num_live_points`` and ``frac_remain`` in ``run_opts``.
