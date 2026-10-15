@@ -21,7 +21,6 @@ from gammapy.irf import (
     Background3D,
     EffectiveAreaTable2D,
     EnergyDispersion2D,
-    FoVAlignment,
 )
 from gammapy.makers import WobbleRegionsFinder
 from gammapy.makers.utils import (
