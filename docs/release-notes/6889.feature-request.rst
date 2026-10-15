@@ -1,1 +1,1 @@
-Add Eemin, Eemax/ Epmin, Epmax as fittable parameters to NaimaSpectralModels.
+Add Eemin, Eemax (for leptonic models) or Epmin, Epmax (for hadronic models) as fit parameters in the `~gammapy.modeling.models.NaimaSpectralModel`s.
