@@ -269,8 +269,10 @@ def test_sampler_options_var_keyword_raises(mock_ultranest):
 
 
 def test_sampler_options_deprecated_name(mock_ultranest):
-    with pytest.warns(GammapyDeprecationWarning, match="live_points"):
+    with pytest.warns(GammapyDeprecationWarning, match="live_points") as record:
         sampler = Sampler(backend="ultranest", options={"live_points": 123})
+    # the warning points to the line of the user
+    assert record[0].filename == __file__
     assert sampler.options["min_num_live_points"] == 123
     assert "live_points" not in sampler.options
 
@@ -331,6 +333,7 @@ def test_sampler_ultranest_deprecated_sampler_opts_names(
         sampler = Sampler(backend="ultranest", sampler_opts=sampler_opts)
 
     messages = [str(warning.message) for warning in record]
+    assert all(warning.filename == __file__ for warning in record)
     assert any('"sampler_opts" was deprecated' in message for message in messages)
     assert any(f"'{old_name}' is deprecated" in message for message in messages)
 
