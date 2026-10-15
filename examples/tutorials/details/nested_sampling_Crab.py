@@ -174,12 +174,11 @@ print(datasets.models)
 # As for the `~gammapy.modeling.Fit` object, the `~gammapy.modeling.Sampler` object can receive
 # different backend (although just one is available for now).
 # The `~gammapy.modeling.Sampler` comes with “reasonable” default parameters, but you can
-# change them via the ``options`` dictionary, using the backend's own option names.
-# Gammapy passes each option to the backend sampler constructor or to its ``run`` method.
-# Here is a short description of the most relevant UltraNest options that you
+# change them via the ``sampler_opts`` dictionary.
+# Here is a short description of the most relevant parameters that you
 # could change :
 #
-# -  ``min_num_live_points``: minimum number of live points throughout the run.
+# -  ``live_points``: minimum number of live points throughout the run.
 #    More points allow to discover multiple peaks if existing, but is
 #    slower. To test the Prior boundaries and for debugging, a lower
 #    number (~100) can be used before a production run with more points
@@ -200,13 +199,13 @@ print(datasets.models)
 # automatically stop once a convergence criteria has been reached.
 #
 
-options = {
-    "min_num_live_points": 300,
+sampler_opts = {
+    "live_points": 300,
     "frac_remain": 0.3,
     "log_dir": None,
 }
 
-sampler = Sampler(backend="ultranest", options=options)
+sampler = Sampler(backend="ultranest", sampler_opts=sampler_opts)
 
 
 ######################################################################
