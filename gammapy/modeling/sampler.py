@@ -4,7 +4,10 @@
 import abc
 import inspect
 import warnings
-from gammapy.utils.deprecation import GammapyDeprecationWarning
+from gammapy.utils.deprecation import (
+    GammapyDeprecationWarning,
+    deprecated_renamed_argument,
+)
 from .utils import _parse_datasets
 
 __all__ = ["Sampler", "SamplerLikelihood", "SamplerResult"]
@@ -18,30 +21,30 @@ class _SamplerBackend(abc.ABC):
 
     Subclasses defining a ``tag`` are registered in ``SAMPLER_BACKENDS``.
 
-    The options are passed to the backend library using its own keyword names:
-    ``sampler_opts`` are forwarded to the sampler constructor and ``run_opts``
-    to its ``run`` method. Options given in ``options`` are routed to the
-    constructor or to ``run`` by inspecting their signatures.
+    The options use the backend library's own names. Before the run, each of them
+    is sent to the backend sampler constructor or to its ``run`` method, by
+    inspecting their signatures.
 
     Parameters
     ----------
-    sampler_opts : dict, optional
-        Options passed to the backend sampler constructor. Default is None.
-    run_opts : dict, optional
-        Options passed to the backend sampler run method. Default is None.
     options : dict, optional
         Options routed automatically to the constructor or the run method.
+        Default is None.
+    sampler_opts : dict, optional
+        Deprecated. Options passed as is to the backend sampler constructor.
+        Default is None.
+    run_opts : dict, optional
+        Deprecated. Options passed as is to the backend sampler run method.
         Default is None.
     """
 
     tag = None
-    default_sampler_opts = {}
-    default_run_opts = {}
+    default_options = {}
     # backend constructor arguments that Gammapy fills from the datasets and models,
     # excluded from the automatic options routing so that users cannot override them
     gammapy_filled_args = ()
     # old option name: new option name
-    deprecated_opts = {}
+    deprecated_options = {}
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -50,28 +53,54 @@ class _SamplerBackend(abc.ABC):
                 raise ValueError(f"Sampler backend '{cls.tag}' is already registered.")
             SAMPLER_BACKENDS[cls.tag] = cls
 
-    def __init__(self, sampler_opts=None, run_opts=None, options=None):
+    def __init__(self, options=None, sampler_opts=None, run_opts=None):
+        options = {} if options is None else dict(options)
         sampler_opts = {} if sampler_opts is None else dict(sampler_opts)
         run_opts = {} if run_opts is None else dict(run_opts)
+
+        options = self._rename_deprecated_options(options)
         sampler_opts, run_opts = self._handle_deprecated_opts(sampler_opts, run_opts)
 
-        if options:
-            routed_sampler_opts, routed_run_opts = self._route_options(options)
-            for routed, explicit in [
-                (routed_sampler_opts, sampler_opts),
-                (routed_run_opts, run_opts),
-            ]:
-                duplicates = set(routed) & set(explicit)
-                if duplicates:
-                    raise ValueError(
-                        f"Options {sorted(duplicates)} are given twice, "
-                        "in options and in sampler_opts or run_opts."
-                    )
-                explicit.update(routed)
+        duplicates = set(options) & (set(sampler_opts) | set(run_opts))
+        if duplicates:
+            raise ValueError(
+                f"Options {sorted(duplicates)} are given twice, "
+                "in options and in sampler_opts or run_opts."
+            )
 
         self._sampler = None
-        self.sampler_opts = {**self.default_sampler_opts, **sampler_opts}
-        self.run_opts = {**self.default_run_opts, **run_opts}
+        self.options = {**self.default_options, **options}
+        self._explicit_sampler_opts = sampler_opts
+        self._explicit_run_opts = run_opts
+        self.sampler_opts = None
+        self.run_opts = None
+
+    def _rename_deprecated_options(self, options):
+        for old_name, new_name in self.deprecated_options.items():
+            if old_name in options:
+                warnings.warn(
+                    f"The {self.tag} sampler option '{old_name}' is deprecated, "
+                    f"use '{new_name}' instead.",
+                    GammapyDeprecationWarning,
+                    stacklevel=4,
+                )
+                options.setdefault(new_name, options.pop(old_name))
+        return options
+
+    def resolve_options(self):
+        """Split the options between the sampler constructor and its run method.
+
+        This imports the backend library. The result is stored in ``sampler_opts``
+        and ``run_opts`` and returned.
+        """
+        explicit = set(self._explicit_sampler_opts) | set(self._explicit_run_opts)
+        options = {
+            key: value for key, value in self.options.items() if key not in explicit
+        }
+        sampler_opts, run_opts = self._route_options(options)
+        self.sampler_opts = {**sampler_opts, **self._explicit_sampler_opts}
+        self.run_opts = {**run_opts, **self._explicit_run_opts}
+        return self.sampler_opts, self.run_opts
 
     @staticmethod
     @abc.abstractmethod
@@ -87,24 +116,12 @@ class _SamplerBackend(abc.ABC):
         The split uses the signatures of the backend sampler class, so it follows
         the installed version of the backend library.
         """
-        options = dict(options)
-        for old_name, new_name in self.deprecated_opts.items():
-            if old_name in options:
-                warnings.warn(
-                    f"The {self.tag} sampler option '{old_name}' is deprecated, "
-                    f"use '{new_name}' instead.",
-                    GammapyDeprecationWarning,
-                    stacklevel=4,
-                )
-                options.setdefault(new_name, options.pop(old_name))
-
         sampler_class = self._import_sampler_class()
         for function in [sampler_class.__init__, sampler_class.run]:
             if self._has_var_keyword(function):
                 raise ValueError(
                     f"The {self.tag} sampler accepts arbitrary keyword arguments, "
-                    "options cannot be routed automatically. "
-                    "Pass them in sampler_opts or run_opts instead."
+                    "options cannot be routed automatically."
                 )
 
         init_names = self._parameter_names(sampler_class.__init__)
@@ -117,7 +134,7 @@ class _SamplerBackend(abc.ABC):
             if in_init and in_run:
                 raise ValueError(
                     f"Option '{key}' is accepted by both the {self.tag} sampler and "
-                    "its run method, pass it in sampler_opts or run_opts instead."
+                    "its run method, it cannot be routed automatically."
                 )
             elif in_init:
                 sampler_opts[key] = value
@@ -170,10 +187,14 @@ class _UltranestBackend(_SamplerBackend):
     """UltraNest backend using `ultranest.ReactiveNestedSampler`."""
 
     tag = "ultranest"
-    default_sampler_opts = {"log_dir": None, "resume": "subfolder"}
-    default_run_opts = {"min_num_live_points": 400, "frac_remain": 0.5}
+    default_options = {
+        "log_dir": None,
+        "resume": "subfolder",
+        "min_num_live_points": 400,
+        "frac_remain": 0.5,
+    }
     gammapy_filled_args = ("param_names", "loglike", "transform")
-    deprecated_opts = {"live_points": "min_num_live_points"}
+    deprecated_options = {"live_points": "min_num_live_points"}
 
     # old sampler_opts name: new run_opts name
     _deprecated_sampler_opts = {
@@ -193,7 +214,7 @@ class _UltranestBackend(_SamplerBackend):
                 continue
             warnings.warn(
                 f"The UltraNest sampler option '{old_name}' is deprecated, "
-                f"use run_opts={{'{new_name}': ...}} instead.",
+                f"use options={{'{new_name}': ...}} instead.",
                 GammapyDeprecationWarning,
                 stacklevel=4,
             )
@@ -223,8 +244,14 @@ class _NautilusBackend(_SamplerBackend):
     """Nautilus backend using `nautilus.Sampler`."""
 
     tag = "nautilus"
-    default_sampler_opts = {"n_live": 2000, "filepath": None, "resume": True}
-    default_run_opts = {"f_live": 0.01, "n_eff": 2000, "verbose": True}
+    default_options = {
+        "n_live": 2000,
+        "filepath": None,
+        "resume": True,
+        "f_live": 0.01,
+        "n_eff": 2000,
+        "verbose": True,
+    }
     gammapy_filled_args = ("prior", "likelihood", "n_dim")
 
     @staticmethod
@@ -276,11 +303,10 @@ class Sampler:
     The sampler class provides a uniform interface to multiple sampler backends.
     Currently available: "ultranest" and "nautilus".
 
-    Backend options are given in ``options``, with the backend's own names. Gammapy
-    passes each of them to the backend sampler constructor or to its ``run``
-    method, based on the signatures of the installed backend library. An unknown
-    option raises an error listing the valid ones. ``sampler_opts`` and ``run_opts``
-    remain available for explicit control.
+    Backend options are given in ``options``, with the backend's own names. When
+    the sampler runs, Gammapy passes each of them to the backend sampler constructor
+    or to its ``run`` method, based on the signatures of the installed backend
+    library. An unknown option raises an error listing the valid ones.
 
     Parameters
     ----------
@@ -291,9 +317,9 @@ class Sampler:
         Nautilus uses neural-network-guided nested sampling. See the
         `Nautilus documentation <https://nautilus-sampler.readthedocs.io/>`__.
     sampler_opts : dict, optional
-        Options passed as is to the backend sampler constructor. Default is None.
+        Deprecated since v2.2, use ``options`` instead. Default is None.
     run_opts : dict, optional
-        Options passed as is to the backend sampler run method. Default is None.
+        Deprecated since v2.2, use ``options`` instead. Default is None.
     options : dict, optional
         Backend options, routed automatically. Default is None. See the options of
         `UltraNest <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler>`__
@@ -323,6 +349,12 @@ class Sampler:
 
     # TODO: add "zeusmc", "emcee"
 
+    @deprecated_renamed_argument(
+        ["sampler_opts", "run_opts"],
+        [None, None],
+        ["2.2", "2.2"],
+        alternative="options",
+    )
     def __init__(
         self, backend="ultranest", sampler_opts=None, run_opts=None, options=None
     ):
@@ -334,18 +366,39 @@ class Sampler:
 
         self.backend = backend
         self._backend = SAMPLER_BACKENDS[backend](
-            sampler_opts=sampler_opts, run_opts=run_opts, options=options
+            options=options, sampler_opts=sampler_opts, run_opts=run_opts
         )
 
     @property
+    def options(self):
+        """Backend options, including the Gammapy defaults."""
+        return self._backend.options
+
+    @property
     def sampler_opts(self):
-        """Options passed to the backend sampler constructor, including defaults."""
-        return self._backend.sampler_opts
+        """Options passed to the backend sampler constructor.
+
+        Deprecated, use `options` instead. Accessing it imports the backend library.
+        """
+        warnings.warn(
+            "Sampler.sampler_opts is deprecated, use Sampler.options instead.",
+            GammapyDeprecationWarning,
+            stacklevel=2,
+        )
+        return self._backend.resolve_options()[0]
 
     @property
     def run_opts(self):
-        """Options passed to the backend sampler run method, including defaults."""
-        return self._backend.run_opts
+        """Options passed to the backend sampler run method.
+
+        Deprecated, use `options` instead. Accessing it imports the backend library.
+        """
+        warnings.warn(
+            "Sampler.run_opts is deprecated, use Sampler.options instead.",
+            GammapyDeprecationWarning,
+            stacklevel=2,
+        )
+        return self._backend.resolve_options()[1]
 
     @property
     def _sampler(self):
@@ -394,6 +447,7 @@ class Sampler:
         like = SamplerLikelihood(
             function=datasets.stat_sum_likelihood, parameters=parameters
         )
+        self._backend.resolve_options()
         self._backend.build(parameters, like)
         result_dict = self._backend.run()
         self._backend.print_summary()
