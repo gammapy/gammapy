@@ -352,7 +352,7 @@ class FluxCollectionEstimator:
         If the `solver` is a sampler the default prior is uniform between [-10, 10].
     solver : `~gammapy.modeling.Fit` or `~gammapy.modeling.Sampler`, optional
         Fit or Sampler instance specifying the backend and options.
-        Default is an "ultranest" Sampler with run options min_num_live_points=300, frac_remain=0.3.
+        Default is an "ultranest" Sampler with options min_num_live_points=300, frac_remain=0.3.
     reoptimize : bool, optional
         Whether to reoptimize each dataset.background_model. Default is False.
         Only SkyModel given in `models` will be fitted the others remain frozen,
@@ -407,10 +407,10 @@ class FluxCollectionEstimator:
 
     @property
     def _default_solver(self):
-        """Return an ultranest Sampler with run options min_num_live_points=300, frac_remain=0.3."""
+        """Return an ultranest Sampler with options min_num_live_points=300, frac_remain=0.3."""
         return Sampler(
             backend="ultranest",
-            run_opts={"min_num_live_points": 300, "frac_remain": 0.3},
+            options={"min_num_live_points": 300, "frac_remain": 0.3},
         )
 
     @property

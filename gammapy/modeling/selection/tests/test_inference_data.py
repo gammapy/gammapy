@@ -40,8 +40,8 @@ def ultranest_result(datasets):
     models = Models([SkyModel(pwl1, name="source1")])
     datasets.models = models
 
-    run_opts = {"min_num_live_points": 50}
-    sampler = Sampler(backend="ultranest", run_opts=run_opts)
+    options = {"min_num_live_points": 50}
+    sampler = Sampler(backend="ultranest", options=options)
 
     ultranest_result = sampler.run(datasets)
     return ultranest_result
