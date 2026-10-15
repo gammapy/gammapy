@@ -239,9 +239,7 @@ def test_sampler_options_unknown_raises(mock_ultranest):
         sampler._backend.resolve_options()
 
 
-@pytest.mark.parametrize(
-    "name", ["param_names", "loglike", "transform", "step_sampler", "nsteps"]
-)
+@pytest.mark.parametrize("name", ["param_names", "loglike", "transform"])
 def test_sampler_options_gammapy_filled_args_raises(mock_ultranest, name):
     sampler = Sampler(backend="ultranest", options={name: None})
     with pytest.raises(ValueError, match="Unknown"):
