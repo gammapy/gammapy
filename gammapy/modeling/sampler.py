@@ -82,7 +82,7 @@ class _SamplerBackend(abc.ABC):
                     f"The {self.tag} sampler option '{old_name}' is deprecated, "
                     f"use '{new_name}' instead.",
                     GammapyDeprecationWarning,
-                    stacklevel=4,
+                    stacklevel=5,
                 )
                 options.setdefault(new_name, options.pop(old_name))
         return options
@@ -216,7 +216,7 @@ class _UltranestBackend(_SamplerBackend):
                 f"The UltraNest sampler option '{old_name}' is deprecated, "
                 f"use options={{'{new_name}': ...}} instead.",
                 GammapyDeprecationWarning,
-                stacklevel=4,
+                stacklevel=5,
             )
             value = sampler_opts.pop(old_name)
             run_opts.setdefault(new_name, value)
