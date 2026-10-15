@@ -1088,7 +1088,7 @@ class TestNaimaModel:
         )
         assert not radiative_model._memoize
 
-    def test_eemin_eemax(self):
+    def test_electron_min_max(self):
         import naima
 
         particle_distribution = naima.models.ExponentialCutoffBrokenPowerLaw(
