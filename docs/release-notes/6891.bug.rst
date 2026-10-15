@@ -1,1 +1,0 @@
-Fix ASDF serialization of ``RegionGeom`` when ``region`` and ``wcs`` are ``None``.
