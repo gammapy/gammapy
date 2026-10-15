@@ -2579,7 +2579,6 @@ class NaimaSpectralModel(SpectralModel):
             parameters.append(Parameter("B", B))
             parameters.append(Parameter("radius", radius, frozen=True))
 
-        # Append Eemin, Eemax / Epmin, Epmax to the fittable parameters
         if "Eemin" in self.radiative_model.param_names:
             for name in ["Eemin", "Eemax"]:
                 value = getattr(self.radiative_model, name)
