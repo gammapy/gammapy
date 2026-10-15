@@ -364,8 +364,11 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
             self._source = "cosmixs"
 
             log.info(
-                "\nSince no spectra source has been chosen, CosmiXs will be \
-                    used by default. From version>2.2, the default source has changed from PPPC4DMID to CosmiXs\n",
+                "\nSince no spectra source has been chosen, PPPC4 will be \
+                    used by default.\n",
+            )
+            log.warning(
+                "\nFrom version>2.2, the default source has changed from PPPC4DMID to CosmiXs\n",
             )
         elif isinstance(source, Table):
             self._source = source
