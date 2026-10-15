@@ -164,12 +164,11 @@ print(dataset.meta_table)
 
 ######################################################################
 # In this case, we are analysing a DL4 product, where the data is already
-# filtered and binned, but in the case of using other formats (i.e., DL3),
-# we have the option of performing any data selection or reduction that we
-# may need (i.e. set the energy bounds, specific observation selection…).
+# filtered and binned, but in the case of using other levels (i.e., DL3),
+# we need to perform the data selection or reduction first.
 #
-# We set our target position. In this case we use the same as in the dataset,
-# since we only have one observation. Let's pretend we are interested on that source
+# We set our target position.  In this case, we choose the center of the
+# dataset as our hypothetical target center.
 
 target_pos = SkyCoord(
     ra=187.27791666667 * u.deg, dec=2.55238888889 * u.deg, frame="icrs"
@@ -294,7 +293,7 @@ dataset.peek()
 #
 
 # First check the parameters of the model
-print(dataset.models.parameters.to_table())
+print(dataset.models.to_parameters_table())
 
 
 ######################################################################
@@ -340,11 +339,9 @@ dataset_to_spectrum.peek()
 # Spatial residuals map
 dataset.plot_residuals_spatial(
     method="diff/sqrt(model)",
-    smooth_kernel="gauss",
-    smooth_radius=0.1 * u.deg,
     cmap="coolwarm",
-    vmin=-5,
-    vmax=5,
+    vmin=-1,
+    vmax=1,
     add_cbar=True,
 )
 
@@ -662,42 +659,49 @@ print(f"  Lifetime lower limit (95% CL): {tau_lower_limit:.3e} s")
 # :math:`\hat{\text{scale}}` — not just the upper branch from zero as in
 # the one-sided limit above.
 #
-# The code below illustrates how this would look — **it is not executed in
-# this tutorial**, since our dataset has TS ≈ 0 and the one-sided limit
-# above is the correct result to report.
+# The function below illustrates how to derive two-sided confidence
+# intervals around the best-fit value. It is included for completeness
+# and is not executed in this tutorial, as our datasets has TS ≈ 0 and
+# a one-sided limit is appropriate.
 #
+# For a fit with evidence for a signal (TS >> 0), the same profiled
+# likelihood can instead be used to determine two-sided confidence
+# intervals around the best-fit value.
 
-# EXAMPLE ONLY — not executed in this tutorial (TS ≈ 0 here)
-# This is what you would run instead of the one-sided UL block above,
-# if the fit had returned TS >> 0 (a real detection).
-idx_min = np.argmin(delta_ts)
-best_fit = scale_scan[idx_min]
 
-lo_branch_scale = scale_scan[: idx_min + 1]
-lo_branch_stat = stat_scan[: idx_min + 1]
-hi_branch_scale = scale_scan[idx_min:]
-hi_branch_stat = stat_scan[idx_min:]
+def two_sided_confidence_interval():
+    """Illustrate how to calculate two-sided confidence intervals for a
+    detected signal using the profiled likelihood."""
+    idx_min = np.argmin(delta_ts)
+    best_fit = scale_scan[idx_min]
 
-print(f"Best-fit scale          : {best_fit:.3e}")
+    lo_branch_scale = scale_scan[: idx_min + 1]
+    lo_branch_stat = stat_scan[: idx_min + 1]
+    hi_branch_scale = scale_scan[idx_min:]
+    hi_branch_stat = stat_scan[idx_min:]
 
-for cl_label, delta_ts_threshold in [("68%", 1.0), ("95%", 3.84)]:
-    try:
-        scale_hi = stat_profile_ul_scipy(
-            hi_branch_scale, hi_branch_stat, delta_ts=delta_ts_threshold
-        )
-        scale_lo = -stat_profile_ul_scipy(
-            -lo_branch_scale[::-1], lo_branch_stat[::-1], delta_ts=delta_ts_threshold
-        )
-    except (ValueError, RuntimeError):
-        continue
+    print(f"Best-fit scale          : {best_fit:.3e}")
 
-    print(f"{cl_label} CL interval on scale : [{scale_lo:.3e}, {scale_hi:.3e}]")
+    for cl_label, delta_ts_threshold in [("68%", 1.0), ("95%", 3.84)]:
+        try:
+            scale_hi = stat_profile_ul_scipy(
+                hi_branch_scale, hi_branch_stat, delta_ts=delta_ts_threshold
+            )
+            scale_lo = -stat_profile_ul_scipy(
+                -lo_branch_scale[::-1],
+                lo_branch_stat[::-1],
+                delta_ts=delta_ts_threshold,
+            )
+        except (ValueError, RuntimeError):
+            continue
 
-    # Converted to the physical quantity (decay case)
-    tau_ref = spectral_model.LIFETIME_AGE_OF_UNIVERSE
-    tau_hi = tau_ref / scale_lo
-    tau_lo = tau_ref / scale_hi
-    print(f"{cl_label} CL interval on tau   : [{tau_lo:.3e}, {tau_hi:.3e}]")
+        print(f"{cl_label} CL interval on scale : [{scale_lo:.3e}, {scale_hi:.3e}]")
+
+        # Converted to the physical quantity (decay case)
+        tau_ref = spectral_model.LIFETIME_AGE_OF_UNIVERSE
+        tau_hi = tau_ref / scale_lo
+        tau_lo = tau_ref / scale_hi
+        print(f"{cl_label} CL interval on tau   : [{tau_lo:.3e}, {tau_hi:.3e}]")
 
 
 ######################################################################
@@ -708,103 +712,105 @@ for cl_label, delta_ts_threshold in [("68%", 1.0), ("95%", 3.84)]:
 # full **exclusion curve** — the standard output of a DM indirect
 # detection analysis — we repeat the same procedure over a grid of masses.
 #
-# For each mass we: 1. Update the spectral model to the new mass 2.
-# Simulate a background-only dataset 3. Fit the background 4. Run the
-# profile scan → `scale_ul` 5. Convert to a physical limit (τ_χ or ⟨σv⟩)
+# For each mass, the analysis:
+#    1. Updates the spectral model to the new mass.
+#    2. Simulates a background-only dataset.
+#    3. Fits the background.
+#    4. Runs the profile scan → `scale_ul`
+#    5. Converts to a physical limit (τ_χ or ⟨σv⟩)
 #
 # The result is a curve of lower limits on τ_χ (or upper limits on ⟨σv⟩)
 # as a function of DM mass.
 #
 # Below you can find the code for making the scan, but in this tutorial we
-# will not run it because it can take sereval minutes.
+# will not run it because it can take several minutes.
 #
 
-# # Mass range we want to scan. In this case we scan 40 masses, for instance.
-# masses = np.logspace(2, 4, 40) * u.GeV
 
-# # Scan grid (adjust if needed per mass)
-# scale_values = np.logspace(-10, -2, 100)
+def compute_dm_exclusion_curve():
+    # Mass range we want to scan. In this case we scan 40 masses, for instance.
+    masses = np.logspace(2, 4, 40) * u.GeV
 
-# # Output containers
-# results = {
-#     "mass"     : [],
-#     "scale_ul" : [],
-#     "scale_ll"   : []   # lower limit on scale
-# }
+    # Scan grid (adjust if needed per mass)
+    scale_values = np.logspace(-10, -2, 100)
 
-# fit = Fit()
+    # Output containers
+    results = {
+        "mass": [],
+        "scale_ul": [],
+        "scale_ll": [],  # lower limit on scale
+    }
 
-# print(f"Running exclusion curve over {len(masses)} masses...")
-# for mass in masses:
+    fit = Fit()
 
-#     print(f"  mass = {mass}  ...", end=" ")
+    print(f"Running exclusion curve over {len(masses)} masses...")
+    for mass in masses:
+        print(f"  mass = {mass}  ...", end=" ")
 
-#     spectral_model_m = DarkMatterDecaySpectralModel(
-#         mass=mass,
-#         channel=channel,
-#         jfactor=total_dfact,
-#     )
-#     spectral_model_m.scale.value  = 0
-#     spectral_model_m.scale.frozen = True
-#     spectral_model_m.scale.min    = 0
+        spectral_model_m = DarkMatterDecaySpectralModel(
+            mass=mass,
+            channel=channel,
+            jfactor=total_dfact,
+        )
+        spectral_model_m.scale.value = 0
+        spectral_model_m.scale.frozen = True
+        spectral_model_m.scale.min = 0
 
-#     bkg_model_m = FoVBackgroundModel(dataset_name=f"dataset-{mass.value:.0f}GeV")
-#     bkg_model_m.parameters["norm"].frozen = False
-#     bkg_model_m.parameters["tilt"].frozen = False
+        bkg_model_m = FoVBackgroundModel(dataset_name=f"dataset-{mass.value:.0f}GeV")
+        bkg_model_m.parameters["norm"].frozen = False
+        bkg_model_m.parameters["tilt"].frozen = False
 
-#     dataset_m = dataset.copy(name=f"dataset-{mass.value:.0f}GeV")
-#     sky_model_m = SkyModel(
-#         spatial_model=spatial_model,
-#         spectral_model=spectral_model_m,
-#         name="dm"
-#     )
-#     dataset_m.models = Models([sky_model_m, bkg_model_m])
+        dataset_m = dataset.copy(name=f"dataset-{mass.value:.0f}GeV")
+        sky_model_m = SkyModel(
+            spatial_model=spatial_model, spectral_model=spectral_model_m, name="dm"
+        )
+        dataset_m.models = Models([sky_model_m, bkg_model_m])
 
-#     # Fit background
-#     result_bkg_m = fit.run(datasets=[dataset_m])
-#     if not result_bkg_m.success:
-#         print("background fit did not converge, skipping.")
-#         continue
+        # Fit background
+        result_bkg_m = fit.run(datasets=[dataset_m])
+        if not result_bkg_m.success:
+            print("background fit did not converge, skipping.")
+            continue
 
-#     # Sanity check: signal changes with scale
-#     spectral_model_m.scale.value = 1e-7
-#     npred_sig = dataset_m.npred_signal().data.sum()
-#     print(f"npred_signal = {npred_sig:.4e}", end=" ... ")
-#     spectral_model_m.scale.value = 0
+        # Sanity check: signal changes with scale
+        spectral_model_m.scale.value = 1e-7
+        npred_sig = dataset_m.npred_signal().data.sum()
+        print(f"npred_signal = {npred_sig:.4e}", end=" ... ")
+        spectral_model_m.scale.value = 0
 
-#     # Profile scan (reoptimizing background at each point)
-#     spectral_model_m.scale.value  = 1e-7
-#     spectral_model_m.scale.frozen = False
+        # Profile scan (reoptimizing background at each point)
+        spectral_model_m.scale.value = 1e-7
+        spectral_model_m.scale.frozen = False
 
-#     scale_par_m = dataset_m.models["dm"].spectral_model.scale
-#     scale_par_m.scan_values = scale_values
+        scale_par_m = dataset_m.models["dm"].spectral_model.scale
+        scale_par_m.scan_values = scale_values
 
-#     profile_m = fit.stat_profile(
-#         datasets=dataset_m,
-#         parameter=scale_par_m,
-#         reoptimize=True,
-#     )
+        profile_m = fit.stat_profile(
+            datasets=dataset_m,
+            parameter=scale_par_m,
+            reoptimize=True,
+        )
 
-#     scale_scan_m = profile_m["dm.spectral.scale_scan"]
-#     delta_ts_m   = profile_m["stat_scan"] - profile_m["stat_scan"].min()
+        scale_scan_m = profile_m["dm.spectral.scale_scan"]
+        delta_ts_m = profile_m["stat_scan"] - profile_m["stat_scan"].min()
 
-#     if delta_ts_m.max() < 2.71:
-#         print("profile did not reach ΔTS=2.71, skipping.")
-#         continue
+        if delta_ts_m.max() < 2.71:
+            print("profile did not reach ΔTS=2.71, skipping.")
+            continue
 
-#     idx_min  = np.argmin(delta_ts_m)
-#     scale_ul = np.interp(2.71,
-#                          delta_ts_m[idx_min:],
-#                          scale_scan_m[idx_min:])
+        idx_min = np.argmin(delta_ts_m)
+        scale_ul = np.interp(2.71, delta_ts_m[idx_min:], scale_scan_m[idx_min:])
 
-#     tau_ref = spectral_model_m.LIFETIME_AGE_OF_UNIVERSE
-#     tau_ll  = tau_ref / scale_ul
+        tau_ref = spectral_model_m.LIFETIME_AGE_OF_UNIVERSE
+        tau_ll = tau_ref / scale_ul
 
-#     results["mass"].append(mass.to("TeV").value)
-#     results["scale_ul"].append(scale_ul)
-#     results["scale_ll"].append(tau_ll.value)
+        results["mass"].append(mass.to("TeV").value)
+        results["scale_ul"].append(scale_ul)
+        results["scale_ll"].append(tau_ll.value)
 
-#     print(f"scale_ul = {scale_ul:.3e}  |  τ_χ > {tau_ll:.3e}")
+        print(f"scale_ul = {scale_ul:.3e}  |  τ_χ > {tau_ll:.3e}")
+
+    return results
 
 
 ######################################################################
@@ -812,25 +818,27 @@ for cl_label, delta_ts_threshold in [("68%", 1.0), ("95%", 3.84)]:
 # example of the resulting plot.
 #
 
-# fig, ax = plt.subplots(1, figsize=(12, 5))
 
-# mass_arr    = np.array(results["mass"])
-# scale_arr   = np.array(results["scale_ll"])
+def plot_exclusion_curve(results):
+    fig, ax = plt.subplots(1, figsize=(12, 5))
 
-# # Decay: lower limit on scale ────────────────────────────────────────────────
-# ax.plot(mass_arr, scale_arr,
-#         color="steelblue", linewidth=2, marker="o", markersize=5)
-# ax.set_xscale("log")
-# ax.set_yscale("log")
-# ax.set_xlabel(r"$m_{\rm DM}$  [TeV]", fontsize=12)
-# ax.set_ylabel(r"Lower limit on $\tau_\chi$  [s]", fontsize=12)
-# ax.set_title(rf"Decay — channel: {channel}", fontsize=12)
-# ax.grid(True, which="both", alpha=0.3)
+    mass_arr = np.array(results["mass"])
+    scale_arr = np.array(results["scale_ll"])
 
-# plt.suptitle(r"Expected sensitivity",
-#              fontsize=13, y=1.02)
-# plt.tight_layout()
-# plt.show()
+    # Decay: lower limit on scale
+    ax.plot(
+        mass_arr, scale_arr, color="steelblue", linewidth=2, marker="o", markersize=5
+    )
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel(r"$m_{\rm DM}$  [TeV]", fontsize=12)
+    ax.set_ylabel(r"Lower limit on $\tau_\chi$  [s]", fontsize=12)
+    ax.set_title(rf"Decay — channel: {channel}", fontsize=12)
+    ax.grid(True, which="both", alpha=0.3)
+
+    plt.suptitle(r"Expected sensitivity", fontsize=13, y=1.02)
+    plt.tight_layout()
+    plt.show()
 
 
 ######################################################################
