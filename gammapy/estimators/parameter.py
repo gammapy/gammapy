@@ -292,7 +292,11 @@ class ParameterEstimator(Estimator):
             sigma=self.n_sigma_ul,
             reoptimize=self.reoptimize,
         )
-        self._confidence_failure = ~res["success"]
+
+        if "success" in res:
+            self._confidence_failure = not res["success"]
+        if "success_errp" in res:
+            self._confidence_failure = not res["success_errp"]
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 
     def estimate_sensitivity(self, datasets, parameter):

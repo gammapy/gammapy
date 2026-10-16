@@ -380,7 +380,7 @@ class Parameter:
 
     @property
     def _step(self):
-        return self.error if self.error > 0.0 else np.abs(self.value)
+        return np.maximum(self.error, np.abs(self.value))
 
     # TODO: possibly allow to set this independently
     @property
@@ -393,8 +393,7 @@ class Parameter:
             return self.min
         else:
             min_ = self.value - self._step * self.scan_n_sigma
-            large_step = np.maximum(self._step, np.abs(self.value))
-            min_ = np.minimum(min_, -large_step * 1e5)
+            min_ = np.minimum(min_, -self._step * 1e5)
             return min_
 
     # TODO: possibly allow to set this independently
@@ -408,8 +407,7 @@ class Parameter:
             return self.max
         else:
             max_ = self.value + self._step * self.scan_n_sigma
-            large_step = np.maximum(self._step, np.abs(self.value))
-            max_ = np.maximum(max_, large_step * 1e5)
+            max_ = np.maximum(max_, self._step * 1e5)
             return max_
 
     @property
