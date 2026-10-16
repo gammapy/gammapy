@@ -17,6 +17,11 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
+from gammapy.data import (
+    FixedPointingInfo,
+    Observation,
+    observatory_locations,
+)
 from gammapy.irf import (
     IRF,
     Background3D,
@@ -25,10 +30,10 @@ from gammapy.irf import (
     EnergyDispersion2D,
 )
 from gammapy.irf.io import COMMON_IRF_HEADERS, IRF_DL3_HDU_SPECIFICATION
+from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import (
     make_edisp_kernel_map,
     make_map_exposure_true_energy,
-    make_psf_map,
 )
 from gammapy.maps import MapAxis, WcsGeom
 
@@ -278,6 +283,10 @@ print(aeff_new)
 
 axis = MapAxis.from_energy_bounds(0.1 * u.TeV, 10 * u.TeV, 6, name="energy_true")
 pointing = SkyCoord(2, 1, unit="deg")
+
+obs_loc = observatory_locations.get("ctao_north")
+livetime = 42 * u.hour
+
 geom = WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis], skydir=pointing)
 
 print(geom)
@@ -504,7 +513,14 @@ rad = MapAxis.from_edges(np.linspace(0.5, 3.0, 10), unit="deg", name="rad")
 etrue = MapAxis.from_energy_bounds(0.5, 2, 6, unit="TeV", name="energy_true")
 geom = WcsGeom.create(10, binsz=0.5, axes=[rad, etrue], skydir=pointing)
 
-psfmap = make_psf_map(psf_assym, pointing, geom)
+
+obs = Observation.create(
+    pointing=pointing,
+    location=obs_loc,
+    livetime=livetime,
+    irfs={"aeff": aeff_3d, "psf": psf_assym},
+)
+psfmap = MapDatasetMaker.make_psf(geom=geom, observation=obs)
 
 psfmap.peek()
 plt.show()
