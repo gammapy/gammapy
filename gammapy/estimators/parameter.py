@@ -5,7 +5,7 @@ import logging
 import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.datasets.actors import DatasetsActor
-from gammapy.modeling import Fit
+from gammapy.modeling import Fit, stat_profile_ul_scipy
 from gammapy.modeling.selection import NestedModelSelection
 from gammapy.modeling.parameter import restore_parameters_status
 from gammapy.stats.utils import ts_to_sigma
@@ -104,6 +104,7 @@ class ParameterEstimator(Estimator):
 
         self.fit = fit
         self.reoptimize = reoptimize
+        self._confidence_failure = False
 
     def estimate_best_fit(self, datasets, parameter):
         """Estimate parameter asymmetric errors.
@@ -249,11 +250,19 @@ class ParameterEstimator(Estimator):
         profile = self.fit.stat_profile(
             datasets=datasets, parameter=parameter, reoptimize=self.reoptimize
         )
-
-        return {
+        results = {
             f"{parameter.name}_scan": scan_values,
             "stat_scan": profile["stat_scan"],
         }
+
+        if self._confidence_failure:
+            try:
+                results[f"{parameter.name}_ul"] = stat_profile_ul_scipy(
+                    scan_values, profile["stat_scan"], delta_ts=self.n_sigma_ul**2
+                )
+            except (ValueError, RuntimeError):
+                results[f"{parameter.name}_ul"] = np.nan
+        return results
 
     def estimate_ul(self, datasets, parameter):
         """Estimate parameter ul.
@@ -283,6 +292,7 @@ class ParameterEstimator(Estimator):
             sigma=self.n_sigma_ul,
             reoptimize=self.reoptimize,
         )
+        self._confidence_failure = ~res["success"]
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 
     def estimate_sensitivity(self, datasets, parameter):
