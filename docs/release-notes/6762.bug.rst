@@ -1,1 +1,1 @@
-Fix Asimov dataset computation for `~gammapy.datasets.MapDatasetOff`: use alpha * N_OFF as expected background. 
+Fix Asimov dataset computation for `~gammapy.datasets.MapDatasetOnOff`: use alpha * N_OFF as expected background.

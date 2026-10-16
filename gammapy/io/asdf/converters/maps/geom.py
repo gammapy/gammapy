@@ -78,13 +78,16 @@ class RegionGeomConverter(Converter):
     def to_yaml_tree(self, obj, tag, ctx):
         from gammapy.utils.regions import compound_region_to_regions
 
-        region = compound_region_to_regions(obj.region)
-        ds9_strings = [_.serialize(format="ds9") for _ in region]
-        node = {
-            "region": ds9_strings,
-            "axes": obj.axes,
-            "wcs": obj.wcs,
-        }
+        node = {"axes": obj.axes}
+        if obj.region is not None:
+            region = compound_region_to_regions(obj.region)
+            for _ in region:
+                _.meta.clear()
+                _.visual.clear()
+            ds9_strings = [_.serialize(format="ds9") for _ in region]
+            node["region"] = ds9_strings
+        if obj.wcs is not None:
+            node["wcs"] = obj.wcs
 
         return node
 
@@ -93,16 +96,17 @@ class RegionGeomConverter(Converter):
         from regions import Regions
         from gammapy.utils.regions import regions_to_compound_region
 
-        ds9_strings = node["region"]
+        region = None
+        if "region" in node:
+            ds9_strings = node["region"]
 
-        region = [Regions.parse(_, format="ds9")[0] for _ in ds9_strings]
-        for _ in region:
-            _.meta.clear()
-            _.visual.clear()
-
-        region = regions_to_compound_region(region)
+            region = [Regions.parse(_, format="ds9")[0] for _ in ds9_strings]
+            for _ in region:
+                _.meta.clear()
+                _.visual.clear()
+            region = regions_to_compound_region(region)
         return RegionGeom(
             region=region,
             axes=node.get("axes"),
-            wcs=node["wcs"],
+            wcs=node.get("wcs"),
         )

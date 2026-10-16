@@ -4,7 +4,7 @@
 import logging
 import numpy as np
 import astropy.units as u
-from scipy.stats import norm, uniform, loguniform, gennorm, gaussian_kde
+from scipy.stats import norm, uniform, loguniform, gennorm, gaussian_kde, lognorm
 from scipy.interpolate import interp1d
 from scipy.special import ndtr
 from gammapy.modeling import PriorParameter, PriorParameters
@@ -17,6 +17,8 @@ __all__ = [
     "LogUniformPrior",
     "Prior",
     "SamplesKDEPrior",
+    "LogNormalPrior",
+    "LogSpaceGaussianPrior",
 ]
 
 log = logging.getLogger(__name__)
@@ -49,6 +51,8 @@ class Prior(ModelBase):
     - `GaussianPrior`
     - `UniformPrior`
     - `LogUniformPrior`
+    - `LogNormalPrior`
+    - `LogSpaceGaussianPrior`
     """
 
     _unit = ""
@@ -376,3 +380,85 @@ class SamplesKDEPrior(Prior):
         if weights is not None:
             weights = np.array(weights, dtype=float)
         return cls(samples=samples, weights=weights)
+
+
+class LogNormalPrior(Prior):
+    r"""Log-normal prior.
+
+    Log-normal probability density in the parameter value :math:`x`:
+
+    .. math::
+        -2 \log p(x) = \left(\frac{\ln(x) - \ln(\mu)}{\sigma}\right)^2
+                       + 2 \ln(x) + 2 \ln(\sigma) + \ln(2\pi)
+
+    The :math:`2 \ln(x)` term is the Jacobian of the change of variable
+    from :math:`\ln(x)` to :math:`x`, so the minimum is at the mode
+    :math:`\mu e^{-\sigma^2}`, not at ``mu``. This is the appropriate
+    density for a Bayesian prior on ``x``. For a gaussian constraint in
+    log space with its minimum at ``mu``, use `LogSpaceGaussianPrior`.
+
+    Parameters
+    ----------
+    mu : float, optional
+        Median of the distribution.
+        Default is 1.
+    sigma : float, optional
+        Standard deviation of the natural logarithm of the value.
+        Default is 1.
+    """
+
+    tag = ["LogNormalPrior"]
+    _type = "prior"
+    mu = PriorParameter(name="mu", value=1, unit="")
+    sigma = PriorParameter(name="sigma", value=1, unit="")
+
+    @staticmethod
+    def evaluate(value, mu, sigma):
+        """Evaluate -2 times the log-normal log-density at value."""
+        rv = lognorm(s=sigma, scale=mu)
+        return -2 * rv.logpdf(value)
+
+    @property
+    def _random_variable(self):
+        """Return random variable object for prior."""
+        return lognorm(s=self.sigma.value, scale=self.mu.value)
+
+
+class LogSpaceGaussianPrior(Prior):
+    r"""Gaussian prior on the natural log of the parameter.
+
+    .. math::
+        -2 \log \mathcal{L} = \left(\frac{\ln(x) - \ln(\mu)}{\sigma}\right)^2
+
+    Unlike `LogNormalPrior`, this is not the log-normal density in ``x``:
+    it has no :math:`1/x` Jacobian, so the minimum is at ``mu``. It is
+    intended as a likelihood constraint on a measured quantity, e.g. a
+    J- or D-factor in a profile-likelihood analysis.
+
+    Parameters
+    ----------
+    mu : float, optional
+        Value at which the penalty is minimal. Default is 1.
+    sigma : float, optional
+        Standard deviation of the natural logarithm of the value.
+        For an uncertainty quoted in dex, pass ``sigma_dex * np.log(10)``.
+        Default is 1.
+    """
+
+    tag = ["LogSpaceGaussianPrior"]
+    _type = "prior"
+    mu = PriorParameter(name="mu", value=1, unit="")
+    sigma = PriorParameter(name="sigma", value=1, unit="")
+
+    @staticmethod
+    def evaluate(value, mu, sigma):
+        """Evaluate a Gaussian prior in logarithmic parameter space."""
+        return ((np.log(value) - np.log(mu)) / sigma) ** 2
+
+    @property
+    def _random_variable(self):
+        """Return random variable object for prior."""
+        raise TypeError(
+            "LogSpaceGaussianPrior represents a Gaussian constraint in log-space "
+            "and does not define a probability density on the parameter itself."
+        )

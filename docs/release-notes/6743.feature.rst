@@ -1,0 +1,1 @@
+Fixed JFactory to correctly compute J/D-factors for extragalactic sources by decoupling rmax from distance and propagating the source distance through the line-of-sight integration geometry.

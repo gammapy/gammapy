@@ -450,16 +450,20 @@ def test_lightcurve_estimator_spectrum_datasets_default():
     # Test default time interval: each time interval is equal to the gti of each
     # dataset, here one hour
     datasets = get_spectrum_datasets()
-    selection = ["scan"]
+    selection = ["scan", "sensitivity"]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV, selection_optional=selection
     )
+    assert estimator.n_sigma_sensitivity == estimator.n_sigma_ul
     estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
+    assert lightcurve.meta["n_sigma_ul"] == 2
+    assert lightcurve.meta["n_sigma_sensitivity"] == 2
     table = lightcurve.to_table()
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["norm"], [[0.911963], [0.906931]], rtol=1e-3)
+    assert_allclose(table["norm_sensitivity"], [[0.075809], [0.07638]], rtol=1e-3)
 
 
 @requires_data()
@@ -770,11 +774,11 @@ def test_dataset_stat_type():
         data=lightcurve, models=[lightcurve.reference_model]
     )
     lightcurve_dataset.stat_type = "profile"
-    assert_allclose(lightcurve_dataset.stat_sum(), 5.741539, rtol=1e-5)
+    assert_allclose(lightcurve_dataset.stat_sum_likelihood(), 5.741539, rtol=1e-5)
     lightcurve_dataset.stat_type = "distrib"
-    assert_allclose(lightcurve_dataset.stat_sum(), 5.824218, rtol=1e-5)
+    assert_allclose(lightcurve_dataset.stat_sum_likelihood(), 5.824218, rtol=1e-5)
     lightcurve_dataset.stat_type = "chi2"
-    assert_allclose(lightcurve_dataset.stat_sum(), 6.014128, rtol=1e-5)
+    assert_allclose(lightcurve_dataset.stat_sum_likelihood(), 6.014128, rtol=1e-5)
 
     # test if scan is not present
     selection = []
@@ -788,7 +792,7 @@ def test_dataset_stat_type():
     )
     with pytest.raises(AttributeError):
         lightcurve_dataset.stat_type = "profile"
-        lightcurve_dataset.stat_sum()
+        lightcurve_dataset.stat_sum_likelihood()
 
 
 @requires_data()

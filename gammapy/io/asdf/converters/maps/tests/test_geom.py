@@ -11,6 +11,7 @@ from regions import (
     PointSkyRegion,
     RectangleSkyRegion,
 )
+from gammapy.utils.testing import requires_dependency
 
 asdf = pytest.importorskip("asdf")
 pytest.importorskip("asdf.testing")
@@ -139,6 +140,7 @@ tested_hpx_geom = [
 ]
 
 
+@requires_dependency("healpy")
 @pytest.mark.parametrize(
     ("nside", "nested", "frame", "region", "axes"), tested_hpx_geom
 )
@@ -161,6 +163,7 @@ def test_hpxgeom_roundtrip(nside, nested, frame, region, axes, tmp_path):
             assert result.region == geom.region
 
 
+@requires_dependency("healpy")
 def test_hpxgeom_roundtrip_tuple_region(tmp_path):
     file_path = tmp_path / "test.asdf"
     geom = HpxGeom(
@@ -189,7 +192,7 @@ tested_read_hpxgeom_examples = [
             data: [8]
           region: DISK(110.,75.,10.)
           """,
-        "truth": HpxGeom(
+        "truth": dict(
             nside=8,
             nest=False,
             frame="galactic",
@@ -209,7 +212,7 @@ tested_read_hpxgeom_examples = [
             data: [6, 15, 16, 28, 29]
           region: explicit
           """,
-        "truth": HpxGeom(
+        "truth": dict(
             nside=8,
             nest=False,
             frame="galactic",
@@ -226,7 +229,7 @@ tested_read_hpxgeom_examples = [
           nside: !core/ndarray-1.1.0
             data: [8]
           """,
-        "truth": HpxGeom(nside=8, nest=True, region=None, axes=None),
+        "truth": dict(nside=8, nest=True, region=None, axes=None),
     },
     {
         "example": """!<asdf://gammapy.org/gammapy/tags/maps/hpxgeom-1.0.0>
@@ -244,7 +247,7 @@ tested_read_hpxgeom_examples = [
           nside: !core/ndarray-1.1.0
             data: [4, 8]
           """,
-        "truth": HpxGeom(
+        "truth": dict(
             nside=np.array([4, 8]),
             nest=True,
             frame="icrs",
@@ -275,12 +278,13 @@ tested_read_hpxgeom_examples = [
 ]
 
 
+@requires_dependency("healpy")
 @pytest.mark.parametrize("example", tested_read_hpxgeom_examples)
 def test_hpx_geom_read_examples(example):
     buff = yaml_to_asdf(f"example: {example['example'].strip()}")
 
     if example.get("truth") is not None:
-        truth = example["truth"]
+        truth = HpxGeom(**example["truth"])
         with asdf.open(buff) as af:
             result = af["example"]
             if truth.nside.size > 1:
@@ -301,6 +305,7 @@ energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
 center1 = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
 center2 = SkyCoord(110.0, 75.0, unit="deg", frame="galactic")
 tested_region_geom = [
+    RegionGeom.create("icrs;circle(83.63, 22.01, 1)"),
     RegionGeom.create(CircleSkyRegion(center=center1, radius=1 * u.deg)),
     RegionGeom.create(
         CircleSkyRegion(center=center1, radius=1 * u.deg), axes=[energy_axis]
@@ -349,12 +354,6 @@ def test_regiongeom_roundtrip(geom, tmp_path):
 tested_read_regiongeom_invalid_examples = [
     {
         "example": """!<asdf://gammapy.org/gammapy/tags/maps/regiongeom-1.0.0>
-         axes: !<asdf://gammapy.org/gammapy/tags/maps/mapaxes-1.0.0>
-           axes: []
-         """,
-    },
-    {
-        "example": """!<asdf://gammapy.org/gammapy/tags/maps/regiongeom-1.0.0>
          region: 42
          """,
     },
@@ -366,3 +365,19 @@ def test_regiongeom_read_examples(example):
     buff = yaml_to_asdf(f"example: {example['example'].strip()}")
     with pytest.raises(asdf.exceptions.ValidationError):
         asdf.open(buff)
+
+
+def test_regiongeom_roundtrip_no_region(tmp_path):
+    file_path = tmp_path / "test.asdf"
+    geom = RegionGeom.create(region=None, axes=[energy_axis])
+
+    with asdf.AsdfFile() as af:
+        af["geom"] = geom
+        af.write_to(file_path)
+
+    with asdf.open(file_path) as af:
+        result = af["geom"]
+        assert result == geom
+        assert result.region is None
+        assert result.wcs is None
+        assert result == geom
