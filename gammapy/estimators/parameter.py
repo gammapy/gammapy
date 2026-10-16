@@ -405,7 +405,7 @@ class ParameterEstimator(Estimator):
             if "ul" in self.selection_optional:
                 result.update(self.estimate_ul(datasets, parameter))
 
-            if "scan" in self.selection_optional:
+            if "scan" in self.selection_optional or self._confidence_failure:
                 result.update(self.estimate_scan(datasets, parameter))
 
             if "sensitivity" in self.selection_optional:
