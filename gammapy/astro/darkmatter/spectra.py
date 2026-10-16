@@ -12,7 +12,11 @@ from astropy.table import Table
 
 from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling import Parameter
-from gammapy.modeling.models import SpectralModel, TemplateNDSpectralModel
+from gammapy.modeling.models import (
+    PRIOR_REGISTRY,
+    SpectralModel,
+    TemplateNDSpectralModel,
+)
 from gammapy.utils.deprecation import (
     GammapyDeprecationWarning,
     deprecated,
@@ -578,7 +582,8 @@ class DarkMatterSpectralModel(SpectralModel):
         Astrophysical factor (integrated squared dark matter density
         along the line of sight and over the solid angle), needed when a
         `~gammapy.modeling.models.PointSpatialModel` is used for the
-        spatial component. Default is 1 (dimensionless).
+        spatial component. Default is 1 (dimensionless) and in a frozen form.
+        If a unit is given it should be convertible to GeV2 cm-5 for annihilation and GeV cm-2 in the case of decay.
     z : float, optional
         Redshift of the source. The primary flux is evaluated at the
         redshifted energy ``energy * (1 + z)``. Default is 0.
@@ -637,9 +642,10 @@ class DarkMatterSpectralModel(SpectralModel):
     """Thermally averaged annihilation cross-section."""
 
     LIFETIME_AGE_OF_UNIVERSE = 4.3e17 * u.Unit("s")
-    """Use age of univserse as lifetime"""
+    """Use age of universe as lifetime"""
 
     scale = Parameter("scale", 1, unit="", interp="log")
+    factor = Parameter("factor", 1, unit="", interp="log", frozen=True)
     tag = ["DarkMatterSpectralModel", "dm-spectralmodel"]
 
     @deprecated_renamed_argument("mass", "mDM", "2.2")
@@ -650,7 +656,7 @@ class DarkMatterSpectralModel(SpectralModel):
         channel,
         *,
         scale=scale.quantity,
-        factor=1,
+        factor=factor.quantity,
         z=0,
         k=2,
         primary_flux=None,
@@ -670,19 +676,16 @@ class DarkMatterSpectralModel(SpectralModel):
         if z < 0:
             raise ValueError(f"Redshift z must be >= 0, got: {z}.")
 
-        if u.Quantity(factor).value <= 0:
-            raise ValueError("The astrophysical factor must be strictly positive.")
-
         self._z = z
         self._mDM = u.Quantity(mDM)
         self._channel = channel
-        self._factor = u.Quantity(factor)
         self.source = source
         self.mapping_dict = mapping_dict
         if primary_flux is not None:
             if hasattr(primary_flux, "channel"):
                 primary_flux.channel = channel
-            primary_flux.mDM = self._expected_primary_flux_mass
+            if hasattr(primary_flux, "mDM"):
+                primary_flux.mDM = self._expected_primary_flux_mass
         else:
             primary_flux = ContinuumPrimaryFlux(
                 self._expected_primary_flux_mass,
@@ -692,7 +695,20 @@ class DarkMatterSpectralModel(SpectralModel):
             )
         self._primary_flux = primary_flux
 
-        super().__init__(scale=scale)
+        factor = u.Quantity(factor)
+        if factor.unit != u.dimensionless_unscaled:
+            expected = u.Unit("GeV2 cm-5") if annihilation else u.Unit("GeV cm-2")
+            if not factor.unit.is_equivalent(expected):
+                raise u.UnitConversionError(
+                    f"factor must be convertible to {expected} "
+                    f"({'annihilation' if annihilation else 'decay'}), got {factor.unit}."
+                )
+            factor = factor.to(expected)
+        if np.any(factor.value <= 0):
+            raise ValueError(f"factor must be positive, got {factor}.")
+
+        super().__init__(scale=scale, factor=factor.value)
+        self.factor.unit = factor.unit
 
     @property
     def annihilation(self):
@@ -703,11 +719,6 @@ class DarkMatterSpectralModel(SpectralModel):
     def mDM(self):
         """Dark matter mass."""
         return self._mDM
-
-    @property
-    def factor(self):
-        """Astrophysical Factor."""
-        return self._factor
 
     @property
     def z(self):
@@ -743,7 +754,7 @@ class DarkMatterSpectralModel(SpectralModel):
         """
         return self._mDM if self._annihilation else self._mDM / 2
 
-    def evaluate(self, energy, scale):
+    def evaluate(self, energy, scale, factor):
         """Evaluate the dark matter annihilation differential flux.
 
         For annihilation, computes:
@@ -753,38 +764,27 @@ class DarkMatterSpectralModel(SpectralModel):
         For decay, computes:
         ``flux = scale * factor * primary_flux(energy * (1 + z))
         / LIFETIME_AGE_OF_UNIVERSE / mDM / (4 * pi)``.
+
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy values (array-like) at which to evaluate the flux.
         scale : float
             Current value of the ``scale`` normalization parameter.
+        factor : Quantity
+            Current value of the ``factor`` parameter.
 
         Returns
         -------
         flux : `~astropy.units.Quantity`
             Differential gamma-ray flux per unit energy.
         """
+        flux = scale * factor * self.primary_flux(energy=energy * (1 + self.z))
         if self.annihilation:
-            return (
-                scale
-                * self.factor
-                * self.THERMAL_RELIC_CROSS_SECTION
-                * self.primary_flux(energy=energy * (1 + self.z))
-                / self.k
-                / self.mDM
-                / self.mDM
-                / (4 * np.pi)
-            )
+            flux = flux * self.THERMAL_RELIC_CROSS_SECTION / self.k / self.mDM**2
         else:
-            return (
-                scale
-                * self.factor
-                * self.primary_flux(energy=energy * (1 + self.z))
-                / self.LIFETIME_AGE_OF_UNIVERSE
-                / self.mDM
-                / (4 * np.pi)
-            )
+            flux = flux / self.LIFETIME_AGE_OF_UNIVERSE / self.mDM
+        return flux / (4 * np.pi)
 
     def to_dict(self, full_output=False):
         """Serialize the model to a dictionary.
@@ -807,9 +807,11 @@ class DarkMatterSpectralModel(SpectralModel):
             `from_dict`.
         """
         data = super().to_dict(full_output=full_output)
+        for p in data["spectral"]["parameters"]:
+            if p["name"] == "factor":
+                p["unit"] = self.factor.unit.to_string()
         data["spectral"]["channel"] = self.channel
         data["spectral"]["mDM"] = self.mDM.to_string()
-        data["spectral"]["factor"] = self.factor.to_string()
         data["spectral"]["z"] = self.z
         data["spectral"]["k"] = self.k
         data["spectral"]["primary_flux"] = self.primary_flux.to_dict()
@@ -822,18 +824,21 @@ class DarkMatterSpectralModel(SpectralModel):
     def from_dict(cls, data):
         """Construct a `DarkMatterSpectralModel` from a dictionary.
 
-        Reconstructs the ``primary_flux`` sub-model using the registry of
-        known primary flux types, extracts the ``scale`` parameter value
-        from the serialized parameter list, and passes the remaining
-        fields through to the constructor.
+        Reconstructs the ``primary_flux`` sub-model from the registry of
+        known primary flux types, rebuilds ``scale`` and ``factor`` from the
+        serialized parameter list (including unit, bounds, frozen state and
+        prior), and passes the remaining fields to the constructor.
+
+        Dictionaries in format of version<2.2, where the astrophysical factor was
+        stored as a separate ``factor`` (or ``jfactor``) field, are still
+        supported.
 
         Parameters
         ----------
         data : dict
             Dictionary with a top-level ``"spectral"`` key, as produced by
-            `to_dict`, containing ``mDM``, ``channel``, ``factor``, ``z``,
-            ``k``, ``primary_flux``, and ``parameters`` (including
-            ``scale``).
+            `to_dict`, containing ``mDM``, ``channel``, ``z``, ``k``,
+            ``primary_flux``, ``annihilation`` and ``parameters``.
 
         Returns
         -------
@@ -841,9 +846,8 @@ class DarkMatterSpectralModel(SpectralModel):
             New instance reconstructed from ``data``.
         """
         data = copy.deepcopy(data["spectral"])
-        model_type = data.get("type", "")
+        model_type = data.pop("type", "")
         default_annihilation = "Decay" not in model_type
-        data.pop("type")
 
         _RENAMED_FIELDS = {"mass": "mDM", "jfactor": "factor"}
         for old_name, new_name in _RENAMED_FIELDS.items():
@@ -857,11 +861,10 @@ class DarkMatterSpectralModel(SpectralModel):
                 data[new_name] = data.pop(old_name)
 
         pf_data = data.pop("primary_flux", None)
-
         if pf_data is None:
-            # Old format
+            # Old format: primary flux rebuilt from the flat fields
             primary_flux = ContinuumPrimaryFlux(
-                data.get("mDM", data.get("mass")),
+                data["mDM"],
                 channel=data["channel"],
                 source=data.get("source"),
                 mapping_dict=data.get("mapping_dict"),
@@ -878,16 +881,41 @@ class DarkMatterSpectralModel(SpectralModel):
         data.pop("source", None)
         data.pop("mapping_dict", None)
         annihilation = data.pop("annihilation", default_annihilation)
-        parameters = data.pop("parameters")
-        scale = next(p["value"] for p in parameters if p["name"] == "scale")
-        return cls(
-            scale=scale, primary_flux=primary_flux, annihilation=annihilation, **data
+        pars = {p["name"]: p for p in data.pop("parameters")}
+
+        if "factor" in pars:  # new format: factor is a Parameter
+            p = pars["factor"]
+            factor = u.Quantity(p["value"], p.get("unit", ""))
+            data.pop("factor", None)
+        else:  # old format: factor serialized as a string field
+            factor = u.Quantity(data.pop("factor", 1))
+
+        model = cls(
+            scale=pars["scale"]["value"],
+            factor=factor,
+            primary_flux=primary_flux,
+            annihilation=annihilation,
+            **data,
         )
+
+        # restore parameter state (bounds, frozen, error, prior)
+        for name, p in pars.items():
+            par = getattr(model, name)
+            for key in ("min", "max", "error", "frozen"):
+                if key in p:
+                    setattr(par, key, p[key])
+            if "prior" in p:
+                prior_data = p["prior"]
+                prior_type = prior_data.get("prior", prior_data)["type"]
+                par.prior = PRIOR_REGISTRY.get_cls(prior_type).from_dict(prior_data)
+
+        return model
 
 
 @deprecated("2.2", alternative="DarkMatterSpectralModel")
 class DarkMatterAnnihilationSpectralModel(DarkMatterSpectralModel):
     scale = Parameter("scale", 1, unit="", interp="log")
+    factor = Parameter("factor", 1, unit="", interp="log", frozen=True)
     tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
 
     def __init__(self, *args, **kwargs):
@@ -898,6 +926,7 @@ class DarkMatterAnnihilationSpectralModel(DarkMatterSpectralModel):
 @deprecated("2.2", alternative="DarkMatterSpectralModel")
 class DarkMatterDecaySpectralModel(DarkMatterSpectralModel):
     scale = Parameter("scale", 1, unit="", interp="log")
+    factor = Parameter("factor", 1, unit="", interp="log", frozen=True)
     tag = ["DarkMatterDecaySpectralModel", "dm-decay"]
 
     def __init__(self, *args, **kwargs):
