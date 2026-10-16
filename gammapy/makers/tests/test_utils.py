@@ -41,6 +41,7 @@ from gammapy.makers.utils import (
 from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
 from gammapy.utils.coordinates import FoVAltAzFrame, FoVICRSFrame
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_to_dict
 
@@ -94,12 +95,13 @@ def geom(map_type, ebounds):
     ],
 )
 def test_make_map_exposure_true_energy(aeff, pars):
-    m = make_map_exposure_true_energy(
-        pointing=SkyCoord(2, 1, unit="deg"),
-        livetime="42 s",
-        aeff=aeff,
-        geom=pars["geom"],
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        m = make_map_exposure_true_energy(
+            pointing=SkyCoord(2, 1, unit="deg"),
+            livetime="42 s",
+            aeff=aeff,
+            geom=pars["geom"],
+        )
 
     assert m.data.shape == pars["shape"]
     assert m.unit == "m2 s"
