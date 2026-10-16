@@ -1,0 +1,1 @@
+Added a `~gammapy.visualization.plotters.irf.RadMaxPlotter` plotter class to replace `~gammapy.irf.RadMax2D.plot_rad_max_vs_energy`
