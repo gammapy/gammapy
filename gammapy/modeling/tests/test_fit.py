@@ -310,8 +310,8 @@ def test_stat_profile():
     dataset.models.parameters["x"].scan_n_values = 3
     result = fit.stat_profile(datasets=[dataset], parameter="x")
 
-    assert_allclose(result["test.x_scan"], [0, 2, 4], atol=1e-7)
-    assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
+    assert_allclose(result["test.x_scan"], [-2, 2, 6], atol=1e-7)
+    assert_allclose(result["stat_scan"], [16, 0, 16], atol=1e-7)
     assert len(result["fit_results"]) == 0
 
     # Check that original value state wasn't changed
@@ -327,8 +327,8 @@ def test_stat_profile_reoptimize():
     dataset.models.parameters["x"].scan_n_values = 3
     result = fit.stat_profile(datasets=[dataset], parameter="x", reoptimize=True)
 
-    assert_allclose(result["test.x_scan"], [0, 2, 4], atol=1e-7)
-    assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
+    assert_allclose(result["test.x_scan"], [-2, 2, 6], atol=1e-7)
+    assert_allclose(result["stat_scan"], [16, 0, 16], atol=1e-7)
     assert_allclose(
         result["fit_results"][0].total_stat, result["stat_scan"][0], atol=1e-7
     )
