@@ -10,12 +10,14 @@ from .fermi import (
     SourceCatalog3FHL,
     SourceCatalog3PC,
     SourceCatalog4FGL,
+    SourceCatalog4LAC,
     SourceCatalogObject2FHL,
     SourceCatalogObject2PC,
     SourceCatalogObject3FGL,
     SourceCatalogObject3FHL,
     SourceCatalogObject3PC,
     SourceCatalogObject4FGL,
+    SourceCatalogObject4LAC,
 )
 from .gammacat import SourceCatalogGammaCat, SourceCatalogObjectGammaCat
 from .hawc import (
@@ -45,6 +47,7 @@ CATALOG_REGISTRY = Registry(
         SourceCatalog3HWC,
         SourceCatalog2PC,
         SourceCatalog1LHAASO,
+        SourceCatalog4LAC,
     ]
 )
 """Registry of source catalogs in Gammapy."""
@@ -60,6 +63,7 @@ __all__ = [
     "SourceCatalog3FHL",
     "SourceCatalog3HWC",
     "SourceCatalog4FGL",
+    "SourceCatalog4LAC",
     "SourceCatalog2PC",
     "SourceCatalog3PC",
     "SourceCatalogGammaCat",
@@ -73,6 +77,7 @@ __all__ = [
     "SourceCatalogObject3FHL",
     "SourceCatalogObject3HWC",
     "SourceCatalogObject4FGL",
+    "SourceCatalogObject4LAC",
     "SourceCatalogObject2PC",
     "SourceCatalogObject3PC",
     "SourceCatalogObjectGammaCat",

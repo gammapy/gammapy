@@ -30,12 +30,14 @@ __all__ = [
     "SourceCatalog3FGL",
     "SourceCatalog3FHL",
     "SourceCatalog4FGL",
+    "SourceCatalog4LAC",
     "SourceCatalog2PC",
     "SourceCatalog3PC",
     "SourceCatalogObject2FHL",
     "SourceCatalogObject3FGL",
     "SourceCatalogObject3FHL",
     "SourceCatalogObject4FGL",
+    "SourceCatalogObject4LAC",
     "SourceCatalogObject2PC",
     "SourceCatalogObject3PC",
 ]
@@ -2036,6 +2038,157 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         return table
 
 
+class SourceCatalogObject4LAC(SourceCatalogObjectFermiBase):
+    """One source from the Fermi-LAT 4LAC catalog.
+
+    Catalog is represented by `~gammapy.catalog.SourceCatalog4LAC`.
+    """
+
+    asso = ["ASSOC1", "VLBI_Counterpart"]
+
+    def info(self, info="all"):
+        """Summary information string.
+
+        Parameters
+        ----------
+        info : {'all', 'basic', 'more', 'position', 'spectral', 'lightcurve'}
+            Comma separated list of options.
+        """
+        if info == "all":
+            info = "basic,more,position,spectral,lightcurve"
+
+        ss = ""
+        ops = info.split(",")
+        if "basic" in ops:
+            ss += self._info_basic()
+        if "more" in ops:
+            ss += self._info_more()
+        if "position" in ops:
+            ss += self._info_position()
+        if "spectral" in ops:
+            ss += self._info_spectral_fit()
+            ss += self._info_spectral_class()
+        if "lightcurve" in ops:
+            ss += self._info_lightcurve()
+        return ss
+
+    def _info_more(self):
+        d = self.data
+        ss = "\n*** Other info ***\n\n"
+        fmt = "{:<32s} : {:.3f}\n"
+        ss += fmt.format("Significance (50 MeV - 1 TeV)", d["Signif_Avg"])
+        ss += fmt.format("Redshift", d["Redshift"])
+        ss += fmt.format("Energy of the highest energy photon", d["Highest_energy"])
+        ss += "\n{:<20s} : {}\n".format("Other flags", d["Flags"])
+        return ss
+
+    def _info_position(self):
+        d = self.data
+        ss = "\n*** Position info ***\n\n"
+        ss += "{:<20s} : {:.3f}\n".format("RA", d["RAJ2000"])
+        ss += "{:<20s} : {:.3f}\n".format("DEC", d["DEJ2000"])
+        ss += "{:<20s} : {:.3f}\n".format("GLON", d["GLON"])
+        ss += "{:<20s} : {:.3f}\n".format("GLAT", d["GLAT"])
+        return ss
+
+    def _info_spectral_fit(self):
+        d = self.data
+        spec_type = d["SpectrumType"].strip()
+
+        ss = "\n*** Spectral info ***\n\n"
+
+        ss += "{:<45s} : {}\n".format("Spectrum type", d["SpectrumType"])
+        fmt = "{:<45s} : {:.3f}\n"
+        ss += fmt.format("Detection significance (50 MeV - 1 TeV)", d["Signif_Avg"])
+
+        if spec_type == "PowerLaw":
+            tag = "PL"
+        elif spec_type == "LogParabola":
+            tag = "LP"
+            ss += "{:<45s} : {:.4f} +- {:.5f}\n".format(
+                "beta", d["LP_beta"], d["Unc_LP_beta"]
+            )
+
+        elif spec_type == "PLSuperExpCutoff4":
+            tag = "PLEC"
+            fmt = "{:<45s} : {:.4f} +- {:.4f}\n"
+
+        else:
+            raise ValueError(f"Invalid spec_type: {spec_type!r}")
+
+        ss += "{:<45s} : {:.0f} {}\n".format(
+            "Pivot energy", d["Pivot_Energy"].value, d["Pivot_Energy"].unit
+        )
+
+        fmt = "{:<45s} : {:.3f} +- {:.3f}\n"
+
+        if tag != "PLEC":
+            ss += fmt.format(
+                "Spectral index", d[tag + "_Index"], d["Unc_" + tag + "_Index"]
+            )
+
+        fmt = "{:<45s} : {:.3} +- {:.3} {}\n"
+        ss += fmt.format(
+            "Integral flux (1 - 100 GeV)",
+            d["Flux1000"].value,
+            d["Unc_Flux1000"].value,
+            "cm-2 s-1",
+        )
+
+        fmt = "{:<45s} : {:.3} +- {:.3} {}\n"
+        ss += fmt.format(
+            "Energy flux (100 MeV - 100 GeV)",
+            d["Energy_Flux100"].value,
+            d["Unc_Energy_Flux100"].value,
+            "erg cm-2 s-1",
+        )
+
+        return ss
+
+    def _info_spectral_class(self):
+        d = self.data
+
+        ss = "\n{:<45s} : {}\n".format("SED class", d["SED_class"])
+
+        ss += "{:<45s} : {:.2e} {}\n".format(
+            "Synchrotron-peak frequency", d["nu_syn"].value, d["nu_syn"].unit
+        )
+        ss += "{:<45s} : {:.2e} {}\n".format(
+            "SED at synchrotron-peak frequency", d["nuFnu_syn"].value, "erg cm-2 s-1"
+        )
+
+        fmt = "{:<45s} : {:.2f} +- {:.2f} {}\n"
+        ss += fmt.format(
+            "Energy of the high-energy SED peak",
+            d["HE_EPeak"].value,
+            d["Unc_HE_EPeak"].value,
+            d["Unc_HE_EPeak"].unit,
+        )
+        fmt = "{:<45s} : {:.2e} +- {:.2e} {}\n"
+        ss += fmt.format(
+            r"SED at the high-energy SED peak",
+            d["HE_nuFnuPeak"].value,
+            d["Unc_HE_nuFnuPeak"].value,
+            "MeV cm-2 s-1",
+        )
+
+        return ss
+
+    def _info_lightcurve(self):
+        d = self.data
+        ss = "\n*** Lightcurve info ***\n\n"
+        # ss += "Lightcurve measured in the energy band: 100 MeV - 100 GeV\n\n"
+
+        ss += "{:<25s} : {:.3f}\n".format("Variability index", d["Variability_Index"])
+
+        fmt = "{:<25s} : {:.3f} +- {:.3f} \n"
+        ss += fmt.format(
+            "Fractional variability", d["Frac_Variability"], d["Unc_Frac_Variability"]
+        )
+
+        return ss
+
+
 class SourceCatalog3FGL(SourceCatalog):
     """Fermi-LAT 3FGL source catalog.
 
@@ -2353,3 +2506,34 @@ class SourceCatalog3PC(SourceCatalog):
 
     def _get_name_spectral(self, data):
         return f"PSR{data[self._source_name_key].strip()}"
+
+
+class SourceCatalog4LAC(SourceCatalog):
+    """Fermi-LAT 4th AGN catalog.
+
+    - https://arxiv.org/abs/2209.12070
+    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/4LACDR3/
+
+    One source is represented by `~gammapy.catalog.SourceCatalogObject4LAC`.
+    """
+
+    tag = "4LAC"
+    description = "LAT 4th AGN catalog"
+    source_object_class = SourceCatalogObject4LAC
+
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/table-4LAC-DR3-h.fits"):
+        filename = make_path(filename)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", u.UnitsWarning)
+            table_agns = Table.read(filename, hdu="4LAC_DR3_AGNs")
+
+        table_standardise_units_inplace(table_agns)
+
+        source_name_key = "Source_Name"
+        source_name_alias = ["ASSOC1"]
+        super().__init__(
+            table=table_agns,
+            source_name_key=source_name_key,
+            source_name_alias=source_name_alias,
+        )
