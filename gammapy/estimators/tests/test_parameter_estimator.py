@@ -35,6 +35,7 @@ def test_parameter_estimator_1d(crab_datasets_1d, pwl_model):
 
     model = SkyModel(spectral_model=pwl_model, name="Crab")
     model.spectral_model.amplitude.scan_n_values = 10
+    model.spectral_model.amplitude.scan_n_sigma = 3
 
     for dataset in datasets:
         dataset.models = model
@@ -50,6 +51,7 @@ def test_parameter_estimator_1d(crab_datasets_1d, pwl_model):
     assert_allclose(result["stat_null"], 391.5527, rtol=1e-3)
     assert_allclose(result["amplitude_errp"], 6.703e-12, rtol=5e-3)
     assert_allclose(result["amplitude_errn"], 6.152e-12, rtol=5e-3)
+    assert_allclose(result["amplitude_ul"], 6.537742e-11, rtol=5e-3)
 
     # Add test for scan
     assert_allclose(result["amplitude_scan"].shape, 10)
@@ -70,7 +72,7 @@ def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
     assert_allclose(datasets[0].models.parameters["alpha"].value, alpha_value)
     assert_allclose(result["amplitude"], 0.018251, rtol=1e-3)
     assert_allclose(result["amplitude_scan"].shape, 10)
-    assert_allclose(result["amplitude_scan"][0], 0.017282, atol=1e-3)
+    assert_allclose(result["amplitude_scan"][0], 1.8256e-07, atol=1e-3)
 
 
 @requires_data()
