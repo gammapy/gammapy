@@ -224,9 +224,11 @@ class TestFluxPointFit:
 
         ts_diff = profile["stat_scan"] - result.total_stat
         assert_allclose(
-            model.amplitude.scan_values, [1.97e-13, 2.16e-13, 2.35e-13], rtol=1e-2
+            model.amplitude.scan_values, [0, 2.16e-13, 4.32144e-13], rtol=1e-2
         )
-        assert_allclose(ts_diff, [110.244116, 0.0, 110.292074], rtol=1e-2, atol=1e-7)
+        assert_allclose(
+            ts_diff, [14259.794067, 0.0, 14260.339442], rtol=1e-2, atol=1e-7
+        )
 
         value = model.parameters["amplitude"].value
         err = model.parameters["amplitude"].error

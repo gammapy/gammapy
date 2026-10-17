@@ -414,7 +414,10 @@ class Parameter:
     def scan_min(self):
         """Stat scan minimum."""
         if self._scan_min is None:
-            return self.value - self._step * self.scan_n_sigma
+            min_ = self.value - self._step * self.scan_n_sigma
+            if self.interp == "log" and min_ < 0:
+                min_ = self._step / 1e5
+            return min_
 
         return self._scan_min
 
