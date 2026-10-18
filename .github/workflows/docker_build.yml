@@ -1,0 +1,19 @@
+name: Build docker image
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'  # Run monthly, at 12:00 AM on day 1 of the month
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Build image
+        run: docker build -t gammapy:test .
+
+      - name: Test image
+        run: docker run --rm gammapy:test python -c "import gammapy; print(gammapy.__version__)"

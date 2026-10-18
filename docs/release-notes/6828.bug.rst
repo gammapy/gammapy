@@ -1,0 +1,1 @@
+Fixes `~gammapy.astro.darkmatter.JFactory` when a map pixel center coincides exactly with the dark-matter halo center.
