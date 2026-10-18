@@ -1,0 +1,45 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://gammapy.org/gammapy/schemas/estimators/fluxpoints-1.0.0"
+
+title: |
+    Represents FluxPoints.
+
+description: |
+    Support the serialization of FluxPoints, a container of flux map
+    quantities (e.g. norm, norm_err, norm_ul) evaluated relative to
+    a reference spectral model.
+
+type: object
+properties:
+  data:
+    type: object
+    additionalProperties:
+      anyOf:
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0"
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0"
+        - tag: "asdf://gammapy.org/gammapy/tags/maps/regionndmap-1.0.0"
+    description: |
+      Dictionary of the associated flux quantities,
+      each stored as a Map object sharing the same geometry.
+  reference_model:
+    tag: "asdf://gammapy.org/gammapy/tags/modeling/models-1.0.0"
+    description: |
+      Reference model used to compute the flux quantities, stored as a
+      Models container holding exactly one model.
+  meta:
+    type: object
+    description: |
+      Associated metadata container.
+  gti:
+    tag: "asdf://gammapy.org/gammapy/tags/data/gti-1.0.0"
+    description: |
+      GTI of the observation(s) the flux points were computed from.
+  filter_success_nan:
+    type: boolean
+    description: |
+      Sets fitted norm and error to NaN when the fit has not succeeded.
+required: [data, reference_model]
+additionalProperties: false
+...
