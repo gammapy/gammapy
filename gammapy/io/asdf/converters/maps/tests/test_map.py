@@ -4,6 +4,7 @@ import pytest
 from gammapy.maps import MapAxis, WcsGeom, Map, Maps
 
 asdf = pytest.importorskip("asdf")
+asdf.get_config().validate_on_read = True
 pytest.importorskip("asdf.testing")
 
 
