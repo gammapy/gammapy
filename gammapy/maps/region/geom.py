@@ -217,7 +217,7 @@ class RegionGeom(Geom):
         """Sky coordinate of the center of the region."""
         if self.region is None:
             return SkyCoord(np.nan * u.deg, np.nan * u.deg)
-        if self.is_all_point_sky_regions:
+        if isinstance(self.region, PointSkyRegion):
             return self.region.center
         return self._rectangle_bbox.center
 
