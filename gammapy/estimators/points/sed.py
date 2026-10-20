@@ -207,6 +207,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             "n_sigma": self.n_sigma,
             "n_sigma_ul": self.n_sigma_ul,
             "sed_type_init": "likelihood",
+            "n_sigma_sensitivity": self.n_sigma_sensitivity,
         }
 
         rows = parallel.run_multiprocessing(
