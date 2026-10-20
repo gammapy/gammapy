@@ -412,7 +412,7 @@ class IRF(metaclass=abc.ABCMeta):
         if axis_name in kwargs:
             axis = self.axes[axis_name]
             coord = u.Quantity(kwargs[axis_name], axis.unit, copy=COPY_IF_NEEDED)
-            kwargs[axis_name] = np.clip(coord, axis.bounds[0], axis.bounds[1])
+            kwargs[axis_name] = np.clip(coord, axis.edges[0], axis.edges[-1])
 
         return cumsum.evaluate(**kwargs)
 
