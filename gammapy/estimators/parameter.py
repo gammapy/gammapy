@@ -380,9 +380,6 @@ class ParameterEstimator(Estimator):
         if not isinstance(datasets, DatasetsActor):
             datasets = Datasets(datasets)
         parameter = datasets.parameters[parameter]
-        parameter._conf_n_sigma = max(
-            self.n_sigma, self.n_sigma_ul, self.n_sigma_sensitivity
-        )
 
         with datasets.parameters.restore_status():
             if not self.reoptimize:
@@ -472,10 +469,12 @@ class ParameterSensitivityEstimator:
         """Parameter value  matching the target significance."""
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
+            param = self.parameter.copy()
+            param.scan_n_sigma = self.n_sigma + 1
             roots, _ = find_roots(
                 self._fcn,
-                self.parameter.conf_min,
-                self.parameter.conf_max,
+                param.conf_min,
+                param.conf_max,
                 args=(datasets,),
                 nbin=100,
                 maxiter=self.max_niter,
