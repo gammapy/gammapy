@@ -38,7 +38,7 @@ class EDispMap(IRFMap):
         import numpy as np
         from astropy import units as u
         from astropy.coordinates import EarthLocation, SkyCoord
-        from gammapy.data import FixedPointingInfo, Observation
+        from gammapy.data import FixedPointingInfo, Observation, observatory_locations
         from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
         from gammapy.makers import MapDatasetMaker
         from gammapy.makers.utils import make_edisp_map
@@ -67,9 +67,11 @@ class EDispMap(IRFMap):
         edisp2D = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")
         aeff2d = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
+        obs_loc = observatory_locations.get("ctao_south")
+
         obs = Observation.create(
             pointing=FixedPointingInfo(fixed_icrs=pointing),
-            location=EarthLocation(lon=0, lat=0),
+            location=obs_loc,
             livetime=livetime,
             irfs={"aeff": aeff2d, "edisp": edisp2D},
         )
