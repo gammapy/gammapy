@@ -903,7 +903,7 @@ def test_warning_for_bad_model(caplog):
         in [_.message for _ in caplog.records]
     )
 
-
+@requires_data()
 def test_confidence_failure_fallback_to_scan():
     dataset = SpectrumDatasetOnOff.read(
         "$GAMMAPY_DATA/datasets/simulations/simulated_spectrum_test_ul_failure.fits.gz"
