@@ -238,7 +238,7 @@ class ModelBase:
 
             setattr(self, par.name, par)
 
-        self._covariance = Covariance(self.parameters)
+        self._covariance = None
 
         covariance_data = kwargs.get("covariance_data", None)
 
@@ -284,7 +284,10 @@ class ModelBase:
         return cls(**kwargs)
 
     def _check_covariance(self):
-        if not self.parameters == self._covariance.parameters:
+        if (
+            self._covariance is None
+            or not self.parameters == self._covariance.parameters
+        ):
             self._covariance = Covariance(self.parameters)
 
     @property
@@ -515,7 +518,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         self._covar_file = None
 
-        self._covariance = Covariance(self.parameters)
+        self._covariance = None
 
         # Set separately because this triggers the update mechanism on the sub-models
         if covariance_data is not None:

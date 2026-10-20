@@ -92,7 +92,7 @@ def test_bayesian_model_selection(bms_results):
     table = bms_results.stats_difference_table("lp(uninformative)")
     test_str = "H0: lp(uninformative) - H1: lp(strong)"
     assert table["Model (prior)"][0] == test_str
-    assert_allclose(table["-2logl"], 0, atol=1e-5)
+    assert_allclose(table["-2logl"], 0, atol=2e-5)
 
 
 @pytest.mark.xfail

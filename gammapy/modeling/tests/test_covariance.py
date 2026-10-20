@@ -73,3 +73,16 @@ def test_from_factor_matrix():
     covar = Covariance.from_factor_matrix(parameters, np.ones((2, 2)))
     assert covar.data.shape == (2, 2)
     assert_allclose(covar.data, 1)
+
+
+def test_diagonal_storage_lazy(covariance_diagonal):
+    """Parameter-only covariance is stored compactly (no eager dense array)."""
+    assert covariance_diagonal._data is None
+    assert_allclose(covariance_diagonal._variance, [0.1**2, 0.2**2, 0.3**2])
+    assert_allclose(covariance_diagonal.data, np.diag([0.1**2, 0.2**2, 0.3**2]))
+
+
+def test_diagonal_storage_dense_input(covariance):
+    """Covariance from explicit data keeps the dense matrix as-is."""
+    assert covariance._data is not None
+    assert_allclose(covariance.data, np.ones((2, 2)))

@@ -25,6 +25,7 @@ from gammapy.utils.testing import requires_dependency
 
 
 asdf = pytest.importorskip("asdf")
+asdf.get_config().validate_on_read = True
 pytest.importorskip("asdf.testing")
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
@@ -398,6 +399,7 @@ test_region_ndmap = [
         "m2 s",
         None,
     ),
+    (RegionGeom.create(region=None, axes=[energy_axis]), "", None),
 ]
 
 
