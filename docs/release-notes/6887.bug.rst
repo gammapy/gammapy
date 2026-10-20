@@ -1,0 +1,1 @@
+Fixes `~gammapy.irf.PSF3D.containment` when rad is larger than the last bin of the PSF rad axis.
