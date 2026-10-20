@@ -398,6 +398,7 @@ test_region_ndmap = [
         "m2 s",
         None,
     ),
+    (RegionGeom.create(region=None, axes=[energy_axis]), "", None),
 ]
 
 

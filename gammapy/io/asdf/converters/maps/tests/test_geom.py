@@ -354,12 +354,6 @@ def test_regiongeom_roundtrip(geom, tmp_path):
 tested_read_regiongeom_invalid_examples = [
     {
         "example": """!<asdf://gammapy.org/gammapy/tags/maps/regiongeom-1.0.0>
-         axes: !<asdf://gammapy.org/gammapy/tags/maps/mapaxes-1.0.0>
-           axes: []
-         """,
-    },
-    {
-        "example": """!<asdf://gammapy.org/gammapy/tags/maps/regiongeom-1.0.0>
          region: 42
          """,
     },
@@ -371,3 +365,19 @@ def test_regiongeom_read_examples(example):
     buff = yaml_to_asdf(f"example: {example['example'].strip()}")
     with pytest.raises(asdf.exceptions.ValidationError):
         asdf.open(buff)
+
+
+def test_regiongeom_roundtrip_no_region(tmp_path):
+    file_path = tmp_path / "test.asdf"
+    geom = RegionGeom.create(region=None, axes=[energy_axis])
+
+    with asdf.AsdfFile() as af:
+        af["geom"] = geom
+        af.write_to(file_path)
+
+    with asdf.open(file_path) as af:
+        result = af["geom"]
+        assert result == geom
+        assert result.region is None
+        assert result.wcs is None
+        assert result == geom
