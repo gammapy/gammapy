@@ -41,7 +41,10 @@ class EDispMap(IRFMap):
         from gammapy.data import FixedPointingInfo, Observation, observatory_locations
         from gammapy.irf import EnergyDispersion2D, EffectiveAreaTable2D
         from gammapy.makers import MapDatasetMaker
-        from gammapy.maps import WcsGeom, MapAxis
+        from gammapy.maps import MapAxis, WcsGeom
+
+        pointing = SkyCoord(0, 0, unit="deg")
+        livetime = 1 * u.hour
 
         # Define energy dispersion map geometry
         energy_axis_true = MapAxis.from_edges(
