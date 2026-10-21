@@ -34,11 +34,6 @@ from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import (
     make_edisp_kernel_map,
 )
-from gammapy.data import (
-    FixedPointingInfo,
-    Observation,
-    observatory_locations,
-)
 from gammapy.maps import MapAxis, WcsGeom
 
 ######################################################################

@@ -106,7 +106,7 @@ def make_test_psfmap(size, shape="gauss"):
     )
 
     geom = WcsGeom.create(
-        skydir=sky_dir, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
+        skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
     )
 
     return MapDatasetMaker.make_psf(geom, test_obs)
