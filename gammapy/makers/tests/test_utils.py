@@ -468,7 +468,8 @@ def test_make_edisp_kernel_map():
 
     geom = WcsGeom.create(10, binsz=0.5, axes=[ereco, etrue])
     pointing = SkyCoord(0, 0, frame="icrs", unit="deg")
-    edispmap = make_edisp_kernel_map(edisp, pointing, geom)
+    with pytest.warns(GammapyDeprecationWarning):
+        edispmap = make_edisp_kernel_map(edisp, pointing, geom)
 
     kernel = edispmap.get_edisp_kernel(position=pointing)
     assert_allclose(kernel.pdf_matrix[:, 0], (1.0, 1.0, 0.0, 0.0, 0.0, 0.0), atol=1e-14)
