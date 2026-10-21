@@ -304,6 +304,7 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     return PSFMap(psf_map, exposure_map)
 
 
+@deprecated("2.2", alternative="MapDatasetMaker.make_edisp")
 def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=True):
     """Make an edisp map for a single observation.
 
@@ -344,6 +345,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     return EDispMap(edisp_map, exposure_map)
 
 
+@deprecated("2.2", alternative="MapDatasetMaker.make_edisp_kernel")
 def make_edisp_kernel_map(
     edisp, pointing, geom, exposure_map=None, use_region_center=True, threshold=1e-8
 ):
