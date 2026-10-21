@@ -39,9 +39,10 @@ class EDispMap(IRFMap):
         import numpy as np
         from astropy import units as u
         from astropy.coordinates import SkyCoord
-        from gammapy.maps import WcsGeom, MapAxis
+        from gammapy.data import FixedPointingInfo, Observation, observatory_locations
         from gammapy.irf import EnergyDispersion2D, EffectiveAreaTable2D
-        from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
+        from gammapy.makers import MapDatasetMaker
+        from gammapy.maps import WcsGeom, MapAxis
 
         # Define energy dispersion map geometry
         energy_axis_true = MapAxis.from_edges(
@@ -49,6 +50,8 @@ class EDispMap(IRFMap):
         )
         migra_axis = MapAxis.from_edges(np.linspace(0, 3, 100), name="migra")
         pointing = SkyCoord(0, 0, unit="deg")
+        livetime = 1 * u.hour
+
         geom = WcsGeom.create(
             binsz=0.25 * u.deg,
             width=10 * u.deg,
@@ -63,14 +66,14 @@ class EDispMap(IRFMap):
         edisp2D = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")
         aeff2d = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
-        # Create the exposure map
-        exposure_geom = geom.squash(axis_name="migra")
-        exposure_map = make_map_exposure_true_energy(
-            pointing, "1 h", aeff2d, exposure_geom
+        test_obs = Observation.create(
+            pointing=FixedPointingInfo(fixed_icrs=pointing),
+            location=observatory_locations["ctao_north"],
+            livetime=livetime,
+            irfs={"aeff": aeff2d, "edisp": edisp2D},
         )
-
-        # Create the EDispMap for the specified pointing
-        edisp_map = make_edisp_map(edisp2D, pointing, geom, exposure_map)
+        # Create the EDispMap for the specified observation
+        edisp_map = MapDatasetMaker.make_edisp(geom, test_obs)
 
         # Get an Energy Dispersion (1D) at any position in the image
         pos = SkyCoord(2.0, 2.5, unit="deg")

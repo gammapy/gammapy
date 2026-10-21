@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import scipy.special
 from astropy import units as u
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import Angle, SkyCoord, EarthLocation
 from astropy.units import Quantity
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
@@ -159,9 +159,12 @@ class EnergyDispersion2D(IRF):
         edisp : `~gammapy.irf.EDispKernel`
             Energy dispersion matrix.
         """
-        from gammapy.makers.utils import make_edisp_kernel_map
+        from gammapy.data import FixedPointingInfo, Observation
+        from gammapy.irf import EffectiveAreaTable2D
+        from gammapy.makers import MapDatasetMaker
 
         offset = Angle(offset)
+        pointing = SkyCoord("0d", "0d")
 
         if isinstance(energy_axis, Quantity):
             energy_axis = MapAxis.from_energy_edges(energy_axis)
@@ -176,16 +179,24 @@ class EnergyDispersion2D(IRF):
         if energy_axis_true is None:
             energy_axis_true = self.axes["energy_true"]
 
-        pointing = SkyCoord("0d", "0d")
+        offset_axis = MapAxis.from_bounds(0, offset, nbin=1, name="offset", unit="deg")
+        aeff = EffectiveAreaTable2D(
+            axes=[energy_axis_true, offset_axis, energy_axis], data=1e10, unit="cm2"
+        )
+
+        temp_obs = Observation.create(
+            pointing=FixedPointingInfo(fixed_icrs=pointing),
+            location=EarthLocation(lon=0, lat=0),
+            livetime=1 * u.s,
+            irfs={"aeff": aeff, "edisp": self},
+        )
 
         center = pointing.directional_offset_by(
             position_angle=0 * u.deg, separation=offset
         )
         geom = RegionGeom.create(region=center, axes=[energy_axis, energy_axis_true])
 
-        edisp = make_edisp_kernel_map(
-            geom=geom, edisp=self, pointing=pointing, threshold=threshold
-        )
+        edisp = MapDatasetMaker.make_edisp(geom, temp_obs)
         return edisp.get_edisp_kernel()
 
     def normalize(self):
