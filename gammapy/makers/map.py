@@ -365,7 +365,6 @@ class MapDatasetMaker(Maker):
             exposure = MapDatasetMaker.make_exposure_irf(
                 geom.squash(axis_name="energy"), observation
             )
-
         # Use EnergyDispersion2D migra axis.
         migra_axis = edisp.axes["migra"]
 

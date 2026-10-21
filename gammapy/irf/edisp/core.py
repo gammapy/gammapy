@@ -181,7 +181,7 @@ class EnergyDispersion2D(IRF):
 
         offset_axis = MapAxis.from_bounds(0, offset, nbin=1, name="offset", unit="deg")
         aeff = EffectiveAreaTable2D(
-            axes=[energy_axis_true, offset_axis, energy_axis], data=1e10, unit="cm2"
+            axes=[energy_axis_true, offset_axis], data=1e10, unit="cm2"
         )
 
         temp_obs = Observation.create(
@@ -196,7 +196,7 @@ class EnergyDispersion2D(IRF):
         )
         geom = RegionGeom.create(region=center, axes=[energy_axis, energy_axis_true])
 
-        edisp = MapDatasetMaker.make_edisp(geom, temp_obs)
+        edisp = MapDatasetMaker.make_edisp_kernel(geom, temp_obs)
         return edisp.get_edisp_kernel()
 
     def normalize(self):
