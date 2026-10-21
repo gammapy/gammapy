@@ -5,7 +5,7 @@ from astropy.table import Table
 import numpy as np
 from regions import PointSkyRegion
 from gammapy.datasets import MapDatasetMetaData
-from gammapy.irf import EDispKernelMap, PSFMap, FoVAlignment
+from gammapy.irf import EDispMap, EDispKernelMap, PSFMap, FoVAlignment
 from gammapy.data import Observation
 from gammapy.maps import Map
 from .core import Maker
