@@ -402,7 +402,7 @@ channels = ["tau", "mu", "b", "Z", "h"]
 fig, ax = plt.subplots(figsize=(7, 5))
 
 for channel in channels:
-    fluxes = PrimaryFlux(mDM=mDM, channel=channel, source="pppc")
+    fluxes = PrimaryFlux(mDM=mDM, channel=channel, source="pppc4")
     fluxes.plot(
         energy_bounds=[mDM / 100, mDM],
         ax=ax,
