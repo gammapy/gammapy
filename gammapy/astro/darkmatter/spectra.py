@@ -41,6 +41,10 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
     (``Log[10,x]``, ``mDM``), enabling interpolation in dark matter mass
     while keeping ``mDM`` itself frozen as a model parameter.
 
+    .. note::
+
+        Since Gammapy v2.2, the default source has changed from "pppc4" to "cosmixs",
+
     Parameters
     ----------
     mDM : `~astropy.units.Quantity`
@@ -64,8 +68,6 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
         plus columns named after the requested annihilation channel(s)
         using the internal channel registry naming convention.
 
-        Note: From version>2.2, the default source has changed from ``"pppc4"`` to
-        ``"cosmixs"``. The PPPC4 tables are still available.
     mapping_dict : dict, optional
         Mapping dictionary used to rename the columns of a custom source
         file to the expected internal column names. Only used when
@@ -368,7 +370,7 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
                     used by default.\n",
             )
             log.warning(
-                "\nFrom version>2.2, the default source has changed from PPPC4DMID to CosmiXs\n",
+                "\nSince Gammapy v2.2, the default source has changed from 'pppc4' to 'cosmixs'\n",
             )
         elif isinstance(source, Table):
             self._source = source
