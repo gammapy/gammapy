@@ -27,7 +27,11 @@ def check_run_pair_validity(
     zenith_tol=10 * u.deg,
     aeff_tol=0.1,
 ):
-    """Validity check over a list of ON/OFF pairs.
+    """Validity check over a list of ON/OFF pairs. Currently supports only one OFF observation
+    for each ON observation
+
+    Checks for difference in zenith angle and effective area. Returns a summary table along
+    with a flag if the match is sufficient within tolerance.
 
     Parameters
     ----------
@@ -77,15 +81,23 @@ def check_run_pair_validity(
     return QTable(results)
 
 
-def _aeff_max_frac_deviation(on_observation, off_observation, energy_axis):
+def _aeff_max_frac_deviation(
+    on_observation, off_observation, energy_axis=None, offset_axis=None
+):
     """Max fractional deviation between the two effective areas."""
     aeff_on = on_observation.aeff
     aeff_off = off_observation.aeff
     if aeff_on is None or aeff_off is None:
         return None
 
-    energy = energy_axis.center
-    offset = aeff_on.axes["offset"].center
+    if energy_axis is None:
+        energy = aeff_on.axes["energy"].center
+    else:
+        energy = energy_axis.center
+    if offset_axis is None:
+        offset = aeff_on.axes["offset"].center
+    else:
+        offset = offset_axis.center
     energy_grid, offset_grid = np.meshgrid(energy, offset, indexing="ij")
 
     a_on = aeff_on.evaluate(energy_true=energy_grid, offset=offset_grid).to_value("m2")
@@ -106,28 +118,37 @@ class OnOffBackgroundMaker(Maker):
     into its OnOff counterpart by mirroring the OFF run's events into
     the ON pointing FoV frame and setting acceptances from livetime.
 
-    On-off pairs should be created beforehand by the user.
+    ON-OFF pairs should be created beforehand by the user.
+
+    Currently, supports only one OFF observation for each ON observation.
+
+    This works only for pointing observations, and drift mode is not supported.
 
     Parameters
     ----------
     acceptance_method : str, optional
-        Allowed option are {"livetime_ratio"}
+        Allowed option are {"livetime_ratio", "counts-ratio"}
         Default is "livetime"
         Strategy for the acceptance calculation
-        "livetime_ratio" takes the ratio of livetimes, flat acceptance
+        "livetime_ratio" takes the ratio of livetimes
+        "counts-ratio" takes the ratio of the counts outside an exclusion mask, passed through kwargs
+    kwargs: Additional arguments passed to the maker
+            Should contain `exclusion_mask` is acceptance_mathod is `counts_ratio`, otherwise assume no mask
     """
 
     tag = "OnOffBackgroundMaker"
 
-    available_acceptance_methods = ["livetime_ratio"]
+    available_acceptance_methods = ["livetime_ratio", "counts-ratio"]
 
-    def __init__(self, acceptance_method="livetime_ratio"):
+    def __init__(self, acceptance_method="livetime_ratio", **kwargs):
         if acceptance_method not in self.available_acceptance_methods:
             raise ValueError(
                 f"Unknown acceptance_method {acceptance_method!r}, "
                 f"choose from {self.available_acceptance_methods}"
             )
+
         self.acceptance_method = acceptance_method
+        self.mask = kwargs.get("exclusion_mask", None)
 
     def _mirror_off_events(self, on_observation, off_observation):
         """Reproject OFF events into the ON pointing FoV frame (aligned with RA/DEC)."""
@@ -145,17 +166,22 @@ class OnOffBackgroundMaker(Maker):
         table["DEC"] = off_coord.dec
         return EventList(table)
 
-    def _make_acceptance(self, dataset, on_observation, off_observation):
+    def _make_acceptance(self, dataset, on_observation, off_observation, counts_off):
         geom = dataset.counts.geom
-        t_on = on_observation.observation_live_time_duration.to_value("s")
-        t_off = off_observation.observation_live_time_duration.to_value("s")
 
         if self.acceptance_method == "livetime_ratio":
-            acceptance = Map.from_geom(geom, unit="", data=t_on)
-            acceptance_off = Map.from_geom(geom, unit="", data=t_off)
-            return acceptance, acceptance_off
+            val_on = on_observation.observation_live_time_duration.to_value("s")
+            val_off = off_observation.observation_live_time_duration.to_value("s")
 
-        raise ValueError(f"Unhandled acceptance_method {self.acceptance_method!r}")
+        elif self.acceptance_method == "counts-ratio":
+            if self.mask is None:
+                mask = Map.from_geom(geom=geom, data=1, dtype=bool)
+            val_on = (dataset.counts * mask).data.sum()
+            val_off = (counts_off * mask).data.sum()
+
+        acceptance = Map.from_geom(geom, unit="", data=val_on)
+        acceptance_off = Map.from_geom(geom, unit="", data=val_off)
+        return acceptance, acceptance_off
 
     def run(self, dataset, on_observation, off_observation):
         """Create background using dedicated off pointing.
@@ -173,12 +199,18 @@ class OnOffBackgroundMaker(Maker):
         -------
         dataset : `~gammapy.datasets.MapDatasetOnOff` or `~gammapy.datasets.SpectrumDatasetOnOff`
         """
+
+        if (
+            on_observation.pointing.mode == "DRIFT"
+            or off_observation.pointing.mode == "DRIFT"
+        ):
+            raise ValueError("DRIFT mode not supported")
         geom = dataset.counts.geom
         counts_off = Map.from_geom(geom, unit="")
         counts_off.fill_events(self._mirror_off_events(on_observation, off_observation))
 
         acceptance, acceptance_off = self._make_acceptance(
-            dataset, off_observation, on_observation
+            dataset, on_observation, off_observation, counts_off
         )
 
         if isinstance(dataset, SpectrumDataset):

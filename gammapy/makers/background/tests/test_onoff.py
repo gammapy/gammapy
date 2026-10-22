@@ -70,7 +70,20 @@ def test_run_map_dataset(map_dataset, observations):
     assert np.allclose(result.counts.data, map_dataset.counts.data)
     assert result.counts_off.data.sum() == 7662
     assert result.counts_off.geom == result.counts.geom
-    assert_allclose(result.background.data.sum(), 7937, atol=1e-1)
+    assert_allclose(result.background.data.sum(), 7396.48, atol=1e-1)
+    assert result.psf is not None
+    assert result.edisp is not None
+
+    on, off = observations
+    result = OnOffBackgroundMaker(acceptance_method="counts-ratio").run(
+        map_dataset, on, off
+    )
+
+    assert isinstance(result, MapDatasetOnOff)
+    assert np.allclose(result.counts.data, map_dataset.counts.data)
+    assert result.counts_off.data.sum() == 7662
+    assert result.counts_off.geom == result.counts.geom
+    assert_allclose(result.background.data.sum(), 5505, atol=1e-1)
     assert result.psf is not None
     assert result.edisp is not None
 
@@ -83,9 +96,9 @@ def test_run_spectrum_dataset(spectrum_dataset, observations):
     assert isinstance(result, SpectrumDatasetOnOff)
     assert result.counts_off.data.sum() == 40
     assert result.counts_off.geom == result.counts.geom
-    assert_allclose(result.background.data.sum(), 41.4, atol=1e-1)
+    assert_allclose(result.background.data.sum(), 38.61, atol=1e-1)
     assert result.acceptance.geom == result.counts.geom
-    assert_allclose(result.alpha.data[0], 1.03, atol=1e-2)
+    assert_allclose(result.alpha.data[0], 0.965, atol=1e-2)
 
 
 @requires_data()
