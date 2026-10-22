@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import astropy.units as u
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
 import numpy as np
 from astropy.table import Table
@@ -666,7 +666,15 @@ def _get_fov_coord(
     coords = {}
 
     if use_offset:
-        coords["offset"] = skycoord.separation(fov_frame.origin)
+        fov_frame_origin = SkyCoord(0 * u.deg, 0 * u.deg, frame=fov_frame)
+        if isinstance(fov_frame, FoVICRSFrame) or (len(fov_frame.obstime.shape) == 0):
+            coords["offset"] = fov_frame_origin.separation(
+                skycoord, origin_mismatch="ignore"
+            )
+        else:
+            coords["offset"] = np.moveaxis(
+                fov_frame_origin.separation(skycoord, origin_mismatch="ignore"), -1, 0
+            )
     else:
         sign = -1.0 if reverse_lon else 1.0
 
