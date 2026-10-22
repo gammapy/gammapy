@@ -16,6 +16,7 @@ from .points import (
     LightCurveEstimator,
     RegularizedFluxPointsEstimator,
     SensitivityEstimator,
+    JointSensitivityEstimator,
 )
 from .profile import ImageProfile, ImageProfileEstimator
 
@@ -35,6 +36,7 @@ __all__ = [
     "ParameterEstimator",
     "RegularizedFluxPointsEstimator",
     "SensitivityEstimator",
+    "JointSensitivityEstimator",
     "ParameterSensitivityEstimator",
     "TSMapEstimator",
     "EnergyDependentMorphologyEstimator",
