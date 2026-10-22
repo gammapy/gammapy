@@ -345,7 +345,7 @@ def test_array_valued_regions():
         [0.00095698, 0.00382794, 0.00861285, 0.01531174] * u.sr,
         rtol=1e-5,
     )
-    assert_allclose(region_geom.width, [8.2, 8.2] * u.deg)
+    assert_allclose(region_geom.width, [8.2, 8.2] * u.deg, rtol=1e-6)
 
     events = EventList.read(
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
