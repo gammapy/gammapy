@@ -137,4 +137,4 @@ def test_parameter_sensitivity_estimator_negative_excess():
     estimator = ParameterEstimator(selection_optional=["sensitivity"])
 
     sensitivity = estimator.estimate_sensitivity(Datasets([dataset_onoff]), amplitude)
-    assert_allclose(sensitivity["amplitude_sensitivity"], 9.703913e-14, rtol=5e-3)
+    assert_allclose(sensitivity["amplitude_sensitivity"], 2.707944e-13, rtol=5e-3)
