@@ -43,7 +43,7 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
 
     .. note::
 
-        Since Gammapy v2.2, the default source has changed from "pppc4" to "cosmixs",
+        Since Gammapy v2.2, the default source has changed from "pppc4" to "cosmixs".
 
     Parameters
     ----------
