@@ -92,6 +92,9 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
+      - name: Install FFTW3 (required to build Sherpa)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfftw3-dev
       - name: Install base dependencies
         run: |
           python -m pip install --upgrade pip
@@ -168,6 +171,9 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.11'
+      - name: Install FFTW3 (required to build Sherpa)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfftw3-dev
       - name: Install base dependencies
         run: |
           python -m pip install --upgrade pip
