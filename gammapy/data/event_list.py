@@ -499,6 +499,8 @@ class EventList:
 
         # Note the events are not necessarily in time order
         delta_time = self.time - np.min(self.time)
+        if hasattr(delta_time, "mask"):
+            delta_time = delta_time[~delta_time.mask].unmasked
 
         ax.set_xlabel(f"Time [{u.s.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel("Counts")
