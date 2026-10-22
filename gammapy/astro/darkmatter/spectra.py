@@ -53,9 +53,9 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
     source : str, optional
         Data source for the spectral tables. Options are:
 
-        * ``"pppc4"`` (default): Cirelli et al. (2011, 2016) PPPC4DMID
+        * ``"pppc4"``: Cirelli et al. (2011, 2016) PPPC4DMID
           tables.
-        * ``"cosmixs"``: Cirelli et al. (2024) / CosmiXs tables.
+        * ``"cosmixs"`` (default): Cirelli et al. (2024) / CosmiXs tables.
         * A path to a custom file readable by `astropy.table.Table.read`
           (extensions ``.dat``, ``.txt``, ``.csv``, or ``.ecsv``).
 
