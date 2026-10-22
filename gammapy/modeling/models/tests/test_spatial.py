@@ -6,7 +6,7 @@ import astropy.units as u
 import matplotlib as mpl
 import numpy as np
 import pytest
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
 from astropy.wcs import WCS
 from numpy.testing import assert_allclose
 from regions import (
@@ -271,12 +271,14 @@ def test_disk_from_region():
     )
     disk = DiskSpatialModel.from_region(region, frame="icrs")
     reg1 = disk.to_region()
-    assert_allclose(reg1.angle, -30.323 * u.deg, rtol=1e-2)
+    actual = Angle(reg1.angle).wrap_at(180 * u.deg)
+    expected = Angle(-30.323 * u.deg)
+    assert_allclose(actual.deg, expected.deg, rtol=1e-2)
     assert_allclose(reg1.height, region.height, rtol=1e-3)
 
     region = CircleSkyRegion(center=region.center, radius=1.0 * u.deg)
     disk = DiskSpatialModel.from_region(region)
-    assert_allclose(disk.parameters["e"].value, 0.0, rtol=1e-2)
+    assert_allclose(disk.parameters["e"].value, 0.0, rtol=1e-2, atol=1e-6)
     assert_allclose(disk.parameters["lon_0"].value, 20, rtol=1e-2)
     assert disk.frame == "galactic"
 
