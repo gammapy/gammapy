@@ -41,6 +41,10 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
     (``Log[10,x]``, ``mDM``), enabling interpolation in dark matter mass
     while keeping ``mDM`` itself frozen as a model parameter.
 
+    .. note::
+
+        Since Gammapy v2.2, the default source has changed from "pppc4" to "cosmixs".
+
     Parameters
     ----------
     mDM : `~astropy.units.Quantity`
@@ -53,9 +57,9 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
     source : str, optional
         Data source for the spectral tables. Options are:
 
-        * ``"pppc4"`` (default): Cirelli et al. (2011, 2016) PPPC4DMID
+        * ``"pppc4"``: Cirelli et al. (2011, 2016) PPPC4DMID
           tables.
-        * ``"cosmixs"``: Cirelli et al. (2024) / CosmiXs tables.
+        * ``"cosmixs"`` (default): Cirelli et al. (2024) / CosmiXs tables.
         * A path to a custom file readable by `astropy.table.Table.read`
           (extensions ``.dat``, ``.txt``, ``.csv``, or ``.ecsv``).
 
@@ -63,6 +67,7 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
         ``"Log[10,x]"`` columns (after applying ``mapping_dict`` if given),
         plus columns named after the requested annihilation channel(s)
         using the internal channel registry naming convention.
+
     mapping_dict : dict, optional
         Mapping dictionary used to rename the columns of a custom source
         file to the expected internal column names. Only used when
@@ -358,11 +363,14 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
     @source.setter
     def source(self, source):
         if source is None:
-            self._source = "pppc4"
+            self._source = "cosmixs"
 
             log.info(
-                "\nSince no spectra source has been chosen, PPPC4 will be \
+                "\nSince no spectra source has been chosen, CosmiXs will be \
                     used by default.\n",
+            )
+            log.warning(
+                "\nSince Gammapy v2.2, the default source has changed from 'pppc4' to 'cosmixs'\n",
             )
         elif isinstance(source, Table):
             self._source = source
@@ -593,9 +601,9 @@ class DarkMatterSpectralModel(SpectralModel):
     source : str, optional
             Data source for the spectral tables. Options are:
 
-            * ``"pppc4"`` (default): Cirelli et al. (2011, 2016) PPPC4DMID
+            * ``"pppc4"``: Cirelli et al. (2011, 2016) PPPC4DMID
                 tables.
-            * ``"cosmixs"``: Cirelli et al. (2024) / CosmiXs tables.
+            * ``"cosmixs"`` (default): Cirelli et al. (2024) / CosmiXs tables.
             * A path to a custom file readable by `astropy.table.Table.read`
                 (extensions ``.dat``, ``.txt``, ``.csv``, or ``.ecsv``).
 
