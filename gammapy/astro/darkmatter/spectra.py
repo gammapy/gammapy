@@ -366,7 +366,7 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
             self._source = "cosmixs"
 
             log.info(
-                "\nSince no spectra source has been chosen, PPPC4 will be \
+                "\nSince no spectra source has been chosen, CosmiXs will be \
                     used by default.\n",
             )
             log.warning(
