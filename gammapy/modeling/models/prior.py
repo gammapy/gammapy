@@ -220,16 +220,28 @@ class UniformPrior(Prior):
 
 
 class LogUniformPrior(Prior):
-    """LogUniform Prior.
+    r"""Log-normal prior.
 
-    Equivalent to a uniform prior on the log of the parameter
+    Log-normal probability density in the parameter value :math:`x`:
+
+    .. math::
+        -2 \log p(x) = \left(\frac{\ln(x) - \ln(\mu)}{\sigma}\right)^2
+                       + 2 \ln(x) + 2 \ln(\sigma) + \ln(2\pi)
+
+    The :math:`2 \ln(x)` term is the Jacobian of the change of variable
+    from :math:`\ln(x)` to :math:`x`, so the minimum is at the mode
+    :math:`\mu e^{-\sigma^2}`, not at ``mu``. This is the appropriate
+    density for a Bayesian prior on ``x``. For a gaussian constraint in
+    log space with its minimum at ``mu``, use `LogSpaceGaussianPrior`.
 
     Parameters
     ----------
-    min : float, optional
-        Minimum value. Default is 1e-14.
-    max : float, optional
-        Maximum value. Default is 1e-10.
+    mu : float, optional
+        Median of the distribution.
+        Default is 1.
+    sigma : float, optional
+        Standard deviation of the natural logarithm of the value.
+        Default is 1.
     """
 
     tag = ["LogUniformPrior"]
