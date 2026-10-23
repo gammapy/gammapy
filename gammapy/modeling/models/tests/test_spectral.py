@@ -742,7 +742,7 @@ def test_call_plsec_4fgl_dr1():
     assert_allclose(model(4 * u.GeV), desired, rtol=1e-3)
 
 
-def test_pwl_pivot_energy():
+def test_pivot_energy():
     pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 cm-2 s-1 TeV-1")
     assert_quantity_allclose(pwl.pivot_energy, np.nan * u.TeV, rtol=1e-5)
 
@@ -765,8 +765,16 @@ def test_pwl_pivot_energy():
     ]
     assert_quantity_allclose(ecpl.pivot_energy, 1.263819 * u.TeV, rtol=5e-2)
 
+    ebl = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=0.1)
+    with pytest.raises(
+        ValueError,
+        match="Pivot energy cannot be computed for the EBLAbsorptionNormSpectralModel model.",
+    ):
+        ebl.pivot_energy
 
-def test_num_pivot_energy():
+    compound = ebl * ecpl
+    assert_quantity_allclose(compound.pivot_energy, 1.1608281 * u.TeV, rtol=5e-2)
+
     lp = LogParabolaSpectralModel(
         amplitude="5.82442e-11 cm-2 s-1 GeV-1",
         reference="17.337 GeV",
