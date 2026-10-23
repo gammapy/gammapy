@@ -11,11 +11,18 @@ from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.estimators import FluxPoints
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.modeling.models import (
+    PowerLawSpectralModel,
+    SkyModel,
+    TemplateSpatialModel,
+    TemplateSpectralModel,
+)
+
 from gammapy.utils.testing import requires_data
 
 asdf = pytest.importorskip("asdf")
 pytest.importorskip("asdf.testing")
+asdf.get_config().validate_on_read = True
 
 
 def assert_fluxpoints_equal(result, expected):
@@ -40,6 +47,19 @@ def assert_fluxpoints_equal(result, expected):
     ref, ref_expected = result.reference_model, expected.reference_model
     assert type(ref) is type(ref_expected)
     assert ref.name == ref_expected.name
+
+    spectral, spectral_expected = ref.spectral_model, ref_expected.spectral_model
+    assert type(spectral) is type(spectral_expected)
+    if isinstance(spectral_expected, TemplateSpectralModel):
+        assert_allclose(spectral.energy, spectral_expected.energy)
+        assert_allclose(spectral.values, spectral_expected.values)
+
+    spatial, spatial_expected = ref.spatial_model, ref_expected.spatial_model
+    assert type(spatial) is type(spatial_expected)
+    if isinstance(spatial_expected, TemplateSpatialModel):
+        assert_allclose(spatial.map.data, spatial_expected.map.data)
+        assert spatial.map.geom == spatial_expected.map.geom
+
     for actual, desired in zip(ref_expected.parameters, ref.parameters):
         assert_allclose(actual.value, desired.value)
         assert actual.unit == desired.unit
