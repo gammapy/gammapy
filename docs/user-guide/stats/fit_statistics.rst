@@ -163,10 +163,24 @@ the statistics on the `~gammapy.datasets.FluxPointsDataset`:
 - profile
 - distrib
 
-These three methods are described below.
+The methods differ in the statistical information they use and in their
+treatment of upper limits. These three methods are described below.
 
 Chi squared
 ===========
+
+The chi2 method evaluates the chi-squared statistic based on measured flux
+measurements and their uncertainties and model predictions.
+The chi-squared statistic is given by:
+
+.. math::
+
+\chi^2 = \sum_i \frac{(f_i - m_i)^2}{\sigma_i^2}
+
+This method is straightforward and appropriate when a chi-squared
+approximation correctly describes the measurements. However, it does not
+make use of the full likelihood information associated with a flux point.
+
 
 
 Likelihood profile
