@@ -14,7 +14,7 @@ from .utils import (
     make_edisp_kernel_map,
     make_edisp_map,
     make_map_background_irf,
-    make_map_exposure_true_energy,
+    make_psf_map,
     project_irf_on_geom,
 )
 
@@ -201,13 +201,7 @@ class MapDatasetMaker(Maker):
                     )
                 return observation.aeff.interp_to_geom(geom=geom) * factor
 
-        return make_map_exposure_true_energy(
-            pointing=observation.get_pointing_icrs(observation.tmid),
-            livetime=observation.observation_live_time_duration,
-            aeff=observation.aeff,
-            geom=geom,
-            use_region_center=use_region_center,
-        )
+        return MapDatasetMaker.make_exposure_irf(geom, observation, use_region_center)
 
     @staticmethod
     def make_exposure_irf(geom, observation, use_region_center=True):
@@ -229,13 +223,17 @@ class MapDatasetMaker(Maker):
         exposure : `~gammapy.maps.Map`
             Exposure map.
         """
-        return make_map_exposure_true_energy(
-            pointing=observation.get_pointing_icrs(observation.tmid),
-            livetime=observation.observation_live_time_duration,
-            aeff=observation.aeff,
-            geom=geom,
-            use_region_center=use_region_center,
-        )
+        fov_frame = observation.get_fov_frame(observation.tmid, FoVAlignment.RADEC)
+        livetime = observation.observation_live_time_duration
+        aeff = observation.aeff
+
+        exposure = project_irf_on_geom(geom, aeff, fov_frame, use_region_center)
+
+        exposure *= u.Quantity(livetime)
+        exposure = exposure.to_unit("m2 s")
+        exposure.meta.update({"livetime": livetime, "is_pointlike": aeff.is_pointlike})
+
+        return exposure
 
     def make_background(self, geom, observation):
         """Make background map.
