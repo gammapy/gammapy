@@ -15,6 +15,12 @@ type: object
 properties:
   data:
     type: object
+    anyOf:
+      - required: [dnde]
+      - required: [e2dnde]
+      - required: [flux]
+      - required: [eflux]
+      - required: [norm]
     additionalProperties:
       anyOf:
         - tag: "asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0"
