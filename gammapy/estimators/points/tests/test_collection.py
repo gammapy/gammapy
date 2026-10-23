@@ -84,7 +84,7 @@ class MockSamplerMulti(Sampler):
     """Mock sampler for multiple-source."""
 
     def __init__(self, ns=1):
-        super().__init__(sampler_opts={})
+        super().__init__()
         self.ns = ns
 
     def run(self, datasets):
