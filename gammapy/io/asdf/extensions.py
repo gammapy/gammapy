@@ -31,8 +31,10 @@ from .converters.modeling.models.core import ModelsConverter
 
 from .converters.irf.psf.map import PSFMapConverter, RecoPSFMapConverter
 from .converters.irf.edisp.map import EDispMapConverter, EDispKernelMapConverter
+from .converters.estimators.points.core import FluxPointsConverter
 
 GAMMAPY_CONVERTERS = [
+    FluxPointsConverter(),
     MapsConverter(),
     GTIConverter(),
     MapAxisConverter(),
