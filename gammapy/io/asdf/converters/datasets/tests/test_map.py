@@ -24,6 +24,7 @@ from gammapy.utils.testing import (
 )
 
 asdf = pytest.importorskip("asdf")
+asdf.get_config().validate_on_read = True
 pytest.importorskip("asdf.testing")
 
 

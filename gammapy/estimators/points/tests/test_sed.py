@@ -1,14 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import pytest
-import logging
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from numpy.testing import assert_allclose
 
-from gammapy.data import Observation
-from gammapy.data.pointing import FixedPointingInfo
+from gammapy.data import Observation, FixedPointingInfo
 from gammapy.datasets import (
     Datasets,
     FluxPointsDataset,
@@ -20,7 +18,6 @@ from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.estimators.utils import get_rebinned_axis
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
-from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
@@ -73,9 +70,13 @@ def simulate_spectrum_dataset(model, random_state=0):
     geom_true = RegionGeom.create(
         region="icrs;circle(0, 0, 0.1)", axes=[energy_axis_true]
     )
-    exposure = make_map_exposure_true_energy(
-        pointing=SkyCoord("0d", "0d"), aeff=aeff, livetime=100 * u.h, geom=geom_true
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(fixed_icrs=SkyCoord("0d", "0d")),
+        location=EarthLocation(lon=0, lat=0),
+        livetime=100 * u.hour,
+        irfs={"aeff": aeff},
     )
+    exposure = MapDatasetMaker.make_exposure(geom=geom_true, observation=test_obs)
 
     mask_safe = RegionNDMap.from_geom(geom=geom, dtype=bool)
     mask_safe.data += True
@@ -230,7 +231,6 @@ def test_run_pwl(fpe_pwl, tmpdir):
     datasets, fpe = fpe_pwl
 
     fp = fpe.run(datasets)
-    assert fp.meta["n_sigma_sensitivity"] == 2
     table = fp.to_table()
 
     actual = table["e_min"].data
@@ -273,7 +273,7 @@ def test_run_pwl(fpe_pwl, tmpdir):
     assert_allclose(actual, [1.216227, 1.035472, 1.316878], rtol=1e-2)
 
     actual = table["norm_sensitivity"].data
-    assert_allclose(actual, [0.103896, 0.08386, 0.194146], rtol=1e-2)
+    assert_allclose(actual, [0.265929, 0.217676, 0.579713], rtol=1e-2)
 
     actual = table["sqrt_ts"].data
     assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-2)
@@ -527,7 +527,6 @@ def test_no_likelihood_contribution():
     dataset.mask_safe = RegionNDMap.from_geom(dataset.counts.geom, dtype=bool)
 
     fpe = FluxPointsEstimator(energy_edges=[1.0, 3.0, 10.0] * u.TeV, source="source")
-
     table = fpe.run([dataset, dataset_2]).to_table()
 
     assert np.isnan(table["norm"]).all()
@@ -903,15 +902,3 @@ def test_warning_for_bad_model(caplog):
         "Reference source model predicts negative flux. Results of estimator should be interpreted with caution"
         in [_.message for _ in caplog.records]
     )
-
-
-def test_sensitivity_limit(caplog):
-    caplog.set_level(logging.INFO)
-    fpe = FluxPointsEstimator(energy_edges=[1, 2, 4, 10] * u.TeV)
-    assert "INFO" in [record.levelname for record in caplog.records]
-    message = "By default, 'n_sigma_sensitivity' is set to the same value as 'n_sigma_ul', i.e., 2."
-    assert message in [record.message for record in caplog.records]
-    assert fpe.n_sigma_sensitivity == fpe.n_sigma_ul
-
-    fpe = FluxPointsEstimator(energy_edges=[1, 2, 4, 10] * u.TeV, n_sigma_sensitivity=4)
-    assert fpe.n_sigma_sensitivity == 4

@@ -3,11 +3,12 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, EarthLocation
 from astropy.units import Unit
-from gammapy.data import DataStore
+from gammapy.data import DataStore, Observation, FixedPointingInfo
 from gammapy.irf import PSF3D, EffectiveAreaTable2D, PSFMap, RecoPSFMap
-from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
+from gammapy.makers import MapDatasetMaker
+from gammapy.makers.utils import make_psf_map
 from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
@@ -81,8 +82,16 @@ def test_make_psf_map():
 def make_test_psfmap(size, shape="gauss"):
     psf = fake_psf3d(size, shape)
     aeff2d = fake_aeff2d()
+    livetime = 1 * u.hour
+    sky_dir = SkyCoord(0, 0, unit="deg")
 
-    pointing = SkyCoord(0, 0, unit="deg")
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(fixed_icrs=sky_dir),
+        location=EarthLocation(lon=0, lat=0),
+        livetime=livetime,
+        irfs={"aeff": aeff2d, "psf": psf},
+    )
+
     energy_axis = MapAxis(
         nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy_true"
     )
@@ -91,14 +100,14 @@ def make_test_psfmap(size, shape="gauss"):
     )
 
     geom = WcsGeom.create(
-        skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
+        skydir=sky_dir, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
     )
 
     exposure_geom = geom.squash(axis_name="rad")
 
-    exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
+    exposure_map = MapDatasetMaker.make_exposure(exposure_geom, test_obs)
 
-    return make_psf_map(psf, pointing, geom, exposure_map)
+    return make_psf_map(psf, sky_dir, geom, exposure_map)
 
 
 def test_psf_map_containment_radius():
@@ -247,11 +256,8 @@ def test_sample_coord_gauss():
 
 
 def make_psf_map_obs(geom, obs):
-    exposure_map = make_map_exposure_true_energy(
-        geom=geom.squash(axis_name="rad"),
-        pointing=obs.get_pointing_icrs(obs.tmid),
-        aeff=obs.aeff,
-        livetime=obs.observation_live_time_duration,
+    exposure_map = MapDatasetMaker.make_exposure(
+        geom=geom.squash(axis_name="rad"), observation=obs
     )
 
     psf_map = make_psf_map(

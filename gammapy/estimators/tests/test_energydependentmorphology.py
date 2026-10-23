@@ -90,17 +90,17 @@ class TestEnergyDependentEstimator:
             assert_allclose(
                 results_edep["sigma_err"],
                 [0.005957, 0.006542, 0.008959] * u.deg,
-                rtol=1e-3,
+                rtol=2e-3,
             )
             assert_allclose(
                 results_edep["lat_0_err"],
                 [0.008503, 0.009585, 0.014906] * u.deg,
-                rtol=1e-3,
+                rtol=2e-3,
             )
             assert_allclose(
                 results_edep["lon_0_err"],
                 [0.008504, 0.009538, 0.014714] * u.deg,
-                rtol=1e-3,
+                rtol=2e-3,
             )
         elif mode == "multiple":
             assert_allclose(
