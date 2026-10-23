@@ -1,0 +1,1 @@
+Fixes error in getting the `pivot_energy` for a `~gammapy.modeling.models.CompoundSpectralModel` or model which does not contain a `reference`.
