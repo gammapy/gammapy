@@ -323,7 +323,21 @@ class SpectralModel(ModelBase):
             The energy at which the statistical error in the computed flux is smallest.
             If no minimum is found, NaN will be returned.
         """
-        x_unit = self.reference.unit
+        if isinstance(self, CompoundSpectralModel):
+            for model in (self.model1, self.model2):
+                reference = getattr(model, "reference", None)
+                if reference is not None:
+                    break
+        else:
+            reference = getattr(self, "reference", None)
+
+        if reference is None:
+            raise ValueError(
+                f"Pivot energy cannot be computed for the "
+                f"{self.__class__.__name__} model."
+            )
+
+        x_unit = reference.unit
 
         def min_func(x):
             """Function to minimise."""
@@ -331,7 +345,7 @@ class SpectralModel(ModelBase):
             dnde, dnde_errn, dnde_errp = self.evaluate_error(x * x_unit, n_samples=500)
             return np.sqrt(dnde_errn**2 + dnde_errp**2) / dnde
 
-        bounds = [np.log(self.reference.value) - 3, np.log(self.reference.value) + 3]
+        bounds = [np.log(reference.value) - 3, np.log(reference.value) + 3]
 
         std = np.std(min_func(x=np.linspace(bounds[0], bounds[1], 100)))
         if std < 1e-5:
