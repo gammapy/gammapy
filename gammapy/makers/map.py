@@ -14,7 +14,6 @@ from .utils import (
     make_edisp_kernel_map,
     make_edisp_map,
     make_map_background_irf,
-    make_psf_map,
     project_irf_on_geom,
 )
 
