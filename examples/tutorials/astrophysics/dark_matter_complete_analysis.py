@@ -1,16 +1,22 @@
 r"""
-Dark Matter indirect search analysis with Gammapy
-=================================================
+Dark Matter indirect detection: A complete analysis
+===================================================
+
+Perform a 3D dark matter analysis using spatial and spectral information.
+
+Prerequisites
+-------------
+- If you are new to Gammapy, please check
+  :doc:`/tutorials/analysis-1d/index` and
+  :doc:`/tutorials/analysis-3d/index`
+- If you are new to Dark Matter, please see the tutorial
+  :doc:`/tutorials/astrophysics/dark_matter_basics`
+
+Context
+-------
 
 This tutorial covers a full analysis pipeline for the indirect search of
-dark matter using Gammapy. We assume basic familiarity with Gammapy’s
-data structures and the Dark Matter module. If you are new to Gammapy,
-we recommend first working through the introductory and the Dark Matter
-Basics and Data handling tutorials.
-
-In this example we perform a **3D analysis** — using both spatial and
-spectral information, as opposed to a 1D (spectral-only) analysis.
-
+dark matter using Gammapy.
 To perform a dark matter analysis, we need to fit the data with a model
 that includes both the background and the dark matter signal component.
 Rather than fitting the physical parameters (e.g. the annihilation
@@ -19,9 +25,8 @@ cross-section :math:`\langle\sigma v\rangle` or the decay lifetime
 parameter**, that rescales the predicted dark matter signal. Depending
 on the DM model assumed, the constrained quantity is different.
 
---------------
-
-**Dark matter annihilation**
+Dark matter annihilation
+------------------------
 
 The expected gamma-ray flux from DM annihilation is:
 
@@ -35,21 +40,20 @@ annihilation cross section** ⟨σv⟩. A larger ⟨σv⟩ means a brighter
 signal. A non-detection gives an **upper limit** on ⟨σv⟩: the DM
 particles annihilate *at most* this efficiently.
 
-In Gammapy’s
-:class:`~gammapy.astro.darkmatter.DarkMatterSpectralModel`, ⟨σv⟩ is
-encoded through a dimensionless **`scale`** parameter:
+In the
+:class:`~gammapy.astro.darkmatter.DarkMatterSpectralModel` class, ⟨σv⟩ is
+encoded through a dimensionless ``scale`` parameter:
 
 .. math:: \text{scale} = \frac{\langle\sigma v\rangle}{\langle\sigma v\rangle_{\rm ref}}
 
 where :math:`\langle\sigma v\rangle_{\rm ref} \approx 3\times10^{-26}`
-cm³ s⁻¹ is the thermal relic value. An upper limit on `scale`
+cm³ s⁻¹ is the thermal relic value. An upper limit on ``scale``
 translates directly into an upper limit on ⟨σv⟩:
 
 .. math:: \langle\sigma v\rangle < \text{scale}_{\rm UL} \times \langle\sigma v\rangle_{\rm ref}
 
---------------
-
-**Dark matter decay**
+Dark matter decay
+-----------------
 
 The expected gamma-ray flux from DM decay is:
 
@@ -64,16 +68,16 @@ signal — the opposite behaviour from the annihilation case. A
 non-detection gives a **lower limit** on τ_χ: the DM particle must live
 *at least* this long.
 
-In Gammapy’s
-:class:`~gammapy.astro.darkmatter.DarkMatterSpectralModel`, the
-lifetime is encoded through the same **`scale`** parameter, but now it
+In the
+:class:`~gammapy.astro.darkmatter.DarkMatterSpectralModel` class, the
+lifetime is encoded through the same ``scale`` parameter, but now it
 multiplies the **decay rate** (inverse lifetime):
 
 .. math:: \text{scale} = \frac{1/\tau_\chi}{1/\tau_{\rm ref}} = \frac{\tau_{\rm ref}}{\tau_\chi}
 
 where :math:`\tau_{\rm ref}` is an internal reference value
-(`LIFETIME_AGE_OF_UNIVERSE` ≈ 4.3 × 10¹⁷ s). Because of the inverse
-relationship, an **upper** limit on `scale` becomes a **lower** limit
+(``LIFETIME_AGE_OF_UNIVERSE`` ≈ 4.3 × 10¹⁷ s). Because of the inverse
+relationship, an **upper** limit on ``scale`` becomes a **lower** limit
 on τ_χ:
 
 .. math:: \tau_\chi > \frac{\tau_{\rm ref}}{\text{scale}_{\rm UL}}
@@ -85,35 +89,31 @@ uncertainty, we can translate it directly into a constraint on
 relation above (`Bergström, L., et al.,
 1998 <https://arxiv.org/abs/astro-ph/9712318>`__).
 
-In this way, the steps/sections followed in this tutorial are:
 
-1. **Data.** We obtain and manage the data to be analyzed. In this case,
-   this corresponds to a 3D dataset (spatial + spectral information).
-2. **Analysis of signal detection.** We perform a statistical test to
-   determine whether the dataset contains a genuine signal or is
-   compatible with background only, and outline the procedure to follow
-   in each case.
-3. **Obtaining limits.**
+Tutorial overview
+-----------------
 
-   - *No signal detected*: we derive upper limits on the dark matter
-     cross-section (or decay lifetime).
-   - *Signal detected*: we derive confidence intervals on the signal
-     parameters.
+The steps followed in this tutorial are:
 
-4. **Exclusion curve: scanning over masses.** We repeat the
-   limit-setting procedure over a grid of dark matter masses to build
-   the exclusion curve.
-5. **Bands plot: uncertainty bands on the exclusion curve.** We compute
-   the expected sensitivity and its uncertainty bands (1σ/2σ) around the
-   exclusion curve, following the standard bands plot convention.
+- **Data.** We obtain and manage the data to be analyzed. In this case,
+  this corresponds to a 3D dataset (spatial + spectral information).
+- **Analysis of signal detection.** We perform a statistical test to
+  determine whether the dataset contains a genuine signal or is
+  compatible with background only, and outline the procedure to follow
+  in each case.
+- **Obtaining limits.**
 
-**Prerequisites**
+  - *No signal detected*: we derive upper limits on the dark matter
+    cross-section (or decay lifetime).
+  - *Signal detected*: we derive confidence intervals on the signal
+    parameters.
 
-- If you are new to Dark Matter, please see the tutorial
-  :doc:`/tutorials/astrophysics/dark_matter_basics`
-- If you are new to Gammapy, please check
-  :doc:`/tutorials/analysis-3d/index` and
-  :doc:`/tutorials/analysis-1d/index`
+- **Exclusion curve: scanning over masses.** We repeat the
+  limit-setting procedure over a grid of dark matter masses to build
+  the exclusion curve.
+- **Bands plot: uncertainty bands on the exclusion curve.** We compute
+  the expected sensitivity and its uncertainty bands (1σ/2σ) around the
+  exclusion curve, following the standard bands plot convention.
 
 """
 
@@ -147,20 +147,11 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 ######################################################################
-# Analysis of a Dark Matter source
-# --------------------------------
+# Obtain data
+# -----------
 #
-
-
-######################################################################
-# 1. Data
-# ~~~~~~~
-#
-
-
-######################################################################
 # For this tutorial we will use the data of a non-signal dataset provided
-# by the Gammapy database.. Additionally, we are going to consider that
+# by the Gammapy database. Additionally, we are going to consider that
 # the data follows an Einasto profile and we are going to study the case
 # of Decay with channel b.
 #
@@ -172,32 +163,32 @@ print(dataset.meta_table)
 
 
 ######################################################################
-# In this case we are analysing a DL4 product, where the data is already
-# filtered and binned, but in the case of using other formats (i.e., DL3),
-# we have the option of performing any data selection or reduction that we
-# may need (i.e. set the energy bounds, specific observtion selection…).
+# In this case, we are analysing a DL4 product, where the data is already
+# filtered and binned, but in the case of using other levels (i.e., DL3),
+# we need to perform the data selection or reduction first.
 #
+# We set our target position.  In this case, we choose the center of the
+# dataset as our hypothetical target center.
 
-# We set our target position. In this case we use the same as in the dataset, since we only have one observation. Let's pretend we are interested on that source
 target_pos = SkyCoord(
     ra=187.27791666667 * u.deg, dec=2.55238888889 * u.deg, frame="icrs"
 )
 target_dist = 16400 * u.kpc
 
-# Geometry map we are going to work with
 geom = WcsGeom.create(
-    binsz=0.1,  # Pixel size
-    skydir=target_pos,  # Sky position of the target, center of the map
-    width=3.0,  # Width of the map (i.e 3x3 map)
-    frame="icrs",  # Coordinates system
+    binsz=0.1,
+    skydir=target_pos,
+    width=3.0,
+    frame="icrs",
 )
 
-
+######################################################################
 # DM Spatial distribution
 
 spatial_model = PointSpatialModel(
     lon_0=target_pos.ra, lat_0=target_pos.dec, frame="icrs"
 )
+######################################################################
 # DM spectral distribution
 
 # DM parameters: mass and channel
@@ -253,8 +244,8 @@ dataset.peek()
 
 
 ######################################################################
-# 2. Analysis of signal detection
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Analysis of signal detection
+# ----------------------------
 #
 # To verify that our dataset contains no dark matter signal, we perform a
 # **likelihood ratio test** between two hypotheses (`Wilks, S.,
@@ -262,7 +253,7 @@ dataset.peek()
 # See :doc:`/user-guide/stats/index` for more details about this
 # statistical procedure.
 #
-# Gammapy’s `Fit` class provides a unified interface to several
+# The `~gammapy.modeling.Fit` class provides a unified interface to several
 # optimization backends; by default it uses
 # `iminuit <https://iminuit.readthedocs.io/>`__, a Python wrapper around
 # the MINUIT2 C++ library originally developed at CERN, the de facto
@@ -272,7 +263,7 @@ dataset.peek()
 # algorithms.
 #
 # During the fit, the optimizer adjusts all **free** parameters of the
-# model — the background normalization parameters (or `scale` (related
+# model — the background normalization parameters (or ``scale`` (related
 # to ⟨σv⟩ or 1/τ_χ, depending on whether we are studying annihilation or
 # decay) if you are making a signal study) — to maximize the Poisson
 # likelihood between the observed (or simulated) counts and the model
@@ -286,23 +277,23 @@ dataset.peek()
 # to absorb residual mismatches between the assumed and true background
 # level, while the spectral shape parameters (e.g. the DM mass or the
 # spectral channel) are kept fixed to the values under study, leaving only
-# the **`scale`** parameter (related to ⟨σv⟩ or 1/τ_χ, depending on
+# the ``scale`` parameter (related to ⟨σv⟩ or 1/τ_χ, depending on
 # whether we are studying annihilation or decay) free to vary. During the
 # fit, the optimizer adjusts all free parameters of the model to maximize
 # the Poisson likelihood between the observed (or simulated) counts and
 # the model prediction, while all fixed parameters remain at their assumed
 # values.
 #
-# Rather than performing the two fits by hand, we use Gammapy’s
-# `select_nested_models` function, which automates this
+# Rather than performing the two fits by hand, we use the
+# `~gammapy.modeling.select_nested_models` function, which automates this
 # nested-hypothesis test: it keeps the background and any other sources in
 # the field of view free and identical in both fits, and only freezes the
-# DM `scale` parameter to 0 for H0, restoring its original state
+# DM ``scale`` parameter to 0 for H0, restoring its original state
 # afterwards.
 #
 
 # First check the parameters of the model
-print(dataset.models.parameters.to_table())
+print(dataset.models.to_parameters_table())
 
 
 ######################################################################
@@ -339,7 +330,7 @@ dataset_to_spectrum.peek()
 
 ######################################################################
 # Residuals
-# ^^^^^^^^^
+# ~~~~~~~~~
 #
 # After fitting the model, it is important to check the residuals to
 # assess how well the model (source+background) describes the data.
@@ -348,11 +339,9 @@ dataset_to_spectrum.peek()
 # Spatial residuals map
 dataset.plot_residuals_spatial(
     method="diff/sqrt(model)",
-    smooth_kernel="gauss",
-    smooth_radius=0.1 * u.deg,
     cmap="coolwarm",
-    vmin=-5,
-    vmax=5,
+    vmin=-1,
+    vmax=1,
     add_cbar=True,
 )
 
@@ -375,11 +364,11 @@ dataset.plot_residuals_spectral(
 
 
 ######################################################################
-# 3. Obtaining limits
-# ~~~~~~~~~~~~~~~~~~~
+# Obtaining limits
+# ----------------
 #
 # The Profile Likelihood
-# ^^^^^^^^^^^^^^^^^^^^^^
+# ~~~~~~~~~~~~~~~~~~~~~~
 #
 # We use the **profile likelihood** to derive both upper limits and
 # confidence intervals. The idea is simple: we scan `scale` over a grid
@@ -452,8 +441,8 @@ dataset.plot_residuals_spectral(
 # :math:`\Delta\text{TS}`) values, from which the desired confidence limit
 # or interval can be read off.
 #
-# 3.1. No signal detected
-# ^^^^^^^^^^^^^^^^^^^^^^^
+# No signal detected
+# ~~~~~~~~~~~~~~~~~~
 #
 # We did not detect a signal, but we can still place a **constraint** on
 # the DM parameter of interest — we can exclude signal amplitudes large
@@ -486,7 +475,7 @@ print(f"Number of points: {len(scale_par.scan_values)}")
 estimator = ParameterEstimator(
     n_sigma=1,  # level for symmetric error (1σ = 68%)
     n_sigma_ul=1.645,  # level for upper limit
-    n_sigma_sensitivity=5, # level for sensitivity
+    n_sigma_sensitivity=5,  # level for sensitivity
     selection_optional=["ul", "scan", "sensitivity"],
     reoptimize=True,
 )
@@ -603,7 +592,7 @@ print(f"Sensitivity (no signal): {result['scale_sensitivity']:.3e}")
 # for the scan (i.e. scan_max…) and run again.
 #
 
-# Convert to physical limits ────────────────────────────────────────────────
+# Convert to physical limits
 
 # Decay: scale = τ_ref / τ_χ  →  τ_χ > τ_ref / scale_ul
 tau_ref = spectral_model.LIFETIME_AGE_OF_UNIVERSE  # ~4.3e17 s
@@ -649,8 +638,8 @@ print(f"  Lifetime lower limit (95% CL): {tau_lower_limit:.3e} s")
 
 
 ######################################################################
-# 3.2. Signal detected
-# ^^^^^^^^^^^^^^^^^^^^
+# Signal detected
+# ~~~~~~~~~~~~~~~
 #
 # If the fit above had returned **TS ≫ 0** (instead of TS ≈ 0), the
 # interpretation — and the quantity we report — would change. A one-sided
@@ -670,149 +659,158 @@ print(f"  Lifetime lower limit (95% CL): {tau_lower_limit:.3e} s")
 # :math:`\hat{\text{scale}}` — not just the upper branch from zero as in
 # the one-sided limit above.
 #
-# The code below illustrates how this would look — **it is not executed in
-# this tutorial**, since our dataset has TS ≈ 0 and the one-sided limit
-# above is the correct result to report.
+# The function below illustrates how to derive two-sided confidence
+# intervals around the best-fit value. It is included for completeness
+# and is not executed in this tutorial, as our datasets has TS ≈ 0 and
+# a one-sided limit is appropriate.
 #
+# For a fit with evidence for a signal (TS >> 0), the same profiled
+# likelihood can instead be used to determine two-sided confidence
+# intervals around the best-fit value.
 
-# EXAMPLE ONLY — not executed in this tutorial (TS ≈ 0 here) ──────────────
-# This is what you would run instead of the one-sided UL block above,
-# if the fit had returned TS >> 0 (a real detection).
-idx_min = np.argmin(delta_ts)
-best_fit = scale_scan[idx_min]
 
-lo_branch_scale = scale_scan[: idx_min + 1]
-lo_branch_stat = stat_scan[: idx_min + 1]
-hi_branch_scale = scale_scan[idx_min:]
-hi_branch_stat = stat_scan[idx_min:]
+def two_sided_confidence_interval():
+    """Illustrate how to calculate two-sided confidence intervals for a
+    detected signal using the profiled likelihood."""
+    idx_min = np.argmin(delta_ts)
+    best_fit = scale_scan[idx_min]
 
-print(f"Best-fit scale          : {best_fit:.3e}")
+    lo_branch_scale = scale_scan[: idx_min + 1]
+    lo_branch_stat = stat_scan[: idx_min + 1]
+    hi_branch_scale = scale_scan[idx_min:]
+    hi_branch_stat = stat_scan[idx_min:]
 
-for cl_label, delta_ts_threshold in [("68%", 1.0), ("95%", 3.84)]:
-    try:
-        scale_hi = stat_profile_ul_scipy(
-            hi_branch_scale, hi_branch_stat, delta_ts=delta_ts_threshold
-        )
-        scale_lo = -stat_profile_ul_scipy(
-            -lo_branch_scale[::-1], lo_branch_stat[::-1], delta_ts=delta_ts_threshold
-        )
-    except (ValueError, RuntimeError):
-        continue
+    print(f"Best-fit scale          : {best_fit:.3e}")
 
-    print(f"{cl_label} CL interval on scale : [{scale_lo:.3e}, {scale_hi:.3e}]")
+    for cl_label, delta_ts_threshold in [("68%", 1.0), ("95%", 3.84)]:
+        try:
+            scale_hi = stat_profile_ul_scipy(
+                hi_branch_scale, hi_branch_stat, delta_ts=delta_ts_threshold
+            )
+            scale_lo = -stat_profile_ul_scipy(
+                -lo_branch_scale[::-1],
+                lo_branch_stat[::-1],
+                delta_ts=delta_ts_threshold,
+            )
+        except (ValueError, RuntimeError):
+            continue
 
-    # Converted to the physical quantity (decay case)
-    tau_ref = spectral_model.LIFETIME_AGE_OF_UNIVERSE
-    tau_hi = tau_ref / scale_lo
-    tau_lo = tau_ref / scale_hi
-    print(f"{cl_label} CL interval on tau   : [{tau_lo:.3e}, {tau_hi:.3e}]")
+        print(f"{cl_label} CL interval on scale : [{scale_lo:.3e}, {scale_hi:.3e}]")
+
+        # Converted to the physical quantity (decay case)
+        tau_ref = spectral_model.LIFETIME_AGE_OF_UNIVERSE
+        tau_hi = tau_ref / scale_lo
+        tau_lo = tau_ref / scale_hi
+        print(f"{cl_label} CL interval on tau   : [{tau_lo:.3e}, {tau_hi:.3e}]")
 
 
 ######################################################################
-# 4. Exclusion Curve: Scanning Over Masses
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Exclusion Curve: Scanning Over Masses
+# -------------------------------------
 #
 # So far we have derived an upper limit for a single DM mass. To build the
 # full **exclusion curve** — the standard output of a DM indirect
 # detection analysis — we repeat the same procedure over a grid of masses.
 #
-# For each mass we: 1. Update the spectral model to the new mass 2.
-# Simulate a background-only dataset 3. Fit the background 4. Run the
-# profile scan → `scale_ul` 5. Convert to a physical limit (τ_χ or ⟨σv⟩)
+# For each mass, the analysis:
+#    1. Updates the spectral model to the new mass.
+#    2. Simulates a background-only dataset.
+#    3. Fits the background.
+#    4. Runs the profile scan → `scale_ul`
+#    5. Converts to a physical limit (τ_χ or ⟨σv⟩)
 #
 # The result is a curve of lower limits on τ_χ (or upper limits on ⟨σv⟩)
 # as a function of DM mass.
 #
 # Below you can find the code for making the scan, but in this tutorial we
-# will not run it because it can take sereval minutes.
+# will not run it because it can take several minutes.
 #
 
-# # Mass range we want to scan. In this case we scan 40 masses, for instance.
-# masses = np.logspace(2, 4, 40) * u.GeV
 
-# # Scan grid (adjust if needed per mass)
-# scale_values = np.logspace(-10, -2, 100)
+def compute_dm_exclusion_curve():
+    # Mass range we want to scan. In this case we scan 40 masses, for instance.
+    masses = np.logspace(2, 4, 40) * u.GeV
 
-# # Output containers
-# results = {
-#     "mass"     : [],
-#     "scale_ul" : [],
-#     "scale_ll"   : []   # lower limit on scale
-# }
+    # Scan grid (adjust if needed per mass)
+    scale_values = np.logspace(-10, -2, 100)
 
-# fit = Fit()
+    # Output containers
+    results = {
+        "mass": [],
+        "scale_ul": [],
+        "scale_ll": [],  # lower limit on scale
+    }
 
-# print(f"Running exclusion curve over {len(masses)} masses...")
-# for mass in masses:
+    fit = Fit()
 
-#     print(f"  mass = {mass}  ...", end=" ")
+    print(f"Running exclusion curve over {len(masses)} masses...")
+    for mass in masses:
+        print(f"  mass = {mass}  ...", end=" ")
 
-#     spectral_model_m = DarkMatterDecaySpectralModel(
-#         mass=mass,
-#         channel=channel,
-#         jfactor=total_dfact,
-#     )
-#     spectral_model_m.scale.value  = 0
-#     spectral_model_m.scale.frozen = True
-#     spectral_model_m.scale.min    = 0
+        spectral_model_m = DarkMatterDecaySpectralModel(
+            mass=mass,
+            channel=channel,
+            jfactor=total_dfact,
+        )
+        spectral_model_m.scale.value = 0
+        spectral_model_m.scale.frozen = True
+        spectral_model_m.scale.min = 0
 
-#     bkg_model_m = FoVBackgroundModel(dataset_name=f"dataset-{mass.value:.0f}GeV")
-#     bkg_model_m.parameters["norm"].frozen = False
-#     bkg_model_m.parameters["tilt"].frozen = False
+        bkg_model_m = FoVBackgroundModel(dataset_name=f"dataset-{mass.value:.0f}GeV")
+        bkg_model_m.parameters["norm"].frozen = False
+        bkg_model_m.parameters["tilt"].frozen = False
 
-#     dataset_m = dataset.copy(name=f"dataset-{mass.value:.0f}GeV")
-#     sky_model_m = SkyModel(
-#         spatial_model=spatial_model,
-#         spectral_model=spectral_model_m,
-#         name="dm"
-#     )
-#     dataset_m.models = Models([sky_model_m, bkg_model_m])
+        dataset_m = dataset.copy(name=f"dataset-{mass.value:.0f}GeV")
+        sky_model_m = SkyModel(
+            spatial_model=spatial_model, spectral_model=spectral_model_m, name="dm"
+        )
+        dataset_m.models = Models([sky_model_m, bkg_model_m])
 
-#     # Fit background
-#     result_bkg_m = fit.run(datasets=[dataset_m])
-#     if not result_bkg_m.success:
-#         print("background fit did not converge, skipping.")
-#         continue
+        # Fit background
+        result_bkg_m = fit.run(datasets=[dataset_m])
+        if not result_bkg_m.success:
+            print("background fit did not converge, skipping.")
+            continue
 
-#     # Sanity check: signal changes with scale
-#     spectral_model_m.scale.value = 1e-7
-#     npred_sig = dataset_m.npred_signal().data.sum()
-#     print(f"npred_signal = {npred_sig:.4e}", end=" ... ")
-#     spectral_model_m.scale.value = 0
+        # Sanity check: signal changes with scale
+        spectral_model_m.scale.value = 1e-7
+        npred_sig = dataset_m.npred_signal().data.sum()
+        print(f"npred_signal = {npred_sig:.4e}", end=" ... ")
+        spectral_model_m.scale.value = 0
 
-#     # Profile scan (reoptimizing background at each point)
-#     spectral_model_m.scale.value  = 1e-7
-#     spectral_model_m.scale.frozen = False
+        # Profile scan (reoptimizing background at each point)
+        spectral_model_m.scale.value = 1e-7
+        spectral_model_m.scale.frozen = False
 
-#     scale_par_m = dataset_m.models["dm"].spectral_model.scale
-#     scale_par_m.scan_values = scale_values
+        scale_par_m = dataset_m.models["dm"].spectral_model.scale
+        scale_par_m.scan_values = scale_values
 
-#     profile_m = fit.stat_profile(
-#         datasets=dataset_m,
-#         parameter=scale_par_m,
-#         reoptimize=True,
-#     )
+        profile_m = fit.stat_profile(
+            datasets=dataset_m,
+            parameter=scale_par_m,
+            reoptimize=True,
+        )
 
-#     scale_scan_m = profile_m["dm.spectral.scale_scan"]
-#     delta_ts_m   = profile_m["stat_scan"] - profile_m["stat_scan"].min()
+        scale_scan_m = profile_m["dm.spectral.scale_scan"]
+        delta_ts_m = profile_m["stat_scan"] - profile_m["stat_scan"].min()
 
-#     if delta_ts_m.max() < 2.71:
-#         print("profile did not reach ΔTS=2.71, skipping.")
-#         continue
+        if delta_ts_m.max() < 2.71:
+            print("profile did not reach ΔTS=2.71, skipping.")
+            continue
 
-#     idx_min  = np.argmin(delta_ts_m)
-#     scale_ul = np.interp(2.71,
-#                          delta_ts_m[idx_min:],
-#                          scale_scan_m[idx_min:])
+        idx_min = np.argmin(delta_ts_m)
+        scale_ul = np.interp(2.71, delta_ts_m[idx_min:], scale_scan_m[idx_min:])
 
-#     tau_ref = spectral_model_m.LIFETIME_AGE_OF_UNIVERSE
-#     tau_ll  = tau_ref / scale_ul
+        tau_ref = spectral_model_m.LIFETIME_AGE_OF_UNIVERSE
+        tau_ll = tau_ref / scale_ul
 
-#     results["mass"].append(mass.to("TeV").value)
-#     results["scale_ul"].append(scale_ul)
-#     results["scale_ll"].append(tau_ll.value)
+        results["mass"].append(mass.to("TeV").value)
+        results["scale_ul"].append(scale_ul)
+        results["scale_ll"].append(tau_ll.value)
 
-#     print(f"scale_ul = {scale_ul:.3e}  |  τ_χ > {tau_ll:.3e}")
+        print(f"scale_ul = {scale_ul:.3e}  |  τ_χ > {tau_ll:.3e}")
+
+    return results
 
 
 ######################################################################
@@ -820,25 +818,27 @@ for cl_label, delta_ts_threshold in [("68%", 1.0), ("95%", 3.84)]:
 # example of the resulting plot.
 #
 
-# fig, ax = plt.subplots(1, figsize=(12, 5))
 
-# mass_arr    = np.array(results["mass"])
-# scale_arr   = np.array(results["scale_ll"])
+def plot_exclusion_curve(results):
+    fig, ax = plt.subplots(1, figsize=(12, 5))
 
-# # Decay: lower limit on scale ────────────────────────────────────────────────
-# ax.plot(mass_arr, scale_arr,
-#         color="steelblue", linewidth=2, marker="o", markersize=5)
-# ax.set_xscale("log")
-# ax.set_yscale("log")
-# ax.set_xlabel(r"$m_{\rm DM}$  [TeV]", fontsize=12)
-# ax.set_ylabel(r"Lower limit on $\tau_\chi$  [s]", fontsize=12)
-# ax.set_title(rf"Decay — channel: {channel}", fontsize=12)
-# ax.grid(True, which="both", alpha=0.3)
+    mass_arr = np.array(results["mass"])
+    scale_arr = np.array(results["scale_ll"])
 
-# plt.suptitle(r"Expected sensitivity",
-#              fontsize=13, y=1.02)
-# plt.tight_layout()
-# plt.show()
+    # Decay: lower limit on scale
+    ax.plot(
+        mass_arr, scale_arr, color="steelblue", linewidth=2, marker="o", markersize=5
+    )
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel(r"$m_{\rm DM}$  [TeV]", fontsize=12)
+    ax.set_ylabel(r"Lower limit on $\tau_\chi$  [s]", fontsize=12)
+    ax.set_title(rf"Decay — channel: {channel}", fontsize=12)
+    ax.grid(True, which="both", alpha=0.3)
+
+    plt.suptitle(r"Expected sensitivity", fontsize=13, y=1.02)
+    plt.tight_layout()
+    plt.show()
 
 
 ######################################################################
@@ -888,8 +888,8 @@ for cl_label, delta_ts_threshold in [("68%", 1.0), ("95%", 3.84)]:
 
 
 ######################################################################
-# 5. Bands Plot: Uncertainty Bands on the Exclusion Curve
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Bands Plot: Uncertainty Bands on the Exclusion Curve
+# ----------------------------------------------------
 #
 # The exclusion curve derived in the previous section is based on a
 # **single background realization**: a different Poisson fluctuation would
