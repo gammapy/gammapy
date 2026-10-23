@@ -267,6 +267,7 @@ def make_map_background_irf(
     return bkg_map.to_unit("")
 
 
+@deprecated("2.2", alternative="MapDatasetMaker.make_psf")
 def make_psf_map(psf, pointing, geom, exposure_map=None):
     """Make a PSF map for a single observation.
 

@@ -165,6 +165,7 @@ def get_psf():
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
+    aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
     geom = WcsGeom.create(
         skydir=(0, 0),
@@ -174,12 +175,16 @@ def get_psf():
         axes=[RAD_AXIS_DEFAULT, psf.axes["energy_true"]],
     )
 
-    return make_psf_map(
-        psf=psf,
-        pointing=SkyCoord(0, 0.5, unit="deg", frame="galactic"),
-        geom=geom,
-        exposure_map=Map.from_geom(geom.squash("rad"), unit="cm2 s"),
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(
+            fixed_icrs=SkyCoord(0, 0.5, unit="deg", frame="galactic").icrs
+        ),
+        location=EarthLocation(lon=0, lat=0),
+        livetime=30 * u.minute,
+        irfs={"aeff": aeff, "psf": psf},
     )
+
+    return MapDatasetMaker.make_psf(geom, test_obs)
 
 
 @requires_data()

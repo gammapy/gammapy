@@ -14,7 +14,6 @@ from .utils import (
     make_edisp_kernel_map,
     make_edisp_map,
     make_map_background_irf,
-    make_psf_map,
     project_irf_on_geom,
 )
 
@@ -361,7 +360,8 @@ class MapDatasetMaker(Maker):
             use_region_center=use_region_center,
         )
 
-    def make_psf(self, geom, observation):
+    @staticmethod
+    def make_psf(geom, observation):
         """Make PSF map.
 
         Parameters
@@ -387,14 +387,15 @@ class MapDatasetMaker(Maker):
                 exposure_map = None
             return psf.__class__(psf.psf_map.interp_to_geom(geom), exposure_map)
 
-        exposure = self.make_exposure_irf(geom.squash(axis_name="rad"), observation)
-
-        return make_psf_map(
-            psf=psf,
-            pointing=observation.get_pointing_icrs(observation.tmid),
-            geom=geom,
-            exposure_map=exposure,
+        exposure = MapDatasetMaker.make_exposure_irf(
+            geom.squash(axis_name="rad"), observation
         )
+
+        fov_frame = observation.get_fov_frame(observation.tmid, FoVAlignment.RADEC)
+
+        psf_map = project_irf_on_geom(geom, psf, fov_frame)
+        psf_map.normalize(axis_name="rad")
+        return PSFMap(psf_map, exposure)
 
     @staticmethod
     def make_meta_table(observation):
