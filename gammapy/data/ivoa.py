@@ -173,7 +173,7 @@ def make_hdu_table(fetched_files):
                     row["HDU_CLASS"] = "events"
                 elif hdu.name == "GTI":
                     row["HDU_TYPE"] = "gti"
-                    row["HDU_CLASS"] = "git"
+                    row["HDU_CLASS"] = "gti"
                 else:
                     row["HDU_TYPE"] = HDU_TYPES[hdu.header["HDUCLAS2"].strip()]
                     row["HDU_CLASS"] = hdu.header["HDUCLAS4"].strip().lower()
