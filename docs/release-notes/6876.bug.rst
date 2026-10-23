@@ -1,1 +1,1 @@
-Dark Matter analysis - Change the Log Normal Prior to new parameter 'factor' instead of 'scale'.
+Dark Matter analysis - Creation of the private Log Gaussian Prior and set it as a prior to 'factor' parameter, instead of 'scale'.
