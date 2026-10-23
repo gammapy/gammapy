@@ -27,8 +27,8 @@ The likelihood functions used currently in Gammapy are:
 
 .. _cash:
 
-Cash : Poisson data with background model
------------------------------------------
+Cash: Poisson data with background model
+----------------------------------------
 
 The number of counts, :math:`n`, is a Poisson random variable of mean value
 :math:`\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}}`. The former is the expected
@@ -61,8 +61,8 @@ Here's an example for the `~gammapy.stats.cash` statistic::
 
 .. _wstat:
 
-WStat : Poisson data with background measurement
-------------------------------------------------
+WStat: Poisson data with background measurement
+-----------------------------------------------
 
 In the absence of a reliable background model, it is possible to use a second
 measurement containing only background to estimate it.
@@ -149,6 +149,79 @@ statistics page`_ with the substitutions:
     \mu_{\mathrm{sig}} = t_s \cdot m_i \\
     \mu_{\mathrm{bkg}} = t_b \cdot m_b \\
     \alpha = t_s / t_b  \\
+
+
+.. _fpd_methods_stats:
+
+`~gammapy.datasets.FluxPointsDataset`: Available statistical methods
+--------------------------------------------------------------------
+
+There are a number of different statistical methods available for calculating
+the statistics on the `~gammapy.datasets.FluxPointsDataset`:
+
+- chi2
+- profile
+- distrib
+
+The methods differ in the statistical information they use and in their
+treatment of upper limits. These three methods are described below.
+
+Chi squared
+===========
+
+The ``chi2`` method evaluates the chi-squared statistic based on measured flux
+measurements and their uncertainties and model predictions.
+The chi-squared statistic is given by:
+
+.. math::
+
+\chi^2 = \sum_i \frac{(f_i - m_i)^2}{\sigma_i^2}
+
+This method is straightforward and appropriate when a chi-squared
+approximation correctly describes the measurements. However, it does not
+make use of the full likelihood information associated with a flux point.
+
+
+
+Likelihood profile
+==================
+
+The ``profile`` method uses the likelihood profile associated with each
+flux point interpolated at the flux predicted by the model.
+This profile described how the fit statistic varies
+as a function of the flux normalisation, relative to its best-fit value.
+
+When estimating flux points, this information can be stored in the
+``stat_scan`` quantity of a `gammapy.estimators.FluxPoints` object.
+
+
+Probability density function of the normal distribution
+=======================================================
+
+the ``distrib`` method approximates the likelihood using a Gaussian
+probability density function, with a cumulative probability for upper
+limits. It uses the flux uncertainties to describe the probability of
+the measured flux given the flux predicted by the model.
+
+For a flux measurement with Gaussian uncertainty, the likelihood is
+proportional to the normal probability density function:
+
+.. math::
+
+\mathcal{L}(f_i \mid m_i)
+= \frac{1}{\sqrt{2\pi}\sigma_i}
+  \exp\left[-\frac{(f_i-m_i)^2}{2\sigma_i^2}\right].
+
+The corresponding contribution to the fit statistic is proportional to
+the squared normalised residual. For measured flux points, this has the
+same quadratic dependence on the residual as the chi-squared statistic.
+
+
+**WHat can I include on upper limits???**
+
+For the treatment of upper limits using an integrated Gaussian
+probability, see Equation C7 of Mohanty et al. (2013).
+
 
 Further references
 ------------------
