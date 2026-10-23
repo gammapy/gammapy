@@ -1,1 +1,0 @@
-Dark Matter analysis - Set the private Log Gaussian Prior and set it as a prior to 'factor' parameter, instead of 'scale'.
