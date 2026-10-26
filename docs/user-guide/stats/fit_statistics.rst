@@ -167,7 +167,7 @@ The methods differ in the statistical information they use and in their
 treatment of upper limits. These three methods are described below.
 
 Chi squared
-===========
+^^^^^^^^^^^
 
 The ``chi2`` method evaluates the chi-squared statistic based on measured flux
 measurements and their uncertainties and model predictions.
@@ -184,7 +184,7 @@ make use of the full likelihood information associated with a flux point.
 
 
 Likelihood profile
-==================
+^^^^^^^^^^^^^^^^^^
 
 The ``profile`` method uses the likelihood profile associated with each
 flux point interpolated at the flux predicted by the model.
@@ -196,7 +196,7 @@ When estimating flux points, this information can be stored in the
 
 
 Probability density function of the normal distribution
-=======================================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 the ``distrib`` method approximates the likelihood using a Gaussian
 probability density function, with a cumulative probability for upper
@@ -217,7 +217,7 @@ the squared normalised residual. For measured flux points, this has the
 same quadratic dependence on the residual as the chi-squared statistic.
 
 
-**WHat can I include on upper limits???**
+**What can I include on upper limits???**
 
 For the treatment of upper limits using an integrated Gaussian
 probability, see Equation C7 of Mohanty et al. (2013).
