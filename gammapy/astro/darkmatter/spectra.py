@@ -697,6 +697,10 @@ class DarkMatterSpectralModel(SpectralModel):
         self._primary_flux = primary_flux
 
         factor = u.Quantity(factor)
+
+        if np.any(factor.value <= 0):
+            raise ValueError(f"factor must be positive, got {factor}.")
+
         if factor.unit != u.dimensionless_unscaled:
             expected = u.Unit("GeV2 cm-5") if annihilation else u.Unit("GeV cm-2")
             if not factor.unit.is_equivalent(expected):
@@ -705,8 +709,6 @@ class DarkMatterSpectralModel(SpectralModel):
                     f"({'annihilation' if annihilation else 'decay'}), got {factor.unit}."
                 )
             factor = factor.to(expected)
-        if np.any(factor.value <= 0):
-            raise ValueError(f"factor must be positive, got {factor}.")
 
         super().__init__(scale=scale, factor=factor.value)
         self.factor.unit = factor.unit

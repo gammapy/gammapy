@@ -18,7 +18,6 @@ __all__ = [
     "Prior",
     "SamplesKDEPrior",
     "LogNormalPrior",
-    "LogSpaceGaussianPrior",
 ]
 
 log = logging.getLogger(__name__)
@@ -231,8 +230,7 @@ class LogUniformPrior(Prior):
     The :math:`2 \ln(x)` term is the Jacobian of the change of variable
     from :math:`\ln(x)` to :math:`x`, so the minimum is at the mode
     :math:`\mu e^{-\sigma^2}`, not at ``mu``. This is the appropriate
-    density for a Bayesian prior on ``x``. For a gaussian constraint in
-    log space with its minimum at ``mu``, use `LogSpaceGaussianPrior`.
+    density for a Bayesian prior on ``x``.
 
     Parameters
     ----------
