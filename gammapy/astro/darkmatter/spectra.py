@@ -96,7 +96,8 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
        indirect dark matter searches" <https://arxiv.org/abs/2312.01153>`_
     .. [3] `Di Mauro et al. (2025), "Nailing down the theoretical
        uncertainties of Dbar spectrum produced from dark matter"
-       <https://arxiv.org/abs/2411.04815>`_ and available on `GitHub <https://github.com/ajueid/CosmiXs>`_
+       <https://arxiv.org/abs/2411.04815>`_ and available on
+       `GitHub <https://github.com/ajueid/CosmiXs>`_
     """
 
     # noqa: E501
@@ -643,7 +644,8 @@ class DarkMatterSpectralModel(SpectralModel):
        indirect dark matter searches" <https://arxiv.org/abs/2312.01153>`_
     .. [3] `Di Mauro et al. (2025), "Nailing down the theoretical
        uncertainties of Dbar spectrum produced from dark matter"
-       <https://arxiv.org/abs/2411.04815>`_ and available on `GitHub <https://github.com/ajueid/CosmiXs>`_
+       <https://arxiv.org/abs/2411.04815>`_ and available on
+       `GitHub <https://github.com/ajueid/CosmiXs>`_
     """
 
     THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
