@@ -299,7 +299,7 @@ axis = MapAxis.from_energy_bounds(0.1 * u.TeV, 10 * u.TeV, 6, name="energy_true"
 obs_loc = observatory_locations.get("ctao_north")
 livetime = 42 * u.hour
 
-geom = WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis], skydir=pointing.skydir)
+geom = WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis], skydir=sky_target)
 
 print(geom)
 
