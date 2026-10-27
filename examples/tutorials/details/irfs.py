@@ -278,7 +278,7 @@ print(aeff_new)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # DL4 data products can be created from these IRFs, but you need to
-# define an observation first
+# define an `~gammapy.data.Observation` first
 #
 sky_target = SkyCoord(2, 1, unit="deg")
 pointing = FixedPointingInfo(fixed_icrs=sky_target)
