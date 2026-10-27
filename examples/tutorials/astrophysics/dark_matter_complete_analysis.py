@@ -123,7 +123,7 @@ The steps followed in this tutorial are:
 # -----
 #
 
-# sphinx_gallery_thumbnail_number = 8
+# sphinx_gallery_thumbnail_number = 5
 from gammapy.datasets import MapDataset, Datasets
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
