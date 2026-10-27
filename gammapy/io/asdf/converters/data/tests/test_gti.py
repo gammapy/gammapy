@@ -8,6 +8,7 @@ from gammapy.data import GTI
 from gammapy.utils.testing import assert_time_allclose
 
 asdf = pytest.importorskip("asdf")
+asdf.get_config().validate_on_read = True
 pytest.importorskip("asdf.testing")
 from asdf.testing.helpers import yaml_to_asdf  # noqa: E402
 

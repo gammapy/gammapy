@@ -3,14 +3,15 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
+from astropy.coordinates import SkyCoord, EarthLocation
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
 from astropy.utils.exceptions import AstropyUserWarning
-from gammapy.data import GTI
+from gammapy.data import GTI, Observation, FixedPointingInfo
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D
-from gammapy.makers.utils import make_map_exposure_true_energy
+from gammapy.makers import MapDatasetMaker
 from gammapy.maps import LabelMapAxis, MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
@@ -239,10 +240,15 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     livetime = 100 * u.s
     gti = GTI.create(start=0 * u.s, stop=livetime)
 
-    geom_true = geom.as_energy_true
-    exposure = make_map_exposure_true_energy(
-        geom=geom_true, livetime=livetime, pointing=geom_true.center_skydir, aeff=aeff
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(fixed_icrs=geom.center_skydir.icrs),
+        location=EarthLocation(lon=0, lat=0),
+        livetime=livetime,
+        irfs={"aeff": aeff},
     )
+
+    geom_true = geom.as_energy_true
+    exposure = MapDatasetMaker.make_exposure(geom=geom_true, observation=test_obs)
 
     edisp = EDispKernelMap.from_diagonal_response(
         energy, energy_true, geom=geom.to_image()
@@ -323,10 +329,15 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
 
     livetime = 100 * u.s
 
-    geom_true = geom.as_energy_true
-    exposure = make_map_exposure_true_energy(
-        geom=geom_true, livetime=livetime, pointing=geom_true.center_skydir, aeff=aeff
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(fixed_icrs=geom.center_skydir.icrs),
+        location=EarthLocation(lon=0, lat=0),
+        livetime=livetime,
+        irfs={"aeff": aeff},
     )
+
+    geom_true = geom.as_energy_true
+    exposure = MapDatasetMaker.make_exposure(geom=geom_true, observation=test_obs)
 
     geom = spectrum_dataset.counts.geom
     counts = RegionNDMap.from_geom(geom=geom)

@@ -41,6 +41,10 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
     (``Log[10,x]``, ``mDM``), enabling interpolation in dark matter mass
     while keeping ``mDM`` itself frozen as a model parameter.
 
+    .. note::
+
+        Since Gammapy v2.2, the default source has changed from "pppc4" to "cosmixs".
+
     Parameters
     ----------
     mDM : `~astropy.units.Quantity`
@@ -53,9 +57,9 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
     source : str, optional
         Data source for the spectral tables. Options are:
 
-        * ``"pppc4"`` (default): Cirelli et al. (2011, 2016) PPPC4DMID
+        * ``"cosmixs"`` (default): Arina et al. (2024) / CosmiXs tables.
+        * ``"pppc4"``: Cirelli et al. (2011, 2016) PPPC4DMID
           tables.
-        * ``"cosmixs"``: Cirelli et al. (2024) / CosmiXs tables.
         * A path to a custom file readable by `astropy.table.Table.read`
           (extensions ``.dat``, ``.txt``, ``.csv``, or ``.ecsv``).
 
@@ -63,6 +67,7 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
         ``"Log[10,x]"`` columns (after applying ``mapping_dict`` if given),
         plus columns named after the requested annihilation channel(s)
         using the internal channel registry naming convention.
+
     mapping_dict : dict, optional
         Mapping dictionary used to rename the columns of a custom source
         file to the expected internal column names. Only used when
@@ -91,7 +96,8 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
        indirect dark matter searches" <https://arxiv.org/abs/2312.01153>`_
     .. [3] `Di Mauro et al. (2025), "Nailing down the theoretical
        uncertainties of Dbar spectrum produced from dark matter"
-       <https://arxiv.org/abs/2411.04815>`_
+       <https://arxiv.org/abs/2411.04815>`_ and available on
+       `GitHub <https://github.com/ajueid/CosmiXs>`_
     """
 
     # noqa: E501
@@ -358,11 +364,14 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
     @source.setter
     def source(self, source):
         if source is None:
-            self._source = "pppc4"
+            self._source = "cosmixs"
 
             log.info(
-                "\nSince no spectra source has been chosen, PPPC4 will be \
+                "\nSince no spectra source has been chosen, CosmiXs will be \
                     used by default.\n",
+            )
+            log.warning(
+                "\nSince Gammapy v2.2, the default source has changed from 'pppc4' to 'cosmixs'.\n",
             )
         elif isinstance(source, Table):
             self._source = source
@@ -563,6 +572,10 @@ class DarkMatterSpectralModel(SpectralModel):
     and :math:`J(\Delta\Omega)` is the astrophysical D-factor (here denoted
     generically as the astrophysical factor).
 
+    .. note::
+
+        Since Gammapy v2.2, the default source has changed from "pppc4" to "cosmixs".
+
     Parameters
     ----------
     mDM : `~astropy.units.Quantity`
@@ -591,13 +604,12 @@ class DarkMatterSpectralModel(SpectralModel):
         instance of `ContinuumPrimaryFlux`. If not provided, a default
         `ContinuumPrimaryFlux` is constructed using ``mDM`` and ``channel``.
     source : str, optional
-            Data source for the spectral tables. Options are:
+        Data source for the spectral tables. Options are:
 
-            * ``"pppc4"`` (default): Cirelli et al. (2011, 2016) PPPC4DMID
-                tables.
-            * ``"cosmixs"``: Cirelli et al. (2024) / CosmiXs tables.
-            * A path to a custom file readable by `astropy.table.Table.read`
-                (extensions ``.dat``, ``.txt``, ``.csv``, or ``.ecsv``).
+        * ``"cosmixs"`` (default): Arina et al. (2024) / CosmiXs tables.
+        * ``"pppc4"``: Cirelli et al. (2011, 2016) PPPC4DMID tables.
+        * A path to a custom file readable by `astropy.table.Table.read`
+          (extensions ``.dat``, ``.txt``, ``.csv``, or ``.ecsv``).
 
             If a custom file path is provided, it must contain ``"mDM"`` and
             ``"Log[10,x]"`` columns (after applying ``mapping_dict`` if given),
@@ -631,6 +643,12 @@ class DarkMatterSpectralModel(SpectralModel):
     .. [1] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist
        Cookbook for Dark Matter Indirect Detection"
        <http://www.marcocirelli.net/PPPC4DMID.html>`_
+    .. [2] `Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for
+       indirect dark matter searches" <https://arxiv.org/abs/2312.01153>`_
+    .. [3] `Di Mauro et al. (2025), "Nailing down the theoretical
+       uncertainties of Dbar spectrum produced from dark matter"
+       <https://arxiv.org/abs/2411.04815>`_ and available on
+       `GitHub <https://github.com/ajueid/CosmiXs>`_
     """
 
     THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
@@ -753,6 +771,7 @@ class DarkMatterSpectralModel(SpectralModel):
         For decay, computes:
         ``flux = scale * factor * primary_flux(energy * (1 + z))
         / LIFETIME_AGE_OF_UNIVERSE / mDM / (4 * pi)``.
+
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
