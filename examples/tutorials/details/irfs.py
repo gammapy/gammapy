@@ -295,12 +295,11 @@ obs = Observation.create(
 
 
 axis = MapAxis.from_energy_bounds(0.1 * u.TeV, 10 * u.TeV, 6, name="energy_true")
-pointing = SkyCoord(2, 1, unit="deg")
 
 obs_loc = observatory_locations.get("ctao_north")
 livetime = 42 * u.hour
 
-geom = WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis], skydir=pointing)
+geom = WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis], skydir=pointing.skydir)
 
 print(geom)
 
@@ -436,7 +435,6 @@ edispmap = make_edisp_kernel_map(edisp3d, sky_target, geom)
 edispmap.peek()
 plt.show()
 
-#
 print(edispmap.edisp_map.data[3][1][3])
 
 
@@ -541,6 +539,8 @@ plt.show()
 # Containers for asymmetric analytic PSFs are not supported at present.
 #
 # **NOTE**: Support for asymmetric IRFs is preliminary at the moment, and
-# will evolve depending on feedback.
+# .. NOTE::
+#    Support for asymmetric IRFs is preliminary at the moment, and
+#    will evolve depending on feedback.
 #
 #
