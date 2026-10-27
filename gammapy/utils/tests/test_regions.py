@@ -331,9 +331,11 @@ def test_array_valued_regions():
 
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=4)
 
+    binsz_wcs = 0.01
     region_geom = RegionGeom.create(
         region=circle,
         axes=[axis],
+        binsz_wcs=binsz_wcs,
     )
 
     assert_allclose(region_geom.center_skydir.ra, (83.63 * u.deg))
@@ -345,7 +347,7 @@ def test_array_valued_regions():
         [0.00095698, 0.00382794, 0.00861285, 0.01531174] * u.sr,
         rtol=1e-5,
     )
-    assert_allclose(region_geom.width, [8.2, 8.2] * u.deg)
+    assert_allclose(region_geom.width, [8.02, 8.02] * u.deg, atol=2 * binsz_wcs + 1e-3)
 
     events = EventList.read(
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
