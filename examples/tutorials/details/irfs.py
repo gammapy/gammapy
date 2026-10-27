@@ -538,7 +538,6 @@ plt.show()
 ######################################################################
 # Containers for asymmetric analytic PSFs are not supported at present.
 #
-# **NOTE**: Support for asymmetric IRFs is preliminary at the moment, and
 # .. NOTE::
 #    Support for asymmetric IRFs is preliminary at the moment, and
 #    will evolve depending on feedback.
