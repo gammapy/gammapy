@@ -344,7 +344,6 @@ class Sampler:
     -----
     If you are using the "UltraNest" library, please follow its citation scheme:
     `Cite UltraNest <https://johannesbuchner.github.io/UltraNest/issues.html#how-should-i-cite-ultranest>`__.
-
     """
 
     # TODO: add "zeusmc", "emcee"
