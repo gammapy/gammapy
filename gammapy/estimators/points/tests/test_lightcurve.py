@@ -273,10 +273,10 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert_allclose(table["norm_ul"], [[1.029989], [1.025061]], rtol=1e-2)
     assert_allclose(table["sqrt_ts"], [[19.384781], [19.161769]], rtol=1e-2)
     assert_allclose(table["ts"], [[375.769735], [367.173374]], rtol=1e-2)
-    assert_allclose(table[0]["norm_scan"], [[0.2, 1.0, 5.0]])
+    assert_allclose(table[0]["norm_scan"], [[0.1, 1.0, 10.0]])
     assert_allclose(
         table[0]["stat_scan"],
-        [[224.058304, 19.074405, 2063.75636]],
+        [[300.147625, 19.074407, 6054.822551]],
         rtol=1e-5,
     )
     assert table.meta["TIMESYS"] == "tt"
@@ -364,10 +364,10 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
         [[16.233236, 10.608376], [16.609784, 9.557339]],
         rtol=1e-2,
     )
-    assert_allclose(table[0]["norm_scan"], [[0.2, 1.0, 5.0], [0.2, 1.0, 5.0]])
+    assert_allclose(table[0]["norm_scan"], [[0.1, 1.0, 10.0], [0.1, 1.0, 10.0]])
     assert_allclose(
         table[0]["stat_scan"],
-        [[153.880281, 10.701492, 1649.609684], [70.178023, 8.372913, 414.146676]],
+        [[207.259557, 10.701494, 4870.107174], [92.888068, 8.372912, 1184.715377]],
         rtol=1e-5,
     )
 

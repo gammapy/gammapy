@@ -20,7 +20,7 @@ from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from
 from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
-from gammapy.modeling import Fit
+from gammapy.modeling import Fit, Parameter
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     FoVBackgroundModel,
@@ -285,10 +285,10 @@ def test_run_pwl(fpe_pwl, tmpdir):
     assert_allclose(actual, [347.55159, 339.08952, 53.50424], rtol=1e-2)
 
     actual = table["norm_scan"][0][[0, 5, -1]]
-    assert_allclose(actual, [0.2, 1.0, 5.0])
+    assert_allclose(actual, [0.1, 1.0, 10.0])
 
     actual = table["stat_scan"][0][[0, 5, -1]]
-    assert_allclose(actual, [220.369, 4.301, 1881.626], rtol=1e-2)
+    assert_allclose(actual, [2.795218e02, 4.301011e00, 6.228218e03], rtol=1e-2)
 
     actual = table["npred"].data
     assert_allclose(actual, [[1492.966], [749.459], [43.105]], rtol=1e-3)
@@ -401,10 +401,10 @@ def test_run_map_pwl(fpe_map_pwl, tmpdir):
     assert_allclose(actual, [16.681221, 28.408676, 21.91912], rtol=1e-2)
 
     actual = table["norm_scan"][0]
-    assert_allclose(actual, [0.2, 1.0, 5])
+    assert_allclose(actual, [0.1, 1.0, 10])
 
     actual = table["stat_scan"][0] - table["stat"][0]
-    assert_allclose(actual, [1.628398e02, 1.452456e-01, 2.008018e03], rtol=1e-2)
+    assert_allclose(actual, [2.153318e02, 1.466019e-01, 6.980637e03], rtol=1e-2)
 
     # test GADF I/O
     fp.write(tmpdir / "test.fits")
@@ -630,7 +630,7 @@ def test_flux_points_recompute_ul(fpe_pwl):
     fp1 = fp.recompute_ul(n_sigma_ul=4)
     assert_allclose(
         fp1.flux_ul.data,
-        [[[2.92877891e-12]], [[1.04993236e-12]], [[1.22089744e-13]]],
+        [[[2.91814e-12]], [[1.05582e-12]], [[1.22476e-13]]],
         rtol=1e-3,
     )
     assert fp1.meta["n_sigma_ul"] == 4
@@ -733,10 +733,10 @@ def test_flux_points_parallel_ray_actor_map(fpe_map_pwl_ray):
     assert_allclose(actual, [16.681221, 28.408676, 21.91912], rtol=1e-2)
 
     actual = table["norm_scan"][0]
-    assert_allclose(actual, [0.2, 1.0, 5])
+    assert_allclose(actual, [0.1, 1.0, 10])
 
     actual = table["stat_scan"][0] - table["stat"][0]
-    assert_allclose(actual, [1.628398e02, 1.452456e-01, 2.008018e03], rtol=1e-2)
+    assert_allclose(actual, [2.153318e02, 1.466019e-01, 6.980637e03], rtol=1e-2)
 
 
 def test_fpe_non_aligned_energy_axes():
@@ -864,7 +864,7 @@ def test_resample_axis():
     flux_points = fpe.run(ds)
     axis_new = get_rebinned_axis(flux_points, method="fixed-bins", group_size=3)
     flux_new = flux_points.resample_axis(axis_new)
-    assert_allclose(flux_new.flux.data, [[[3.1050191 * 1e-12]]], rtol=1e-5)
+    assert_allclose(flux_new.flux.data, [[[3.118082e-12]]], rtol=1e-5)
 
 
 def test_warning_for_bad_model(caplog):
@@ -878,3 +878,73 @@ def test_warning_for_bad_model(caplog):
         "Reference source model predicts negative flux. Results of estimator should be interpreted with caution"
         in [_.message for _ in caplog.records]
     )
+
+
+@requires_data()
+def test_confidence_failure_fallback_to_scan():
+    dataset = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_spectrum_test_ul_failure.fits.gz"
+    )
+    model = SkyModel(
+        spectral_model=PowerLawSpectralModel(
+            index=2, amplitude=f"{1e-13} cm-2 s-1 TeV-1"
+        ),
+        name="source",
+    )
+    dataset.models = model
+
+    norm = Parameter(
+        name="norm",
+        value=1,
+        min=0,
+        scan_min=1e-2,
+        scan_max=1e2,
+        scan_n_values=41,
+        interp="log",
+    )
+
+    estimator = FluxPointsEstimator(
+        source="source",
+        energy_edges=[0.05, 50] * u.TeV,
+        selection_optional=["scan"],
+        n_sigma_ul=1.645,
+        norm=norm,
+    )
+    results = estimator.run(dataset)
+    assert not hasattr(results, "norm_ul")
+    assert not hasattr(results, "norm_errn")
+    assert not hasattr(results, "norm_errp")
+
+    estimator = FluxPointsEstimator(
+        source="source",
+        energy_edges=[0.05, 50] * u.TeV,
+        selection_optional=["ul", "errn-errp"],
+        n_sigma_ul=1.645,
+        norm=norm,
+    )
+    results = estimator.run(dataset)
+    assert hasattr(results, "stat_scan")
+    assert_allclose(results.norm_ul.data.flatten()[0], 0.6908785888971987, rtol=1e-5)
+    assert np.isnan(results.norm_errn.data.flatten()[0])
+    assert_allclose(results.norm_errp.data.flatten()[0], 0.2669708627581299, rtol=1e-5)
+
+    norm = Parameter(
+        name="norm",
+        value=1,
+        min=0,
+        scan_min=0.2,
+        scan_max=5,
+        scan_n_values=11,
+        interp="log",
+    )
+    estimator = FluxPointsEstimator(
+        source="source",
+        energy_edges=[0.05, 50] * u.TeV,
+        selection_optional=["ul", "errn-errp"],
+        n_sigma_ul=1.645,
+        norm=norm,
+    )
+    assert hasattr(results, "stat_scan")
+    assert_allclose(results.norm_ul.data.flatten()[0], 0.6908785888971987, rtol=1e-5)
+    assert np.isnan(results.norm_errn.data.flatten()[0])
+    assert_allclose(results.norm_errp.data.flatten()[0], 0.2669708627581299, rtol=1e-5)
