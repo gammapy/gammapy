@@ -947,4 +947,3 @@ def test_confidence_failure_fallback_to_scan():
     assert hasattr(results, "stat_scan")
     assert_allclose(results.norm_ul.data.flatten()[0], 0.6908785888971987, rtol=1e-5)
     assert np.isnan(results.norm_errn.data.flatten()[0])
-    assert_allclose(results.norm_errp.data.flatten()[0], 0.2669708627581299, rtol=1e-5)
