@@ -33,7 +33,6 @@ from gammapy.irf.io import COMMON_IRF_HEADERS, IRF_DL3_HDU_SPECIFICATION
 from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import (
     make_edisp_kernel_map,
-)
 from gammapy.maps import MapAxis, WcsGeom
 
 ######################################################################
