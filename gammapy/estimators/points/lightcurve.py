@@ -50,6 +50,9 @@ class LightCurveEstimator(FluxPointsEstimator):
     n_sigma_ul : float, optional
         Number of sigma to use for upper limit computation. Must be a positive value.
         Default is 2.
+    n_sigma_sensitivity : float, optional
+        Sigma to use for sensitivity computation. Must be a positive value.
+        Default is 5.
     selection_optional : list of str, optional
         Which steps to execute. Available options are:
 

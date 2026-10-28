@@ -1,0 +1,1 @@
+Recompute upper limits using likelihood profiles if the default method using fit condidence fails in `gammapy.estimators.ParameterEstimator`.

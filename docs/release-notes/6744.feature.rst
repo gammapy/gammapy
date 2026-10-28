@@ -1,0 +1,1 @@
+Implementation of parameter validation and code restructuring for Dark Matter spectral models.

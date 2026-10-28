@@ -333,7 +333,7 @@ TEST_MODELS = [
         val_at_2TeV=u.Quantity(1.418847, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(4.397409, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(10.505849, "TeV cm-2 s-1"),
-        e_peak=7.408182 * u.TeV,
+        e_peak=2.342673 * u.TeV,
     ),
 ]
 
@@ -1087,6 +1087,29 @@ class TestNaimaModel:
             energy_bounds=[10 * u.GeV, 80 * u.TeV], energy_power=2, ax=ax
         )
         assert not radiative_model._memoize
+
+    def test_electron_min_max(self):
+        import naima
+
+        particle_distribution = naima.models.ExponentialCutoffBrokenPowerLaw(
+            amplitude=2e33 / u.eV,
+            e_0=10 * u.TeV,
+            alpha_1=2.5,
+            alpha_2=2.7,
+            e_break=900 * u.GeV,
+            e_cutoff=10 * u.TeV,
+        )
+        radiative_model = naima.radiative.InverseCompton(
+            particle_distribution, seed_photon_fields=["CMB"]
+        )
+
+        model = NaimaSpectralModel(radiative_model)
+        model.Eemin.value = 1e-3
+        model.Eemax.value = 1e3
+
+        energy = np.logspace(-3, 3, 30) * u.TeV
+
+        assert_quantity_allclose(model(energy), radiative_model.flux(energy))
 
 
 class TestSpectralModelErrorPropagation:

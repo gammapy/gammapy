@@ -10,8 +10,8 @@ without a WCS (see "sky and pixel regions" in PIG 10), or some HEALPix integrati
 """
 
 import operator
+
 import numpy as np
-from scipy.optimize import Bounds, minimize
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -19,6 +19,7 @@ from gammapy.utils.scripts import make_path
 from regions import (
     CircleAnnulusSkyRegion,
     CircleSkyRegion,
+    CirclePixelRegion,
     CompoundSkyRegion,
     EllipseSkyRegion,
     RectangleSkyRegion,
@@ -26,14 +27,20 @@ from regions import (
     PolygonSkyRegion,
     PolygonPixelRegion,
 )
+from regions.core import RegionBoundingBox
+from regions.core.attributes import RegionAttribute
+from scipy.optimize import Bounds, minimize
 
 from regions.core.pixcoord import PixCoord
 from regions.core.metadata import RegionMeta, RegionVisual
 
 __all__ = [
+    "CircleSkyRegionArray",
+    "CirclePixelRegionArray",
     "compound_region_to_regions",
     "make_concentric_annulus_sky_regions",
     "make_orthogonal_rectangle_sky_regions",
+    "make_grid_rectangle_sky_regions",
     "regions_to_compound_region",
     "region_to_frame",
 ]
@@ -361,7 +368,7 @@ class PolygonPointsPixelRegion(PolygonPixelRegion):
 
 
 def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=1):
-    """Utility returning an array of regions to make orthogonal projections.
+    """Utility returning an array of regions to make orthogonal projections for a 1D profile.
 
     Parameters
     ----------
@@ -378,7 +385,7 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
 
     Returns
     -------
-    regions : list of `~regions.RectangleSkyRegion`
+    regions : `~regions.Regions`
         Regions in which the profiles are made.
     """
     pix_start = start_pos.to_pixel(wcs)
@@ -402,6 +409,74 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
     return regions
 
 
+def make_grid_rectangle_sky_regions(
+    center, width, height, wcs, nbinx=1, nbiny=1, angle=0 * u.deg
+):
+    """Utility to return a list of 2D grid of rectangular projections.
+
+    This function to create a 2D grid of
+    `~regions.RectangleSkyRegion` tiles on the
+    projection plane defined by the input WCS.
+    This is similar to `make_orthogonal_rectangle_sky_regions`
+    but covers a 2-D field instead of a 1-D profile.
+
+    Parameters
+    ----------
+    center : `~astropy.coordinates.SkyCoord`
+        Center coordinate of the full grid.
+    width : `~astropy.units.Quantity`
+        Total angular width of the grid (longitude direction).
+    height : `~astropy.units.Quantity`
+        Total angular height of the grid (latitude direction).
+    wcs : `~astropy.wcs.WCS`
+        WCS projection object used to convert between sky and pixel
+        coordinates.
+    nbinx : int, optional
+        Number of boxes along x-axis (RA/longitude). Default is 1.
+    nbiny : int, optional
+        Number of boxes along y-axis (Dec/latitude). Default is 1.
+    angle : `~astropy.units.Quantity`, optional
+        Rotation angle (in deg) of the grid, anti-clockwise.
+        Default is 0 deg.
+
+    Returns
+    -------
+    regions : `~regions.Regions`
+         List of `~regions.RectangleSkyRegion`
+
+    """
+    pix_center = center.to_pixel(wcs)
+
+    dx = center.directional_offset_by(angle + 90 * u.deg, width / 2)
+    dy = center.directional_offset_by(angle, height / 2)
+
+    pix_dx = dx.to_pixel(wcs)
+    pix_dy = dy.to_pixel(wcs)
+
+    dir_x = np.array([pix_dx[0] - pix_center[0], pix_dx[1] - pix_center[1]])
+    dir_y = np.array([pix_dy[0] - pix_center[0], pix_dy[1] - pix_center[1]])
+    x_edges = np.linspace(-1, 1, nbinx + 1)
+    y_edges = np.linspace(-1, 1, nbiny + 1)
+    x_center = 0.5 * (x_edges[:-1] + x_edges[1:])
+    y_center = 0.5 * (y_edges[:-1] + y_edges[1:])
+
+    regions = []
+    for x in x_center:
+        for y in y_center:
+            pix_x = pix_center[0] + x * dir_x[0] + y * dir_y[0]
+            pix_y = pix_center[1] + x * dir_x[1] + y * dir_y[1]
+
+            sky_center = SkyCoord.from_pixel(pix_x, pix_y, wcs)
+            reg = RectangleSkyRegion(
+                center=sky_center,
+                width=width / nbinx,
+                height=height / nbiny,
+                angle=angle,
+            )
+            regions.append(reg)
+    return Regions(regions)
+
+
 def make_concentric_annulus_sky_regions(
     center, radius_max, radius_min=1e-5 * u.deg, nbin=11
 ):
@@ -420,8 +495,8 @@ def make_concentric_annulus_sky_regions(
 
     Returns
     -------
-    regions : list of `~regions.CircleAnnulusSkyRegion`
-        Regions in which the profiles are made.
+    regions : `~regions.Regions`
+        List of `~regions.CircleAnnulusSkyRegion` in which the profiles are made.
     """
     regions = []
 
@@ -435,7 +510,7 @@ def make_concentric_annulus_sky_regions(
         )
         regions.append(region)
 
-    return regions
+    return Regions(regions)
 
 
 def region_to_frame(region, frame):
@@ -502,8 +577,8 @@ def extract_bright_star_regions(
 
     Returns
     -------
-    regions : list of `~regions.CircleSkyRegion`
-        Star exclusion regions.
+    regions : `~regions.Regions`
+        Star exclusion regions as list of `~regions.CircleSkyRegion`
     """
     regions = []
 
@@ -531,4 +606,59 @@ def extract_bright_star_regions(
             )
         )
 
-    return regions
+    return Regions(regions)
+
+
+class ArrayQuantityLength(RegionAttribute):
+    """
+    Descriptor class for `~regions.SkyRegion`, which takes a scalar
+    `~astropy.units.Quantity` object.
+    """
+
+    def _validate(self, value):
+        if not isinstance(value, u.Quantity):
+            raise ValueError(f"The {self.name} must be an astropy  `Quantity object`")
+
+
+class ArrayLength(RegionAttribute):
+    """
+    Descriptor class for `~regions.PixelRegion`, which takes a scalar
+    python/numpy number.
+    """
+
+    def _validate(self, value):
+        pass
+
+
+class CircleSkyRegionArray(CircleSkyRegion):
+    """Circle sky region with array support for radius"""
+
+    radius = ArrayQuantityLength("radius")
+    is_regular = False
+
+    def to_pixel(self, wcs):
+        center, pixscale, _ = pixel_scale_angle_at_skycoord(self.center, wcs)
+        radius = (self.radius / pixscale).to(u.pix).value
+        return CirclePixelRegionArray(center, radius, self.meta, self.visual)
+
+
+class CirclePixelRegionArray(CirclePixelRegion):
+    """Pixel sky region with array support for radius"""
+
+    radius = ArrayLength("radius")
+    is_regular = False
+
+    @property
+    def bounding_box(self):
+        """Bounding box (`~regions.RegionBoundingBox`)."""
+        radius = np.atleast_1d(self.radius).max()
+        xmin = self.center.x - radius
+        xmax = self.center.x + radius
+        ymin = self.center.y - radius
+        ymax = self.center.y + radius
+        return RegionBoundingBox.from_float(xmin, xmax, ymin, ymax)
+
+    @property
+    def area(self):
+        # Extra axes to match dimensions from a RegionGeom
+        return super().area[:, np.newaxis, np.newaxis]

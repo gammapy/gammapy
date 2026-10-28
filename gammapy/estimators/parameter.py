@@ -5,7 +5,7 @@ import logging
 import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.datasets.actors import DatasetsActor
-from gammapy.modeling import Fit
+from gammapy.modeling import Fit, stat_profile_ul_scipy
 from gammapy.modeling.selection import NestedModelSelection
 from gammapy.modeling.parameter import restore_parameters_status
 from gammapy.stats.utils import ts_to_sigma
@@ -15,6 +15,13 @@ from .core import Estimator
 log = logging.getLogger(__name__)
 
 __all__ = ["ParameterEstimator", "ParameterSensitivityEstimator"]
+
+
+def _get_error_from_scan(scan_values, stat_scan, delta_ts):
+    try:
+        return stat_profile_ul_scipy(scan_values, stat_scan, delta_ts=delta_ts)
+    except (ValueError, RuntimeError):
+        return np.nan
 
 
 class ParameterEstimator(Estimator):
@@ -207,13 +214,18 @@ class ParameterEstimator(Estimator):
             sigma=self.n_sigma,
             reoptimize=self.reoptimize,
         )
-
+        if "success" in res and not res["success"]:
+            res["errp"] = np.nan
+            res["errp"] = np.nan
+        if "success_errp" in res and not (res["success_errp"] and res["success_errn"]):
+            res["errp"] = np.nan
+            res["errp"] = np.nan
         return {
             f"{parameter.name}_errp": res["errp"],
             f"{parameter.name}_errn": res["errn"],
         }
 
-    def estimate_scan(self, datasets, parameter):
+    def estimate_scan(self, datasets, parameter, estimate_err=False, estimate_ul=False):
         """Estimate parameter statistic scan.
 
         Parameters
@@ -222,6 +234,12 @@ class ParameterEstimator(Estimator):
             The datasets used to estimate the model parameter.
         parameter : `~gammapy.modeling.Parameter`
             For which parameter to get the value.
+        estimate_err: bool, optional
+            Whether to compute errn, and errp from profile or not.
+            Default is False.
+        estimate_ul : bool, optional
+            Whether to compute ul from profile or not.
+            Default is False.
 
         Returns
         -------
@@ -230,6 +248,13 @@ class ParameterEstimator(Estimator):
 
                 * parameter.name_scan : parameter values scan.
                 * "stat_scan" : fit statistic values scan.
+
+            Optional entries:
+
+                * {parameter.name}_errp : positive error on parameter value.
+                * {parameter.name}_errn : negative error on parameter value.
+                * {parameter.name}_ul : upper limit on parameter value.
+
         """
         scan_values = parameter.scan_values
 
@@ -244,11 +269,30 @@ class ParameterEstimator(Estimator):
         profile = self.fit.stat_profile(
             datasets=datasets, parameter=parameter, reoptimize=self.reoptimize
         )
-
-        return {
+        results = {
             f"{parameter.name}_scan": scan_values,
             "stat_scan": profile["stat_scan"],
         }
+
+        if estimate_err and "errn-errp" in self.selection_optional:
+            results[f"{parameter.name}_errn"] = _get_error_from_scan(
+                scan_values[::-1],
+                profile["stat_scan"][::-1],
+                delta_ts=self.n_sigma**2,
+            )
+            results[f"{parameter.name}_errp"] = _get_error_from_scan(
+                scan_values,
+                profile["stat_scan"],
+                delta_ts=self.n_sigma**2,
+            )
+        if estimate_ul and "ul" in self.selection_optional:
+            results[f"{parameter.name}_ul"] = _get_error_from_scan(
+                scan_values,
+                profile["stat_scan"],
+                delta_ts=self.n_sigma_ul**2,
+            )
+
+        return results
 
     def estimate_ul(self, datasets, parameter):
         """Estimate parameter ul.
@@ -265,7 +309,7 @@ class ParameterEstimator(Estimator):
         result : dict
             Dictionary with the parameter upper limits. Entries are:
 
-                * parameter.name_ul : upper limit on parameter value.
+                * {parameter.name}_ul : upper limit on parameter value.
         """
         if not np.any(datasets.contributes_to_stat):
             return {f"{parameter.name}_ul": np.nan}
@@ -278,7 +322,12 @@ class ParameterEstimator(Estimator):
             sigma=self.n_sigma_ul,
             reoptimize=self.reoptimize,
         )
-        return {f"{parameter.name}_ul": res["errp"] + parameter.value}
+        res_value = res["errp"] + parameter.value
+        if "success" in res and not res["success"]:
+            res_value = np.nan
+        if "success_errp" in res and not res["success_errp"]:
+            res_value = np.nan
+        return {f"{parameter.name}_ul": res_value}
 
     def estimate_sensitivity(self, datasets, parameter):
         """Estimate norm sensitivity for the flux point.
@@ -384,14 +433,24 @@ class ParameterEstimator(Estimator):
             result = self.estimate_best_fit(datasets, parameter)
             result.update(self.estimate_ts(datasets, parameter))
 
+            has_invalid_err = False
+            has_invalid_ul = False
             if "errn-errp" in self.selection_optional:
-                result.update(self.estimate_errn_errp(datasets, parameter))
+                res = self.estimate_errn_errp(datasets, parameter)
+                has_invalid_err = np.any(np.isnan([float(_) for _ in res.values()]))
+                result.update(res)
 
             if "ul" in self.selection_optional:
-                result.update(self.estimate_ul(datasets, parameter))
+                res = self.estimate_ul(datasets, parameter)
+                has_invalid_ul = np.any(np.isnan([float(_) for _ in res.values()]))
+                result.update(res)
 
-            if "scan" in self.selection_optional:
-                result.update(self.estimate_scan(datasets, parameter))
+            if "scan" in self.selection_optional or has_invalid_err or has_invalid_ul:
+                result.update(
+                    self.estimate_scan(
+                        datasets, parameter, has_invalid_err, has_invalid_ul
+                    )
+                )
 
             if "sensitivity" in self.selection_optional:
                 result.update(self.estimate_sensitivity(datasets, parameter))
@@ -464,10 +523,12 @@ class ParameterSensitivityEstimator:
         """Parameter value  matching the target significance."""
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
+            param = self.parameter.copy()
+            param.scan_n_sigma = self.n_sigma + 1
             roots, _ = find_roots(
                 self._fcn,
-                self.parameter.conf_min,
-                self.parameter.conf_max,
+                param.conf_min,
+                param.conf_max,
                 args=(datasets,),
                 nbin=100,
                 maxiter=self.max_niter,

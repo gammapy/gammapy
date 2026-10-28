@@ -14,8 +14,10 @@ from .prior import (
     GeneralizedGaussianPrior,
     Prior,
     UniformPrior,
-    LogUniformPrior,
     SamplesKDEPrior,
+    LogNormalPrior,
+    LogUniformPrior,
+    LogSpaceGaussianPrior,
 )
 from .spatial import (
     ConstantFluxSpatialModel,
@@ -102,6 +104,7 @@ __all__ = [
     "integrate_spectrum",
     "LightCurveTemplateTemporalModel",
     "LinearTemporalModel",
+    "LogNormalPrior",
     "LogParabolaNormSpectralModel",
     "LogParabolaSpectralModel",
     "LogParabola2SpectralModel",
@@ -217,6 +220,8 @@ PRIOR_REGISTRY = Registry(
         GaussianPrior,
         LogUniformPrior,
         GeneralizedGaussianPrior,
+        LogNormalPrior,
+        LogSpaceGaussianPrior,
     ]
 )
 """Registry of prior classes."""

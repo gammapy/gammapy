@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 import astropy.units as u
+from numpy.testing import assert_allclose
 
 from gammapy.visualization.violin import plot_samples_violin_vs_energy
 
@@ -190,4 +191,132 @@ def test_plot_samples_violin_vs_energy_no_weights():
     assert "Energy" in ax.get_xlabel()
     assert "dN/dE" in ax.get_ylabel()
 
+    plt.close(fig)
+
+
+def test_plot_samples_violin_vs_energy_preserves_axis_units():
+    energy_edges = [1, 10, 100] * u.TeV
+
+    samples_per_band = [
+        np.array([0.9, 1.0, 1.1]) * 1e-12 * u.Unit("cm-2 s-1 TeV-1"),
+        np.array([1.8, 2.0, 2.2]) * 1e-13 * u.Unit("cm-2 s-1 TeV-1"),
+    ]
+
+    fig, ax = plt.subplots()
+
+    ax.yaxis.set_units(u.Unit("erg-1 cm-2 s-1"))
+    ax.xaxis.set_units(u.Unit("GeV"))
+
+    ax = plot_samples_violin_vs_energy(
+        ax=ax,
+        energy_edges=energy_edges,
+        samples_per_band=samples_per_band,
+    )
+
+    assert ax.xaxis.units == u.GeV
+    assert ax.yaxis.units == u.Unit("cm-2 s-1 erg-1")
+
+    ax.set_xlim(9e2, 2e5)
+    xticks = ax.get_xticks()
+    xlim = ax.get_xlim()
+    assert_allclose(
+        xticks[(xticks >= xlim[0]) & (xticks <= xlim[1])], [1e3, 1e4, 1e5], rtol=1e-3
+    )
+
+    ax.set_ylim(9e-14, 2e-12)
+    yticks = ax.get_yticks()
+    ylim = ax.get_ylim()
+    assert_allclose(
+        yticks[(yticks >= ylim[0]) & (yticks <= ylim[1])], [1e-13, 1e-12], rtol=1e-3
+    )
+    plt.close(fig)
+
+    fig, ax = plt.subplots()
+
+    ax.yaxis.set_units(u.Unit("erg cm-2 s-1"))
+    ax.xaxis.set_units(u.Unit("eV"))
+
+    ax = plot_samples_violin_vs_energy(
+        ax=ax,
+        energy_edges=energy_edges,
+        samples_per_band=samples_per_band,
+        energy_power=2,
+    )
+
+    assert ax.xaxis.units == u.eV
+    assert ax.yaxis.units == u.Unit("cm-2 s-1 erg")
+
+    ax.set_xlim(9e11, 2e14)
+    xticks = ax.get_xticks()
+    xlim = ax.get_xlim()
+    assert_allclose(
+        xticks[(xticks >= xlim[0]) & (xticks <= xlim[1])], [1e12, 1e13, 1e14], rtol=1e-3
+    )
+
+    ax.set_ylim(9e-12, 2e-9)
+    yticks = ax.get_yticks()
+    ylim = ax.get_ylim()
+
+    assert_allclose(
+        yticks[(yticks >= ylim[0]) & (yticks <= ylim[1])],
+        [1e-11, 1e-10, 1e-9],
+        rtol=1e-3,
+    )
+    plt.close(fig)
+
+
+def test_plot_samples_violin_vs_energy_energy_power_units():
+    energy_edges = [1, 10, 100] * u.TeV
+
+    samples_per_band = [
+        np.array([0.9, 1.0, 1.1]) * 1e-12 * u.Unit("cm-2 s-1 TeV-1"),
+        np.array([1.8, 2.0, 2.2]) * 1e-13 * u.Unit("cm-2 s-1 TeV-1"),
+    ]
+
+    fig, ax = plt.subplots()
+    ax = plot_samples_violin_vs_energy(
+        ax=ax,
+        energy_edges=energy_edges,
+        samples_per_band=samples_per_band,
+        energy_power=-1,
+    )
+
+    assert ax.xaxis.units == u.TeV
+    assert ax.yaxis.units == u.Unit("TeV-2 s-1 cm-2")
+    assert (
+        ax.yaxis.get_label().get_text()
+        == r"$E^-1\,\times$ dN/dE [$\mathrm{s^{-1}\,TeV^{-2}\,cm^{-2}}$]"
+    )
+    plt.close(fig)
+
+    fig, ax = plt.subplots()
+    ax = plot_samples_violin_vs_energy(
+        ax=ax,
+        energy_edges=energy_edges,
+        samples_per_band=samples_per_band,
+        energy_power=0,
+    )
+
+    assert ax.xaxis.units == u.TeV
+    assert ax.yaxis.units == u.Unit("TeV-1 s-1 cm-2")
+    assert (
+        ax.yaxis.get_label().get_text()
+        == r"dN/dE [$\mathrm{TeV^{-1}\,s^{-1}\,cm^{-2}}$]"
+    )
+    plt.close(fig)
+
+    fig, ax = plt.subplots()
+    ax = plot_samples_violin_vs_energy(
+        ax=ax,
+        energy_edges=energy_edges,
+        samples_per_band=samples_per_band,
+        energy_power=2,
+    )
+
+    assert ax.xaxis.units == u.TeV
+    assert ax.yaxis.units == u.Unit("TeV s-1 cm-2")
+    assert (
+        ax.yaxis.get_label().get_text()
+        == r"$E^2\,\times$ dN/dE [$\mathrm{TeV\,s^{-1}\,cm^{-2}}$]"
+    )
     plt.close(fig)

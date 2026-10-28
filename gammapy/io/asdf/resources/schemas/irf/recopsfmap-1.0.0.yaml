@@ -1,0 +1,33 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://gammapy.org/gammapy/schemas/irf/recopsfmap-1.0.0"
+
+title: |
+  Represents RecoPSFMap.
+
+description: |
+     Support the serialization of RecoPSFMap, a PSFMap variant defined using
+     the reconstructed energy axis instead of energy_true.
+
+type: object
+properties:
+  psf_map:
+    anyOf:
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/regionndmap-1.0.0"
+    description: |
+      Holds the actual PSF probability-density values as a Map object,
+      with two non-spatial axes, in this exact order: rad and energy axes.
+  exposure_map:
+    anyOf:
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/regionndmap-1.0.0"
+    description: |
+       Optional field holding exposure-weighting values as a Map.
+
+required: [psf_map]
+additionalProperties: false
+...
