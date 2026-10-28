@@ -20,6 +20,8 @@ from gammapy.modeling.models import (
     Models,
 )
 
+pytest.importorskip("ultranest")
+pytest.importorskip("nautilus")
 
 tested_backends = [_.tag for _ in SAMPLER_BACKEND_REGISTRY]
 
