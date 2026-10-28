@@ -174,8 +174,7 @@ measurements and their uncertainties and model predictions.
 The chi-squared statistic is given by:
 
 .. math::
-
-\chi^2 = \sum_i \frac{(f_i - m_i)^2}{\sigma_i^2}
+    \chi^2 = \sum_i \frac{(f_i - m_i)^2}{\sigma_i^2}
 
 This method is straightforward and appropriate when a chi-squared
 approximation correctly describes the measurements. However, it does not
@@ -207,10 +206,9 @@ For a flux measurement with Gaussian uncertainty, the likelihood is
 proportional to the normal probability density function:
 
 .. math::
-
-\mathcal{L}(f_i \mid m_i)
-= \frac{1}{\sqrt{2\pi}\sigma_i}
-  \exp\left[-\frac{(f_i-m_i)^2}{2\sigma_i^2}\right].
+    \mathcal{L}(f_i \mid m_i) \\
+    = \frac{1}{\sqrt{2\pi}\sigma_i} \\
+    \exp\left[-\frac{(f_i-m_i)^2}{2\sigma_i^2}\right].
 
 The corresponding contribution to the fit statistic is proportional to
 the squared normalised residual. For measured flux points, this has the
