@@ -1,19 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-import importlib
 import sys
 import types
 import numpy as np
 from gammapy.utils.testing import requires_data
 from numpy.testing import assert_allclose
+from gammapy.modeling import SAMPLER_BACKEND_REGISTRY
 from gammapy.modeling.models import SkyModel
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.modeling.sampler import (
     Sampler,
     SamplerLikelihood,
-    SAMPLER_BACKENDS,
-    _SamplerBackend,
-    _UltranestBackend,
 )
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.modeling.models import (
@@ -23,7 +20,8 @@ from gammapy.modeling.models import (
     Models,
 )
 
-tested_backends = [_ for _ in SAMPLER_BACKENDS if importlib.util.find_spec(_)]
+
+tested_backends = [_.tag for _ in SAMPLER_BACKEND_REGISTRY]
 
 
 @pytest.fixture()
@@ -88,7 +86,7 @@ def test_sampler_options_override_defaults():
 
 
 def test_invalid_backend_raises():
-    with pytest.raises(ValueError, match="unknown_backend"):
+    with pytest.raises(KeyError, match="unknown_backend"):
         Sampler(backend="unknown_backend")
 
 
@@ -354,40 +352,6 @@ def test_sampler_deprecated_properties(mock_ultranest):
             "frac_remain": 0.5,
             "max_ncalls": 10,
         }
-
-
-def test_sampler_backends_registered():
-    assert set(SAMPLER_BACKENDS) == {"ultranest", "nautilus"}
-    assert SAMPLER_BACKENDS["ultranest"] is _UltranestBackend
-
-
-@pytest.fixture()
-def clean_registry():
-    registry = dict(SAMPLER_BACKENDS)
-    yield
-    SAMPLER_BACKENDS.clear()
-    SAMPLER_BACKENDS.update(registry)
-
-
-def test_sampler_backend_registration(clean_registry):
-    class DummyBackend(_UltranestBackend):
-        tag = "dummy"
-
-    assert SAMPLER_BACKENDS["dummy"] is DummyBackend
-    assert Sampler(backend="dummy").backend == "dummy"
-
-    with pytest.raises(ValueError, match="already registered"):
-
-        class DuplicateBackend(_UltranestBackend):
-            tag = "dummy"
-
-
-def test_sampler_backend_without_tag_not_registered(clean_registry):
-    class BaseBackend(_SamplerBackend):
-        pass
-
-    assert BaseBackend not in SAMPLER_BACKENDS.values()
-    assert set(SAMPLER_BACKENDS) == {"ultranest", "nautilus"}
 
 
 @pytest.mark.parametrize("backend", tested_backends)

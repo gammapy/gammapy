@@ -12,14 +12,11 @@ from .utils import _parse_datasets
 
 __all__ = ["Sampler", "SamplerLikelihood", "SamplerResult"]
 
-# Filled automatically with each backend class, keyed by its tag.
-SAMPLER_BACKENDS = {}
-
 
 class _SamplerBackend(abc.ABC):
     """Base class for the sampler backends.
 
-    Subclasses defining a ``tag`` are registered in ``SAMPLER_BACKENDS``.
+    Subclasses defining a ``tag`` are registered in ``SAMPLER_BACKEND_REGISTRY``.
 
     The options use the backend library's own names. Before the run, each of them
     is sent to the backend sampler constructor or to its ``run`` method, by
@@ -45,13 +42,6 @@ class _SamplerBackend(abc.ABC):
     gammapy_filled_args = ()
     # old option name: new option name
     deprecated_options = {}
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        if cls.tag is not None:
-            if cls.tag in SAMPLER_BACKENDS:
-                raise ValueError(f"Sampler backend '{cls.tag}' is already registered.")
-            SAMPLER_BACKENDS[cls.tag] = cls
 
     def __init__(self, options=None, sampler_opts=None, run_opts=None):
         options = {} if options is None else dict(options)
@@ -357,14 +347,10 @@ class Sampler:
     def __init__(
         self, backend="ultranest", sampler_opts=None, run_opts=None, options=None
     ):
-        if backend not in SAMPLER_BACKENDS:
-            raise ValueError(
-                f"Sampler {backend} is not supported. "
-                f"Available backends are: {sorted(SAMPLER_BACKENDS)}."
-            )
+        from . import SAMPLER_BACKEND_REGISTRY
 
         self.backend = backend
-        self._backend = SAMPLER_BACKENDS[backend](
+        self._backend = SAMPLER_BACKEND_REGISTRY.get_cls(backend)(
             options=options, sampler_opts=sampler_opts, run_opts=run_opts
         )
 
