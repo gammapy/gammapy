@@ -1,0 +1,1 @@
+Add MapDataset.downsample functionality for energy_true axis, fix IRFMap.downsample behaviour, restrict axes for downsampling.

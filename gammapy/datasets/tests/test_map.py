@@ -641,6 +641,9 @@ def test_downsample():
     with pytest.raises(ValueError):
         dataset.downsample(2, axis_name="energy")
 
+    with pytest.raises(ValueError):
+        dataset.downsample(2, axis_name="rad")
+
 
 def test_downsample_energy(geom, geom_etrue):
     # This checks that downsample and resample_energy_axis give identical results
@@ -665,6 +668,34 @@ def test_downsample_energy(geom, geom_etrue):
         dataset_downsampled.edisp.edisp_map.data[:, :, 0, 0],
         dataset_resampled.edisp.edisp_map.data[:, :, 0, 0],
     )
+
+
+# @requires_data()
+def test_downsample_energy_true(geom):
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=5, name="energy_true")
+    geom_et = WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+    dataset = get_map_dataset(geom, geom_et)
+    counts = Map.from_geom(geom, data=np.ones(geom.data_shape))
+    dataset.counts = counts
+
+    downsampled = dataset.downsample(5, axis_name="energy_true")
+
+    assert_allclose(downsampled.counts.data, dataset.counts.data)
+    assert downsampled.exposure.data.shape == (
+        dataset.exposure.data.shape[0] // 5,
+        dataset.exposure.data.shape[1],
+        dataset.exposure.data.shape[2],
+    )
+    assert_allclose(np.mean(downsampled.exposure.data), np.mean(dataset.exposure.data))
+
+    with pytest.raises(ValueError):
+        dataset.downsample(2, axis_name="energy")
 
 
 @requires_data()

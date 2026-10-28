@@ -998,7 +998,7 @@ class IRFMap:
     def downsample(self, factor, axis_name=None, weights=None):
         """Downsample the dimension of the spatial axes or a non-spatial axis by a given factor.
 
-        It is not recommended to use this function on a `~gammapy.irf.PSFMap` rad axis.
+        It is not possible to use this function on a `~gammapy.irf.PSFMap` rad axis.
 
         Parameters
         ----------
@@ -1015,7 +1015,12 @@ class IRFMap:
         map : `IRFMap`
             Downsampled IRF map.
         """
-        if axis_name in [None, "energy_true", "rad"]:
+        if (axis_name not in self.downsample_axes) and (axis_name is not None):
+            raise ValueError(
+                f"Possible values: {self.downsample_axes} or None (to downsample spatial axes). Got {axis_name} instead."
+            )
+
+        if axis_name in [None, "energy_true"]:
             preserve_counts = False
         else:
             preserve_counts = True
