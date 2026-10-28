@@ -1,1 +1,0 @@
-Fix error messages in `gammapy.data.FixedPointingInfo` and `gammapy.maps.WcsNDMap.convolve()` that printed a literal placeholder instead of the expected frame or kernel shape.
