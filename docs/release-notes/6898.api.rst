@@ -1,2 +1,2 @@
 The options of `~gammapy.modeling.Sampler` are now given in a single ``options`` dictionary, using the backend's own
-option names. 
+option names.
