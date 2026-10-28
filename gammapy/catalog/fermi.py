@@ -2521,7 +2521,22 @@ class SourceCatalog4LAC(SourceCatalog):
     description = "LAT 4th AGN catalog"
     source_object_class = SourceCatalogObject4LAC
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/table-4LAC-DR3-h.fits"):
+    def __init__(
+        self,
+        filename=None,
+        latitude="high",
+    ):
+        if filename is None:
+            if latitude not in ["high", "low"]:
+                raise ValueError(
+                    f"{latitude} latitude is not valid for the 4LAC files. Only high and low are accepted."
+                )
+
+            print(f"Reading {latitude} latitude 4LAC file.")
+            filename = (
+                f"$GAMMAPY_DATA/catalogs/fermi/table-4LAC-DR3-{latitude[0]}.fits.gz"
+            )
+
         filename = make_path(filename)
 
         with warnings.catch_warnings():
