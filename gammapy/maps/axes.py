@@ -426,7 +426,32 @@ class MapAxis:
         xmin, xmax = self.bounds
         if xmin != xmax:
             ax.set_xlim(self.bounds)
+
+        self._fix_narrow_log_xaxis(ax, xmin, xmax)
         return ax
+
+    @staticmethod
+    def _fix_narrow_log_xaxis(ax, xmin, xmax):
+        """Avoid overlapping scientific-notation minor tick labels on a narrow log x-axis.
+
+        On a log scale spanning one decade or less, matplotlib labels the minor
+        ticks (e.g. ``1.05x10^0``, ``1.1x10^0``, ...) which overlap in a small
+        panel. In that case, switch to plain scalar labels on a reduced number of
+        major ticks and drop the minor labels. For ranges wider than one decade
+        matplotlib shows no minor labels, so this is a no-op (see #6847).
+        """
+        from matplotlib.ticker import MaxNLocator, NullLocator, ScalarFormatter
+
+        if ax.get_xscale() != "log":
+            return
+
+        ratio = u.Quantity(xmax / xmin).to_value("")
+        if ratio <= 0 or np.log10(ratio) > 1:
+            return
+
+        ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+        ax.xaxis.set_major_formatter(ScalarFormatter())
+        ax.xaxis.set_minor_locator(NullLocator())
 
     def format_plot_yaxis(self, ax):
         """Format plot y-axis.
