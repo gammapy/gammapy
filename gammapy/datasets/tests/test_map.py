@@ -678,7 +678,7 @@ def test_downsample_energy(geom, geom_etrue):
     )
 
 
-# @requires_data()
+@requires_data()
 def test_downsample_energy_true(geom):
     axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=5, name="energy_true")
     geom_et = WcsGeom.create(
