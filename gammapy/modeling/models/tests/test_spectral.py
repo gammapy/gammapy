@@ -742,6 +742,7 @@ def test_call_plsec_4fgl_dr1():
     assert_allclose(model(4 * u.GeV), desired, rtol=1e-3)
 
 
+@requires_data()
 def test_pivot_energy():
     pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 cm-2 s-1 TeV-1")
     assert_quantity_allclose(pwl.pivot_energy, np.nan * u.TeV, rtol=1e-5)
