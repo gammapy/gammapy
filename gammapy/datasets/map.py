@@ -2104,7 +2104,7 @@ class MapDataset(Dataset):
         factor : int
             Downsampling factor.
         axis_name : {None, "energy", "energy_true"}, optional
-            Name of axis to downsample. If None is given, spatial axes are downsampled.\
+            Name of axis to downsample. If None is given, spatial axes are downsampled.
             Default is None.
         name : str, optional
             Name of the downsampled dataset. Default is None.
@@ -2116,8 +2116,8 @@ class MapDataset(Dataset):
         """
         if axis_name not in [None, "energy", "energy_true"]:
             raise ValueError(
-                f"Possible values: 'energy', 'energy_true', or None\
- (to downsample spatial axes). Got {axis_name} instead."
+                f"Invalid 'axis_name': {axis_name}. "
+                "Possible options are: 'energy', 'energy_true', or None."
             )
 
         name = make_name(name)

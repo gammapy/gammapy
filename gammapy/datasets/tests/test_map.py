@@ -714,7 +714,7 @@ def test_downsample_energy_true(geom):
     with pytest.raises(
         ValueError,
         match="Number of energy_true bins \\(5\\) is not\
- divisible by 2",
+        match="Number of energy_true bins (5) is not divisible by 2",
     ):
         dataset.downsample(2, axis_name="energy_true")
 
