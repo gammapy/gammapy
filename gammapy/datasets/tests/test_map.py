@@ -692,11 +692,12 @@ def test_downsample_energy_true(geom):
     counts = Map.from_geom(geom, data=np.ones(geom.data_shape))
     dataset.counts = counts
 
-    downsampled = dataset.downsample(5, axis_name="energy_true")
+    factor = 5
+    downsampled = dataset.downsample(factor=factor, axis_name="energy_true")
 
     assert_allclose(downsampled.counts.data, dataset.counts.data)
     assert downsampled.exposure.data.shape == (
-        dataset.exposure.data.shape[0] // 5,
+        dataset.exposure.data.shape[0] // factor,
         dataset.exposure.data.shape[1],
         dataset.exposure.data.shape[2],
     )
