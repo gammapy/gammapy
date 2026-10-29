@@ -1330,10 +1330,10 @@ class BrokenPowerLawSpectralModel(SpectralModel):
     Parameters
     ----------
     index1 : `~astropy.units.Quantity`
-        :math:`\Gamma1`.
+        :math:`\Gamma_1`.
         Default is 2.
     index2 : `~astropy.units.Quantity`
-        :math:`\Gamma2`.
+        :math:`\Gamma_2`.
         Default is 2.
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`.
@@ -1984,12 +1984,13 @@ class LogParabola2SpectralModel(SpectralModel):
         This is the peak in E^2 x dN/dE and is given by:
 
         .. math::
-            E_{Peak} = E_{0} \exp{ (2 - \alpha) / (2 * \beta)}
+            E_{Peak} = \sqrt{E_{0} E_{\mathrm{s}}} \exp{ (2 - \alpha) / (2 * \beta)}
         """
         escale = self.escale.quantity
         alpha = self.alpha.quantity
         beta = self.beta.quantity
-        return escale * np.exp((2 - alpha) / (2 * beta))
+        reference = self.reference.quantity
+        return np.sqrt(escale * reference) * np.exp((2 - alpha) / (2 * beta))
 
 
 class LogParabolaNormSpectralModel(SpectralModel):
@@ -2579,6 +2580,18 @@ class NaimaSpectralModel(SpectralModel):
             parameters.append(Parameter("B", B))
             parameters.append(Parameter("radius", radius, frozen=True))
 
+        if "Eemin" in self.radiative_model.param_names:
+            for name in ["Eemin", "Eemax"]:
+                value = getattr(self.radiative_model, name)
+                parameter = Parameter(name, value, frozen=True)
+                parameters.append(parameter)
+
+        if "Epmin" in self.radiative_model.param_names:
+            for name in ["Epmin", "Epmax"]:
+                value = getattr(self.radiative_model, name)
+                parameter = Parameter(name, value, frozen=True)
+                parameters.append(parameter)
+
         self.default_parameters = Parameters(parameters)
         self.ssc_energy = np.logspace(-7, 9, 100) * u.eV
         super().__init__()
@@ -2651,6 +2664,14 @@ class NaimaSpectralModel(SpectralModel):
 
         if "B" in self.radiative_model.param_names:
             self.radiative_model.B = self.B.quantity
+
+        if "Eemin" in self.radiative_model.param_names:
+            self.radiative_model.Eemin = self.Eemin.quantity
+            self.radiative_model.Eemax = self.Eemax.quantity
+
+        if "Epmin" in self.radiative_model.param_names:
+            self.radiative_model.Epmin = self.Epmin.quantity
+            self.radiative_model.Epmax = self.Epmax.quantity
 
     def evaluate(self, energy, *args):
         """Evaluate the model.

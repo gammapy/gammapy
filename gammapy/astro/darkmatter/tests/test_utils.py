@@ -308,7 +308,9 @@ def test_dmfluxmap_annihilation(jfact_annihilation):
         float(jfact_annihilation.mean().value), unit=jfact_annihilation.unit
     )
 
-    diff_flux = DarkMatterSpectralModel(mDM=massDM, channel=channel, factor=total_jfact)
+    diff_flux = DarkMatterSpectralModel(
+        mDM=massDM, channel=channel, factor=total_jfact, source="pppc4"
+    )
     int_flux = (
         diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
         * jfact_annihilation
@@ -327,7 +329,9 @@ def test_dmfluxmap_decay(jfact_decay):
     massDM = 1 * u.TeV
     channel = "W"
 
-    diff_flux = DarkMatterSpectralModel(mDM=massDM, channel=channel, annihilation=False)
+    diff_flux = DarkMatterSpectralModel(
+        mDM=massDM, channel=channel, annihilation=False, source="pppc4"
+    )
     int_flux = (
         jfact_decay
         * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
@@ -344,19 +348,19 @@ def test_prior_attached(dm_decay_model):
     centered on mu=1 by default (i.e. the nominal factor value)."""
     add_factor_prior(dm_decay_model, sigma=0.2)
 
-    prior = dm_decay_model.scale.prior
+    prior = dm_decay_model.factor.prior
     assert prior is not None
     assert prior.sigma.value == pytest.approx(0.2 * np.log(10))
-    assert prior.mu.value == pytest.approx(1.0)
+    assert prior.mu.value == pytest.approx(3.41e19)
 
 
 @requires_data()
 def test_custom_mu(dm_decay_model):
     """A custom `mu` should be respected instead of the default 1.0."""
-    add_factor_prior(dm_decay_model, sigma=0.15, mu=0.5)
+    add_factor_prior(dm_decay_model, sigma=0.15)
 
-    prior = dm_decay_model.scale.prior
-    assert prior.mu.value == pytest.approx(0.5)
+    prior = dm_decay_model.factor.prior
+    assert prior.mu.value == pytest.approx(3.41e19)
     assert prior.sigma.value == pytest.approx(0.15 * np.log(10))
 
 

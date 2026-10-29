@@ -1,0 +1,1 @@
+`~gammapy.maps.MapAxis.format_plot_xaxis` no longer produces overlapping scientific-notation minor tick labels on a log x-axis spanning less than one decade.
