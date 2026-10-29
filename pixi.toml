@@ -11,6 +11,8 @@ python = ">=3.12"
 # ------------
 [feature.gammapy.pypi-dependencies]
 gammapy = { path = ".", editable = true }
+[feature.gammapy.tasks]
+download-dataset = "gammapy download datasets"
 
 # Pre-commit feature
 # ------------
