@@ -35,6 +35,8 @@ python = "3.12.*"
 python = "3.13.*"
 [feature.py314.dependencies]
 python = "3.14.*"
+[feature.py315.dependencies]
+python = "3.15.*"
 
 # Numpy features
 # ------------
@@ -109,6 +111,7 @@ default = { features = ["gammapy"], solve-group = "gammapy" }
 py312 = { features = ["test", "py312"], solve-group = "py312" }
 py313 = { features = ["test", "py313"], solve-group = "py313" }
 py314 = { features = ["test", "py314"], solve-group = "py314" }
+py315 = { features = ["test", "py315"], solve-group = "py315" }
 
 # Numpy pins environments
 numpy20 = { features = ["test", "numpy20"], solve-group = "numpy20" }
