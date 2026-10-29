@@ -32,7 +32,7 @@ ready-to-use environment with Jupyter and the tutorial notebooks.
 
         .. _recommended-setup:
 
-        The recommended way to get started is to create a dedicated Gammapy
+        The recommended way to get started is to **create** a dedicated Gammapy
         conda environment. It installs Gammapy together with Jupyter and all the
         packages required to run the tutorial notebooks, with pinned and
         reproducible versions.
@@ -59,7 +59,7 @@ ready-to-use environment with Jupyter and the tutorial notebooks.
 
     .. tab-item:: Environment Based
 
-        For a traditional installation into an existing environment, we recommend
+        For a traditional installation into an **existing environment**, we recommend
         utilising a dedicated Python environment.
 
         Using **pip** from PyPI:
