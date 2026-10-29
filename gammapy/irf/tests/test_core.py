@@ -2,6 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+import re
 import astropy.units as u
 from gammapy.irf.core import IRF, FoVAlignment
 from gammapy.maps import MapAxis, WcsNDMap
@@ -143,3 +144,13 @@ def test_irfmap_downsample():
         / np.sum(weights.data[:, :, 0:2, 0:2], axis=(2, 3)),
         irf6.edisp_map.data[:, :, 0, 0],
     )
+
+    # test error for wrong axis_name
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            "Invalid 'axis_name': rad. "
+            "Possible options are: ['energy', 'energy_true'] or None."
+        ),
+    ):
+        irf2.downsample(2, axis_name="rad")

@@ -4,6 +4,7 @@ import warnings
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
+import re
 import astropy.units as u
 from astropy.coordinates import SkyCoord, EarthLocation
 from astropy.io import fits
@@ -651,8 +652,8 @@ def test_downsample():
 
     with pytest.raises(
         ValueError,
-        match="Possible values: 'energy', 'energy_true',\
- or None \\(to downsample spatial axes\\). Got rad instead.",
+        match="Invalid 'axis_name': rad. "
+        "Possible options are: 'energy', 'energy_true', or None.",
     ):
         dataset.downsample(2, axis_name="rad")
 
@@ -713,8 +714,7 @@ def test_downsample_energy_true(geom):
 
     with pytest.raises(
         ValueError,
-        match="Number of energy_true bins \\(5\\) is not\
-        match="Number of energy_true bins (5) is not divisible by 2",
+        match=re.escape("Number of energy_true bins (5) is not divisible by 2"),
     ):
         dataset.downsample(2, axis_name="energy_true")
 

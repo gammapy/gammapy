@@ -2103,7 +2103,7 @@ class MapDataset(Dataset):
         ----------
         factor : int
             Downsampling factor.
-        axis_name : {None, "energy", "energy_true"}, optional
+        axis_name : {None, energy, energy_true}, optional
             Name of axis to downsample. If None is given, spatial axes are downsampled.
             Default is None.
         name : str, optional

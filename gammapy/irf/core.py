@@ -1061,7 +1061,8 @@ class IRFMap:
         """
         if (axis_name not in self.downsample_axes) and (axis_name is not None):
             raise ValueError(
-                f"Possible values: {self.downsample_axes} or None (to downsample spatial axes). Got {axis_name} instead."
+                f"Invalid 'axis_name': {axis_name}. "
+                f"Possible options are: {self.downsample_axes} or None."
             )
 
         if axis_name in [None, "energy_true"]:
