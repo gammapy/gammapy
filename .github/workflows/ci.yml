@@ -59,6 +59,10 @@ jobs:
             gammapy_data: true
             allowed_fail: true
           - os: ubuntu-latest
+            pixi_env: 'py315'
+            gammapy_data: true
+            allowed_fail: true
+          - os: ubuntu-latest
             pixi_env: 'all'
             gammapy_data: true
             allowed_fail: false
@@ -76,11 +80,6 @@ jobs:
             pixi_env: 'all-no-ray'
             gammapy_data: true
             allowed_fail: true # todo: restore to false
-          - os: ubuntu-latest
-            python: '3.14'
-            tox_env: 'devdeps'
-            gammapy_data: true
-            allowed_fail: true
 
     steps:
       - name: Check out repository
