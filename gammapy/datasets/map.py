@@ -2159,8 +2159,12 @@ class MapDataset(Dataset):
                 axis_name in ["energy", "energy_true"]
                 and axis_name in self.edisp.downsample_axes
             ):
+                edisp_weights = None
+                if axis_name == "energy":
+                    edisp_weights = self.mask_safe_edisp
+
                 kwargs["edisp"] = self.edisp.downsample(
-                    factor=factor, axis_name=axis_name, weights=self.mask_safe_edisp
+                    factor=factor, axis_name=axis_name, weights=edisp_weights
                 )
             else:
                 kwargs["edisp"] = self.edisp.copy()
