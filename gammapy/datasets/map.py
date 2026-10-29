@@ -2096,8 +2096,8 @@ class MapDataset(Dataset):
     def downsample(self, factor, axis_name=None, name=None):
         """Downsample map dataset.
 
-        The PSFMap and EDispKernelMap spatial axes are not downsampled,\
-        as they follow a separate spatial geometry.
+        The `~gammapy.irf.PSFMap` and `~gammapy.irf.EDispKernelMap` spatial axes are\
+        not downsampled, as they follow a separate spatial geometry.
 
         Parameters
         ----------
@@ -2111,7 +2111,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset` or `SpectrumDataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Downsampled map dataset.
         """
         if axis_name not in [None, "energy", "energy_true"]:
