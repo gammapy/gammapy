@@ -2096,14 +2096,16 @@ class MapDataset(Dataset):
     def downsample(self, factor, axis_name=None, name=None):
         """Downsample map dataset.
 
-        The PSFMap and EDispKernelMap spatial axes are not downsampled, as they follow a separate spatial geometry.
+        The PSFMap and EDispKernelMap spatial axes are not downsampled,\
+        as they follow a separate spatial geometry.
 
         Parameters
         ----------
         factor : int
             Downsampling factor.
         axis_name : {None, "energy", "energy_true"}, optional
-            Name of axis to downsample. If None is given, spatial axes are downsampled. Default is None.
+            Name of axis to downsample. If None is given, spatial axes are downsampled.\
+            Default is None.
         name : str, optional
             Name of the downsampled dataset. Default is None.
 
@@ -2114,7 +2116,8 @@ class MapDataset(Dataset):
         """
         if axis_name not in [None, "energy", "energy_true"]:
             raise ValueError(
-                f"Possible values: 'energy', 'energy_true', or None (to downsample spatial axes). Got {axis_name} instead."
+                f"Possible values: 'energy', 'energy_true', or None\
+ (to downsample spatial axes). Got {axis_name} instead."
             )
 
         name = make_name(name)
@@ -2152,7 +2155,10 @@ class MapDataset(Dataset):
                 kwargs["background"] = self.background.copy()
 
         if self.edisp is not None:
-            if axis_name in ["energy", "energy_true"]:
+            if (
+                axis_name in ["energy", "energy_true"]
+                and axis_name in self.edisp.downsample_axes
+            ):
                 kwargs["edisp"] = self.edisp.downsample(
                     factor=factor, axis_name=axis_name, weights=self.mask_safe_edisp
                 )

@@ -649,7 +649,11 @@ def test_downsample():
     with pytest.raises(ValueError):
         dataset.downsample(2, axis_name="energy")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="Possible values: 'energy', 'energy_true',\
+ or None \\(to downsample spatial axes\\). Got rad instead.",
+    ):
         dataset.downsample(2, axis_name="rad")
 
 
@@ -696,6 +700,7 @@ def test_downsample_energy_true(geom):
     downsampled = dataset.downsample(factor=factor, axis_name="energy_true")
 
     assert_allclose(downsampled.counts.data, dataset.counts.data)
+    assert_allclose(downsampled.background.data, dataset.background.data)
     assert downsampled.exposure.data.shape == (
         dataset.exposure.data.shape[0] // factor,
         dataset.exposure.data.shape[1],
@@ -703,8 +708,12 @@ def test_downsample_energy_true(geom):
     )
     assert_allclose(np.mean(downsampled.exposure.data), np.mean(dataset.exposure.data))
 
-    with pytest.raises(ValueError):
-        dataset.downsample(2, axis_name="energy")
+    with pytest.raises(
+        ValueError,
+        match="Number of energy_true bins \\(5\\) is not\
+ divisible by 2",
+    ):
+        dataset.downsample(2, axis_name="energy_true")
 
 
 @requires_data()
@@ -2189,6 +2198,19 @@ def test_downsample_onoff():
     assert downsampled.counts.data.sum() == dataset_onoff.counts.data.sum()
     assert downsampled.counts_off.data.sum() == dataset_onoff.counts_off.data.sum()
     assert_allclose(downsampled.alpha.data, 0.5)
+
+    axis = MapAxis.from_energy_bounds(1, 10, 4, unit="TeV", name="energy_true")
+    geom_et = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
+
+    exposure = Map.from_geom(geom_et, data=np.ones((4, 10, 10)))
+    dataset_onoff.exposure = exposure
+    downsampled2 = dataset_onoff.downsample(2, axis_name="energy_true")
+
+    assert_allclose(dataset_onoff.counts, downsampled2.counts)
+    assert_allclose(dataset_onoff.counts_off, downsampled2.counts_off)
+    assert_allclose(
+        np.mean(dataset_onoff.exposure.data), np.mean(downsampled2.exposure.data)
+    )
 
 
 @requires_data()
