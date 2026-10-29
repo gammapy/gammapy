@@ -20,14 +20,46 @@ Installation
 Two main installation methods are available:
 
 * Environment-based installation using **pip** or **conda**.
-  See :ref:`quickstart-setup`.
+  See the :ref:`installation` page.
 * Project-based installation using **uv** or **pixi**.
+
+The **Recommended Setup** below is the easiest way to get started: it provides a
+ready-to-use environment with Jupyter and the tutorial notebooks.
 
 .. tab-set::
 
+    .. tab-item:: Recommended Setup
+
+        .. _recommended-setup:
+
+        The recommended way to get started is to **create** a dedicated Gammapy
+        conda environment. It installs Gammapy together with Jupyter and all the
+        packages required to run the tutorial notebooks, with pinned and
+        reproducible versions.
+
+        .. substitution-code-block:: console
+
+            curl -O https://gammapy.org/download/install/gammapy-|release|-environment.yml
+            conda env create -f gammapy-|release|-environment.yml
+
+        .. note::
+
+            On Windows, you have to open up the conda environment file and delete the
+            line with ``healpy``. This is an optional dependency that
+            currently isn't available on Windows.
+
+        .. note::
+
+            To avoid some installation issues, ``sherpa`` is not part of the
+            environment file provided. If required, you can install ``sherpa`` in
+            your environment using ``python -m pip install sherpa``.
+
+        Next, download the tutorial notebooks and example datasets, and set the
+        ``GAMMAPY_DATA`` variable, as described in :ref:`quickstart-setup` below.
+
     .. tab-item:: Environment Based
 
-        For a traditional installation into an existing environment, we recommend
+        For a traditional installation into an **existing environment**, we recommend
         utilising a dedicated Python environment.
 
         Using **pip** from PyPI:
@@ -42,6 +74,17 @@ Two main installation methods are available:
 
             conda install -c conda-forge gammapy
             # or mamba install -c conda-forge gammapy
+
+        .. note::
+
+            This is a **minimal** installation: it installs Gammapy and its
+            required dependencies only, and does **not** include IPython or
+            Jupyter. To run the tutorial notebooks, use the **Recommended
+            Setup** above, or install the notebook tools separately, e.g.
+            ``conda install -c conda-forge jupyter ipython`` (or
+            ``pip install jupyterlab ipython``). Note that
+            ``pip install gammapy[all]`` adds the optional science dependencies
+            but **not** Jupyter.
 
     .. tab-item:: Project Based
 
