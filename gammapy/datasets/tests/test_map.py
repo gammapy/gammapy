@@ -1871,7 +1871,7 @@ def test_map_dataset_on_off_to_spectrum_dataset_weights():
         center=dataset.counts.geom.center_skydir, radius=1.0 * u.deg
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         dataset.to_spectrum_dataset(on_region)
 
     dataset.mask_safe.data = True
@@ -1880,7 +1880,7 @@ def test_map_dataset_on_off_to_spectrum_dataset_weights():
     on_region = CircleSkyRegion(
         center=dataset.counts.geom.center_skydir, radius=15 * u.deg
     )
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         dataset.to_spectrum_dataset(on_region)
 
 
@@ -2321,7 +2321,7 @@ def test_map_dataset_region_geom_npred():
     dataset_spec = dataset.to_region_map_dataset(region)
     dataset_spec.models = [model_1, model_2]
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         invalid_region = dataset.counts.geom.footprint_rectangle_sky_region
         dataset_spec = dataset.to_region_map_dataset(invalid_region)
 
