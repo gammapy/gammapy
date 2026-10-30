@@ -2569,7 +2569,7 @@ class NaimaSpectralModel(SpectralModel):
 
         # In case of a synchrotron radiative model, append B to the fittable parameters
         if "B" in self.radiative_model.param_names:
-            value = getattr(self.radiative_model, "B")
+            value = self.radiative_model.B
             parameter = Parameter("B", value)
             parameters.append(parameter)
 

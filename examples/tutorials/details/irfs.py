@@ -245,9 +245,6 @@ plt.show()
 # Unless specified, it is assumed these IRFs are in the RADEC frame
 #
 
-aeff_3d.fov_alignment
-
-
 ######################################################################
 # Serialisation
 # ~~~~~~~~~~~~~

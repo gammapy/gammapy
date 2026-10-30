@@ -1998,7 +1998,7 @@ class MapDataset(Dataset):
                 | np.any(region_mask.data[:, -1])
             )
             if not_fully_contained:
-                raise Exception(
+                raise ValueError(
                     """`to_region_map_dataset` can only be applied if the region
                     is fully contained inside the counts geom.
                     """
@@ -2010,7 +2010,7 @@ class MapDataset(Dataset):
             is_uniform = np.all(values, axis=1)
             is_uniform |= np.all(values == False, axis=1)  # noqa
             if not np.all(is_uniform):
-                raise Exception(
+                raise ValueError(
                     """`to_region_map_dataset` can only be applied if the mask
                     is spatially uniform within the region for each energy bin"""
                 )

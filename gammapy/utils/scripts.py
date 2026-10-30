@@ -70,7 +70,7 @@ def from_yaml(text, sort_keys=False, checksum=False):
         yaml_format["sort_keys"] = sort_keys
         yaml_str = yaml.dump(data, **yaml_format)
         if not verify_checksum(yaml_str, checksum_str):
-            warnings.warn("Checksum verification failed.", UserWarning)
+            warnings.warn("Checksum verification failed.", UserWarning, stacklevel=2)
 
     return data
 

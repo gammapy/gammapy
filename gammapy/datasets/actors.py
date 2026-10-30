@@ -50,7 +50,7 @@ class DatasetsActor(Datasets):
             self._penalties = None
 
         # trigger actors auto_init_wrapper (so overhead so appears on init)
-        self.name
+        _ = self.name
 
     def insert(self, idx, dataset):
         if isinstance(dataset, Dataset):
@@ -206,7 +206,9 @@ class MapDatasetActor(RayFrontendMixin):
 class RayBackendMixin:
     """Ray mixin for the remote class."""
 
-    def _get(self, name, *args, to_update={}, from_actors=False, **kwargs):
+    def _get(self, name, *args, to_update=None, from_actors=False, **kwargs):
+        if to_update is None:
+            to_update = {}
         for key, value in to_update.items():
             setattr(self, key, value)
         res = getattr(self, name)
@@ -234,7 +236,9 @@ class _MapDatasetActorBackend(MapDataset, RayBackendMixin):
         if self.models is None:
             self.models = DatasetModels()
 
-    def _update_stat_sum(self, values, to_update={}):
+    def _update_stat_sum(self, values, to_update=None):
+        if to_update is None:
+            to_update = {}
         for key, value in to_update.items():
             setattr(self, key, value)
         self.models.parameters.free_parameters.value = values

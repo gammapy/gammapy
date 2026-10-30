@@ -350,8 +350,6 @@ customprior(pwl.parameters["index"])
 
 print(pwl.to_dict())
 model_read = Model.from_dict(pwl.to_dict())
-model_read.parameters.prior
-
 
 ######################################################################
 # Example 2: Encouraging Positive Amplitude Values

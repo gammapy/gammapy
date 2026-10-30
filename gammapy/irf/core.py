@@ -522,8 +522,9 @@ class IRF(metaclass=abc.ABCMeta):
             if ax.name == "energy":
                 column_prefix = "ENERG"
             else:
-                for column_prefix, spec in IRF_DL3_AXES_SPECIFICATION.items():
+                for prefix, spec in IRF_DL3_AXES_SPECIFICATION.items():
                     if spec["name"] == ax.name:
+                        column_prefix = prefix
                         break
 
             if ax.node_type == "edges":

@@ -171,7 +171,6 @@ ignore = [
     "N802", "N803", "N806", "N813",
     "S101", # use of assert
     # TODO: the following rules should not be ignored
-    "B006","B007", "B008", "B009", "B017", "B018", "B024", "B028",
     "D101", "D103", "D200", "D202", "D208", "D209", "D214", "D215", "D301", "D404", "D409", "D410", "D411", "D419",
     "DTZ011",
     "E741", "E501",
