@@ -194,10 +194,16 @@ class EnergyDispersion2D(IRF):
         )
 
         # Normalize in migra space
-        pdf /= np.sum(
+        norm = np.sum(
             pdf * dmigra[np.newaxis, :],
             axis=1,
             keepdims=True,
+        )
+        pdf = np.divide(
+            pdf,
+            norm,
+            out=np.zeros_like(pdf),
+            where=norm > 0,
         )
 
         # Probability mass contained in each migra bin
@@ -223,12 +229,26 @@ class EnergyDispersion2D(IRF):
             - np.maximum(old_lo[:, None, :], new_lo),
         )
 
-        frac = overlap / (old_hi - old_lo)[:, None, :]
+        bin_width = (old_hi - old_lo)[:, None, :]
+
+        frac = np.divide(
+            overlap,
+            bin_width,
+            out=np.zeros_like(overlap),
+            where=bin_width > 0,
+        )
 
         # Redistribution matrix
         matrix = np.sum(
             prob[:, None, :] * frac,
             axis=-1,
+        )
+
+        matrix = np.nan_to_num(
+            matrix,
+            nan=0.0,
+            posinf=0.0,
+            neginf=0.0,
         )
 
         # Remove tiny numerical artifacts only
