@@ -34,14 +34,20 @@ class SNR:
     def __init__(
         self,
         e_sn="1e51 erg",
-        theta=Quantity(0.1),
-        n_ISM=Quantity(1, "cm-3"),
+        theta=None,
+        n_ISM=None,
         m_ejecta=astropy.constants.M_sun,
-        t_stop=Quantity(1e6, "K"),
+        t_stop=None,
         age=None,
         morphology="Shell2D",
         spectral_index=2.1,
     ):
+        if theta is None:
+            theta = Quantity(0.1)
+        if n_ISM is None:
+            n_ISM = Quantity(1, "cm-3")
+        if t_stop is None:
+            t_stop = Quantity(1e6, "K")
         self.e_sn = Quantity(e_sn, "erg")
         self.theta = theta
         self.rho_ISM = n_ISM * astropy.constants.m_p

@@ -458,9 +458,7 @@ class FaucherSpiral(LogSpiral):
         return polar(x + dx, y + dy)
 
     @staticmethod
-    def _gc_correction(
-        radius, theta, r_corr=Quantity(2.857, "kpc"), random_state="random-seed"
-    ):
+    def _gc_correction(radius, theta, r_corr=None, random_state="random-seed"):
         """Correction of source distribution towards the galactic center.
 
         To avoid spiral arm features near the Galactic Center, the position angle theta
@@ -480,6 +478,8 @@ class FaucherSpiral(LogSpiral):
             Passed to `~gammapy.utils.random.get_random_state`.
             Default is 'random-seed'.
         """
+        if r_corr is None:
+            r_corr = Quantity(2.857, "kpc")
         random_state = get_random_state(random_state)
 
         theta_corr = Quantity(random_state.uniform(0, 2 * np.pi, radius.size), "rad")
