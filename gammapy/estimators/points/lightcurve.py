@@ -160,7 +160,7 @@ class LightCurveEstimator(FluxPointsEstimator):
         valid_intervals = []
         parallel_datasets = []
         dataset_names = datasets.names
-        for idx, (t_min, t_max) in enumerate(
+        for _idx, (t_min, t_max) in enumerate(
             progress_bar(gti.time_intervals, desc="Time intervals selection")
         ):
             datasets_to_fit = datasets.select_time(

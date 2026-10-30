@@ -753,7 +753,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         table = Table()
         table["Parameters"] = names
 
-        for idx, name in enumerate(names):
+        for idx, _name in enumerate(names):
             values = self.covariance.data[idx]
             table[str(idx)] = values
 

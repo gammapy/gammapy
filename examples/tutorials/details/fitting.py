@@ -391,7 +391,7 @@ fig, axes = plt.subplots(1, 3, figsize=(10, 3))
 colors = ["m", "b", "c"]
 
 for (par_1, par_2), ax in zip(param_pairs, axes):
-    for ks, sigma in enumerate(sigmas):
+    for ks, _sigma in enumerate(sigmas):
         contour = cts_sigma[ks][f"contour_{par_1}_{par_2}"]
         plot_contour_line(
             ax,
