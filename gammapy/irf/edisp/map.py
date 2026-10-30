@@ -78,7 +78,7 @@ class EDispMap(IRFMap):
         # Create the exposure map
         exposure_geom = geom.squash(axis_name="migra")
         exposure_map = MapDatasetMaker.make_exposure(exposure_geom, obs)
-        
+
         # Create the EDispMap for the specified observation
         edisp_map = MapDatasetMaker.make_edisp(geom, obs)
 
