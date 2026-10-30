@@ -17,6 +17,11 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
+from gammapy.data import (
+    FixedPointingInfo,
+    Observation,
+    observatory_locations,
+)
 from gammapy.irf import (
     IRF,
     Background3D,
@@ -25,10 +30,9 @@ from gammapy.irf import (
     EnergyDispersion2D,
 )
 from gammapy.irf.io import COMMON_IRF_HEADERS, IRF_DL3_HDU_SPECIFICATION
+from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import (
     make_edisp_kernel_map,
-    make_map_exposure_true_energy,
-    make_psf_map,
 )
 from gammapy.maps import MapAxis, WcsGeom
 
@@ -273,18 +277,33 @@ print(aeff_new)
 # Create exposure map (DL4 product)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# DL4 data products can be created from these IRFs.
+# DL4 data products can be created from these IRFs, but you need to
+# define an `~gammapy.data.Observation` first
 #
+sky_target = SkyCoord(2, 1, unit="deg")
+pointing = FixedPointingInfo(fixed_icrs=sky_target)
+
+obs_loc = observatory_locations.get("ctao_north")
+livetime = 42 * u.hour
+
+obs = Observation.create(
+    pointing=pointing,
+    location=obs_loc,
+    livetime=livetime,
+    irfs={"aeff": aeff_3d, "bkg": bkg},
+)
+
 
 axis = MapAxis.from_energy_bounds(0.1 * u.TeV, 10 * u.TeV, 6, name="energy_true")
-pointing = SkyCoord(2, 1, unit="deg")
-geom = WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis], skydir=pointing)
+
+obs_loc = observatory_locations.get("ctao_north")
+livetime = 42 * u.hour
+
+geom = WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis], skydir=sky_target)
 
 print(geom)
 
-exposure_map = make_map_exposure_true_energy(
-    pointing=pointing, livetime="42 h", aeff=aeff_3d, geom=geom
-)
+exposure_map = MapDatasetMaker.make_exposure(geom=geom, observation=obs)
 
 exposure_map.plot_grid(add_cbar=True, figsize=(17, 7))
 plt.show()
@@ -409,14 +428,13 @@ print(edisp_new)
 migra = MapAxis.from_edges(np.linspace(0.5, 1.5, 50), unit="", name="migra")
 etrue = MapAxis.from_energy_bounds(0.5, 2, 6, unit="TeV", name="energy_true")
 ereco = MapAxis.from_energy_bounds(0.5, 2, 3, unit="TeV", name="energy")
-geom = WcsGeom.create(10, binsz=0.5, axes=[ereco, etrue], skydir=pointing)
+geom = WcsGeom.create(10, binsz=0.5, axes=[ereco, etrue], skydir=sky_target)
 
-edispmap = make_edisp_kernel_map(edisp3d, pointing, geom)
+edispmap = make_edisp_kernel_map(edisp3d, sky_target, geom)
 
 edispmap.peek()
 plt.show()
 
-#
 print(edispmap.edisp_map.data[3][1][3])
 
 
@@ -502,9 +520,16 @@ psf_new = PSF_assym.read("test_psf.fits.gz")
 
 rad = MapAxis.from_edges(np.linspace(0.5, 3.0, 10), unit="deg", name="rad")
 etrue = MapAxis.from_energy_bounds(0.5, 2, 6, unit="TeV", name="energy_true")
-geom = WcsGeom.create(10, binsz=0.5, axes=[rad, etrue], skydir=pointing)
+geom = WcsGeom.create(10, binsz=0.5, axes=[rad, etrue], skydir=sky_target)
 
-psfmap = make_psf_map(psf_assym, pointing, geom)
+
+obs = Observation.create(
+    pointing=pointing,
+    location=obs_loc,
+    livetime=livetime,
+    irfs={"aeff": aeff_3d, "psf": psf_assym},
+)
+psfmap = MapDatasetMaker.make_psf(geom=geom, observation=obs)
 
 psfmap.peek()
 plt.show()
@@ -513,7 +538,8 @@ plt.show()
 ######################################################################
 # Containers for asymmetric analytic PSFs are not supported at present.
 #
-# **NOTE**: Support for asymmetric IRFs is preliminary at the moment, and
-# will evolve depending on feedback.
+# .. NOTE::
+#    Support for asymmetric IRFs is preliminary at the moment, and
+#    will evolve depending on feedback.
 #
 #

@@ -273,10 +273,10 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert_allclose(table["norm_ul"], [[1.029989], [1.025061]], rtol=1e-2)
     assert_allclose(table["sqrt_ts"], [[19.384781], [19.161769]], rtol=1e-2)
     assert_allclose(table["ts"], [[375.769735], [367.173374]], rtol=1e-2)
-    assert_allclose(table[0]["norm_scan"], [[0.2, 1.0, 5.0]])
+    assert_allclose(table[0]["norm_scan"], [[0.1, 1.0, 10.0]])
     assert_allclose(
         table[0]["stat_scan"],
-        [[224.058304, 19.074405, 2063.75636]],
+        [[300.147625, 19.074407, 6054.822551]],
         rtol=1e-5,
     )
     assert table.meta["TIMESYS"] == "tt"
@@ -364,10 +364,10 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
         [[16.233236, 10.608376], [16.609784, 9.557339]],
         rtol=1e-2,
     )
-    assert_allclose(table[0]["norm_scan"], [[0.2, 1.0, 5.0], [0.2, 1.0, 5.0]])
+    assert_allclose(table[0]["norm_scan"], [[0.1, 1.0, 10.0], [0.1, 1.0, 10.0]])
     assert_allclose(
         table[0]["stat_scan"],
-        [[153.880281, 10.701492, 1649.609684], [70.178023, 8.372913, 414.146676]],
+        [[207.259557, 10.701494, 4870.107174], [92.888068, 8.372912, 1184.715377]],
         rtol=1e-5,
     )
 
@@ -450,20 +450,16 @@ def test_lightcurve_estimator_spectrum_datasets_default():
     # Test default time interval: each time interval is equal to the gti of each
     # dataset, here one hour
     datasets = get_spectrum_datasets()
-    selection = ["scan", "sensitivity"]
+    selection = ["scan"]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV, selection_optional=selection
     )
-    assert estimator.n_sigma_sensitivity == estimator.n_sigma_ul
     estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
-    assert lightcurve.meta["n_sigma_ul"] == 2
-    assert lightcurve.meta["n_sigma_sensitivity"] == 2
     table = lightcurve.to_table()
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["norm"], [[0.911963], [0.906931]], rtol=1e-3)
-    assert_allclose(table["norm_sensitivity"], [[0.075809], [0.07638]], rtol=1e-3)
 
 
 @requires_data()

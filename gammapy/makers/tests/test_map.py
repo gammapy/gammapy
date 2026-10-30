@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, EarthLocation
 from astropy.table import Table
 from astropy.time import Time
 from regions import CircleSkyRegion
@@ -18,7 +18,13 @@ from gammapy.data import (
 )
 from gammapy.datasets import MapDataset, MapDatasetMetaData
 from gammapy.datasets.map import RAD_AXIS_DEFAULT
-from gammapy.irf import Background2D, EDispKernelMap, EDispMap, PSFMap
+from gammapy.irf import (
+    Background2D,
+    EDispKernelMap,
+    EDispMap,
+    PSFMap,
+    EffectiveAreaTable2D,
+)
 from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import HpxGeom, Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data, requires_dependency
@@ -32,12 +38,33 @@ def observations():
     return data_store.get_observations(obs_id)
 
 
-def geom(ebounds, binsz=0.5):
-    skydir = SkyCoord(0, -1, unit="deg", frame="galactic")
-    energy_axis = MapAxis.from_edges(ebounds, name="energy", unit="TeV", interp="log")
-    return WcsGeom.create(
-        skydir=skydir, binsz=binsz, width=(10, 5), frame="galactic", axes=[energy_axis]
+@pytest.fixture(scope="session")
+def aeff():
+    filename = (
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
+    return EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
+
+
+def geom(ebounds, binsz=0.5, map_type=None):
+    if not map_type:
+        skydir = SkyCoord(0, -1, unit="deg", frame="galactic")
+        energy_axis = MapAxis.from_edges(
+            ebounds, name="energy", unit="TeV", interp="log"
+        )
+        return WcsGeom.create(
+            skydir=skydir,
+            binsz=binsz,
+            width=(10, 5),
+            frame="galactic",
+            axes=[energy_axis],
+        )
+    elif map_type == "wcs":
+        axis = MapAxis.from_edges(ebounds, name="energy_true", unit="TeV", interp="log")
+        return WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis])
+    elif map_type == "hpx":
+        axis = MapAxis.from_edges(ebounds, name="energy_true", unit="TeV", interp="log")
+        return HpxGeom(256, axes=[axis])
 
 
 @pytest.fixture(scope="session")
@@ -551,6 +578,42 @@ def test_make_background_2d(observations):
 
     map_dataset = maker_obs.run(reference, obs)
     assert_allclose(map_dataset.background.data.sum(), 17636.60091226549)
+
+
+@requires_data()
+@pytest.mark.parametrize(
+    "pars",
+    [
+        {
+            "geom": geom(ebounds=[0.1, 1, 10], map_type="wcs"),
+            "shape": (2, 3, 4),
+            "sum": 8.103974e08,
+        },
+        {
+            "geom": geom(ebounds=[0.1, 10], map_type="wcs"),
+            "shape": (1, 3, 4),
+            "sum": 2.387916e08,
+        },
+        # TODO: make this work for HPX
+        # 'HpxGeom' object has no attribute 'separation'
+        # {
+        #     'geom': geom(map_type='hpx', ebounds=[0.1, 1, 10]),
+        #     'shape': '???',
+        #     'sum': '???',
+        # },
+    ],
+)
+def test_make_exposure(aeff, pars):
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(fixed_icrs=SkyCoord(2, 1, unit="deg")),
+        location=EarthLocation(lon=0, lat=0),
+        livetime=42 * u.second,
+        irfs={"aeff": aeff},
+    )
+    m = MapDatasetMaker.make_exposure(geom=pars["geom"], observation=test_obs)
+    assert m.data.shape == pars["shape"]
+    assert m.unit == "m2 s"
+    assert_allclose(m.data.sum(), pars["sum"], rtol=1e-5)
 
 
 @requires_data()
