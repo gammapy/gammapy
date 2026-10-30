@@ -23,7 +23,6 @@ from gammapy.modeling.models import (
     SuperExpCutoffPowerLaw4FGLDR3SpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
 )
-from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.testing import (
     assert_quantity_allclose,

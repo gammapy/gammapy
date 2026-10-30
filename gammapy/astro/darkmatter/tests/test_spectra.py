@@ -15,7 +15,7 @@ from gammapy.astro.darkmatter import (
     DarkMatterDecaySpectralModel,
     PrimaryFlux,
 )
-from gammapy.modeling.models import Models, SkyModel, SpectralModel
+from gammapy.modeling.models import Models, SkyModel
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 from gammapy.astro.darkmatter.utils import add_factor_prior
 from gammapy.modeling.models.prior import LogSpaceGaussianPrior

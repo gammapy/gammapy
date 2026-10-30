@@ -3,7 +3,6 @@
 
 import json
 import logging
-from configparser import ConfigParser
 import tomllib
 import click
 from datetime import date
