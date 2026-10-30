@@ -381,7 +381,6 @@ def test_interpolate_map_dataset():
         events=events,
         obs_filter=None,
         pointing=FixedPointingInfo(fixed_icrs=SkyCoord(0 * u.deg, 0 * u.deg)),
-        location=EarthLocation(lon=0, lat=0),
     )
 
     # define analysis geometry
@@ -443,7 +442,7 @@ def test_interpolate_map_dataset():
 
     # test running maker with dataset
     maker = MapDatasetMaker(selection=["exposure", "edisp", "psf"])
-    dataset = maker.run(dataset, obs)
+    dataset = maker.run(dataset, dataset)
 
 
 @requires_data()
@@ -675,7 +674,6 @@ def test_map_dataset_maker_swgo():
     assert observations_redu.ids == observation_groups["EVENT_TYPE_" + event_type].ids
 
     obs = observations_redu[0]
-    obs._location = EarthLocation(lon=0, lat=0)
     obs.gti = gti
 
     with pytest.raises(ValueError):
