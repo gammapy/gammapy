@@ -29,6 +29,10 @@ class DMProfile(abc.ABC):
     LOCAL_DENSITY = 0.3 * u.GeV / (u.cm**3)
     """Local dark matter density as given in reference 2"""
 
+    @abc.abstractmethod
+    def evaluate(self, *args, **kwargs):
+        """Evaluate the profile. Must be implemented by subclasses."""
+
     def __call__(self, radius):
         """Call evaluate method of derived classes."""
         kwargs = {par.name: par.quantity for par in self.parameters}
