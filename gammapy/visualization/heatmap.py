@@ -61,7 +61,7 @@ def plot_heatmap(
     plt.setp(ax.get_xticklabels(), rotation=-30, ha="right", rotation_mode="anchor")
 
     # Turn spines off and create white grid.
-    for edge, spine in ax.spines.items():
+    for _edge, spine in ax.spines.items():
         spine.set_visible(False)
 
     ax.set_xticks(np.arange(data.shape[1] + 1) - 0.5, minor=True)

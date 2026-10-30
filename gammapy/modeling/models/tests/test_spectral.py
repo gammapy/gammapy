@@ -416,7 +416,7 @@ def test_models(spectrum):
     ):
         assert_quantity_allclose(model.inverse(value), energy, rtol=0.01)
         inverse = model.inverse_all(values)
-        for ke, ener in enumerate(energies):
+        for ke, _ener in enumerate(energies):
             assert_quantity_allclose(inverse[ke], energies[ke], rtol=0.01)
 
     if "integral_infinity" in spectrum:

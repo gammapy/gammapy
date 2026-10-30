@@ -722,7 +722,7 @@ class WcsNDMap(WcsMap):
 
             data = np.empty(cutout.data.shape[:-2], dtype=self.data.dtype)
 
-            for i, val in np.ndenumerate(data):
+            for i, _val in np.ndenumerate(data):
                 data[i] = func(cutout.data[i][mask.data[i]]).astype(self.data.dtype)
 
         return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())

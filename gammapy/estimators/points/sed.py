@@ -486,7 +486,7 @@ class FluxCollectionEstimator:
     def _compute_npred(datasets, param, model):
         """Compute npred within the datasets masks."""
         npred = 0
-        for kd, d in enumerate(datasets):
+        for _kd, d in enumerate(datasets):
             name = model.name + "_" + d.name
             if d.evaluators[name].contributes:
                 npred_map = Map.from_geom(d.counts.geom)
@@ -614,7 +614,7 @@ class FluxCollectionEstimator:
 
         fp_results = []
 
-        for ke, (emin, emax) in enumerate(self._energy_axis.iter_by_edges):
+        for _ke, (emin, emax) in enumerate(self._energy_axis.iter_by_edges):
             with set_and_restore_mask_fit(
                 fp_datasets, energy_min=emin, energy_max=emax
             ):
