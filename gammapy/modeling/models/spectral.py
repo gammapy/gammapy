@@ -334,6 +334,12 @@ class SpectralModel(ModelBase):
                 reference = getattr(model, "reference", None)
                 if reference is not None:
                     break
+            else:
+                names = ", ".join(type(model).__name__ for model in models)
+                raise ValueError(
+                    "Pivot energy cannot be computed for this CompoundSpectralModel "
+                    f"as none of its models ({names}) has a reference energy."
+                )
         else:
             reference = getattr(self, "reference", None)
 

@@ -797,6 +797,15 @@ def test_pivot_energy():
     ):
         compound_double.pivot_energy
 
+    compound_ebl = ebl * ebl
+    with pytest.raises(
+        ValueError,
+        match="Pivot energy cannot be computed for this CompoundSpectralModel "
+        "as none of its models \\(EBLAbsorptionNormSpectralModel, "
+        "EBLAbsorptionNormSpectralModel\\) has a reference energy.",
+    ):
+        compound_ebl.pivot_energy
+
 
 def test_template_spectral_model_evaluate_tiny():
     energy = np.array([1.00000000e06, 1.25892541e06, 1.58489319e06, 1.99526231e06])
