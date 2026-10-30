@@ -1026,7 +1026,7 @@ def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
 def _aeff_max_frac_deviation(
     on_observation, off_observation, energy_axis=None, offset_axis=None
 ):
-    """Max fractional deviation between the two effective areas.
+    """Maximum fractional deviation between the two effective areas.
 
     Parameters
     ----------
@@ -1036,8 +1036,10 @@ def _aeff_max_frac_deviation(
         The OFF observation.
     energy_range : `~gammapy.maps.MapAxis`
         The energy axis on which to check the effective area.
+        Default is None, which takes the effective area energy axis center.
     offset_axis : `~gammapy.maps.MapAxis`
         The offset range axis on which to check the effective area.
+        Default is None, which takes the offset energy axis center.
     """
     aeff_on = on_observation.aeff
     aeff_off = off_observation.aeff
@@ -1072,25 +1074,27 @@ def check_run_pair_validity(
     zenith_tol=10 * u.deg,
     aeff_tol=0.1,
 ):
-    """Validity check over a list of ON/OFF pairs. 
-    
-    Currently supports only one OFF observation for each ON observation.
+    """Validity check over a list of ON/OFF pairs.
 
-    Checks for difference in zenith angle and effective area. Returns a summary table along
-    with a flag if the match is sufficient within tolerance.
+    Currently, supports only one OFF observation for each ON observation.
+
+    Checks for difference in zenith angle and effective area. Returns a summary
+    table along with a flag if the match is sufficient within tolerance.
 
     Parameters
     ----------
     on_observations : list of `~gammapy.data.Observation` or `~gammapy.data.Observations`
-        The ON observations list
+        The ON observations list.
     off_observations : list of `~gammapy.data.Observation` or `~gammapy.data.Observations`
-        The OFF observation list
+        The OFF observation list.
     energy_range : `~gammapy.maps.MapAxis`
-        The energy axis on which to check the effective area
+        The energy axis on which to check the effective area.
     zenith_tol : `~astropy.units.Quantity`, optional
-        Zenith tolerance, default 10 deg.
+        Zenith tolerance.
+        Default is 10 deg.
     aeff_tol : float, optional
-        Effective-area fractional-deviation tolerance, default 0.1.
+        Effective-area fractional-deviation tolerance.
+        Default is 0.1.
 
     Returns
     -------

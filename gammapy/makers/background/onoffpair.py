@@ -15,7 +15,6 @@ from gammapy.datasets import (
     SpectrumDatasetOnOff,
 )
 from ..core import Maker
-from ..utils import check_run_pair_validity
 from gammapy.maps import Map
 from gammapy.utils.coordinates import fov_to_sky, sky_to_fov
 
@@ -27,41 +26,40 @@ __all__ = ["OnOffBackgroundMaker"]
 class OnOffBackgroundMaker(Maker):
     """Estimate OFF background from a paired OFF observation.
 
-    Turns a reduced ``~gammapy.datasets.MapDataset`` or ``~gammapy.datasets.SpectrumDataset``
-    into its OnOff counterpart by mirroring the OFF run's events into
-    the ON pointing FoV frame and setting acceptances from livetime.
+    Turns a reduced `~gammapy.datasets.MapDataset` or
+    `~gammapy.datasets.SpectrumDataset` into its OnOff counterpart by
+    mirroring the OFF run's events into the ON pointing FoV frame and
+    setting acceptances from livetime.
 
     ON-OFF pairs should be created beforehand by the user.
 
- .. note::
- 
-       Currently, this supports only one OFF observation for each ON observation. 
-       It also only works for pointing observations, and drift mode is not supported.
+    .. note::
+
+        Currently, this supports only one OFF observation for each
+        ON observation. It also only works for pointing observations,
+        and drift mode is not supported.
 
     Parameters
     ----------
     acceptance_method : str, optional
         Allowed options are {"livetime_ratio", "counts_ratio"}
-        Strategy for the acceptance calculation, can be either the ratio of livetimes or counts
-            "livetime_ratio" takes the ratio of livetimes
-            "counts_ratio" takes the ratio of the counts outside an exclusion mask, passed through kwargs
-        Strategy for the acceptance calculation, can be either the ratio of livetimes or counts.
+        Strategy for the acceptance calculation.
         Available options are:
 
             * "livetime_ratio": takes the ratio of livetimes.
-            * "counts_ratio": takes the ratio of the counts outside an exclusion mask, 
+            * "counts_ratio": takes the ratio of the counts outside an exclusion mask,
               passed through kwargs.
-              
+
         Default is "livetime_ratio".
     kwargs : dict, optional
         Additional arguments passed to the maker.
-        Should contain `exclusion_mask` if acceptance_method is `counts_ratio`, 
+        Should contain `exclusion_mask` if acceptance_method is `counts_ratio`,
         otherwise assume no mask.
 
     Returns
     -------
     dataset : `~gammapy.datasets.MapDatasetOnOff` or `~gammapy.datasets.SpectrumDatasetOnOff`
-            Either a spectrum dataset or a map on off dataset.
+        Either a spectrum dataset or a map on off dataset.
     """
 
     tag = "OnOffBackgroundMaker"
@@ -101,7 +99,7 @@ class OnOffBackgroundMaker(Maker):
             val_on = on_observation.observation_live_time_duration.to_value("s")
             val_off = off_observation.observation_live_time_duration.to_value("s")
 
-        elif self.acceptance_method == "counts-ratio":
+        elif self.acceptance_method == "counts_ratio":
             if self.mask is None:
                 mask = Map.from_geom(geom=geom, data=1, dtype=bool)
             val_on = (dataset.counts * mask).data.sum()
@@ -117,7 +115,7 @@ class OnOffBackgroundMaker(Maker):
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
-            Reduced dataset for the ON observation
+            Reduced dataset for the ON observation.
         on_observation : `~gammapy.data.Observation`
             The ON observation.
         off_observation : `~gammapy.data.Observation`
