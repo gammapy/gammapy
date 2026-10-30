@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from datetime import date
+from datetime import datetime
 from pathlib import Path
 import click
 from ruamel.yaml import YAML
@@ -19,7 +19,7 @@ def update_citation_cff(release):
     with CITATION_PATH.open("r") as stream:
         data = yaml.load(stream=stream)
 
-    data["date-released"] = date.today()
+    data["date-released"] = datetime.now(tz=datetime.UTC).date()
     data["version"] = release
 
     with CITATION_PATH.open("w") as stream:
