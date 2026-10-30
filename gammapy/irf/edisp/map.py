@@ -41,7 +41,6 @@ class EDispMap(IRFMap):
         from gammapy.data import FixedPointingInfo, Observation, observatory_locations
         from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
         from gammapy.makers import MapDatasetMaker
-        from gammapy.makers.utils import make_edisp_map
         from gammapy.maps import MapAxis, WcsGeom
 
         pointing = SkyCoord(0, 0, unit="deg")
@@ -80,8 +79,8 @@ class EDispMap(IRFMap):
         exposure_geom = geom.squash(axis_name="migra")
         exposure_map = MapDatasetMaker.make_exposure(exposure_geom, obs)
 
-        # Create the EDispMap for the specified pointing
-        edisp_map = make_edisp_map(edisp2D, pointing, geom, exposure_map)
+        # Create the EDispMap for the specified observation
+        edisp_map = MapDatasetMaker.make_edisp(geom, obs)
 
         # Get an Energy Dispersion (1D) at any position in the image
         pos = SkyCoord(2.0, 2.5, unit="deg")

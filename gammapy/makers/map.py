@@ -5,14 +5,12 @@ from astropy.table import Table
 import numpy as np
 from regions import PointSkyRegion
 from gammapy.datasets import MapDatasetMetaData
-from gammapy.irf import EDispKernelMap, PSFMap, FoVAlignment
+from gammapy.irf import EDispMap, EDispKernelMap, PSFMap, FoVAlignment
 from gammapy.data import Observation
 from gammapy.maps import Map
 from .core import Maker
 from .utils import (
     make_counts_rad_max,
-    make_edisp_kernel_map,
-    make_edisp_map,
     make_map_background_irf,
     project_irf_on_geom,
 )
@@ -295,34 +293,42 @@ class MapDatasetMaker(Maker):
             location=observation.observatory_earth_location,
         )
 
-    def make_edisp(self, geom, observation):
+    @staticmethod
+    def make_edisp(geom, observation, use_region_center=True):
         """Make energy dispersion map.
 
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            Reference geometry.
+            Reference geometry. Must contain "migra and "energy_true" axes, in this specific order.
         observation : `~gammapy.data.Observation`
             Observation container.
+        use_region_center : bool, optional
+            For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
+            If False, average over the whole region.
+            Default is True.
 
         Returns
         -------
         edisp : `~gammapy.irf.EDispMap`
             Energy dispersion map.
         """
-        exposure = self.make_exposure_irf(geom.squash(axis_name="migra"), observation)
 
-        use_region_center = getattr(self, "use_region_center", True)
-
-        return make_edisp_map(
-            edisp=observation.edisp,
-            pointing=observation.get_pointing_icrs(observation.tmid),
-            geom=geom,
-            exposure_map=exposure,
-            use_region_center=use_region_center,
+        edisp = observation.edisp
+        exposure = MapDatasetMaker.make_exposure_irf(
+            geom.squash(axis_name="migra"), observation, use_region_center
         )
 
-    def make_edisp_kernel(self, geom, observation):
+        fov_frame = observation.get_fov_frame(observation.tmid, FoVAlignment.RADEC)
+
+        edisp_map = project_irf_on_geom(
+            geom, edisp, fov_frame, use_region_center
+        ).to_unit("")
+        edisp_map.normalize(axis_name="migra")
+        return EDispMap(edisp_map, exposure)
+
+    @staticmethod
+    def make_edisp_kernel(geom, observation, use_region_center=True, threshold=1e-8):
         """Make energy dispersion kernel map.
 
         Parameters
@@ -331,6 +337,12 @@ class MapDatasetMaker(Maker):
             Reference geometry. Must contain "energy" and "energy_true" axes in that order.
         observation : `~gammapy.data.Observation`
             Observation container.
+        use_region_center : bool, optional
+            For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
+            If False, average over the whole region.
+            Default is True.
+        threshold : float, optional
+            Threshold value to remove numerical artifacts. Default is 1e-8.
 
         Returns
         -------
@@ -347,18 +359,24 @@ class MapDatasetMaker(Maker):
                 exposure = None
             interp_map = edisp.edisp_map.interp_to_geom(geom)
             return EDispKernelMap(edisp_kernel_map=interp_map, exposure_map=exposure)
+        else:
+            exposure = MapDatasetMaker.make_exposure_irf(
+                geom.squash(axis_name="energy"), observation
+            )
+        fov_frame = observation.get_fov_frame(observation.tmid, FoVAlignment.RADEC)
 
-        exposure = self.make_exposure_irf(geom.squash(axis_name="energy"), observation)
+        # Use EnergyDispersion2D migra axis.
+        migra_axis = edisp.axes["migra"]
 
-        use_region_center = getattr(self, "use_region_center", True)
+        # Create temporary EDispMap Geom
+        new_geom = geom.to_image().to_cube([migra_axis, geom.axes["energy_true"]])
 
-        return make_edisp_kernel_map(
-            edisp=observation.edisp,
-            pointing=observation.get_pointing_icrs(observation.tmid),
-            geom=geom,
-            exposure_map=exposure,
-            use_region_center=use_region_center,
-        )
+        edisp_map = project_irf_on_geom(
+            new_geom, edisp, fov_frame, use_region_center
+        ).to_unit("")
+        edisp_map.normalize(axis_name="migra")
+        edisp_map = EDispMap(edisp_map, exposure)
+        return edisp_map.to_edisp_kernel_map(geom.axes["energy"], threshold=threshold)
 
     @staticmethod
     def make_psf(geom, observation):
