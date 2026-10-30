@@ -207,6 +207,9 @@ line-ending = "auto"
 # formatting of code example in docstring.
 docstring-code-format = true
 
+[tool.codespell]
+ignore-words-list = "dne,egal,esy,hist,indx,livetime,livetimes,nd,ned,merrors,NotIn,OptIn,slac,unparseable,compiletime,THIRDPARTY,inout"
+
 # Including towncrier to create the changelog
 [tool.towncrier]
 package = "gammapy"
