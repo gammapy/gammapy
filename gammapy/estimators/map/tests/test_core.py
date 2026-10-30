@@ -174,7 +174,7 @@ def test_missing_column(region_map_flux_estimate):
     fe = FluxMaps(data=region_map_flux_estimate, reference_model=model)
 
     with pytest.raises(AttributeError):
-        fe.dnde_errn
+        _ = fe.dnde_errn
 
 
 def test_map_properties(map_flux_estimate):
@@ -383,7 +383,7 @@ def test_partial_flux_map_read_write(
 
     # the TS map shouldn't exist
     with pytest.raises(AttributeError):
-        new_fluxmap.ts
+        _ = new_fluxmap.ts
 
 
 def test_flux_map_read_write_gti(tmp_path, partial_wcs_flux_map, reference_model):

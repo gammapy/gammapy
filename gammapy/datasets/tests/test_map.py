@@ -1969,7 +1969,7 @@ def test_map_dataset_geom(geom, sky_model):
     dataset.mask_fit = None
 
     with pytest.raises(ValueError):
-        dataset._geom
+        _ = dataset._geom
 
 
 @requires_data()
