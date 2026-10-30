@@ -1030,15 +1030,14 @@ def _aeff_max_frac_deviation(
 
     Parameters
     ----------
-    on_observation: `~gammapy.data.Observation`
-        The ON observation
+    on_observation : `~gammapy.data.Observation`
+        The ON observation.
     off_observation : `~gammapy.data.Observation`
-        The OFF observation
+        The OFF observation.
     energy_range : `~gammapy.maps.MapAxis`
-        The energy axis on which to check the effective area
+        The energy axis on which to check the effective area.
     offset_axis : `~gammapy.maps.MapAxis`
-        The offset range axis on which to check the effective area
-
+        The offset range axis on which to check the effective area.
     """
     aeff_on = on_observation.aeff
     aeff_off = off_observation.aeff
@@ -1073,8 +1072,9 @@ def check_run_pair_validity(
     zenith_tol=10 * u.deg,
     aeff_tol=0.1,
 ):
-    """Validity check over a list of ON/OFF pairs. Currently supports only one OFF observation
-    for each ON observation
+    """Validity check over a list of ON/OFF pairs. 
+    
+    Currently supports only one OFF observation for each ON observation.
 
     Checks for difference in zenith angle and effective area. Returns a summary table along
     with a flag if the match is sufficient within tolerance.

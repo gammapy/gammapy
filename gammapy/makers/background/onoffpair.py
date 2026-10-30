@@ -44,10 +44,18 @@ class OnOffBackgroundMaker(Maker):
         Strategy for the acceptance calculation, can be either the ratio of livetimes or counts
             "livetime_ratio" takes the ratio of livetimes
             "counts_ratio" takes the ratio of the counts outside an exclusion mask, passed through kwargs
-        Default is "livetime_ratio"
-    kwargs: dict, optional
-        Additional arguments passed to the maker
-        Should contain `exclusion_mask` is acceptance_method is `counts_ratio`, otherwise assume no mask
+        Strategy for the acceptance calculation, can be either the ratio of livetimes or counts.
+        Available options are:
+
+            * "livetime_ratio": takes the ratio of livetimes.
+            * "counts_ratio": takes the ratio of the counts outside an exclusion mask, 
+              passed through kwargs.
+              
+        Default is "livetime_ratio".
+    kwargs : dict, optional
+        Additional arguments passed to the maker.
+        Should contain `exclusion_mask` if acceptance_method is `counts_ratio`, 
+        otherwise assume no mask.
 
     Returns
     -------
@@ -57,7 +65,7 @@ class OnOffBackgroundMaker(Maker):
 
     tag = "OnOffBackgroundMaker"
 
-    available_acceptance_methods = ["livetime_ratio", "counts-ratio"]
+    available_acceptance_methods = ["livetime_ratio", "counts_ratio"]
 
     def __init__(self, acceptance_method="livetime_ratio", **kwargs):
         if acceptance_method not in self.available_acceptance_methods:
@@ -117,6 +125,7 @@ class OnOffBackgroundMaker(Maker):
         Returns
         -------
         dataset : `~gammapy.datasets.MapDatasetOnOff` or `~gammapy.datasets.SpectrumDatasetOnOff`
+            Either a spectrum dataset or a map on off dataset.
         """
 
         if (
