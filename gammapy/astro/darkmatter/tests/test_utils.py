@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import warnings
+
 import numpy as np
 import astropy.units as u
 import pytest
 
 from gammapy.astro.darkmatter import (
-    DarkMatterAnnihilationSpectralModel,
-    DarkMatterDecaySpectralModel,
+    DarkMatterSpectralModel,
     JFactory,
     profiles,
     add_factor_prior,
@@ -17,6 +18,11 @@ from gammapy.utils.testing import assert_quantity_allclose, requires_data
 @pytest.fixture(scope="session")
 def geom():
     return WcsGeom.create(binsz=0.5, npix=10)
+
+
+@pytest.fixture
+def central_geom():
+    return WcsGeom.create(skydir=(0, 0), npix=3, binsz=0.05, frame="galactic")
 
 
 @pytest.fixture(scope="session")
@@ -44,10 +50,11 @@ def jfact_decay(geom):
 
 @pytest.fixture
 def dm_decay_model():
-    return DarkMatterDecaySpectralModel(
+    return DarkMatterSpectralModel(
         mDM=5000 * u.Unit("GeV"),
         channel="b",
         factor=3.41e19 * u.Unit("GeV cm-2"),
+        annihilation=False,
     )
 
 
@@ -66,6 +73,116 @@ def test_compute_differential_jfactor_large_separation():
 
     assert jfactor.shape == geom.data_shape
     assert np.all(np.isfinite(jfactor.value))
+
+
+@pytest.mark.parametrize(
+    ("annihilation", "expected"),
+    [
+        (
+            True,
+            2.775992151519749e27 * u.Unit("GeV2 cm-5 sr-1"),
+        ),
+        (
+            False,
+            9.936881967248796e23 * u.Unit("GeV cm-2 sr-1"),
+        ),
+    ],
+)
+def test_compute_differential_jfactor_central_pixel(
+    central_geom,
+    annihilation,
+    expected,
+):
+    jfactory = JFactory(
+        geom=central_geom,
+        profile=profiles.NFWProfile(),
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
+        annihilation=annihilation,
+    )
+
+    with pytest.warns(UserWarning, match="pixel center coincides with the halo center"):
+        diff_jfactor = jfactory.compute_differential_jfactor(ndecade=100)
+
+    assert_quantity_allclose(diff_jfactor[1, 1], expected, rtol=1e-6)
+
+
+def test_compute_differential_jfactor_central_pixel_max_subdivision(central_geom):
+    jfactory = JFactory(
+        geom=central_geom,
+        profile=profiles.NFWProfile(),
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
+    )
+
+    with pytest.warns(UserWarning) as warnings_record:
+        diff_jfactor = jfactory.compute_differential_jfactor(
+            ndecade=100,
+            central_pixel_max_subdivision=np.int64(4),
+        )
+
+    assert any(
+        "maximum subdivision factor" in str(item.message) for item in warnings_record
+    )
+
+    expected = 2.4977898557104927e27 * u.Unit("GeV2 cm-5 sr-1")
+    assert_quantity_allclose(diff_jfactor[1, 1], expected, rtol=1e-6)
+
+
+def test_compute_jfactor_central_pixel(monkeypatch, central_geom):
+    jfactory = JFactory(
+        geom=central_geom,
+        profile=profiles.NFWProfile(),
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
+    )
+
+    factors = []
+    original_upsample = WcsGeom.upsample
+
+    def record_upsample(self, factor, *args, **kwargs):
+        factors.append(factor)
+        return original_upsample(self, factor, *args, **kwargs)
+
+    monkeypatch.setattr(WcsGeom, "upsample", record_upsample)
+    with pytest.warns(UserWarning, match="pixel center coincides with the halo center"):
+        jfactor = jfactory.compute_jfactor(
+            ndecade=100,
+            central_pixel_rtol=0.06,
+            central_pixel_max_subdivision=8,
+        )
+
+    expected_jfactor = 2.0113971909309723e21 * u.Unit("GeV2 cm-5")
+    assert_quantity_allclose(jfactor[1, 1], expected_jfactor, rtol=1e-6)
+    assert factors == [2, 4, 8]
+
+
+def test_compute_differential_jfactor_no_central_pixel_warning(geom):
+    jfactory = JFactory(
+        geom=geom,
+        profile=profiles.NFWProfile(),
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
+    )
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        jfactory.compute_differential_jfactor(ndecade=100)
+
+
+@pytest.mark.parametrize("central_pixel_max_subdivision", [2, 6, 4.0])
+def test_jfactory_invalid_max_subdivision(geom, central_pixel_max_subdivision):
+    jfactory = JFactory(
+        geom=geom,
+        profile=profiles.NFWProfile(),
+        distance=8.33 * u.kpc,
+        rmax=1 * u.kpc,
+    )
+
+    with pytest.raises(ValueError, match="power of two"):
+        jfactory.compute_differential_jfactor(
+            central_pixel_max_subdivision=central_pixel_max_subdivision,
+        )
 
 
 def test_compute_differential_jfactor_outside_halo_no_intersection():
@@ -191,8 +308,8 @@ def test_dmfluxmap_annihilation(jfact_annihilation):
         float(jfact_annihilation.mean().value), unit=jfact_annihilation.unit
     )
 
-    diff_flux = DarkMatterAnnihilationSpectralModel(
-        mDM=massDM, channel=channel, factor=total_jfact
+    diff_flux = DarkMatterSpectralModel(
+        mDM=massDM, channel=channel, factor=total_jfact, source="pppc4"
     )
     int_flux = (
         diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
@@ -212,7 +329,9 @@ def test_dmfluxmap_decay(jfact_decay):
     massDM = 1 * u.TeV
     channel = "W"
 
-    diff_flux = DarkMatterDecaySpectralModel(mDM=massDM, channel=channel)
+    diff_flux = DarkMatterSpectralModel(
+        mDM=massDM, channel=channel, annihilation=False, source="pppc4"
+    )
     int_flux = (
         jfact_decay
         * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
@@ -229,19 +348,19 @@ def test_prior_attached(dm_decay_model):
     centered on mu=1 by default (i.e. the nominal factor value)."""
     add_factor_prior(dm_decay_model, sigma=0.2)
 
-    prior = dm_decay_model.scale.prior
+    prior = dm_decay_model.factor.prior
     assert prior is not None
     assert prior.sigma.value == pytest.approx(0.2 * np.log(10))
-    assert prior.mu.value == pytest.approx(1.0)
+    assert prior.mu.value == pytest.approx(3.41e19)
 
 
 @requires_data()
 def test_custom_mu(dm_decay_model):
     """A custom `mu` should be respected instead of the default 1.0."""
-    add_factor_prior(dm_decay_model, sigma=0.15, mu=0.5)
+    add_factor_prior(dm_decay_model, sigma=0.15)
 
-    prior = dm_decay_model.scale.prior
-    assert prior.mu.value == pytest.approx(0.5)
+    prior = dm_decay_model.factor.prior
+    assert prior.mu.value == pytest.approx(3.41e19)
     assert prior.sigma.value == pytest.approx(0.15 * np.log(10))
 
 

@@ -4,9 +4,11 @@ import numpy as np
 import scipy.special
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, EarthLocation
+from gammapy.data import Observation, FixedPointingInfo
 from gammapy.irf import IRF
-from gammapy.makers.utils import make_edisp_kernel_map, make_map_exposure_true_energy
+from gammapy.makers import MapDatasetMaker
+from gammapy.makers.utils import make_edisp_kernel_map
 from gammapy.maps import MapAxes, MapAxis, WcsGeom
 
 
@@ -111,9 +113,14 @@ def test_aeff_3d(aeff_3d):
     pointing = SkyCoord(2, 1, unit="deg")
     geom = WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis], skydir=pointing)
 
-    exposure_map = make_map_exposure_true_energy(
-        pointing=pointing, livetime="42 h", aeff=aeff_3d, geom=geom
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(fixed_icrs=pointing),
+        location=EarthLocation(lon=0, lat=0),
+        livetime=42 * u.hour,
+        irfs={"aeff": aeff_3d},
     )
+    exposure_map = MapDatasetMaker.make_exposure(geom=geom, observation=test_obs)
+
     assert_allclose(
         exposure_map.data[3][1][1:3], [323894.44971479, 323894.44971479], rtol=1e-5
     )

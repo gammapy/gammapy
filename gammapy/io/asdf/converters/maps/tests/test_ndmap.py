@@ -6,9 +6,26 @@ import astropy.units as u
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
-from gammapy.maps import HpxGeom, HpxNDMap, WcsGeom, WcsNDMap, MapAxis
+from regions import (
+    CircleSkyRegion,
+    EllipseSkyRegion,
+    PointSkyRegion,
+    RectangleSkyRegion,
+)
+from gammapy.maps import (
+    HpxGeom,
+    HpxNDMap,
+    MapAxis,
+    RegionGeom,
+    RegionNDMap,
+    WcsGeom,
+    WcsNDMap,
+)
+from gammapy.utils.testing import requires_dependency
+
 
 asdf = pytest.importorskip("asdf")
+asdf.get_config().validate_on_read = True
 pytest.importorskip("asdf.testing")
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
@@ -234,6 +251,7 @@ tested_partialsky_hpx_ndmap = [
 tested_hpx_ndmap = tested_allsky_hpx_ndmap + tested_partialsky_hpx_ndmap
 
 
+@requires_dependency("healpy")
 @pytest.mark.parametrize(
     ("nside", "nested", "frame", "region", "axes", "unit", "meta"), tested_hpx_ndmap
 )
@@ -252,6 +270,7 @@ def test_hpxndmap_roundtrip(nside, nested, frame, region, axes, unit, meta, tmp_
         assert result.meta == m.meta
 
 
+@requires_dependency("healpy")
 def test_hpxndmap_roundtrip_compressed(tmp_path):
     file_path = tmp_path / "test.asdf"
     geom = HpxGeom(
@@ -286,6 +305,7 @@ tested_hpx_ndmap_dtypes = [
 ]
 
 
+@requires_dependency("healpy")
 @pytest.mark.parametrize(
     ("dtype", "unit", "meta"),
     tested_hpx_ndmap_dtypes,
@@ -296,6 +316,140 @@ def test_hpxndmap_roundtrip_dtype(dtype, unit, meta, tmp_path):
         nside=8, nest=False, frame="galactic", region="DISK(110.,75.,10.)", axes=axes1
     )
     m = HpxNDMap(geom, unit=unit, meta=meta)
+    if dtype is bool:
+        m.data = np.arange(m.data.size).reshape(m.geom.data_shape) % 2 == 0
+    else:
+        m.data = np.arange(m.data.size, dtype=dtype).reshape(m.geom.data_shape)
+    with asdf.AsdfFile() as af:
+        af["map"] = m
+        af.write_to(file_path)
+    with asdf.open(file_path) as af:
+        result = af["map"]
+        assert_allclose(result.data, m.data)
+        assert result.unit == m.unit
+        assert result.meta == m.meta
+        assert result.data.dtype == m.data.dtype
+
+
+energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+center1 = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
+center2 = SkyCoord(110.0, 75.0, unit="deg", frame="galactic")
+galactic_center = SkyCoord(0, 0, unit="deg", frame="galactic")
+test_region_ndmap = [
+    (RegionGeom.create(CircleSkyRegion(center=center1, radius=2.5 * u.deg)), "", None),
+    (
+        RegionGeom.create(CircleSkyRegion(center=galactic_center, radius=1 * u.deg)),
+        "",
+        None,
+    ),
+    (
+        RegionGeom.create(
+            CircleSkyRegion(center=center1, radius=1 * u.deg), axes=[energy_axis]
+        ),
+        "",
+        {"telescope": "CTA"},
+    ),
+    (
+        RegionGeom.create(
+            RectangleSkyRegion(center=center1, width=1 * u.deg, height=5 * u.deg),
+        ),
+        "m2",
+        None,
+    ),
+    (
+        RegionGeom.create(PointSkyRegion(center=center1)),
+        1 / (u.cm**2 / u.s),
+        {
+            "livetime": 100.0 * u.s,
+            "t_start": Time("2020-01-01"),
+            "t_stop": Time("2020-01-02"),
+        },
+    ),
+    (RegionGeom.from_regions("icrs;circle(83.63, 22.01, 1)"), "", None),
+    (
+        RegionGeom.from_regions(
+            [
+                CircleSkyRegion(center=center1, radius=1 * u.deg),
+                CircleSkyRegion(
+                    center=SkyCoord(84.50, 23.00, unit="deg", frame="icrs"),
+                    radius=5 * u.deg,
+                ),
+            ]
+        ),
+        "cm2 s-1",
+        {"Telescope": "HESS"},
+    ),
+    (
+        RegionGeom.create(
+            EllipseSkyRegion(
+                center=center1, width=1 * u.deg, height=1 * u.deg, angle=20 * u.deg
+            )
+        ),
+        "",
+        None,
+    ),
+    (
+        RegionGeom.create(
+            CircleSkyRegion(center=center2, radius=1 * u.deg),
+            axes=[energy_axis],
+            wcs=WcsGeom.create(
+                skydir=(0, 0), frame="galactic", width="1.5deg", binsz="0.1deg"
+            ).wcs,
+        ),
+        "m2 s",
+        None,
+    ),
+    (RegionGeom.create(region=None, axes=[energy_axis]), "", None),
+]
+
+
+@pytest.mark.parametrize(("geom", "unit", "meta"), test_region_ndmap)
+def test_regionndmap_roundtrip(geom, unit, meta, tmp_path):
+    file_path = tmp_path / "test.asdf"
+    m = RegionNDMap(geom, unit=unit, meta=meta)
+    m.data = np.arange(m.data.size, dtype=m.data.dtype).reshape(m.geom.data_shape)
+    with asdf.AsdfFile() as af:
+        af["map"] = m
+        af.write_to(file_path)
+    with asdf.open(file_path) as af:
+        result = af["map"]
+        assert_allclose(result.data, m.data)
+        assert result.unit == m.unit
+        assert result.meta == m.meta
+
+
+def test_regionndmap_roundtrip_compressed(tmp_path):
+    file_path = tmp_path / "test.asdf"
+    geom = RegionGeom.create(CircleSkyRegion(center=center1, radius=1 * u.deg))
+    m = RegionNDMap(geom, unit="m2")
+    m.data = np.arange(m.data.size, dtype=m.data.dtype).reshape(m.geom.data_shape)
+    with asdf.AsdfFile() as af:
+        af["map"] = m
+        af.write_to(file_path, all_array_compression="zlib")
+    with asdf.open(file_path) as af:
+        result = af["map"]
+        assert_allclose(result.data, m.data)
+        assert result.unit == m.unit
+        assert result.meta == m.meta
+
+
+tested_region_ndmap_dtypes = [
+    (np.float32, "m2", None),
+    (np.float64, "", {"test": "dtype"}),
+    (bool, "", None),
+]
+
+
+@pytest.mark.parametrize(
+    ("dtype", "unit", "meta"),
+    tested_region_ndmap_dtypes,
+)
+def test_regionndmap_roundtrip_dtype(dtype, unit, meta, tmp_path):
+    file_path = tmp_path / "test.asdf"
+    geom = RegionGeom.create(
+        RectangleSkyRegion(center=center1, width=1 * u.deg, height=5 * u.deg),
+    )
+    m = RegionNDMap(geom, unit=unit, meta=meta)
     if dtype is bool:
         m.data = np.arange(m.data.size).reshape(m.geom.data_shape) % 2 == 0
     else:

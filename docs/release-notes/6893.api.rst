@@ -1,0 +1,1 @@
+Deprecate `gammapy.makers.utils.make_psf_map`.

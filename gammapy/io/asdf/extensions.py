@@ -6,6 +6,9 @@ via an ``entry-point`` in the ``pyproject.toml`` file.
 
 from asdf.extension import ManifestExtension
 
+from .converters.data.gti import GTIConverter
+from .converters.datasets.map import MapDatasetConverter, MapDatasetOnOffConverter
+
 from .converters.maps.axes import (
     LabelMapAxisConverter,
     MapAxesConverter,
@@ -17,18 +20,38 @@ from .converters.maps.geom import (
     RegionGeomConverter,
     WcsGeomConverter,
 )
-from .converters.maps.ndmap import HpxNDMapConverter, WcsNDMapConverter
+
+from .converters.maps.maps import MapsConverter
+from .converters.maps.ndmap import (
+    HpxNDMapConverter,
+    RegionNDMapConverter,
+    WcsNDMapConverter,
+)
+from .converters.modeling.models.core import ModelsConverter
+
+from .converters.irf.psf.map import PSFMapConverter, RecoPSFMapConverter
+from .converters.irf.edisp.map import EDispMapConverter, EDispKernelMapConverter
 
 GAMMAPY_CONVERTERS = [
+    MapsConverter(),
+    GTIConverter(),
     MapAxisConverter(),
     MapAxesConverter(),
+    ModelsConverter(),
+    MapDatasetConverter(),
+    MapDatasetOnOffConverter(),
     TimeMapAxisConverter(),
     LabelMapAxisConverter(),
     HpxGeomConverter(),
     RegionGeomConverter(),
     WcsGeomConverter(),
     HpxNDMapConverter(),
+    RegionNDMapConverter(),
     WcsNDMapConverter(),
+    PSFMapConverter(),
+    RecoPSFMapConverter(),
+    EDispMapConverter(),
+    EDispKernelMapConverter(),
 ]
 
 GAMMAPY_EXTENSIONS = [

@@ -2,11 +2,11 @@
 """Utilities to compute J-factor maps."""
 
 import html
+import numbers
+import warnings
 
 import astropy.units as u
-from gammapy.modeling.models.prior import (
-    LogNormalPrior,
-)
+from gammapy.modeling.models.prior import LogSpaceGaussianPrior
 import numpy as np
 
 __all__ = ["JFactory", "add_factor_prior"]
@@ -96,7 +96,59 @@ class JFactory:
 
         return 0 * u.Unit("GeV2 cm-5" if self.annihilation else "GeV cm-2")
 
-    def compute_differential_jfactor(self, ndecade=1e4):
+    def _integrate_central_pixel(self, ndecade, rtol, max_subdivision):
+        """Adaptively average the line-of-sight integral over the central pixel."""
+        central_geom = self.geom.to_image().cutout(
+            position=self.geom.center_skydir,
+            width=self.geom.pixel_scales,
+        )
+        parent_solid_angle = central_geom.solid_angle().sum()
+        previous = None
+
+        factor = 2
+        while factor <= max_subdivision:
+            # Even factors ensure no subpixel center coincides with the halo center.
+            subgeom = central_geom.upsample(factor)
+            separation = subgeom.separation(self.geom.center_skydir).rad
+            impact = u.Quantity(
+                value=np.sin(separation) * self.distance,
+                unit=self.distance.unit,
+            )
+
+            values = [
+                self._integrate_los(impact_i, separation_i, ndecade)
+                for impact_i, separation_i in zip(impact.ravel(), separation.ravel())
+            ]
+            values = u.Quantity(values).reshape(impact.shape)
+            current = (values * subgeom.solid_angle()).sum() / parent_solid_angle
+
+            if previous is not None:
+                relative_change = np.abs((current - previous) / current)
+                if relative_change < rtol:
+                    return current
+
+            previous = current
+            factor *= 2
+
+        warnings.warn(
+            "The requested central-pixel relative tolerance "
+            f"(central_pixel_rtol={rtol}) was not reached "
+            "before the maximum subdivision factor "
+            f"(central_pixel_max_subdivision={max_subdivision}). "
+            "Returning the finest estimate. Increase "
+            "central_pixel_max_subdivision if higher accuracy is required.",
+            UserWarning,
+            stacklevel=3,
+        )
+        return previous
+
+    def compute_differential_jfactor(
+        self,
+        ndecade=1e4,
+        *,
+        central_pixel_rtol=0.01,
+        central_pixel_max_subdivision=128,
+    ):
         r"""Compute differential J-Factor.
 
         .. math::
@@ -112,6 +164,13 @@ class JFactory:
         ndecade : float, optional
             Number of sampling points per decade in radius used for the numerical
             integration. Default is 1e4.
+        central_pixel_rtol : float, optional
+            Relative tolerance for adaptive refinement of the central pixel.
+            Default is 0.01.
+        central_pixel_max_subdivision : int, optional
+            Maximum subdivision factor for adaptive refinement of the central
+            pixel. Must be a power of two greater than or equal to 4. Default is
+            128.
 
         Returns
         -------
@@ -154,19 +213,58 @@ class JFactory:
         evaluating it directly, each radial branch is integrated with the
         substitution :math:`r = r_\perp\cosh t`.
         """
+        if not np.isfinite(central_pixel_rtol) or central_pixel_rtol <= 0:
+            raise ValueError("central_pixel_rtol must be a finite positive number.")
+
+        if (
+            not isinstance(central_pixel_max_subdivision, numbers.Integral)
+            or central_pixel_max_subdivision < 4
+            or central_pixel_max_subdivision & (central_pixel_max_subdivision - 1)
+        ):
+            raise ValueError(
+                "central_pixel_max_subdivision must be a power of two greater "
+                "than or equal to 4."
+            )
+
         separation = self.geom.separation(self.geom.center_skydir).rad
         impact = u.Quantity(
             value=np.sin(separation) * self.distance, unit=self.distance.unit
         )
+        zero_separation = separation == 0
+        if np.any(zero_separation):
+            warnings.warn(
+                "A pixel center coincides with the halo center, as can occur for "
+                "a centered map with an odd number of pixels. The central pixel "
+                "will be adaptively subdivided to avoid the zero-impact line of "
+                "sight. Consider using an even number of pixels if this special "
+                "treatment is not desired.",
+                UserWarning,
+                stacklevel=2,
+            )
+
         val = [
-            self._integrate_los(impact_i, separation_i, ndecade)
-            for impact_i, separation_i in zip(impact.ravel(), separation.ravel())
+            self._integrate_central_pixel(
+                ndecade,
+                rtol=central_pixel_rtol,
+                max_subdivision=central_pixel_max_subdivision,
+            )
+            if is_zero_separation
+            else self._integrate_los(impact_i, separation_i, ndecade)
+            for impact_i, separation_i, is_zero_separation in zip(
+                impact.ravel(), separation.ravel(), zero_separation.ravel()
+            )
         ]
         integral_unit = u.Unit("GeV2 cm-5") if self.annihilation else u.Unit("GeV cm-2")
         jfact = u.Quantity(val).to(integral_unit).reshape(impact.shape)
         return jfact / u.steradian
 
-    def compute_jfactor(self, ndecade=1e4):
+    def compute_jfactor(
+        self,
+        ndecade=1e4,
+        *,
+        central_pixel_rtol=0.01,
+        central_pixel_max_subdivision=128,
+    ):
         r"""Compute astrophysical J-Factor.
 
         .. math::
@@ -179,44 +277,59 @@ class JFactory:
         ndecade : float, optional
             Number of sampling points per decade in radius used for the numerical
             integration. Default is 1e4.
+        central_pixel_rtol : float, optional
+            Relative tolerance for adaptive refinement of the central pixel.
+            Default is 0.01.
+        central_pixel_max_subdivision : int, optional
+            Maximum subdivision factor for adaptive refinement of the central
+            pixel. Must be a power of two greater than or equal to 4. Default is
+            128.
 
         Returns
         -------
         jfactor : `~astropy.units.Quantity`
             The j-factor.
         """
-        diff_jfact = self.compute_differential_jfactor(ndecade)
+        diff_jfact = self.compute_differential_jfactor(
+            ndecade,
+            central_pixel_rtol=central_pixel_rtol,
+            central_pixel_max_subdivision=central_pixel_max_subdivision,
+        )
         return diff_jfact * self.geom.to_image().solid_angle()
 
 
-def add_factor_prior(model, sigma, mu=1.0):
-    """Attach a Log Normal nuisance prior on ``scale`` for J/D-factor uncertainty.
+def add_factor_prior(model, sigma):
+    """Attach a log-normal nuisance prior to the astrophysical factor.
 
-    The J/D-factor is kept fixed at its nominal value; the associated
-    uncertainty is instead expressed as an equivalent prior on ``scale``,
-    since the predicted flux depends only on the product
-    ``scale * jfactor``. Placing the prior directly on a second parameter
-    (e.g. ``log10_jfactor``) would make it perfectly degenerate with
-    ``scale``. This reparametrisation is a pure shift, so the prior
-    retains the same shape and ``sigma``, centered at ``scale = 1``
-    instead of at the nominal log10(J).
+    The J/D-factor carries a multiplicative uncertainty of ``sigma`` dex from
+    the stellar-kinematics analysis. This function attaches the corresponding
+    log-normal prior to the ``factor`` parameter, which is unfrozen as part of
+    the call, and leaves ``scale`` free and unconstrained.
+
+    ``scale`` and ``factor`` are exactly degenerate: the predicted flux depends
+    only on their product. That degeneracy is inherent to the measurement, and
+    the prior is what curves the otherwise flat direction. Profiling ``factor`` at
+    fixed ``scale`` is the standard treatment of this nuisance in a profile-likelihood analysis
+    (Ackermann et al. 2014).
 
     Parameters
     ----------
-    model : `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel` or `~gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`
-        Model whose ``scale`` parameter will get the prior attached.
-        ``scale`` is unfrozen as part of this call.
+    model : `~gammapy.astro.darkmatter.DarkMatterSpectralModel`
+        Model whose ``factor`` parameter will get the prior attached.
     sigma : float
-        Uncertainty on log10(J) (or log10(D)), in dex.
-    mu : float, optional
-        Center of the prior, in units of ``scale``. Default is 1.0, i.e.
-        the nominal J/D-factor value.
+        Uncertainty on log10 of the astrophysical factor, in dex.
 
     Returns
     -------
-    model : `DarkMatterAnnihilationSpectralModel` or `DarkMatterDecaySpectralModel`
+    model : `DarkMatterSpectralModel`
         The same model instance, with the prior attached, for chaining.
+
+    References
+    ----------
+    * Ackermann et al. (2014), Phys. Rev. D 89, 042001
     """
-    model.scale.frozen = False
-    model.scale.prior = LogNormalPrior(mu=mu, sigma=sigma * np.log(10))
+    nominal = model.factor.value if model.factor.value is not None else None
+    model.factor.min = np.finfo(float).tiny
+    model.factor.frozen = False
+    model.factor.prior = LogSpaceGaussianPrior(mu=nominal, sigma=sigma * np.log(10))
     return model

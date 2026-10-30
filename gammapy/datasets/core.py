@@ -486,18 +486,27 @@ class Datasets(collections.abc.MutableSequence):
     ):
         """Serialize datasets to YAML and FITS files.
 
+        .. note::
+
+            The current implementation of this write function automatically
+            assumes the format is in 'gadf'. To write in other formats one
+            should rather write each `~gammapy.datasets.Dataset` separately.
+            Previous implementation meant that the default setting for
+            `~gammapy.datasets.SpectrumDataset` was 'ogip'.
+
         Parameters
         ----------
         filename : str or `~pathlib.Path`
-            File path or name of datasets yaml file.
+            File path or name of datasets YAML file.
         filename_models : str or `~pathlib.Path`, optional
-            File path or name of models yaml file. Default is None.
+            File path or name of models YAML file. Default is None.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
-        write_covariance : bool
+        write_covariance : bool, optional
             save covariance or not. Default is True.
-        checksum : bool
-            When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS files.
+        checksum : bool, optional
+            When True adds both DATASUM and CHECKSUM cards to the
+            headers written to the FITS files.
             Default is True.
         """
         if filename is None:

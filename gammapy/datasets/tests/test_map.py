@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, EarthLocation
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
@@ -36,7 +36,7 @@ from gammapy.irf import (
     RecoPSFMap,
 )
 from gammapy.makers import MapDatasetMaker
-from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
+from gammapy.makers.utils import make_psf_map
 from gammapy.maps import (
     HpxGeom,
     LabelMapAxis,
@@ -148,12 +148,15 @@ def get_exposure(geom_etrue):
     )
     aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
-    exposure_map = make_map_exposure_true_energy(
-        pointing=SkyCoord(1, 0.5, unit="deg", frame="galactic"),
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(
+            fixed_icrs=SkyCoord(1, 0.5, unit="deg", frame="galactic").icrs
+        ),
+        location=EarthLocation(lon=0, lat=0),
         livetime=1 * u.hr,
-        aeff=aeff,
-        geom=geom_etrue,
+        irfs={"aeff": aeff},
     )
+    exposure_map = MapDatasetMaker.make_exposure(geom=geom_etrue, observation=test_obs)
     return exposure_map
 
 
@@ -162,6 +165,7 @@ def get_psf():
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
+    aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
     geom = WcsGeom.create(
         skydir=(0, 0),
@@ -171,12 +175,16 @@ def get_psf():
         axes=[RAD_AXIS_DEFAULT, psf.axes["energy_true"]],
     )
 
-    return make_psf_map(
-        psf=psf,
-        pointing=SkyCoord(0, 0.5, unit="deg", frame="galactic"),
-        geom=geom,
-        exposure_map=Map.from_geom(geom.squash("rad"), unit="cm2 s"),
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(
+            fixed_icrs=SkyCoord(0, 0.5, unit="deg", frame="galactic").icrs
+        ),
+        location=EarthLocation(lon=0, lat=0),
+        livetime=30 * u.minute,
+        irfs={"aeff": aeff, "psf": psf},
     )
+
+    return MapDatasetMaker.make_psf(geom, test_obs)
 
 
 @requires_data()

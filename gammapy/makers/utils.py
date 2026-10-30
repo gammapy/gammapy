@@ -88,6 +88,7 @@ def _compute_rotation_time_steps(
     return Time(times)
 
 
+@deprecated("2.2", alternative="MapDatasetMaker.make_exposure")
 def make_map_exposure_true_energy(
     pointing, livetime, aeff, geom, use_region_center=True
 ):
@@ -267,6 +268,7 @@ def make_map_background_irf(
     return bkg_map.to_unit("")
 
 
+@deprecated("2.2", alternative="MapDatasetMaker.make_psf")
 def make_psf_map(psf, pointing, geom, exposure_map=None):
     """Make a PSF map for a single observation.
 
@@ -792,6 +794,9 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
      exposure : `~gammapy.maps.Map`
         Effective livetime.
     """
+    from gammapy.makers.map import MapDatasetMaker
+
+    maker = MapDatasetMaker()
     livetime = Map.from_geom(geom, unit=u.hr)
     for obs in observations:
         if offset_max is None:
@@ -803,11 +808,9 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
         offset = coords.skycoord.separation(obs.get_pointing_icrs(obs.tmid))
         mask = offset < offset_max
 
-        exposure = make_map_exposure_true_energy(
-            pointing=obs.get_pointing_icrs(obs.tmid),
-            livetime=obs.observation_live_time_duration,
-            aeff=obs.aeff,
-            geom=geom_obs,
+        exposure = maker.make_exposure(
+            geom_obs,
+            obs,
             use_region_center=True,
         )
 
@@ -855,9 +858,13 @@ def _get_fov_coord(
     if use_offset:
         fov_frame_origin = SkyCoord(0 * u.deg, 0 * u.deg, frame=fov_frame)
         if isinstance(fov_frame, FoVICRSFrame) or (len(fov_frame.obstime.shape) == 0):
-            coords["offset"] = skycoord.separation(fov_frame_origin)
+            coords["offset"] = fov_frame_origin.separation(
+                skycoord, origin_mismatch="ignore"
+            )
         else:
-            coords["offset"] = np.moveaxis(skycoord.separation(fov_frame_origin), -1, 0)
+            coords["offset"] = np.moveaxis(
+                fov_frame_origin.separation(skycoord, origin_mismatch="ignore"), -1, 0
+            )
     else:
         sign = -1.0 if reverse_lon else 1.0
 

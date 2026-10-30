@@ -1,0 +1,1 @@
+Fixes an out-of-memory error when computing the covariance of models with a large number of parameters (e.g. a full source catalogue) by building diagonal covariances lazily in `gammapy.modeling.covariance.Covariance`.

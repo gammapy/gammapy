@@ -42,6 +42,7 @@ from gammapy.makers.utils import (
 from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
 from gammapy.utils.coordinates import FoVAltAzFrame, FoVICRSFrame
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_to_dict
 
@@ -95,12 +96,13 @@ def geom(map_type, ebounds):
     ],
 )
 def test_make_map_exposure_true_energy(aeff, pars):
-    m = make_map_exposure_true_energy(
-        pointing=SkyCoord(2, 1, unit="deg"),
-        livetime="42 s",
-        aeff=aeff,
-        geom=pars["geom"],
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        m = make_map_exposure_true_energy(
+            pointing=SkyCoord(2, 1, unit="deg"),
+            livetime="42 s",
+            aeff=aeff,
+            geom=pars["geom"],
+        )
 
     assert m.data.shape == pars["shape"]
     assert m.unit == "m2 s"
@@ -212,11 +214,10 @@ def test_map_background_2d(bkg_2d, fixed_pointing_info):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
 
     obstime = Time("2020-01-01T20:00:00")
-    skydir = fixed_pointing_info.get_icrs(obstime).galactic
+    skydir = fixed_pointing_info.get_icrs(obstime)
     geom = WcsGeom.create(
-        npix=(3, 3), binsz=4, axes=[axis], skydir=skydir, frame="galactic"
+        npix=(3, 3), binsz=4.0, axes=[axis], skydir=skydir.galactic, frame="galactic"
     )
-
     bkg = make_map_background_irf(
         pointing=skydir,
         ontime="42 s",
@@ -881,7 +882,7 @@ def test_get_fov_coords():
     # Check that pixel centers end up at correct offsets
     # after letting the sky drift away from the starting position
     fov_frame = FoVAltAzFrame(
-        origin=fov_origin, location=location, obstime=time_start + 4.303333 * u.minute
+        origin=fov_origin, location=location, obstime=time_start + 4.303264 * u.minute
     )
     center_sep = 0.5
     sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
@@ -893,7 +894,7 @@ def test_get_fov_coords():
 
     # Check that pixel centers end up at correct offsets
     # after letting the sky drift away from the starting position
-    obs_times = time_start + np.linspace(0, 4.303333, 2) * u.minute
+    obs_times = time_start + np.linspace(0, 4.303264, 2) * u.minute
     fov_frame = FoVAltAzFrame(origin=fov_origin, location=location, obstime=obs_times)
     center_sep = 0.5
     sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")

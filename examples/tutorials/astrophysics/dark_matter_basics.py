@@ -1,6 +1,11 @@
 r"""
-Dark Matter Indirect Detection with Gammapy: Basics
-===================================================
+Dark Matter indirect detection: Modeling the Expected Signal
+============================================================
+
+Learn how to model gamma-ray signals from dark matter annihilation and decay.
+
+Introduction
+------------
 
 Weakly Interacting Massive Particles (WIMPs) are among the most
 compelling candidates for Dark Matter (DM). If they exist, WIMPs can
@@ -71,8 +76,7 @@ from gammapy.astro.darkmatter import (
     JFactory,
     PrimaryFlux,
     profiles,
-    DarkMatterAnnihilationSpectralModel,
-    DarkMatterDecaySpectralModel,
+    DarkMatterSpectralModel,
     add_factor_prior,
 )
 from regions import CircleSkyRegion
@@ -326,9 +330,8 @@ print(f"D-factor integrated on 0.1 deg circle: {total_dfact:.3g}")
 # - The J/D-factor uncertainty is added externally via
 #   `~gammapy.astro.darkmatter.add_factor_prior()`, a log-normal prior
 #   term on the likelihood. This should be used once the spectral model is
-#   set (`~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`
-#   or `~gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`). Check
-#   the next subsections for details.
+#   set (`~gammapy.astro.darkmatter.DarkMatterSpectralModel`). Check the
+#   next subsections for details.
 #
 
 
@@ -370,7 +373,7 @@ print(f"D-factor integrated on 0.1 deg circle: {total_dfact:.3g}")
 #   these expected names, a `mapping_dict` must be provided to map them
 #   accordingly.
 #
-# Currently, the default source is PPPC4DMID.
+# Currently, the default source is CosmiXs.
 #
 # The :class:`~gammapy.astro.darkmatter.PrimaryFlux` class in Gammapy
 # interpolates these tables and returns dN/dE as a spectral model that can
@@ -404,7 +407,7 @@ channels = ["tau", "mu", "b", "Z", "h"]
 fig, ax = plt.subplots(figsize=(7, 5))
 
 for channel in channels:
-    fluxes = PrimaryFlux(mDM=mDM, channel=channel)
+    fluxes = PrimaryFlux(mDM=mDM, channel=channel, source="pppc4")
     fluxes.plot(
         energy_bounds=[mDM / 100, mDM],
         ax=ax,
@@ -561,11 +564,11 @@ fluxes_from_table = PrimaryFlux(mDM=mDM, channel="tau", source=table)
 #
 # :class:`~gammapy.astro.darkmatter.PrimaryFlux` gives you the raw dN/dE
 # table, but it is not yet a model you can plug into Gammapy’s
-# modeling/fitting machinery. For that, Gammapy provides two ready-to-use
-# :class:`~gammapy.modeling.models.SpectralModel` classes:
-#
-# - `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`
-# - `~gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`
+# modeling/fitting machinery. For that, Gammapy provides a ready-to-use
+# :class:`~gammapy.modeling.models.SpectralModel`,
+# `~gammapy.astro.darkmatter.DarkMatterSpectralModel`. With this class
+# you can set the spectral model for annihilation or decay scenarios by
+# setting the flag `annihilation` flag to True or False.
 #
 # Internally, they wrap :class:`~gammapy.astro.darkmatter.PrimaryFlux`
 # and apply the corresponding normalization
@@ -601,10 +604,11 @@ E_max = mass_DM
 # Annihilation flux
 #
 
-ann_model = DarkMatterAnnihilationSpectralModel(
+ann_model = DarkMatterSpectralModel(
     mass=mass_DM,
     channel=channel,
     # source = 'cosmixs' # Here the source is also a parameter, since this class wraps Primary flux.
+    # annihilation = True # By default the spectral model is set for the annihilation case
 )
 
 int_flux_ann = (
@@ -632,7 +636,11 @@ jfactory_dec = JFactory(
 )
 dfact_draco = jfactory_dec.compute_jfactor()
 
-dec_model = DarkMatterDecaySpectralModel(mass=mass_DM, channel=channel)
+dec_model = DarkMatterSpectralModel(
+    mass=mass_DM,
+    channel=channel,
+    annihilation=False,  # Must set the annihilation flag to False to indicate a Decay scenario
+)
 
 int_flux_dec = (
     dfact_draco * dec_model.integral(energy_min=E_min, energy_max=E_max)
