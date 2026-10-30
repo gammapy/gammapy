@@ -324,7 +324,13 @@ class SpectralModel(ModelBase):
             If no minimum is found, NaN will be returned.
         """
         if isinstance(self, CompoundSpectralModel):
-            for model in (self.model1, self.model2):
+            models = (self.model1, self.model2)
+            if any(isinstance(model, CompoundSpectralModel) for model in models):
+                raise ValueError(
+                    "Pivot energy cannot be computed for a CompoundSpectralModel "
+                    "contained within another CompoundSpectralModel."
+                )
+            for model in models:
                 reference = getattr(model, "reference", None)
                 if reference is not None:
                     break

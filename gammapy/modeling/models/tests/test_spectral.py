@@ -789,6 +789,13 @@ def test_pivot_energy():
     lp.beta.error = "0.0670"
     assert_quantity_allclose(lp.pivot_energy, 18.198706 * u.GeV, rtol=7e-2)
 
+    compound_double = compound * ebl
+    with pytest.raises(
+        ValueError,
+        match="Pivot energy cannot be computed for a CompoundSpectralModel contained within another CompoundSpectralModel.",
+    ):
+        compound_double.pivot_energy
+
 
 def test_template_spectral_model_evaluate_tiny():
     energy = np.array([1.00000000e06, 1.25892541e06, 1.58489319e06, 1.99526231e06])
