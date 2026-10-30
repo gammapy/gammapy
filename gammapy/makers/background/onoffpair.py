@@ -42,11 +42,12 @@ class OnOffBackgroundMaker(Maker):
     acceptance_method : str, optional
         Allowed options are {"livetime_ratio", "counts_ratio"}
         Strategy for the acceptance calculation, can be either the ratio of livetimes or counts
-        "livetime_ratio" takes the ratio of livetimes
-        "counts_ratio" takes the ratio of the counts outside an exclusion mask, passed through kwargs
-    kwargs: Additional arguments passed to the maker
-            Should contain `exclusion_mask` is acceptance_method is `counts_ratio`, otherwise assume no mask
+            "livetime_ratio" takes the ratio of livetimes
+            "counts_ratio" takes the ratio of the counts outside an exclusion mask, passed through kwargs
         Default is "livetime_ratio"
+    kwargs: dict, optional
+        Additional arguments passed to the maker
+        Should contain `exclusion_mask` is acceptance_method is `counts_ratio`, otherwise assume no mask
 
     Returns
     -------
