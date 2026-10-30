@@ -90,6 +90,7 @@ class EventListReader:
                     warnings.warn(
                         f"Checksum verification failed for HDU {self.hdu} of {filename}.",
                         UserWarning,
+                        stacklevel=2,
                     )
 
             if format is None:
