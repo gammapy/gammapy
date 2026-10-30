@@ -350,8 +350,6 @@ class MapDatasetMaker(Maker):
             Energy dispersion kernel map.
         """
         edisp = observation.edisp
-        fov_frame = observation.get_fov_frame(observation.tmid, FoVAlignment.RADEC)
-
         if isinstance(edisp, EDispKernelMap):
             if edisp.exposure_map:
                 exposure = edisp.exposure_map.interp_to_geom(
@@ -365,6 +363,8 @@ class MapDatasetMaker(Maker):
             exposure = MapDatasetMaker.make_exposure_irf(
                 geom.squash(axis_name="energy"), observation
             )
+        fov_frame = observation.get_fov_frame(observation.tmid, FoVAlignment.RADEC)
+
         # Use EnergyDispersion2D migra axis.
         migra_axis = edisp.axes["migra"]
 
