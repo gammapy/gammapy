@@ -79,6 +79,11 @@ dependencies:
   # - cffconvert
   - pyinstrument
   - memray
+  # build tools required to compile sherpa from source via pip below
+  # (its bundled "region" library needs a yacc/lex parser generator and make)
+  - bison
+  - flex
+  - make
   - pip:
       - pytest-sphinx
       - ray[default]>=2.9
