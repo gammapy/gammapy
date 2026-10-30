@@ -1,0 +1,1 @@
+Fix the ``gammapy-dev`` conda environment for compiling ``sherpa`` from source and adding all documentation dependencies.

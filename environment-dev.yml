@@ -65,6 +65,8 @@ dependencies:
   - sphinx-gallery
   - sphinx-design
   - sphinx-copybutton
+  - sphinx-automodapi
+  - numpydoc
   - tox
   - pydata-sphinx-theme
   - pre-commit
@@ -79,9 +81,17 @@ dependencies:
   # - cffconvert
   - pyinstrument
   - memray
+  # build tools to compile sherpa from source
+  - fftw
+  - cmake
+  - pkg-config
+  - bison
+  - flex
+  - make
   - pip:
       - pytest-sphinx
       - ray[default]>=2.9
       - PyGithub
       - pypandoc
       - sherpa>=4.17
+      - sphinx-changelog
