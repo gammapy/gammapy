@@ -2,7 +2,8 @@
 """On-Off background estimation for dedicated On Off Pair runs"""
 
 import numpy as np
-import astropy.units as u
+import logging
+
 from astropy.coordinates import SkyCoord
 from astropy.table import QTable
 
@@ -14,126 +15,43 @@ from gammapy.datasets import (
     SpectrumDatasetOnOff,
 )
 from ..core import Maker
+from ..utils import check_run_pair_validity
 from gammapy.maps import Map
 from gammapy.utils.coordinates import fov_to_sky, sky_to_fov
 
-__all__ = ["OnOffBackgroundMaker", "check_run_pair_validity"]
+log = logging.getLogger(__name__)
 
-
-def check_run_pair_validity(
-    on_observations,
-    off_observations,
-    energy_range,
-    zenith_tol=10 * u.deg,
-    aeff_tol=0.1,
-):
-    """Validity check over a list of ON/OFF pairs. Currently supports only one OFF observation
-    for each ON observation
-
-    Checks for difference in zenith angle and effective area. Returns a summary table along
-    with a flag if the match is sufficient within tolerance.
-
-    Parameters
-    ----------
-    on_observations : list of `~gammapy.data.Observation` or `~gammapy.data.Observations`
-        The ON observations list
-    off_observations : list of `~gammapy.data.Observation` or `~gammapy.data.Observations`
-        The OFF observation list
-    energy_range : `~gammapy.maps.MapAxis`
-        The energy axis on which to check the effective area
-    zenith_tol : `~astropy.units.Quantity`, optional
-        Zenith tolerance, default 10 deg.
-    aeff_tol : float, optional
-        Effective-area fractional-deviation tolerance, default 0.1.
-
-    Returns
-    -------
-    table : `~astropy.table.QTable`
-        One row per pair, with columns ``obs_id``, ``off_obs_id``,
-        ``zenith_on``, ``zenith_off``, ``delta_zenith``, ``zenith_ok``,
-        ``aeff_max_frac_deviation`` and ``aeff_ok``.
-    """
-    if len(on_observations) != len(off_observations):
-        raise ValueError(
-            "on_observations and off_observations must have equal length; "
-            f"got {len(on_observations)} and {len(off_observations)}"
-        )
-
-    results = []
-    for on_obs, off_obs in zip(on_observations, off_observations):
-        zenith_on = 90.0 * u.deg - on_obs.get_pointing_altaz(on_obs.tmid).alt
-        zenith_off = 90.0 * u.deg - off_obs.get_pointing_altaz(off_obs.tmid).alt
-        delta_zenith = abs(zenith_on - zenith_off)
-        aeff_dev = _aeff_max_frac_deviation(on_obs, off_obs, energy_range)
-        aeff_ok = aeff_dev is not None and aeff_dev < aeff_tol
-        result = {
-            "obs_id": on_obs.obs_id,
-            "off_obs_id": off_obs.obs_id,
-            "zenith_on": zenith_on,
-            "zenith_off": zenith_off,
-            "delta_zenith": delta_zenith,
-            "zenith_ok": bool(delta_zenith < zenith_tol),
-            "aeff_max_frac_deviation": aeff_dev,
-            "aeff_ok": bool(aeff_ok),
-        }
-        results.append(result)
-
-    return QTable(results)
-
-
-def _aeff_max_frac_deviation(
-    on_observation, off_observation, energy_axis=None, offset_axis=None
-):
-    """Max fractional deviation between the two effective areas."""
-    aeff_on = on_observation.aeff
-    aeff_off = off_observation.aeff
-    if aeff_on is None or aeff_off is None:
-        return None
-
-    if energy_axis is None:
-        energy = aeff_on.axes["energy"].center
-    else:
-        energy = energy_axis.center
-    if offset_axis is None:
-        offset = aeff_on.axes["offset"].center
-    else:
-        offset = offset_axis.center
-    energy_grid, offset_grid = np.meshgrid(energy, offset, indexing="ij")
-
-    a_on = aeff_on.evaluate(energy_true=energy_grid, offset=offset_grid).to_value("m2")
-    a_off = aeff_off.evaluate(energy_true=energy_grid, offset=offset_grid).to_value(
-        "m2"
-    )
-
-    mask = a_on > 0
-    if not np.any(mask):
-        return None
-    return float(np.max(np.abs(a_off[mask] - a_on[mask]) / a_on[mask]))
+__all__ = ["OnOffBackgroundMaker"]
 
 
 class OnOffBackgroundMaker(Maker):
     """Estimate OFF background from a paired OFF observation.
 
-    Turns a reduced ``MapDataset`` / ``SpectrumDataset``
+    Turns a reduced ``MapDataset`` or ``SpectrumDataset``
     into its OnOff counterpart by mirroring the OFF run's events into
     the ON pointing FoV frame and setting acceptances from livetime.
 
     ON-OFF pairs should be created beforehand by the user.
 
-    Currently, supports only one OFF observation for each ON observation.
-
-    This works only for pointing observations, and drift mode is not supported.
+    ..note..
+        Currently, supports only one OFF observation for each ON observation.
+        This works only for pointing observations, and drift mode is not supported.
 
     Parameters
     ----------
     acceptance_method : str, optional
-        Allowed option are {"livetime_ratio", "counts-ratio"}
-        Default is "livetime"
-        Strategy for the acceptance calculation
+        Allowed options are {"livetime_ratio", "counts_ratio"}
+        Strategy for the acceptance calculation, can be either the ratio of livetimes or counts
         "livetime_ratio" takes the ratio of livetimes
-        "counts-ratio" takes the ratio of the counts outside an exclusion mask, passed through kwargs
+        "counts_ratio" takes the ratio of the counts outside an exclusion mask, passed through kwargs
     kwargs: Additional arguments passed to the maker
-            Should contain `exclusion_mask` is acceptance_mathod is `counts_ratio`, otherwise assume no mask
+            Should contain `exclusion_mask` is acceptance_method is `counts_ratio`, otherwise assume no mask
+        Default is "livetime_ratio"
+
+    Returns
+    -------
+    dataset : `~gammapy.datasets.MapDatasetOnOff` or `~gammapy.datasets.SpectrumDatasetOnOff`
+            Either a spectrum dataset or a map on off dataset.
     """
 
     tag = "OnOffBackgroundMaker"
@@ -204,7 +122,16 @@ class OnOffBackgroundMaker(Maker):
             on_observation.pointing.mode == "DRIFT"
             or off_observation.pointing.mode == "DRIFT"
         ):
-            raise ValueError("DRIFT mode not supported")
+            log.warning(
+                f"{on_observation.obs_id}/{off_observation.obs_id} pair is in DRIFT mode. IGNORING."
+            )
+            return
+
+        if not isinstance(dataset, MapDataset):
+            raise TypeError(
+                f"Expected MapDataset or SpectrumDataset, got {type(dataset).__name__}"
+            )
+
         geom = dataset.counts.geom
         counts_off = Map.from_geom(geom, unit="")
         counts_off.fill_events(self._mirror_off_events(on_observation, off_observation))
@@ -229,6 +156,4 @@ class OnOffBackgroundMaker(Maker):
                 counts_off=counts_off,
                 name=dataset.name,
             )
-        raise TypeError(
-            f"Expected MapDataset or SpectrumDataset, got {type(dataset).__name__}"
-        )
+        return

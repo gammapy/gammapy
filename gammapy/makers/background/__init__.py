@@ -20,5 +20,4 @@ __all__ = [
     "RingBackgroundMaker",
     "WobbleRegionsFinder",
     "OnOffBackgroundMaker",
-    "check_run_pair_validity",
 ]
