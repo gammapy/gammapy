@@ -76,7 +76,7 @@ class SafeMaskMaker(Maker):
 
     def __init__(
         self,
-        methods=["aeff-default"],
+        methods=None,
         aeff_percent=10,
         bias_percent=10,
         position=None,
@@ -84,6 +84,8 @@ class SafeMaskMaker(Maker):
         offset_max="3 deg",
         irfs="DL4",
     ):
+        if methods is None:
+            methods = ["aeff-default"]
         methods = set(methods)
 
         if not methods.issubset(self.available_methods):
