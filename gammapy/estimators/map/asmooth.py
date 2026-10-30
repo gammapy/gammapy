@@ -98,7 +98,7 @@ class ASmoothMapEstimator(Estimator):
         return
 
     @staticmethod
-    def get_scales(n_scales, factor=np.sqrt(2), kernel=Gaussian2DKernel):
+    def get_scales(n_scales, factor=None, kernel=Gaussian2DKernel):
         """Create list of Gaussian widths.
 
         Parameters
@@ -113,6 +113,8 @@ class ASmoothMapEstimator(Estimator):
         scales : `~numpy.ndarray`
             Scale array.
         """
+        if factor is None:
+            factor = np.sqrt(2)
         if kernel == Gaussian2DKernel:
             sigma_0 = 1.0 / np.sqrt(9 * np.pi)
         elif kernel == Tophat2DKernel:

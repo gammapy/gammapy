@@ -15,9 +15,9 @@ from gammapy.utils.time import time_ref_from_dict, time_relative_to_ref
 def make_test_observation_table(
     observatory_name="hess",
     n_obs=10,
-    az_range=Angle([0, 360], "deg"),
-    alt_range=Angle([45, 90], "deg"),
-    date_range=(Time("2010-01-01"), Time("2015-01-01")),
+    az_range=None,
+    alt_range=None,
+    date_range=None,
     use_abs_time=False,
     n_tels_range=(3, 4),
     random_state="random-seed",
@@ -64,6 +64,12 @@ def make_test_observation_table(
     obs_table : `~gammapy.data.ObservationTable`
         Observation table.
     """
+    if az_range is None:
+        az_range = Angle([0, 360], "deg")
+    if alt_range is None:
+        alt_range = Angle([45, 90], "deg")
+    if date_range is None:
+        date_range = (Time("2010-01-01"), Time("2015-01-01"))
     random_state = get_random_state(random_state)
 
     n_obs_start = 1

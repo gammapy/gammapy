@@ -235,7 +235,7 @@ class Observation:
         tstop=None,
         irfs=None,
         deadtime_fraction=0.0,
-        reference_time=Time("2000-01-01 00:00:00"),
+        reference_time=None,
     ):
         """Create an observation.
 
@@ -269,6 +269,8 @@ class Observation:
         obs : `gammapy.data.MemoryObservation`
             Observation.
         """
+        if reference_time is None:
+            reference_time = Time("2000-01-01 00:00:00")
         if tstart is None:
             tstart = reference_time.copy()
 
