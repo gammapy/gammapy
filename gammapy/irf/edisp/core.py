@@ -12,6 +12,7 @@ from gammapy.maps import MapAxes, MapAxis, RegionGeom
 from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
 
+
 __all__ = ["EnergyDispersion2D"]
 
 
@@ -159,15 +160,13 @@ class EnergyDispersion2D(IRF):
         edisp : `~gammapy.irf.EDispKernel`
             Energy dispersion matrix.
         """
-        from gammapy.data import FixedPointingInfo, Observation
-        from gammapy.irf import EffectiveAreaTable2D
-        from gammapy.makers import MapDatasetMaker
+        from gammapy.irf import EDispKernel
 
         offset = Angle(offset)
-        pointing = SkyCoord("0d", "0d")
 
         if isinstance(energy_axis, Quantity):
             energy_axis = MapAxis.from_energy_edges(energy_axis)
+
         if energy_axis is None:
             energy_axis = self.axes["energy_true"].copy(name="energy")
 
@@ -176,28 +175,73 @@ class EnergyDispersion2D(IRF):
                 energy_axis_true,
                 name="energy_true",
             )
+
         if energy_axis_true is None:
             energy_axis_true = self.axes["energy_true"]
 
-        offset_axis = MapAxis.from_bounds(0, offset, nbin=1, name="offset", unit="deg")
-        aeff = EffectiveAreaTable2D(
-            axes=[energy_axis_true, offset_axis], data=1e10, unit="cm2"
+        e_true = energy_axis_true.center
+
+        migra_axis = self.axes["migra"]
+        migra_center = migra_axis.center
+        migra_edges = migra_axis.edges
+        dmigra = np.diff(migra_edges)
+
+        # Evaluate P(migra | E_true)
+        pdf = self.evaluate(
+            offset=offset,
+            energy_true=e_true[:, np.newaxis],
+            migra=migra_center[np.newaxis, :],
         )
 
-        temp_obs = Observation.create(
-            pointing=FixedPointingInfo(fixed_icrs=pointing),
-            location=EarthLocation(lon=0, lat=0),
-            livetime=1 * u.s,
-            irfs={"aeff": aeff, "edisp": self},
+        # Normalize in migra space
+        pdf /= np.sum(
+            pdf * dmigra[np.newaxis, :],
+            axis=1,
+            keepdims=True,
         )
 
-        center = pointing.directional_offset_by(
-            position_angle=0 * u.deg, separation=offset
-        )
-        geom = RegionGeom.create(region=center, axes=[energy_axis, energy_axis_true])
+        # Probability mass contained in each migra bin
+        prob = pdf * dmigra[np.newaxis, :]
 
-        edisp = MapDatasetMaker.make_edisp_kernel(geom, temp_obs)
-        return edisp.get_edisp_kernel()
+        reco_edges = energy_axis.edges.to_value(e_true.unit)
+
+        # For each true energy convert migra edges to reco-energy edges
+        ereco_edges = (e_true[:, np.newaxis] * migra_edges[np.newaxis, :]).to_value(
+            e_true.unit
+        )
+
+        old_lo = ereco_edges[:, :-1]
+        old_hi = ereco_edges[:, 1:]
+
+        new_lo = reco_edges[:-1][None, :, None]
+        new_hi = reco_edges[1:][None, :, None]
+
+        # Overlap fractions
+        overlap = np.maximum(
+            0.0,
+            np.minimum(old_hi[:, None, :], new_hi)
+            - np.maximum(old_lo[:, None, :], new_lo),
+        )
+
+        frac = overlap / (old_hi - old_lo)[:, None, :]
+
+        # Redistribution matrix
+        matrix = np.sum(
+            prob[:, None, :] * frac,
+            axis=-1,
+        )
+
+        # Remove tiny numerical artifacts only
+        if threshold is not None:
+            matrix[matrix < threshold] = 0.0
+
+        return EDispKernel(
+            axes=[
+                energy_axis_true,
+                energy_axis,
+            ],
+            data=matrix.data,
+        )
 
     def normalize(self):
         """Normalise energy dispersion."""
