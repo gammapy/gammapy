@@ -23,5 +23,5 @@ def cli_check_logging():
     log.debug("this is log.debug() output")
     log.info("this is log.info() output")
     log.warning("this is log.warning() output")
-    warnings.warn("this is warnings.warn() output")
+    warnings.warn("this is warnings.warn() output", stacklevel=2)
     print("this is stdout output")

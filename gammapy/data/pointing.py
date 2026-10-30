@@ -130,6 +130,7 @@ class FixedPointingInfo:
                 warnings.warn(
                     "In future, fixed_icrs must have non-nan values",
                     GammapyDeprecationWarning,
+                    stacklevel=2,
                 )
 
             self._mode = PointingMode.POINTING
