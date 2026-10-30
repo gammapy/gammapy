@@ -4,7 +4,6 @@ import warnings
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
-import re
 import astropy.units as u
 from astropy.coordinates import SkyCoord, EarthLocation
 from astropy.io import fits
@@ -714,7 +713,7 @@ def test_downsample_energy_true(geom):
 
     with pytest.raises(
         ValueError,
-        match=re.escape("Number of energy_true bins (5) is not divisible by 2"),
+        match="Number of energy_true bins \\(5\\) is not divisible by 2",
     ):
         dataset.downsample(2, axis_name="energy_true")
 
