@@ -6,7 +6,7 @@ import logging
 from configparser import ConfigParser
 import tomllib
 import click
-from datetime import date
+from datetime import datetime
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ def update_codemeta(maintainer, filename, setup_file=None):
     data["developmentStatus"] = ("active",)
     data["email"] = "GAMMAPY-COORDINATION-L@IN2P3.FR"
 
-    modified_date = str(date.today())
+    modified_date = str(datetime.now(tz=datetime.UTC).date())
     data["dateModified"] = modified_date
 
     if setup_file:
