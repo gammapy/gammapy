@@ -305,6 +305,7 @@ class Observation:
             warnings.warn(
                 "Pointing will be required to be provided as FixedPointingInfo",
                 GammapyDeprecationWarning,
+                stacklevel=2,
             )
             pointing = FixedPointingInfo.from_fits_header(obs_info)
 
