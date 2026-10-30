@@ -95,6 +95,7 @@ class EDispMap(IRFMap):
 
     tag = "edisp_map"
     required_axes = ["migra", "energy_true"]
+    downsample_axes = ["energy_true"]
 
     def __init__(self, edisp_map, exposure_map=None):
         super().__init__(irf_map=edisp_map, exposure_map=exposure_map)
@@ -335,6 +336,7 @@ class EDispKernelMap(IRFMap):
 
     tag = "edisp_kernel_map"
     required_axes = ["energy", "energy_true"]
+    downsample_axes = ["energy", "energy_true"]
 
     def __init__(self, edisp_kernel_map, exposure_map=None):
         super().__init__(irf_map=edisp_kernel_map, exposure_map=exposure_map)

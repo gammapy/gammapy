@@ -2096,68 +2096,100 @@ class MapDataset(Dataset):
     def downsample(self, factor, axis_name=None, name=None):
         """Downsample map dataset.
 
-        The PSFMap and EDispKernelMap are not downsampled, except if
-        a corresponding axis is given.
+        The `~gammapy.irf.PSFMap` and `~gammapy.irf.EDispKernelMap` spatial axes are\
+        not downsampled, as they follow a separate spatial geometry.
 
         Parameters
         ----------
         factor : int
             Downsampling factor.
-        axis_name : str, optional
-            Which non-spatial axis to downsample. By default only spatial axes are downsampled. Default is None.
+        axis_name : {None, energy, energy_true}, optional
+            Name of axis to downsample. If None is given, spatial axes are downsampled.
+            Default is None.
         name : str, optional
             Name of the downsampled dataset. Default is None.
 
         Returns
         -------
-        dataset : `MapDataset` or `SpectrumDataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Downsampled map dataset.
         """
+        if axis_name not in [None, "energy", "energy_true"]:
+            raise ValueError(
+                f"Invalid 'axis_name': {axis_name}. "
+                "Possible options are: 'energy', 'energy_true', or None."
+            )
+
         name = make_name(name)
 
         kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
 
         if self.counts is not None:
-            kwargs["counts"] = self.counts.downsample(
-                factor=factor,
-                preserve_counts=True,
-                axis_name=axis_name,
-                weights=self.mask_safe,
-            )
+            if axis_name in [None, "energy"]:
+                kwargs["counts"] = self.counts.downsample(
+                    factor=factor,
+                    preserve_counts=True,
+                    axis_name=axis_name,
+                    weights=self.mask_safe,
+                )
+            else:
+                kwargs["counts"] = self.counts.copy()
 
         if self.exposure is not None:
-            if axis_name is None:
+            if axis_name in [None, "energy_true"]:
                 kwargs["exposure"] = self.exposure.downsample(
-                    factor=factor, preserve_counts=False, axis_name=None
+                    factor=factor, preserve_counts=False, axis_name=axis_name
                 )
             else:
                 kwargs["exposure"] = self.exposure.copy()
 
         if self.background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.background.downsample(
-                factor=factor, axis_name=axis_name, weights=self.mask_safe
-            )
+            if axis_name in [None, "energy"]:
+                kwargs["background"] = self.background.downsample(
+                    factor=factor,
+                    preserve_counts=True,
+                    axis_name=axis_name,
+                    weights=self.mask_safe,
+                )
+            else:
+                kwargs["background"] = self.background.copy()
 
         if self.edisp is not None:
-            if axis_name is not None:
+            if (
+                axis_name in ["energy", "energy_true"]
+                and axis_name in self.edisp.downsample_axes
+            ):
+                edisp_weights = None
+                if axis_name == "energy":
+                    edisp_weights = self.mask_safe_edisp
+
                 kwargs["edisp"] = self.edisp.downsample(
-                    factor=factor, axis_name=axis_name, weights=self.mask_safe_edisp
+                    factor=factor, axis_name=axis_name, weights=edisp_weights
                 )
             else:
                 kwargs["edisp"] = self.edisp.copy()
 
         if self.psf is not None:
-            kwargs["psf"] = self.psf.copy()
+            if axis_name in ["energy_true"]:
+                kwargs["psf"] = self.psf.downsample(factor=factor, axis_name=axis_name)
+            else:
+                kwargs["psf"] = self.psf.copy()
 
         if self.mask_safe is not None:
-            kwargs["mask_safe"] = self.mask_safe.downsample(
-                factor=factor, preserve_counts=False, axis_name=axis_name
-            )
+            if axis_name in [None, "energy"]:
+                kwargs["mask_safe"] = self.mask_safe.downsample(
+                    factor=factor, preserve_counts=False, axis_name=axis_name
+                )
+            else:
+                kwargs["mask_safe"] = self.mask_safe.copy()
 
         if self.mask_fit is not None:
-            kwargs["mask_fit"] = self.mask_fit.downsample(
-                factor=factor, preserve_counts=False, axis_name=axis_name
-            )
+            if axis_name in [None, "energy"]:
+                kwargs["mask_fit"] = self.mask_fit.downsample(
+                    factor=factor, preserve_counts=False, axis_name=axis_name
+                )
+            else:
+                kwargs["mask_fit"] = self.mask_fit.copy()
 
         return self.__class__(**kwargs)
 
@@ -3335,25 +3367,32 @@ class MapDatasetOnOff(MapDataset):
 
         counts_off = None
         if self.counts_off is not None:
-            counts_off = self.counts_off.downsample(
-                factor=factor,
-                preserve_counts=True,
-                axis_name=axis_name,
-                weights=self.mask_safe,
-            )
+            if axis_name in [None, "energy"]:
+                counts_off = self.counts_off.downsample(
+                    factor=factor,
+                    preserve_counts=True,
+                    axis_name=axis_name,
+                    weights=self.mask_safe,
+                )
+            else:
+                counts_off = self.counts_off.copy()
 
         acceptance, acceptance_off = None, None
         if self.acceptance_off is not None:
-            acceptance = self.acceptance.downsample(
-                factor=factor, preserve_counts=False, axis_name=axis_name
-            )
-            factor = self.background.downsample(
-                factor=factor,
-                preserve_counts=True,
-                axis_name=axis_name,
-                weights=self.mask_safe,
-            )
-            acceptance_off = acceptance * counts_off / factor
+            if axis_name in [None, "energy"]:
+                acceptance = self.acceptance.downsample(
+                    factor=factor, preserve_counts=False, axis_name=axis_name
+                )
+                factor = self.background.downsample(
+                    factor=factor,
+                    preserve_counts=True,
+                    axis_name=axis_name,
+                    weights=self.mask_safe,
+                )
+                acceptance_off = acceptance * counts_off / factor
+            else:
+                acceptance = self.acceptance.copy()
+                acceptance_off = self.acceptance_off.copy()
 
         return self.__class__.from_map_dataset(
             dataset,
