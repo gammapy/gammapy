@@ -693,6 +693,29 @@ def test_irf_alpha_config(dataset, models):
 
 
 @requires_data()
+def test_irf_beta_config(dataset, models):
+    irfs = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/cta-caldb/CTAO-Performance-Prod6-CTAO-South-20deg-dark-v1.0.FITS.tar.gz"
+    )
+    livetime = 1.0 * u.hr
+    pointing = FixedPointingInfo(
+        fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
+    )
+    obs = Observation.create(
+        obs_id=1001,
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
+        location=LOCATION,
+    )
+
+    dataset.models = models
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.run(dataset=dataset, observation=obs)
+    assert events is not None
+
+
+@requires_data()
 def test_mde_run_switchoff(dataset, models):
     irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
