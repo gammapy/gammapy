@@ -695,7 +695,7 @@ def test_irf_alpha_config(dataset, models):
 @requires_data()
 def test_irf_beta_config(dataset, models):
     irfs = load_irf_dict_from_file(
-        "$GAMMAPY_DATA/cta-caldb/CTAO-Performance-Prod6-CTAO-South-20deg-dark-v1.0.FITS.tar.gz"
+        "$GAMMAPY_DATA/cta-caldb/Prod6-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
     )
     livetime = 1.0 * u.hr
     pointing = FixedPointingInfo(
