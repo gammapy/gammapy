@@ -33,9 +33,10 @@ class OnOffBackgroundMaker(Maker):
 
     ON-OFF pairs should be created beforehand by the user.
 
-    ..note..
-        Currently, supports only one OFF observation for each ON observation.
-        This works only for pointing observations, and drift mode is not supported.
+ .. note::
+ 
+       Currently, this supports only one OFF observation for each ON observation. 
+       It also only works for pointing observations, and drift mode is not supported.
 
     Parameters
     ----------
