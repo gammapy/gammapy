@@ -27,7 +27,7 @@ __all__ = ["OnOffBackgroundMaker"]
 class OnOffBackgroundMaker(Maker):
     """Estimate OFF background from a paired OFF observation.
 
-    Turns a reduced ``MapDataset`` or ``SpectrumDataset``
+    Turns a reduced ``~gammapy.datasets.MapDataset`` or ``~gammapy.datasets.SpectrumDataset``
     into its OnOff counterpart by mirroring the OFF run's events into
     the ON pointing FoV frame and setting acceptances from livetime.
 
