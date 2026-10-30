@@ -71,6 +71,9 @@ def test_run_map_dataset(map_dataset, observations):
     assert result.counts_off.data.sum() == 7662
     assert result.counts_off.geom == result.counts.geom
     assert_allclose(result.background.data.sum(), 7396.48, atol=1e-1)
+    assert_allclose(result.alpha.data.sum(), 49425, atol=1e-2)
+    assert_allclose(result.acceptance_off.data[2][2][2], 1638.5, atol=1e-2)
+
     assert result.psf is not None
     assert result.edisp is not None
 
