@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 from astropy.io import fits
-from astropy.table import Column, Table, hstack
+from astropy.table import Column, Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
 
