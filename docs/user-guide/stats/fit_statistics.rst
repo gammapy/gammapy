@@ -164,7 +164,9 @@ the statistics on the `~gammapy.datasets.FluxPointsDataset`:
 - distrib
 
 The methods differ in the statistical information they use and in their
-treatment of upper limits. These three methods are described below.
+treatment of upper limits. For a comparison of these statistics on flux points
+please refer to :ref:`this example <1d-tutorial-stats>`.
+These three methods are described below.
 
 Chi squared
 ^^^^^^^^^^^

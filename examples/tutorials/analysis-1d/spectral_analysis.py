@@ -490,6 +490,8 @@ plt.show()
 # sphinx_gallery_thumbnail_number = 5
 
 ######################################################################
+# .. _1d-tutorial-stats:
+#
 # A note on statistics
 # --------------------
 #
