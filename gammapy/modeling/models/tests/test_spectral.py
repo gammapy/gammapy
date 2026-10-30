@@ -792,7 +792,8 @@ def test_pivot_energy():
     compound_double = compound * ebl
     with pytest.raises(
         ValueError,
-        match="Pivot energy cannot be computed for a CompoundSpectralModel contained within another CompoundSpectralModel.",
+        match="Pivot energy cannot be computed for a CompoundSpectralModel "
+        "contained within another CompoundSpectralModel.",
     ):
         compound_double.pivot_energy
 
