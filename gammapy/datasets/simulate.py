@@ -377,7 +377,7 @@ class MapDatasetEventSampler:
         ----------
         psf_map : `~gammapy.irf.PSFMap`
             PSF map.
-        events : `~gammapy.data.EventList`
+        events_table : `~astropy.table.Table`
             Event list.
 
         Returns
