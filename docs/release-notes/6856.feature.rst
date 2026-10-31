@@ -1,0 +1,1 @@
+Add `~gammapy.visualization.plotters.irf.EDispPlotter` and `~gammapy.visualization.plotters.irf.EDispKernelPlotter` classes, reimplementing the energy dispersion plotting methods as part of the new Plotters API defined in PIG 31.
