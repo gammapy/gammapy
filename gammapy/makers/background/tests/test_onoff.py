@@ -15,7 +15,6 @@ from gammapy.datasets import (
 from gammapy.makers import (
     MapDatasetMaker,
     OnOffBackgroundMaker,
-    check_run_pair_validity,
 )
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
