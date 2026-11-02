@@ -8,12 +8,12 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
-date-released: 2025-07-26
+date-released: 2025-12-16
 keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
-version: v2.0
+version: v2.0.1
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
@@ -29,31 +29,10 @@ authors:
   affiliation: "Université Paris-Saclay, Université Paris Cité, CEA, CNRS, AIM, F-91191
     Gif-sur-Yvette, France"
   orcid: "https://orcid.org/0000-0002-6606-2816"
-- given-names: Kush
-  family-names: Agarwal
-  affiliation: " Gandhi Institute of Technology and Management (GITAM) University, Visakhapatnam, India"
-  orcid: "https://orcid.org/0009-0004-3008-3035"
-- given-names: Arnau
-  family-names: Aguasca-Cabot
-  affiliation: "Departament de Física Quàntica i Astrofísica, Institut de Ciències
-    del Cosmos, Universitat de Barcelona, IEEC-UB, Barcelona, Spain"
-  orcid: "https://orcid.org/0000-0001-8816-4920"
-- given-names: Tora T.H.
-  family-names: Arnesen
-  affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad de La Laguna,
-    C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
-  orcid: "https://orcid.org/0009-0004-0816-0700"
-- given-names: Ebraam
-  family-names: Ashraf
-  affiliation: "Cairo University, Faculty of Engineering, Computer Engineering Department"
-  orcid: "https://orcid.org/0009-0005-2096-3466"
-- given-names: Y. Emre
-  family-names: Bahar
-  affiliation: "INAF, Osservatorio di Astrofisica e Scienza dello Spazio, via Piero Gobetti 93/3, 40129 Bologna, Italy"
-  orcid: "https://orcid.org/0000-0002-4893-7615"
 - given-names: Tomas
   family-names: Bylund
-  affiliation: "LUX, Observatoire de Paris, Université PSL, Sorbonne Université, CNRS, 92190 Meudon, France"
+  affiliation: "LUX, Observatoire de Paris, Université PSL, Sorbonne Université, CNRS,
+    92190 Meudon, France"
   orcid: "https://orcid.org/0000-0003-2946-1313"
 - given-names: Marie-Sophie
   family-names: Carrasco
@@ -62,78 +41,66 @@ authors:
   orcid: "https://orcid.org/0000-0001-6484-485X"
 - given-names: Alexander
   family-names: Cerviño Cortínez
-  affiliation: "IPARCOS-UCM, Instituto de Física de Partículas y del Cosmos, and EMFTEL Department, Universidad Complutense de Madrid"
+  affiliation: "IPARCOS-UCM, Instituto de Física de Partículas y del Cosmos, and EMFTEL
+    Department, Universidad Complutense de Madrid"
   orcid: "https://orcid.org/0009-0007-1566-9507"
-- given-names: Pratham
-  family-names: Chaudhary
-  affiliation: "Indian Institute of Technology (BHU) Varanasi, India"
-  orcid: "https://orcid.org/0009-0000-3755-6262"
-- given-names: Yaocheng
-  family-names: Chen
-  affiliation: "Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG), University of São Paulo (USP), Rua do Matão 1226, 05508-090 São Paulo, SP, Brazil"
-  orcid: "https://orcid.org/0000-0002-8967-4911"
-- given-names: Axel
+ - given-names: Axel
   family-names: Donath
   affiliation: "Center for Astrophysics | Harvard & Smithsonian, USA"
   orcid: "https://orcid.org/0000-0003-4568-7005"
-- given-names: Anshita
-  family-names: Dubey
-  affiliation: "Department of Computer Science and Engineering, JSS University, India"
-  orcid: "https://orcid.org/0009-0002-0120-8586"
 - given-names: Katharina
   family-names: Egg
   affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
     2, 91058 Erlangen, Germany"
   orcid: "https://orcid.org/0009-0002-4238-034X"
+- given-names: Gabriel
+  family-names: Emery
+  affiliation: "Instituto de Astrofísica de Andalucía-CSIC, Glorieta de la Astronomía
+   s/n, 18008, Granada, Spain"
+  orcid: "https://orcid.org/0000-0001-6155-4742"
 - given-names: Kirsty
   family-names: Feijen
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
     Paris, France"
   orcid: "https://orcid.org/0000-0003-1476-3714"
-- given-names: Claudio
-  family-names: Galelli
-  affiliation: Laboratoire Univers et Théories, Observatoire de Paris, Université
-    PSL,\ \ Université Paris Cité, CNRS, F-92190 Meudon, France
-  orcid: "https://orcid.org/0000-0002-7372-9703"
-- given-names: Lea
-  family-names: Heckmann
-  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
-    Paris, France"
-  orcid: "https://orcid.org/0000-0002-6653-8407"
 - given-names: Basmala
   family-names: Hekal
-  affiliation: "Faculty of Computer and Information, Computer Science Department, Tanta University, Egypt."
+  affiliation: "Faculty of Computer and Information, Computer Science Department,
+    Tanta University, Egypt."
   orcid: "https://orcid.org/0009-0001-6071-9522"
 - given-names: Bruno
   family-names: Khélifi
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
     Paris, France"
   orcid: "https://orcid.org/0000-0001-6876-5577"
-- given-names: Maximilian
-  family-names: Linhoff
-  affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
-  orcid: "https://orcid.org/0000-0001-7993-8189"
 - given-names: Daniel
   family-names: Morcuende
-  affiliation: "CTAO Central Organisation, Science Data Management Centre, Platanenallee 6, 15738 Zeuthen, Germany"
+  affiliation: "CTAO Central Organisation, Science Data Management Centre, Platanenallee
+    6, 15738 Zeuthen, Germany"
   orcid: https://orcid.org/0000-0001-9400-0922
-- given-names: Mireia
-  family-names: Nievas Rosillo
-  affiliation: "Instituto de Astrofísica de Canarias (IAC), C/ Vía Láctea s/n, 38205 La Laguna, Tenerife, Spain"
-  orcid: "https://orcid.org/0000-0002-8321-9168"
+- given-names: Laura
+  family-names: Olivera-Nieto
+  affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
+  orcid: "https://orcid.org/0000-0002-9105-0518"
+- given-names: Michele
+  family-names: Peresano
+  affiliation: "Max-Planck-Institut für Physik, Boltzmannstraße 8, 85748 Garching
+    bei München, Germany"
+  orcid: "https://orcid.org/0000-0002-7537-7334"
 - given-names: Natthan
   family-names: Pigoux
-  affiliation: "Laboratoire Univers et Particules de Montpellier, CNRS, Université de Montpellier, Montpellier, France"
+  affiliation: "Laboratoire Univers et Particules de Montpellier, CNRS, Université
+    de Montpellier, Montpellier, France"
   orcid: "https://orcid.org/0009-0001-0100-9846"
-- given-names: Pierre
-  family-names: Pichard
-  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
-    Paris, France"
-  orcid: "https://orcid.org/0009-0005-9803-0762"
 - given-names: Fabio
   family-names: Pintore
   affiliation: "INAF/IASF PALERMO, Italy"
   orcid: "https://orcid.org/0000-0002-3869-2925"
+- given-names: Tobi
+  family-names: Preis
+  affiliation: "Universität Innsbruck, Institut für Astro- und Teilchenphysik, Technikerstraße
+    25, 6020 Innsbruck, Austria"
+  orcid: "https://orcid.org/0009-0001-7110-6764"
 - given-names: Maxime
   family-names: Regeard
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -143,11 +110,6 @@ authors:
   family-names: Remy
   affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
   orcid: "https://orcid.org/0000-0002-8815-6530"
-- given-names: Leander
-  family-names: Schlegel
-  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
-    Paris, France"
-  orcid: "https://orcid.org/0009-0002-3619-951X"
 - given-names: Atreyee
   family-names: Sinha
   affiliation: "Dept. of High Energy Physics, Tata Institute of Fundamental Research,
@@ -158,6 +120,11 @@ authors:
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
     Paris, France"
   orcid: "https://orcid.org/0000-0002-8219-4667"
+- given-names: Tim
+  family-names: Unbehaun
+  affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
+    2, 91058 Erlangen, Germany"
+  orcid: "https://orcid.org/0000-0002-7378-4024"
 preferred-citation:
   authors:
   - family-names: "The Gammapy team"
