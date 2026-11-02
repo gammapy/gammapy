@@ -514,6 +514,7 @@ class MapDatasetMaker(Maker):
         mask_safe.data[...] = True
 
         kwargs["mask_safe"] = mask_safe
+        use_region_center = getattr(self, "use_region_center", True)
 
         if "counts" in self.selection:
             counts = self.make_counts(dataset.counts.geom, observation)
@@ -529,6 +530,7 @@ class MapDatasetMaker(Maker):
             kwargs["background"] = self.make_background(
                 dataset.counts.geom,
                 observation,
+                use_region_center=use_region_center,
                 interp_missing_data=self.background_interp_missing_data,
                 pad_offset=self.background_pad_offset,
                 oversampling=self.background_oversampling,
