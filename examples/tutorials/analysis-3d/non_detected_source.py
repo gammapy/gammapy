@@ -26,7 +26,8 @@ to quantify non-detections. There are two distinct approaches to consider:
 - Test for the presence of emission anywhere in a map and compute an integral flux upper limit at
   any position (i.e. UL map).
 - Test the presence of emission from a potential source with given position and morphology and compute
-  integral and differential UL
+  integral and differential UL.
+- Use both frequentist and Bayesian approaches for computing the ULs.
 
 """
 
@@ -39,7 +40,7 @@ to quantify non-detections. There are two distinct approaches to consider:
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
-
+import numpy as np
 import astropy.units as u
 
 from gammapy.datasets import MapDataset, Datasets
@@ -185,18 +186,41 @@ print(LLR["fit_results"].parameters.to_table())
 # Differential upper limits
 # ~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# In the absence of a detection, using the model directly from the fit is meaningless as its features can be
-# simply due to background fluctuations.
-# It is important to **set a reasonable model** on the dataset
-# before proceeding with the `~gammapy.estimators.FluxPointsEstimator`. This model can come from
-# measurements from other instruments, be an extrapolation of the flux
-# observed at other wavelengths, come from theoretical estimations, etc.
-# In particular, a model with a negative amplitude as obtained above should not be used.
+# As source is not significantly detected, a measured flux would mostly
+# reflect background fluctuations. Instead, we quote an **upper limit (UL)**:
+# the largest flux that is still compatible with the data, at a chosen
+# confidence level. We compute it in two ways: first a frequentist UL from the
+# profile likelihood, then a Bayesian UL from the posterior distribution.
+# The two answer different questions, as discussed at the end of this notebook.
 #
-# Note that **the computed upper limits depend on the spectral parameters of the assumed model**.
-# Here, we compute the 3-sigma upper limits for assuming a spectral index of 2.0.
-# We also fix the spatial parameters of the model to prevent the minimiser
-# from wandering off to different regions in the FoV.
+# The upper limit is what we actually obtained from this particular
+# data set, and is *not* an estimate of the true source flux.
+# The upper limits also depends on:
+#
+# - the **assumed spectral shape**. Here we assume a power law with index 2. The
+#   amplitude only sets a reference flux, which is rescaled,
+#   so its value does not affect the UL as long as it is positive.
+#   In particular, do not use a model with a negative amplitude, such as one
+#   returned by the fit above.
+# - the **confidence level** and the **method**. Always report both, and, for a
+#   Bayesian UL, also report the prior.
+#
+# Frequentist differential upper limits
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# A frequentist UL is the output of a procedure with a guaranteed
+# *coverage*: if the observation were repeated many times, the interval
+# ``[0, UL]`` would contain the true flux in the stated fraction of the
+# repetitions (e.g. 95%). It is **not** the probability that the flux lies
+# below the UL. In Gammapy, the UL is the flux at which the fit statistic rises
+# by ``n_sigma_ul**2`` above its minimum (on the high-flux side). Asymptotically,
+# this corresponds to a one-sided confidence level: ``n_sigma_ul=2`` (the default)
+# gives ΔTS = 4, i.e. ~97.7%, and ``n_sigma_ul=1.645`` gives 95%.
+# The `~gammapy.estimators.FluxPointsEstimator` computes one UL per energy bin.
+# By default (``reoptimize=False``), only the normalisation is fitted in each bin;
+# all other parameters, including the index, stay fixed. Here we use
+# ``n_sigma_ul=5`` so that the ULs can be compared with the 5-sigma sensitivity
+# computed below.
 #
 
 sky_model.parameters["amplitude"].value = 1e-14
@@ -205,9 +229,9 @@ sky_model.freeze(model_type="spatial")
 
 energy_edges = dataset.geoms["geom"].axes["energy"].edges
 fpe = FluxPointsEstimator(
-    selection_optional="all",
+    selection_optional=["ul"],
     energy_edges=energy_edges,
-    n_sigma_ul=3,
+    n_sigma_ul=5,
     source="source",
 )
 
@@ -217,6 +241,51 @@ fp1 = fpe.run(dataset)
 fp1.plot(sed_type="dnde")
 plt.show()
 
+######################################################################
+# Expected upper limits (Brazil bands) and sensitivity
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# An observed upper limit comes from a single realisation of the data. To see
+# how unusual it is, we compare it with the distribution of upper limits we would
+# expect if there were no source. We simulate many *background-only datasets*,
+# compute the upper limits for each one in the same way as above, and take the
+# median and the 68% and 95% ranges. These form the so-called Brazil bands.
+#
+#
+
+n_toys = 100  # increase for smoother bands
+
+dnde_ul_toys = []
+for idx in range(n_toys):
+    toy = dataset.copy(name=f"toy-{idx}")
+    toy.models = None
+    toy.fake(random_state=idx)
+    toy.models = sky_model.copy(name="source")  # same reference model as above
+    fp_toy = fpe.run(toy)
+    dnde_ul_toys.append(fp_toy.dnde_ul.quantity.squeeze())
+
+unit = u.Unit("cm-2 s-1 TeV-1")
+dnde_ul_toys = u.Quantity(dnde_ul_toys).to_value(unit)
+p025, p16, p50, p84, p975 = np.nanpercentile(
+    dnde_ul_toys, [2.5, 16, 50, 84, 97.5], axis=0
+)
+
+energy = fp1.energy_ref.to_value("TeV")
+fig, ax = plt.subplots()
+ax.fill_between(energy, p025, p975, color="gold", label="Expected 95%")
+ax.fill_between(energy, p16, p84, color="limegreen", label="Expected 68%")
+ax.plot(energy, p50, "k--", label="Expected median")
+ax.plot(energy, fp1.dnde_ul.quantity.squeeze().to_value(unit), "ko-", label="Observed")
+ax.loglog()
+ax.set_xlabel("Energy [TeV]")
+ax.set_ylabel(f"dnde upper limit [{unit.to_string('latex_inline')}]")
+ax.legend()
+plt.show()
+
+######################################################################
+# If the observed upper limits lie inside the bands, the data are consistent with
+# background only. If they fall below the yellow band, the background has
+# fluctuated down (or is overestimated).
 
 ######################################################################
 # Integral upper limits
@@ -235,36 +304,3 @@ fp2 = fpe2.run(dataset)
 print(
     f"Integral upper limit between {emin:.1f} and {emax:.1f} is {fp2.flux_ul.quantity.ravel()[0]:.2e}"
 )
-
-
-######################################################################
-# Sensitivity estimation
-# ~~~~~~~~~~~~~~~~~~~~~~
-#
-# We can then ask,  **would this source have been detectable given this IRF/exposure time?**
-#
-# The `~gammapy.estimators.FluxPointsEstimator` can be used to obtain the sensitivity,
-# which can be compared to the flux prediction for a given (hypothetical) source. We have the 5-sigma
-# sensitivity here, which can be configured using ``n_sigma_sensitivity``
-# parameter of this estimator. Let us see what we would have seen if a Crab-like source was
-# present in the center.
-# Note that this computed sensitivity does not take into account the factors
-# such as the minimum number of gamma-rays (see :doc:`/tutorials/analysis-1d/cta_sensitivity`)
-# and is dependent on the analysis configuration.
-# We compare this with the known Crab spectrum.
-
-crab_model = create_crab_spectral_model()
-
-fp1.dnde_sensitivity.plot(label="sensitivity")
-crab_model.plot(
-    energy_bounds=fp1.geom.axes["energy"], sed_type="dnde", label="Crab spectrum"
-)
-plt.grid(which="minor", alpha=0.3)
-
-plt.legend()
-plt.show()
-# sphinx_gallery_thumbnail_number = 6
-
-
-######################################################################
-# Thus, a Crab-like source should have been above our sensitivity till around ~ 4 TeV for this specific observation.
