@@ -48,5 +48,4 @@ __all__ = [
     "SpectrumDatasetMaker",
     "WobbleRegionsFinder",
     "OnOffBackgroundMaker",
-    "check_run_pair_validity",
 ]
