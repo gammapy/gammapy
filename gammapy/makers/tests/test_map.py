@@ -70,6 +70,17 @@ def fixed_pointing_info_aligned():
     return FixedPointingInfo(fixed_icrs=fixed_icrs)
 
 
+@pytest.fixture(scope="session")
+def bkg_2d():
+    offset_axis = MapAxis.from_bounds(0, 4, nbin=10, name="offset", unit="deg")
+    energy_axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=20)
+    bkg_2d = Background2D(axes=[energy_axis, offset_axis], unit="s-1 TeV-1 sr-1")
+    coords = bkg_2d.axes.get_coord()
+    value = np.exp(-0.5 * (coords["offset"] / (2 * u.deg)) ** 2)
+    bkg_2d.data = (value * (coords["energy"] / (1 * u.TeV)) ** -2).to_value("")
+    return bkg_2d
+
+
 def fake_bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
     if symmetry == "constant":
         data = np.ones((2, 3, 3))
@@ -623,7 +634,7 @@ def test_dataset_hawc():
 
 
 @requires_data()
-def test_make_background_2d(observations):
+def test_run_background_2d(observations):
     filename = "$GAMMAPY_DATA/tests/irf/bkg_2d_full_example.fits"
     bkg = Background2D.read(filename)
     # TODO: better example file for 2d bkg
@@ -647,6 +658,33 @@ def test_make_background_2d(observations):
 
     map_dataset = maker_obs.run(reference, obs)
     assert_allclose(map_dataset.background.data.sum(), 17636.60091226549)
+
+
+@requires_data()
+def test_make_background_2d(bkg_2d, fixed_pointing_info):
+    axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
+
+    skydir = fixed_pointing_info.fixed_icrs
+    geom = WcsGeom.create(
+        npix=(3, 3), binsz=4.0, axes=[axis], skydir=skydir.galactic, frame="galactic"
+    )
+
+    test_obs = Observation.create(
+        pointing=fixed_pointing_info,
+        location=EarthLocation(lon=0, lat=0),
+        tstart=Time("2020-01-01T20:00:00"),
+        livetime=42 * u.second,
+        irfs={"bkg": bkg_2d},
+    )
+
+    bkg = MapDatasetMaker.make_background(
+        geom=geom,
+        observation=test_obs,
+        fov_rotation_step=1.0 * u.deg,
+        pad_offset=False,
+    )
+
+    assert_allclose(bkg.data[:, 1, 1], [1.869025, 0.186903], rtol=1e-5)
 
 
 @requires_data()
@@ -674,7 +712,7 @@ def test_make_background_2d(observations):
         # },
     ],
 )
-def test_make_background(bkg_3d, pars, fixed_pointing_info):
+def test_make_background_3d(bkg_3d, pars, fixed_pointing_info):
     test_obs = Observation.create(
         pointing=fixed_pointing_info,
         location=EarthLocation(lon=0, lat=0),
@@ -698,7 +736,7 @@ def test_make_background(bkg_3d, pars, fixed_pointing_info):
     assert_allclose(m.data.sum(), pars["sum"], rtol=1e-5)
 
 
-def make_map_background_irf_with_symmetry(fpi, symmetry="constant"):
+def make_background_irf_with_symmetry(fpi, symmetry="constant"):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
     test_obs = Observation.create(
         pointing=fpi,
@@ -716,8 +754,32 @@ def make_map_background_irf_with_symmetry(fpi, symmetry="constant"):
 
 
 @requires_data()
-def test_bkg_map_asym(fixed_pointing_info_aligned):
-    m = make_map_background_irf_with_symmetry(
+def test_make_background_irf_constant(fixed_pointing_info_aligned):
+    m = make_background_irf_with_symmetry(
+        fpi=fixed_pointing_info_aligned, symmetry="constant"
+    )
+    for d in m.data:
+        assert_allclose(d[1, :], d[1, 0])  # Constant along lon
+        assert_allclose(d[0, 1], d[2, 1])  # Symmetric along lat
+        with pytest.raises(AssertionError):
+            # Not constant along lat due to changes in
+            # solid angle (great circle)
+            assert_allclose(d[:, 1], d[0, 1])
+
+
+@requires_data()
+def test_make_background_irf_sym(fixed_pointing_info_aligned):
+    m = make_background_irf_with_symmetry(
+        fpi=fixed_pointing_info_aligned, symmetry="symmetric"
+    )
+    for d in m.data:
+        assert_allclose(d[1, 0], d[1, 2], rtol=1e-4)  # Symmetric along lon
+        assert_allclose(d[0, 1], d[2, 1], rtol=1e-4)  # Symmetric along lat
+
+
+@requires_data()
+def test_make_background_irf_asym(fixed_pointing_info_aligned):
+    m = make_background_irf_with_symmetry(
         fpi=fixed_pointing_info_aligned, symmetry="asymmetric"
     )
     for d in m.data:
