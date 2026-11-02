@@ -162,6 +162,11 @@ class TestEnergyDependentEstimator:
         mode, result = estimator_result
         results_edep = result["energy_dependence"]["result"]
 
+        # test default
+        chi2_sigma_default = weighted_chi2_parameter(results_edep)
+
+        assert chi2_sigma_default["parameter"] == ["sigma"]
+
         chi2_sigma = weighted_chi2_parameter(
             results_edep, parameters=["sigma", "lat_0", "lon_0"]
         )
