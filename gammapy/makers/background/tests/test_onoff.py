@@ -72,13 +72,13 @@ def test_run_map_dataset(map_dataset, observations):
     assert result.counts_off.geom == result.counts.geom
     assert_allclose(result.background.data.sum(), 7396.48, atol=1e-1)
     assert_allclose(result.alpha.data.sum(), 49425.7, rtol=1e-4)
-    assert_allclose(result.acceptance_off.data[2][2][2], 1638.5, atol=1e-2)
+    assert_allclose(result.acceptance_off.data[2][2][2], 1638.517, atol=1e-2)
 
     assert result.psf is not None
     assert result.edisp is not None
 
     on, off = observations
-    result = OnOffBackgroundMaker(acceptance_method="counts-ratio").run(
+    result = OnOffBackgroundMaker(acceptance_method="counts_ratio").run(
         map_dataset, on, off
     )
 
