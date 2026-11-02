@@ -527,7 +527,12 @@ class MapDatasetMaker(Maker):
 
         if "background" in self.selection:
             kwargs["background"] = self.make_background(
-                dataset.counts.geom, observation
+                dataset.counts.geom,
+                observation,
+                interp_missing_data=self.background_interp_missing_data,
+                pad_offset=self.background_pad_offset,
+                oversampling=self.background_oversampling,
+                fov_rotation_step=self.fov_rotation_step,
             )
 
         if "psf" in self.selection:
