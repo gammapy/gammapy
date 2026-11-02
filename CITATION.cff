@@ -191,6 +191,10 @@ authors:
   affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
     2, 91058 Erlangen, Germany"
   orcid: "https://orcid.org/0000-0002-7378-4024"
+- family-names: Vuillaume
+  given-names: Thomas
+  orcid: https://orcid.org/0000-0002-5686-2078
+  email: thomas.vuillaume@lapp.in2p3.fr
 preferred-citation:
   authors:
   - family-names: "The Gammapy team"
