@@ -205,3 +205,8 @@ preferred-citation:
   title: "Gammapy: A Python package for gamma-ray astronomy"
   type: article
   doi: 10.1051/0004-6361/202346488
+- given-names: Ahmed
+  family-names: Mahmoud
+  affiliation: "Faculty of Engineering, Systems and Biomedical Engineering,
+    Cairo University, Egypt."
+  orcid : "https://orcid.org/0009-0008-8751-0615"
