@@ -5,7 +5,7 @@ import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.coordinates.erfa_astrom import ErfaAstromInterpolator, erfa_astrom
-from astropy.table import Table
+from astropy.table import Table, QTable
 from astropy.time import Time
 from regions import CircleSkyRegion
 
@@ -31,6 +31,7 @@ __all__ = [
     "ThetaSquaredTable",
     "make_effective_livetime_map",
     "make_observation_time_map",
+    "check_run_pair_validity",
 ]
 
 log = logging.getLogger(__name__)
@@ -1020,3 +1021,112 @@ def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
         data = np.sum(weights * data, axis=2, keepdims=True)
 
     return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
+
+
+def _aeff_max_frac_deviation(
+    on_observation, off_observation, energy_axis=None, offset_axis=None
+):
+    """Maximum fractional deviation between the two effective areas.
+
+    Parameters
+    ----------
+    on_observation : `~gammapy.data.Observation`
+        The ON observation.
+    off_observation : `~gammapy.data.Observation`
+        The OFF observation.
+    energy_range : `~gammapy.maps.MapAxis`
+        The energy axis on which to check the effective area.
+        Default is None, which takes the effective area energy axis center.
+    offset_axis : `~gammapy.maps.MapAxis`
+        The offset range axis on which to check the effective area.
+        Default is None, which takes the offset energy axis center.
+    """
+    aeff_on = on_observation.aeff
+    aeff_off = off_observation.aeff
+    if aeff_on is None or aeff_off is None:
+        return None
+
+    if energy_axis is None:
+        energy = aeff_on.axes["energy"].center
+    else:
+        energy = energy_axis.center
+    if offset_axis is None:
+        offset = aeff_on.axes["offset"].center
+    else:
+        offset = offset_axis.center
+    energy_grid, offset_grid = np.meshgrid(energy, offset, indexing="ij")
+
+    a_on = aeff_on.evaluate(energy_true=energy_grid, offset=offset_grid).to_value("m2")
+    a_off = aeff_off.evaluate(energy_true=energy_grid, offset=offset_grid).to_value(
+        "m2"
+    )
+
+    mask = a_on > 0
+    if not np.any(mask):
+        return None
+    return float(np.max(np.abs(a_off[mask] - a_on[mask]) / a_on[mask]))
+
+
+def check_run_pair_validity(
+    on_observations,
+    off_observations,
+    energy_range,
+    zenith_tol=10 * u.deg,
+    aeff_tol=0.1,
+):
+    """Validity check over a list of ON/OFF pairs.
+
+    Currently, supports only one OFF observation for each ON observation.
+
+    Checks for difference in zenith angle and effective area. Returns a summary
+    table along with a flag if the match is sufficient within tolerance.
+
+    Parameters
+    ----------
+    on_observations : list of `~gammapy.data.Observation` or `~gammapy.data.Observations`
+        The ON observations list.
+    off_observations : list of `~gammapy.data.Observation` or `~gammapy.data.Observations`
+        The OFF observation list.
+    energy_range : `~gammapy.maps.MapAxis`
+        The energy axis on which to check the effective area.
+    zenith_tol : `~astropy.units.Quantity`, optional
+        Zenith tolerance.
+        Default is 10 deg.
+    aeff_tol : float, optional
+        Effective-area fractional-deviation tolerance.
+        Default is 0.1.
+
+    Returns
+    -------
+    table : `~astropy.table.QTable`
+        Summary table.
+        One row per pair, with columns ``obs_id``, ``off_obs_id``,
+        ``zenith_on``, ``zenith_off``, ``delta_zenith``, ``zenith_ok``,
+        ``aeff_max_frac_deviation`` and ``aeff_ok``.
+    """
+    if len(on_observations) != len(off_observations):
+        raise ValueError(
+            "on_observations and off_observations must have equal length; "
+            f"got {len(on_observations)} for on and {len(off_observations)} for off."
+        )
+
+    results = []
+    for on_obs, off_obs in zip(on_observations, off_observations):
+        zenith_on = 90.0 * u.deg - on_obs.get_pointing_altaz(on_obs.tmid).alt
+        zenith_off = 90.0 * u.deg - off_obs.get_pointing_altaz(off_obs.tmid).alt
+        delta_zenith = abs(zenith_on - zenith_off)
+        aeff_dev = _aeff_max_frac_deviation(on_obs, off_obs, energy_range)
+        aeff_ok = aeff_dev is not None and aeff_dev < aeff_tol
+        result = {
+            "obs_id": on_obs.obs_id,
+            "off_obs_id": off_obs.obs_id,
+            "zenith_on": zenith_on,
+            "zenith_off": zenith_off,
+            "delta_zenith": delta_zenith,
+            "zenith_ok": bool(delta_zenith < zenith_tol),
+            "aeff_max_frac_deviation": aeff_dev,
+            "aeff_ok": bool(aeff_ok),
+        }
+        results.append(result)
+
+    return QTable(results)
