@@ -1330,10 +1330,10 @@ class BrokenPowerLawSpectralModel(SpectralModel):
     Parameters
     ----------
     index1 : `~astropy.units.Quantity`
-        :math:`\Gamma1`.
+        :math:`\Gamma_1`.
         Default is 2.
     index2 : `~astropy.units.Quantity`
-        :math:`\Gamma2`.
+        :math:`\Gamma_2`.
         Default is 2.
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`.

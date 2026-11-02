@@ -891,12 +891,12 @@ class PowerLawTemporalModel(TemporalModel):
 
     Parameters
     ----------
-    alpha : float
+    alpha : float, optional
         Decay time power. Default is 1.
-    t_ref: `~astropy.units.Quantity`
+    t_ref : `~astropy.units.Quantity`, optional
         The reference time in mjd.
         Frozen by default, at 2000-01-01.
-    t0: `~astropy.units.Quantity`
+    t0 : `~astropy.units.Quantity`, optional
         The scaling time in mjd.
         Fixed by default, at 1 day.
     """
