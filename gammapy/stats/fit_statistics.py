@@ -412,8 +412,12 @@ class Chi2AsymmetricErrorFitStatistic(FitStatistic):
 
         mask_ul = dataset.data.is_ul.data
         value = model[mask_ul]
-        loc_ul = dataset.data.dnde_ul.data.filled(np.nan)[mask_ul]
-        scale_ul = dataset.data.dnde_ul.data.filled(np.nan)[mask_ul]
+
+        dnde_ul = dataset.data.dnde_ul.data
+        if isinstance(dataset.data.dnde_ul.data, np.ma.MaskedArray):
+            dnde_ul = dnde_ul.filled(np.nan)
+        loc_ul = dnde_ul[mask_ul]
+        scale_ul = dnde_ul[mask_ul]
 
         stat[mask_ul] = 2 * np.log(
             (erfc((loc_ul - value) / scale_ul) / 2)
