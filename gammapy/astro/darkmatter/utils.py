@@ -207,27 +207,32 @@ class JFactory:
         .. math::
             r_\perp = D \sin\theta.
 
-        The integration is split into two regions:
-
-        1. :math:`D < r_{\max}`: the observer is inside the integration radius.
-        Directions with :math:`\theta < \pi / 2` cross the inner radial interval
-        twice, while directions with :math:`\theta \geq \pi / 2` contain only
-        the outward branch.
-
-        2. :math:`D \geq r_{\max}`: the observer is outside the integration radius.
-        The line of sight contributes only when it points toward the halo and
-        intersects the integration sphere, i.e. when :math:`\theta < \pi / 2`
-        and :math:`r_\perp < r_{\max}`.
-
-        Each radial branch is evaluated using
+        Defining the signed coordinate
 
         .. math::
-            \mathrm dl =
-            \frac{r}{\sqrt{r^2-r_\perp^2}}\,\mathrm dr.
+            s = l - D \cos\theta,
 
-        The apparent singularity at :math:`r = r_\perp` is integrable. To avoid
-        evaluating it directly, each radial branch is integrated with the
-        substitution :math:`r = r_\perp\cosh t`.
+        gives :math:`r^2 = r_\perp^2 + s^2`. The physical forward ray
+        (:math:`l \geq 0`) and the integration sphere
+        (:math:`r \leq r_{\max}`) define the limits
+
+        .. math::
+            s_{\min} = \max\left(-\sqrt{r_{\max}^2-r_\perp^2},
+            -D\cos\theta\right), \qquad
+            s_{\max} = \sqrt{r_{\max}^2-r_\perp^2}.
+
+        If these domains do not overlap, the integral is zero. Otherwise, for
+        non-zero impact parameter, the line of sight is evaluated continuously
+        using
+
+        .. math::
+            s = r_\perp\sinh t, \qquad
+            r = r_\perp\cosh t, \qquad
+            \mathrm ds = r\,\mathrm dt.
+
+        A zero-impact line of sight that does not cross the halo center is
+        integrated directly in positive :math:`s`. The central direction is
+        handled by the adaptive central-pixel integration.
         """
         if not np.isfinite(central_pixel_rtol) or central_pixel_rtol <= 0:
             raise ValueError("central_pixel_rtol must be a finite positive number.")
