@@ -48,6 +48,7 @@ check  :doc:`/tutorials/starting/analysis_2` or :doc:`/tutorials/analysis-1d/spe
 # -----
 import numpy as np
 import astropy.units as u
+import matplotlib.pyplot as plt
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.data import DataStore
@@ -178,8 +179,10 @@ estimator = ExcessMapEstimator(
     selection_optional=[],
 )
 maps = estimator.run(stacked)
-maps["sqrt_ts"].plot(add_cbar=True)
 
+plt.figure()
+maps["sqrt_ts"].plot(add_cbar=True)
+plt.show()
 ######################################################################
 # 1D Spectral fit
 # ---------------
