@@ -51,33 +51,6 @@ class JFactory:
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
 
-    def _integrate_los_branch(self, impact, radius_min, radius_max, ndecade):
-        """Integrate one radial line-of-sight branch."""
-        exponent = 2 if self.annihilation else 1
-        unit = radius_max.unit
-
-        impact = impact.to(unit)
-        radius_min = radius_min.to(unit)
-        radius_max = radius_max.to(unit)
-
-        if impact.value == 0:
-            return self.profile.integral(
-                radius_min, radius_max, 0, ndecade, self.annihilation, self.distance
-            )
-
-        logmin = np.log10(radius_min.value)
-        logmax = np.log10(radius_max.value)
-        n = max(2, int((logmax - logmin) * ndecade))
-
-        t_min = np.arccosh(np.maximum((radius_min / impact).to_value(""), 1))
-        t_max = np.arccosh(np.maximum((radius_max / impact).to_value(""), 1))
-        t = np.linspace(t_min, t_max, n)
-
-        radius = impact * np.cosh(t)
-        values = self.profile(radius) ** exponent * radius
-
-        return np.trapezoid(values, t)
-
     def _integrate_los(self, impact, separation, ndecade):
         """Integrate the physical forward line of sight."""
         distance = self.distance
