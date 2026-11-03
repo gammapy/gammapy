@@ -82,19 +82,67 @@ class JFactory:
         """Integrate the physical forward line of sight."""
         distance = self.distance
         rmax = self.rmax
+        exponent = 2 if self.annihilation else 1
+        integral_unit = u.Unit("GeV2 cm-5" if self.annihilation else "GeV cm-2")
 
-        if distance < rmax:
-            integral = self._integrate_los_branch(impact, distance, rmax, ndecade)
-            if separation < np.pi / 2:
-                integral += 2 * self._integrate_los_branch(
-                    impact, impact, distance, ndecade
+        if distance >= rmax and np.cos(separation) <= 0:
+            return 0 * integral_unit
+
+        discriminant = rmax**2 - impact**2
+        if discriminant <= 0 * rmax.unit**2:
+            return 0 * integral_unit
+
+        los_half_length = np.sqrt(discriminant)
+        observer = -distance * np.cos(separation)
+        s_min = np.maximum(-los_half_length, observer)
+        s_max = los_half_length
+
+        if s_min >= s_max:
+            return 0 * integral_unit
+
+        if impact.value == 0:
+            if s_min <= 0 * s_min.unit <= s_max:
+                raise ValueError(
+                    "The zero-impact central line of sight must be handled by "
+                    "the central-pixel integration."
                 )
-            return integral
 
-        if separation < np.pi / 2 and impact < rmax:
-            return 2 * self._integrate_los_branch(impact, impact, rmax, ndecade)
+            unit = s_min.unit
+            radial_decades = np.abs(
+                np.log10((np.abs(s_max) / np.abs(s_min)).to_value(""))
+            )
+            n = max(2, int(radial_decades * ndecade))
+            sign = np.sign(s_min.to_value(unit))
+            values = np.geomspace(
+                np.abs(s_min.to_value(unit)),
+                np.abs(s_max.to_value(unit)),
+                n,
+            )
+            s = sign * values * unit
+            radius = np.abs(s)
 
-        return 0 * u.Unit("GeV2 cm-5" if self.annihilation else "GeV cm-2")
+            return np.trapezoid(self.profile(radius) ** exponent, s)
+
+        t_min = np.arcsinh((s_min / impact).to_value(""))
+        t_max = np.arcsinh((s_max / impact).to_value(""))
+
+        radius_start = np.sqrt(impact**2 + s_min**2)
+        radius_end = np.sqrt(impact**2 + s_max**2)
+        if s_min <= 0 * s_min.unit <= s_max:
+            radius_closest = impact
+        else:
+            radius_closest = np.minimum(radius_start, radius_end)
+
+        radial_decades = np.log10(
+            (radius_start / radius_closest).to_value("")
+        ) + np.log10((radius_end / radius_closest).to_value(""))
+        n = max(2, int(radial_decades * ndecade))
+
+        t = np.linspace(t_min, t_max, n)
+        radius = impact * np.cosh(t)
+        values = self.profile(radius) ** exponent * radius
+
+        return np.trapezoid(values, t)
 
     def _integrate_central_pixel(self, ndecade, rtol, max_subdivision):
         """Adaptively average the line-of-sight integral over the central pixel."""
