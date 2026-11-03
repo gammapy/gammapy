@@ -121,8 +121,8 @@ class EnergyDispersion2D(IRF):
 
         # Analytical formula for integral of Gaussian
         s = np.sqrt(2) * sigma
-        t1 = (migra_max - 1 - bias) / s
-        t2 = (migra_min - 1 - bias) / s
+        t1 = ((migra_max - 1 - bias) / s).to_value("")
+        t2 = ((migra_min - 1 - bias) / s).to_value("")
         pdf = (scipy.special.erf(t1) - scipy.special.erf(t2)) / 2
         pdf = pdf / (migra_max - migra_min)
 
