@@ -81,20 +81,15 @@ class JFactory:
                 )
 
             unit = s_min.unit
-            radial_decades = np.abs(
-                np.log10((np.abs(s_max) / np.abs(s_min)).to_value(""))
-            )
+            radial_decades = np.log10((s_max / s_min).to_value(""))
             n = max(2, int(radial_decades * ndecade))
-            sign = np.sign(s_min.to_value(unit))
-            values = np.geomspace(
-                np.abs(s_min.to_value(unit)),
-                np.abs(s_max.to_value(unit)),
+            s = np.geomspace(
+                s_min.to_value(unit),
+                s_max.to_value(unit),
                 n,
-            )
-            s = sign * values * unit
-            radius = np.abs(s)
+            ) * unit
 
-            return np.trapezoid(self.profile(radius) ** exponent, s)
+            return np.trapezoid(self.profile(s) ** exponent, s)
 
         t_min = np.arcsinh((s_min / impact).to_value(""))
         t_max = np.arcsinh((s_max / impact).to_value(""))
