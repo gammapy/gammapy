@@ -475,6 +475,7 @@ class MapDatasetMaker(Maker):
         mask_safe.data[...] = True
 
         kwargs["mask_safe"] = mask_safe
+        use_region_center = getattr(self, "use_region_center", True)
 
         if "counts" in self.selection:
             counts = self.make_counts(dataset.counts.geom, observation)
@@ -497,10 +498,16 @@ class MapDatasetMaker(Maker):
 
         if "edisp" in self.selection:
             if dataset.edisp.edisp_map.geom.axes[0].name.upper() == "MIGRA":
-                edisp = self.make_edisp(dataset.edisp.edisp_map.geom, observation)
+                edisp = self.make_edisp(
+                    dataset.edisp.edisp_map.geom,
+                    observation,
+                    use_region_center=use_region_center,
+                )
             else:
                 edisp = self.make_edisp_kernel(
-                    dataset.edisp.edisp_map.geom, observation
+                    dataset.edisp.edisp_map.geom,
+                    observation,
+                    use_region_center=use_region_center,
                 )
 
             kwargs["edisp"] = edisp
