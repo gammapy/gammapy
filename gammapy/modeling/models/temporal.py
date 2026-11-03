@@ -424,8 +424,8 @@ class GaussianTemporalModel(TemporalModel):
         t_ref = self.reference_time
         norm = np.sqrt(np.pi / 2) * sigma
 
-        u_min = (t_min - t_ref) / (np.sqrt(2) * sigma)
-        u_max = (t_max - t_ref) / (np.sqrt(2) * sigma)
+        u_min = ((t_min - t_ref) / (np.sqrt(2) * sigma)).to_value("")
+        u_max = ((t_max - t_ref) / (np.sqrt(2) * sigma)).to_value("")
 
         integral = norm * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
         return integral / self.time_sum(t_min, t_max)
