@@ -2,6 +2,8 @@
 Data analysis using background estimated from dedicated OFF runs
 ===============================================================
 
+Analysis using paired empty off runs.
+
 Estimate the background for observations using paired,
 empty-field OFF runs, and the use it for computing
     - a significance map
@@ -11,7 +13,8 @@ Context
 -------
 
 Standard IACT background methods try to estimate the background from source-free
-regions in room same field of view as the source, eg: ``ReflectedRegionsBackgroundMaker``.
+regions in room same field of view as the source,
+eg: ``~gammapy.makers.ReflectedRegionsBackgroundMaker``.
 However, sometimes one might need **dedicated ON/OFF
 observations**, where the source sits at the centre of the ON run and a
 separate, empty-field OFF run is taken to measure the background. This is the
@@ -53,15 +56,14 @@ from gammapy.makers import (
     MapDatasetMaker,
     SafeMaskMaker,
     OnOffBackgroundMaker,
-    check_run_pair_validity,
 )
+from gammapy.makers.utils import check_run_pair_validity
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     SkyModel,
     PowerLawSpectralModel,
-    PointSpatialModel,
 )
 
 ######################################################################
@@ -95,7 +97,7 @@ off_observations = datastore.get_observations(off_ids)
 # -----------------
 #
 # Gammapy provides a convenience function to check how good the pairing is.
-# You may decide to reject some pairs based on this information
+# You may decide to reject some pairs based on this information.
 
 energy_axis_true = MapAxis.from_energy_bounds(
     "0.5 TeV", "20 TeV", nbin=20, name="energy_true"
@@ -113,10 +115,11 @@ print(validity)
 # --------------
 #
 # Now we come to the main part of the data reduction where we will
-# run the `OnOffBackgroundMaker` along with our regular makers
+# run the `~gammapy.makers.OnOffBackgroundMaker` along with our regular makers
 # As usual, we will need to define our analysis geometry.
 # We will do the data analysis on a 3D geometry now. If you have `point-like` IRFs,
-# you should use a 1D geometry.
+# you should use a 1D geometry, and perform only spectral extraction, as in,
+# eg: :doc:`/tutorials/data/magic` or :doc:`/tutorials/data/veritas`.
 
 energy_axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=10, name="energy")
 
