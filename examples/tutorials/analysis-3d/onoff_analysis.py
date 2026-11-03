@@ -1,6 +1,6 @@
 """
 Data analysis using background estimated from dedicated OFF runs
-====================================================
+===============================================================
 
 Estimate the background for observations using paired,
 empty-field OFF runs, and the use it for computing
@@ -36,8 +36,8 @@ This tutorial:
 Prerequisites
 -------------
 
-If you are not familiar with our general data reduction and analysis chain, please
-check  `:doc:`/tutorials/starting/analysis_2` or `:doc:`/tutorials/analysis-1d/spectral_analysis.py`
+If you are not familiar with general data reduction and analysis chains, please
+check  :doc:`/tutorials/starting/analysis_2` or :doc:`/tutorials/analysis-1d/spectral_analysis`
 """
 
 ###################################################################
