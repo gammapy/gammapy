@@ -1,6 +1,6 @@
 """
 Data analysis using background estimated from dedicated OFF runs
-===============================================================
+================================================================
 
 Perform an analysis using paired empty off runs.
 
