@@ -2,33 +2,34 @@
 Data analysis using background estimated from dedicated OFF runs
 ===============================================================
 
-Analysis using paired empty off runs.
+Perform an analysis using paired empty off runs.
 
 Estimate the background for observations using paired,
 empty-field OFF runs, and the use it for computing
-    - a significance map
-    - a 1D spectral fit.
+- a significance map
+- a 1D spectral fit.
 
 Context
 -------
 
 Standard IACT background methods try to estimate the background from source-free
 regions in room same field of view as the source,
-eg: ``~gammapy.makers.ReflectedRegionsBackgroundMaker``.
-However, sometimes one might need **dedicated ON/OFF
-observations**, where the source sits at the centre of the ON run and a
-separate, empty-field OFF run is taken to measure the background. This is the
-classical Whipple-style ON/OFF setup, and it is used when the
-source fills the field of view or when no reliable background model exists.
+e.g.: `~gammapy.makers.ReflectedRegionsBackgroundMaker`.
+However, sometimes one might need **dedicated ON/OFF observations**,
+where the source sits at the centre of the ON run and a separate, empty-field
+OFF run is taken to measure the background. This is the classical Whipple-style
+ON/OFF setup, and it is used when the source fills the field of view or when
+no reliable background model exists.
 
-This case maybe handles with `~gammapy.makers.OnOffBackgroundMaker`. It takes a
+This case can be handled with `~gammapy.makers.OnOffBackgroundMaker`. It takes a
 reduced ON dataset and a paired OFF observation, mirrors the OFF run's events
 into the ON pointing frame to build ``counts_off``, and sets the acceptances
 from the livetimes so that ``alpha = t_on / t_off``. The resulting
-``MapDatasetOnOff`` / ``SpectrumDatasetOnOff`` uses WStat, which treats
-the OFF counts as a Poisson measurement.
+`~gammapy.datasets.MapDatasetOnOff` or `~gammapy.datasets.SpectrumDatasetOnOff`
+uses WStat, which treats the OFF counts as a Poisson measurement.
 
-This tutorial:
+Proposed approach
+-----------------
 
 1. Loads Crab ON runs and empty-field OFF runs from the H.E.S.S. DL3 DR1,
 2. Pairs them and checks each pairing with ``check_run_pair_validity``,
@@ -40,7 +41,8 @@ Prerequisites
 -------------
 
 If you are not familiar with general data reduction and analysis chains, please
-check  :doc:`/tutorials/starting/analysis_2` or :doc:`/tutorials/analysis-1d/spectral_analysis`
+check the :doc:`/tutorials/starting/analysis_2` or
+:doc:`/tutorials/analysis-1d/spectral_analysis` tutorials.
 """
 
 ###################################################################
@@ -87,8 +89,9 @@ off_ids = [23736, 21851, 22022, 26827]  # empty-field runs (OFF)
 on_observations = datastore.get_observations(on_ids)
 off_observations = datastore.get_observations(off_ids)
 
+######################################################################
 # Note that the ON/OFF pairing is user responsibility -- the maker does not match runs.
-# Here we pair positionally (`on_observations[i]` with `off_observations[i]`); in a
+# Here we pair positionally (``on_observations[i]`` with ``off_observations[i]``); in a
 # real analysis you would pair by matched zenith/azimuth and observing
 # conditions.
 
@@ -97,7 +100,7 @@ off_observations = datastore.get_observations(off_ids)
 # Check the pairing
 # -----------------
 #
-# Gammapy provides a convenience function to check how good the pairing is.
+# Gammapy provides a convenience function to check the validity of the pairing.
 # You may decide to reject some pairs based on this information.
 
 energy_axis_true = MapAxis.from_energy_bounds(
@@ -118,9 +121,9 @@ print(validity)
 # Now we come to the main part of the data reduction where we will
 # run the `~gammapy.makers.OnOffBackgroundMaker` along with our regular makers
 # As usual, we will need to define our analysis geometry.
-# We will do the data analysis on a 3D geometry now. If you have `point-like` IRFs,
+# We will do the data analysis on a 3D geometry now. If you have ``point-like`` IRFs,
 # you should use a 1D geometry, and perform only spectral extraction, as in,
-# eg: :doc:`/tutorials/data/magic` or :doc:`/tutorials/data/veritas`.
+# e.g.: :doc:`/tutorials/data/magic` or :doc:`/tutorials/data/veritas`.
 
 energy_axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=10, name="energy")
 
@@ -143,8 +146,8 @@ bkg_maker = OnOffBackgroundMaker(acceptance_method="livetime_ratio")
 
 ###########################################################################
 # Note that here we are simply using the ratio of the livetimes for acceptance
-# computation. You may also use the total counts outside an `exclusion_mask` using the
-# option `counts_ratio`.
+# computation. You may also use the total counts outside an ``exclusion_mask``
+# using the option ``counts_ratio``.
 
 datasets = Datasets()
 
@@ -165,12 +168,13 @@ print(datasets)
 # While a full 3D analysis is technically feasible, it can introduce a
 # lot of systematics. For now, we will extract a significance map and
 # a spectrum separately.
+
 #####################################################################
 # Significance maps
 # -----------------
 #
-# A quick-look check that the background estimate is sensible:
-# The Crab is clearly seen at center
+# A quick-look check that the background estimate is sensible.
+# The Crab is clearly seen at center:
 
 stacked = datasets.stack_reduce(name="stacked")
 estimator = ExcessMapEstimator(
@@ -183,6 +187,7 @@ maps = estimator.run(stacked)
 plt.figure()
 maps["sqrt_ts"].plot(add_cbar=True)
 plt.show()
+
 ######################################################################
 # 1D Spectral fit
 # ---------------
@@ -205,6 +210,8 @@ result = fit.run([spectrum_dataset])
 print(result)
 print(result.models.to_parameters_table())
 
-# You can compare this with the standard Crab spectrum, compute flux point, etc
+######################################################################
+# You can compare this with the standard Crab spectrum, compute flux point, etc.
+#
 # Try this on other sources in the H.E.S.S. data release and compare with the
 # results from the FoV background.
