@@ -2,7 +2,80 @@
 
 .. _gammapy_2p2_release:
 
-2.2 (Unreleased)
-================
+2.2 (xx November, 2026)
+=====================
 
-No changes yet
+- Released: xx November, 2026
+- New contributors: 6 (Marked with * in the list)
+- Total contributors: 31
+- Total merged PRs: 192
+
+
+Summary
+-------
+
+Gammapy v2.2 is a new feature release with a number of performance improvements, new features and bug fixes.
+The main themes include new tools for Bayesian inference,  a broad overhaul of the dark matter module, and ASDF
+serialization of the core data structures.
+
+Python 3.14 in now supported, and issues encountered with `regions` in the previous versions are
+now resolved.
+
+The dark matter module has been substantially refactored and extended in this release.
+The spectral model classes have been unified into a single class handling both annihilation and decay,
+with improved parameter validation and an overall cleaner code structure.
+`CosmiXs` is now the default source for dark matter spectra, replacing `PPPC4DMID`;
+note that this changes the results of analyses that relied on the previous default.
+Users can also provide their own custom spectra from a file.
+The computation of astrophysical factors has been improved, with corrections for extragalactic sources,
+the line-of-sight geometry and the treatment of the central pixel.
+Notably, uncertainties on the astrophysical factor can now be included as a
+nuisance parameter profiled in the likelihood fit,
+so that limits on the annihilation cross-section or decay lifetime account for the
+uncertainty on the target's dark matter distribution, yielding more realistic
+and typically more conservative constraints. The documentation and tutorials have been updated accordingly,
+with new and improved tutorials covering both a basic introduction and a complete analysis.
+
+Maps, geometries (WCS, HEALPix, region), map axes,
+GTIs, IRF maps, Datasets and Models can now be written to and read from ASDF. This is the groundwork for storing a
+complete analysis state in a single, self-describing file.
+
+The 4FGL catalog is updated, with support for the FL16Y list. A new `OnOffDatasetMaker` with an associated tutorial is provided
+for background estimation with paired off runs. The ``nautilus`` is now available as a ``Sampler`` backend, and
+``LogNormalPrior`` and ``SamplesKDEPrior`` are introduced. Significant additions have been made to our estimator package:
+Upper limits using likelihood profiles are now computed internally, and a new ``RegularizedFluxPointsEstimator`` is introduced for
+flux point computation in true-energy space with a given regularisation.
+
+
+Contributors
+------------
+
+-* Syed Ahnaf Raza
+- Fabio Acero
+-* Nicki R. Bond
+- Tomas Bylund
+- Marie-Sophie Carrasco
+- R. Alexander Cerviño-Cortínez
+- Axel Donath
+- Katharina Egg
+- Gabriel Emery
+-* Esther
+- Kirsty Feijen
+- Lea Heckmann
+- Basmala Hekal
+- Bruno Khélifi
+-* Ahmed Mahmoud
+-* Júlia Gouvêa Mamprim
+- Daniel Morcuende
+- Laura Olivera-Nieto
+- Michele Peresano
+- Tobias Preis
+- Maxime Regeard
+- Quentin Remy
+- Atreyee Sinha
+- Régis Terrier
+- Thomas Vuillaume
+-* Ziheng Wang
+- Fabio Pintore
+- Natthan Pigoux
+- T Unbehaun

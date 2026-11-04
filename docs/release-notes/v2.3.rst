@@ -1,0 +1,8 @@
+.. include:: ../references.txt
+
+.. _gammapy_2p2_release:
+
+2.2 (Unreleased)
+================
+
+No changes yet
