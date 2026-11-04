@@ -156,71 +156,91 @@ statistics page`_ with the substitutions:
 `~gammapy.datasets.FluxPointsDataset`: Available statistical methods
 --------------------------------------------------------------------
 
-There are a number of different statistical methods available for calculating
-the statistics on the `~gammapy.datasets.FluxPointsDataset`:
+Different fit statistics are available for `~gammapy.datasets.FluxPointsDataset`,
+and can be selected with the ``stat_type`` argument:
 
 - chi2
 - profile
 - distrib
 
-The methods differ in the statistical information they use and in their
-treatment of upper limits. For a comparison of these statistics on flux points
-please refer to :ref:`this example <1d-tutorial-stats>`.
+The methods differ in the likelihood information they use and in their
+treatment of upper limits. For a comparison of these statistics on
+fitting precomputed flux points please refer to
+:ref:`this example <1d-tutorial-stats>`.
 These three methods are described below.
 
 Chi squared
 ^^^^^^^^^^^
 
-The ``chi2`` method evaluates the chi-squared statistic based on measured flux
+The ``chi2`` statistic evaluates the chi-squared statistic based on measured flux
 measurements and their uncertainties and model predictions.
 The chi-squared statistic is given by:
 
 .. math::
     \chi^2 = \sum_i \frac{(f_i - m_i)^2}{\sigma_i^2}
 
-This method is straightforward and appropriate when a chi-squared
-approximation correctly describes the measurements. However, it does not
-make use of the full likelihood information associated with a flux point.
-
+This method is straightforward and appropriate each measurement can be well
+approximated by a Gaussian. It reduces each point to a value and an
+uncertainty, so any asymmetry or non-Gaussian shape of the per-bin likelihood
+is lost. **Upper limits are completely ignored.**
 
 
 Likelihood profile
 ^^^^^^^^^^^^^^^^^^
 
-The ``profile`` method uses the likelihood profile associated with each
+The ``profile`` statistic uses the likelihood profile associated with each
 flux point interpolated at the flux predicted by the model.
-This profile described how the fit statistic varies
+The profile describes how the fit statistic varies
 as a function of the flux normalisation, relative to its best-fit value.
 
-When estimating flux points, this information can be stored in the
-``stat_scan`` quantity of a `gammapy.estimators.FluxPoints` object.
+Because the profile is defined for every bin, whether or not the source is
+significantly detected there, upper limits need no special treatment: they
+enter the fit through the same profile as any other point.
+**This makes ``profile`` the most complete of the three statistics.**
+
+It requires the profiles to have been computed when estimating the flux
+points. They are stored in the ``stat_scan`` quantity of
+`~gammapy.estimators.FluxPoints`, and are produced by
+`~gammapy.estimators.FluxPointsEstimator` when "scan" is included in
+``selection_optional``.
 
 
 Probability density function of the normal distribution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-the ``distrib`` method approximates the likelihood using a Gaussian
+The ``distrib`` statistic approximates the likelihood using a Gaussian
 probability density function, with a cumulative probability for upper
 limits. It uses the flux uncertainties to describe the probability of
 the measured flux given the flux predicted by the model.
+Upper limits are treated as censored measurements.
 
-For a flux measurement with Gaussian uncertainty, the likelihood is
-proportional to the normal probability density function:
+The statistic approximates the likelihood of each flux point by a Gaussian,
+and treats upper limits as constrained measurements.
+The likelihood is proportional to the normal probability density function:
 
 .. math::
-    \mathcal{L}(f_i \mid m_i) \\
-    = \frac{1}{\sqrt{2\pi}\sigma_i} \\
+    \mathcal{L}(f_i \mid m_i) = \frac{1}{\sqrt{2\pi}\sigma_i} \\
     \exp\left[-\frac{(f_i-m_i)^2}{2\sigma_i^2}\right].
 
 The corresponding contribution to the fit statistic is proportional to
 the squared normalised residual. For measured flux points, this has the
-same quadratic dependence on the residual as the chi-squared statistic.
+same quadratic dependence on the residual as the chi-squared statistic;
+**the two differ in the treatment of upper limit**
 
+For an upper limit, the likelihood is the probability
+that the flux lies below the limit given the model prediction, i.e. the
+Gaussian cumulative distribution function (CDF):
 
-**What can I include on upper limits???**
+.. math::
+    \Phi(x) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{x}  \exp\left(-\frac{t^2}{2}\right),dt \\
+    = \frac{1}{2} \left[1+\operatorname{erf}\left(\frac{x}{\sqrt{2}}\right)\right].
+
+A upper limit thus contributes negligibly when the model prediction lies much
+below, and a strong penalty when the model exceeds it.
 
 For the treatment of upper limits using an integrated Gaussian
-probability, see Equation C7 of Mohanty et al. (2013).
+probability, see Equation C7 of
+`Mohanty et al (2013) <https://iopscience.iop.org/article/10.1088/0004-637X/773/2/168/pdf>`.
 
 
 Further references
