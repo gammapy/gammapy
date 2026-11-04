@@ -227,7 +227,7 @@ plt.show()
 # for debugging.
 # Here we remind the user of the meaning of the forthcoming quantities:
 #
-# -  ``counts``: predicted counts from the null hypothesis,
+# -  ``counts``: observed counts outside the masked bins
 # -  ``npred``: predicted number of counts from best fit hypothesis,
 # -  ``npred_excess``: predicted number of excess counts from best fit hypothesis.
 #

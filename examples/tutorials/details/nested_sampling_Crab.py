@@ -172,7 +172,7 @@ print(datasets.models)
 # --------------------------------
 #
 # As for the `~gammapy.modeling.Fit` object, the `~gammapy.modeling.Sampler` object can receive
-# different backend (although just one is available for now).
+# different backends.
 # The `~gammapy.modeling.Sampler` comes with “reasonable” default parameters, but you can
 # change them via the ``options`` dictionary, using the backend's own option names.
 # Gammapy passes each option to the backend sampler constructor or to its ``run`` method.
