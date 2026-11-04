@@ -3,7 +3,7 @@
 .. _gammapy_2p2_release:
 
 2.2 (xx November, 2026)
-=====================
+======================
 
 - Released: xx November, 2026
 - New contributors: 6 (Marked with * in the list)
