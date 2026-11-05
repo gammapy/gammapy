@@ -8,7 +8,6 @@ from astropy.units import Unit
 from gammapy.data import DataStore, Observation, FixedPointingInfo
 from gammapy.irf import PSF3D, EffectiveAreaTable2D, PSFMap, RecoPSFMap
 from gammapy.makers import MapDatasetMaker
-from gammapy.makers.utils import make_psf_map
 from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
@@ -60,8 +59,15 @@ def fake_aeff2d(area=1e6 * u.m**2):
 
 def test_make_psf_map():
     psf = fake_psf3d(0.3 * u.deg)
-
+    aeff = fake_aeff2d()
     pointing = SkyCoord(0, 0, unit="deg")
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(fixed_icrs=pointing),
+        location=EarthLocation(lon=0, lat=0),
+        livetime=30 * u.minute,
+        irfs={"aeff": aeff, "psf": psf},
+    )
+
     energy_axis = MapAxis(
         nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy_true"
     )
@@ -71,7 +77,7 @@ def test_make_psf_map():
         skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
     )
 
-    psfmap = make_psf_map(psf, pointing, geom)
+    psfmap = MapDatasetMaker.make_psf(geom=geom, observation=test_obs)
 
     assert psfmap.psf_map.geom.axes[0] == rad_axis
     assert psfmap.psf_map.geom.axes[1] == energy_axis
@@ -103,11 +109,7 @@ def make_test_psfmap(size, shape="gauss"):
         skydir=sky_dir, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
     )
 
-    exposure_geom = geom.squash(axis_name="rad")
-
-    exposure_map = MapDatasetMaker.make_exposure(exposure_geom, test_obs)
-
-    return make_psf_map(psf, sky_dir, geom, exposure_map)
+    return MapDatasetMaker.make_psf(geom, test_obs)
 
 
 def test_psf_map_containment_radius():
@@ -191,14 +193,21 @@ def test_psfmap_read_write(tmp_path):
 
 def test_containment_radius_map():
     psf = fake_psf3d(0.15 * u.deg)
+    aeff = fake_aeff2d()
     pointing = SkyCoord(0, 0, unit="deg")
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(fixed_icrs=pointing),
+        location=EarthLocation(lon=0, lat=0),
+        livetime=1 * u.minute,
+        irfs={"aeff": aeff, "psf": psf},
+    )
     energy_axis = MapAxis(nodes=[0.2, 1, 2], unit="TeV", name="energy_true")
     psf_theta_axis = MapAxis(nodes=np.linspace(0.0, 0.6, 30), unit="deg", name="rad")
     geom = WcsGeom.create(
         skydir=pointing, binsz=0.5, width=(4, 3), axes=[psf_theta_axis, energy_axis]
     )
 
-    psfmap = make_psf_map(psf=psf, pointing=pointing, geom=geom)
+    psfmap = MapDatasetMaker.make_psf(geom=geom, observation=test_obs)
     m = psfmap.containment_radius_map(energy_true=1 * u.TeV)
     coord = SkyCoord(0.3, 0, unit="deg")
     val = m.interp_by_coord(coord)
@@ -256,17 +265,7 @@ def test_sample_coord_gauss():
 
 
 def make_psf_map_obs(geom, obs):
-    exposure_map = MapDatasetMaker.make_exposure(
-        geom=geom.squash(axis_name="rad"), observation=obs
-    )
-
-    psf_map = make_psf_map(
-        geom=geom,
-        psf=obs.psf,
-        pointing=obs.get_pointing_icrs(obs.tmid),
-        exposure_map=exposure_map,
-    )
-    return psf_map
+    return MapDatasetMaker.make_psf(geom=geom, observation=obs)
 
 
 @requires_data()
@@ -338,7 +337,6 @@ def test_make_psf(pars, data_store):
     geom = WcsGeom.create(
         skydir=position, npix=(3, 3), axes=[rad_axis, energy_axis], binsz=0.2
     )
-
     psf_map = make_psf_map_obs(geom, obs)
     psf = psf_map.to_region_nd_map(position)
 

@@ -694,7 +694,7 @@ def test_convolve_kernel_size_error():
     kgeom = WcsGeom.create(binsz=0.05 * u.deg, width=0.5 * u.deg, axes=[axis_2])
     kernel = PSFKernel.from_gauss(kgeom, sigma=0.1 * u.deg, max_radius=1.5 * u.deg)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"and kernel \(3,\)"):
         m.convolve(kernel)
 
 
