@@ -2248,7 +2248,7 @@ class TemplateNDSpectralModel(SpectralModel):
         args = list(kwargs.values())
         return self.evaluate(energy, *args)
 
-    def write(self, overwrite=False, filename=None):
+    def write(self, overwrite=False, filename=None, hdu="SKYMAP", checksum=False):
         """
         Write the map.
 
@@ -2261,6 +2261,11 @@ class TemplateNDSpectralModel(SpectralModel):
             Filename of the template model. By default, the template model
             will be saved with the `TemplateNDSpectralModel.filename` attribute.
             If `filename` is provided, this attribute will be used.
+        hdu : str, optional
+            Name of the HDU. Default is "SKYMAP".
+        checksum : bool, optional
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
         if filename is not None:
             self.filename = filename
@@ -2269,14 +2274,18 @@ class TemplateNDSpectralModel(SpectralModel):
         elif os.path.isfile(self.filename) and not overwrite:
             log.warning("Template file already exits, and overwrite is False")
         else:
-            self.map.write(self.filename, overwrite=overwrite)
+            self.map.write(
+                self.filename, overwrite=overwrite, hdu=hdu, checksum=checksum
+            )
+            self._hdu = hdu
 
     @classmethod
     def from_dict(cls, data, **kwargs):
         data = data["spectral"]
         filename = data["filename"]
-        m = RegionNDMap.read(filename)
+        m = RegionNDMap.read(filename, hdu=data.get("hdu"))
         model = cls(m, filename=filename)
+        model._hdu = data.get("hdu", "SKYMAP")
         for idx, p in enumerate(model.parameters):
             par = p.to_dict()
             par.update(data["parameters"][idx])
@@ -2288,6 +2297,9 @@ class TemplateNDSpectralModel(SpectralModel):
         data = super().to_dict(full_output)
         data["spectral"]["filename"] = self.filename
         data["spectral"]["unit"] = str(self.map.unit)
+        hdu = getattr(self, "_hdu", "SKYMAP")
+        if hdu != "SKYMAP":
+            data["spectral"]["hdu"] = hdu
         return data
 
 
