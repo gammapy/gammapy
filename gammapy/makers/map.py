@@ -263,14 +263,14 @@ class MapDatasetMaker(Maker):
             Interpolate missing values in background 3d map.
             Default is True, have to be set to True for CTAO IRF.
         pad_offset : bool, optional
-            Pad one bin in offset for 2d background map.
+            Pad one bin in offset for 2D background map.
             This avoids extrapolation at edges and use the nearest value.
             Default is True.
         oversampling : int, optional
             Oversampling factor in energy, used for the background model evaluation.
             Default is None.
         fov_rotation_step : `~astropy.units.Quantity`
-            Maximum rotation error to create sub-time bins if the irf is 3D and in AltAz.
+            Maximum rotation error to create sub-time bins if the IRF is in 3D and in AltAz.
             Default is 1.0 deg.
 
         Returns
@@ -280,7 +280,6 @@ class MapDatasetMaker(Maker):
         """
         bkg = observation.bkg
 
-        # Were we passed a MapDataset instead of an Observation?
         with u.add_enabled_units([u.def_unit("transit", u.sday)]):
             if isinstance(bkg, Map):
                 if not bkg.unit or bkg.unit.is_equivalent(u.Unit("")):
@@ -329,19 +328,16 @@ class MapDatasetMaker(Maker):
             )
             fov_frame = observation.get_fov_frame(times, FoVAlignment.ALTAZ)
         else:
-            if isinstance(pointing, FixedPointingInfo):
-                if pointing.mode == PointingMode.POINTING:
-                    fov_frame = observation.get_fov_frame(
-                        observation.tmid, FoVAlignment.RADEC
-                    )
-                else:
-                    raise NotImplementedError(
-                        "Drift pointing mode is not supported for background calculation."
-                    )
-            else:
-                fov_frame = observation.get_fov_frame(
-                    observation.tmid, FoVAlignment.RADEC
+            if (
+                isinstance(pointing, FixedPointingInfo)
+                and pointing.mode == PointingMode.DRIFT
+            ):
+                raise NotImplementedError(
+                    "Drift pointing mode is not supported for background calculation."
                 )
+            fov_frame = observation.get_fov_frame(
+                observation.tmid, FoVAlignment.RADEC
+            )            
 
         if oversampling is not None:
             geom = geom.upsample(factor=oversampling, axis_name="energy")
