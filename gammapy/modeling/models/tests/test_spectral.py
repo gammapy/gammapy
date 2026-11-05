@@ -6,6 +6,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
+from astropy.io import fits
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling.models import (
@@ -23,6 +24,7 @@ from gammapy.modeling.models import (
     LogParabolaSpectralModel,
     LogParabola2SpectralModel,
     Model,
+    Models,
     NaimaSpectralModel,
     PiecewiseNormSpectralModel,
     PowerLaw2SpectralModel,
@@ -1423,6 +1425,38 @@ def test_template_ND_EBL(tmpdir):
     assert_allclose(template_new.map.data, region_map.data)
     assert len(template.parameters) == 1
     assert_allclose(template.parameters["redshift"].value, 0.1)
+
+
+def test_template_ND_write_hdu_checksum(tmpdir):
+    energy_axis = MapAxis.from_bounds(
+        1.0, 100, 10, interp="log", name="energy_true", unit="GeV"
+    )
+    norm = MapAxis.from_bounds(0, 10, 10, interp="lin", name="norm", unit="")
+    region_map = RegionNDMap.create(
+        region="icrs;point(83.63, 22.01)",
+        axes=[energy_axis, norm],
+        unit="cm-2 s-1 TeV-1",
+    )
+    region_map.data += 1
+
+    filename = str(tmpdir / "template_ND_hdu.fits")
+    template = TemplateNDSpectralModel(region_map, filename=filename)
+    template.parameters["norm"].value = 2
+    template.write(hdu="TEMPLATE", checksum=True)
+
+    # FITS file: custom HDU name and checksum
+    with fits.open(filename) as hdulist:
+        assert "CHECKSUM" in hdulist["TEMPLATE"].header
+    m = RegionNDMap.read(filename, hdu="TEMPLATE", checksum=True)
+    assert_allclose(m.data, region_map.data)
+
+    # Model: YAML round trip finds the custom HDU again
+    models = Models([SkyModel(spectral_model=template, name="template")])
+    models.write(tmpdir / "models.yaml")
+    template_new = Models.read(tmpdir / "models.yaml")["template"].spectral_model
+
+    assert_allclose(template_new.map.data, region_map.data)
+    assert template_new.parameters["norm"].value == 2
 
 
 def test_incorrect_param_name():
