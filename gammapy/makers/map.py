@@ -11,7 +11,6 @@ from gammapy.maps import Map
 from .core import Maker
 from .utils import (
     make_counts_rad_max,
-    make_map_background_irf,
     project_irf_on_geom,
     integrate_project_irf_on_geom,
     _compute_rotation_time_steps,
@@ -332,9 +331,7 @@ class MapDatasetMaker(Maker):
                 raise NotImplementedError(
                     "Drift pointing mode is not supported for background calculation."
                 )
-            fov_frame = observation.get_fov_frame(
-                observation.tmid, FoVAlignment.RADEC
-            )            
+            fov_frame = observation.get_fov_frame(observation.tmid, FoVAlignment.RADEC)
 
         if oversampling is not None:
             geom = geom.upsample(factor=oversampling, axis_name="energy")
