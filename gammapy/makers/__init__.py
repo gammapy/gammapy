@@ -9,6 +9,7 @@ from .background import (
     RegionsFinder,
     RingBackgroundMaker,
     WobbleRegionsFinder,
+    OnOffBackgroundMaker,
 )
 from .core import Maker
 from .map import MapDatasetMaker
@@ -46,4 +47,5 @@ __all__ = [
     "SafeMaskMaker",
     "SpectrumDatasetMaker",
     "WobbleRegionsFinder",
+    "OnOffBackgroundMaker",
 ]

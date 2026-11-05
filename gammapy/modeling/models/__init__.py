@@ -17,6 +17,7 @@ from .prior import (
     SamplesKDEPrior,
     LogNormalPrior,
     LogUniformPrior,
+    LogSpaceGaussianPrior,
 )
 from .spatial import (
     ConstantFluxSpatialModel,
@@ -220,6 +221,7 @@ PRIOR_REGISTRY = Registry(
         LogUniformPrior,
         GeneralizedGaussianPrior,
         LogNormalPrior,
+        LogSpaceGaussianPrior,
     ]
 )
 """Registry of prior classes."""

@@ -5,6 +5,7 @@ from gammapy.irf import EDispMap, EDispKernelMap
 from gammapy.maps import MapAxis
 
 asdf = pytest.importorskip("asdf")
+asdf.get_config().validate_on_read = True
 pytest.importorskip("asdf.testing")
 
 

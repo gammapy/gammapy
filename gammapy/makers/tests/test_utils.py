@@ -21,6 +21,7 @@ from gammapy.irf import (
     Background3D,
     EffectiveAreaTable2D,
     EnergyDispersion2D,
+    FoVAlignment,
 )
 from gammapy.makers import WobbleRegionsFinder
 from gammapy.makers.utils import (
@@ -37,10 +38,12 @@ from gammapy.makers.utils import (
     make_map_exposure_true_energy,
     make_observation_time_map,
     project_irf_on_geom,
+    check_run_pair_validity,
 )
 from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
 from gammapy.utils.coordinates import FoVAltAzFrame, FoVICRSFrame
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_to_dict
 
@@ -94,12 +97,13 @@ def geom(map_type, ebounds):
     ],
 )
 def test_make_map_exposure_true_energy(aeff, pars):
-    m = make_map_exposure_true_energy(
-        pointing=SkyCoord(2, 1, unit="deg"),
-        livetime="42 s",
-        aeff=aeff,
-        geom=pars["geom"],
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        m = make_map_exposure_true_energy(
+            pointing=SkyCoord(2, 1, unit="deg"),
+            livetime="42 s",
+            aeff=aeff,
+            geom=pars["geom"],
+        )
 
     assert m.data.shape == pars["shape"]
     assert m.unit == "m2 s"
@@ -215,26 +219,28 @@ def test_map_background_2d(bkg_2d, fixed_pointing_info):
     geom = WcsGeom.create(
         npix=(3, 3), binsz=4.0, axes=[axis], skydir=skydir.galactic, frame="galactic"
     )
-    bkg = make_map_background_irf(
-        pointing=skydir,
-        ontime="42 s",
-        bkg=bkg_2d,
-        geom=geom,
-        time_start=obstime,
-        fov_rotation_step=1.0 * u.deg,
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        bkg = make_map_background_irf(
+            pointing=skydir,
+            ontime="42 s",
+            bkg=bkg_2d,
+            geom=geom,
+            time_start=obstime,
+            fov_rotation_step=1.0 * u.deg,
+        )
 
     assert_allclose(bkg.data[:, 1, 1], [1.869025, 0.186903], rtol=1e-5)
 
     # Check that function works also passing the FixedPointingInfo
-    bkg_fpi = make_map_background_irf(
-        pointing=fixed_pointing_info,
-        ontime="42 s",
-        bkg=bkg_2d,
-        geom=geom,
-        time_start=obstime,
-        fov_rotation_step=1.0 * u.deg,
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        bkg_fpi = make_map_background_irf(
+            pointing=fixed_pointing_info,
+            ontime="42 s",
+            bkg=bkg_2d,
+            geom=geom,
+            time_start=obstime,
+            fov_rotation_step=1.0 * u.deg,
+        )
     assert_allclose(bkg.data, bkg_fpi.data, rtol=1e-5)
 
 
@@ -287,19 +293,20 @@ def geom(map_type, ebounds, skydir):
     ],
 )
 def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
-    m = make_map_background_irf(
-        pointing=fixed_pointing_info,
-        ontime="42 s",
-        bkg=bkg_3d,
-        geom=geom(
-            map_type=pars["map_type"],
-            ebounds=pars["ebounds"],
-            skydir=fixed_pointing_info.fixed_icrs,
-        ),
-        time_start=Time("2020-01-01T20:00"),
-        fov_rotation_step=1.0 * u.deg,
-        oversampling=10,
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        m = make_map_background_irf(
+            pointing=fixed_pointing_info,
+            ontime="42 s",
+            bkg=bkg_3d,
+            geom=geom(
+                map_type=pars["map_type"],
+                ebounds=pars["ebounds"],
+                skydir=fixed_pointing_info.fixed_icrs,
+            ),
+            time_start=Time("2020-01-01T20:00"),
+            fov_rotation_step=1.0 * u.deg,
+            oversampling=10,
+        )
 
     assert m.data.shape == pars["shape"]
     assert m.unit == ""
@@ -308,9 +315,10 @@ def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
 
 @requires_data()
 def test_make_map_background_irf_constant(fixed_pointing_info_aligned):
-    m = make_map_background_irf_with_symmetry(
-        fpi=fixed_pointing_info_aligned, symmetry="constant"
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        m = make_map_background_irf_with_symmetry(
+            fpi=fixed_pointing_info_aligned, symmetry="constant"
+        )
     for d in m.data:
         assert_allclose(d[1, :], d[1, 0])  # Constant along lon
         assert_allclose(d[0, 1], d[2, 1])  # Symmetric along lat
@@ -322,9 +330,10 @@ def test_make_map_background_irf_constant(fixed_pointing_info_aligned):
 
 @requires_data()
 def test_make_map_background_irf_sym(fixed_pointing_info_aligned):
-    m = make_map_background_irf_with_symmetry(
-        fpi=fixed_pointing_info_aligned, symmetry="symmetric"
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        m = make_map_background_irf_with_symmetry(
+            fpi=fixed_pointing_info_aligned, symmetry="symmetric"
+        )
     for d in m.data:
         assert_allclose(d[1, 0], d[1, 2], rtol=1e-4)  # Symmetric along lon
         assert_allclose(d[0, 1], d[2, 1], rtol=1e-4)  # Symmetric along lat
@@ -332,9 +341,10 @@ def test_make_map_background_irf_sym(fixed_pointing_info_aligned):
 
 @requires_data()
 def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
-    m = make_map_background_irf_with_symmetry(
-        fpi=fixed_pointing_info_aligned, symmetry="asymmetric"
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        m = make_map_background_irf_with_symmetry(
+            fpi=fixed_pointing_info_aligned, symmetry="asymmetric"
+        )
     for d in m.data:
         # TODO:
         #  Dimensions of skymap data are [energy, lat, lon] (and is
@@ -351,15 +361,16 @@ def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
 def test_make_map_background_irf_skycoord(fixed_pointing_info_aligned):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
     position = fixed_pointing_info_aligned.fixed_icrs
-    with pytest.raises(TypeError):
-        make_map_background_irf(
-            pointing=position,
-            ontime="42 s",
-            bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
-            geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=position),
-            time_start=Time("2020-01-01T20:00:00"),
-            fov_rotation_step=1.0 * u.deg,
-        )
+    with pytest.warns(GammapyDeprecationWarning):
+        with pytest.raises(TypeError):
+            make_map_background_irf(
+                pointing=position,
+                ontime="42 s",
+                bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+                geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=position),
+                time_start=Time("2020-01-01T20:00:00"),
+                fov_rotation_step=1.0 * u.deg,
+            )
 
 
 @requires_data()
@@ -377,52 +388,53 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
     obstime = Time("2020-01-01T20:00:00")
     location = observatory_locations["ctao_south"]
 
-    map_long_altaz = make_map_background_irf(
-        pointing=fixed_pointing_info,
-        ontime="42000 s",
-        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
-        geom=_get_geom(fixed_pointing_info, obstime),
-        time_start=obstime,
-        fov_rotation_step=20.0 * u.deg,
-        location=location,
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        map_long_altaz = make_map_background_irf(
+            pointing=fixed_pointing_info,
+            ontime="42000 s",
+            bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+            geom=_get_geom(fixed_pointing_info, obstime),
+            time_start=obstime,
+            fov_rotation_step=20.0 * u.deg,
+            location=location,
+        )
 
-    map_short_altaz = make_map_background_irf(
-        pointing=fixed_pointing_info,
-        ontime="42 s",
-        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
-        geom=_get_geom(fixed_pointing_info, obstime),
-        time_start=obstime + "20979 s",
-        fov_rotation_step=20.0 * u.deg,
-        location=location,
-    )
-    map_long_radec = make_map_background_irf(
-        pointing=fixed_pointing_info,
-        ontime="42000 s",
-        bkg=bkg_3d_custom("asymmetric", "RADEC"),
-        geom=_get_geom(fixed_pointing_info, obstime),
-        time_start=obstime,
-        fov_rotation_step=20.0 * u.deg,
-        location=location,
-    )
-    map_short_altaz_norotation = make_map_background_irf(
-        pointing=fixed_pointing_info,
-        ontime="42 s",
-        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
-        geom=_get_geom(fixed_pointing_info, obstime),
-        time_start=obstime - 21 * u.s,
-        fov_rotation_step=360.0 * u.deg,
-        location=location,
-    )
-    map_altaz_long_norotation = make_map_background_irf(
-        pointing=fixed_pointing_info,
-        ontime="4200 s",
-        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
-        geom=_get_geom(fixed_pointing_info, obstime),
-        time_start=obstime - 2100 * u.s,
-        fov_rotation_step=360.0 * u.deg,
-        location=location,
-    )
+        map_short_altaz = make_map_background_irf(
+            pointing=fixed_pointing_info,
+            ontime="42 s",
+            bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+            geom=_get_geom(fixed_pointing_info, obstime),
+            time_start=obstime + "20979 s",
+            fov_rotation_step=20.0 * u.deg,
+            location=location,
+        )
+        map_long_radec = make_map_background_irf(
+            pointing=fixed_pointing_info,
+            ontime="42000 s",
+            bkg=bkg_3d_custom("asymmetric", "RADEC"),
+            geom=_get_geom(fixed_pointing_info, obstime),
+            time_start=obstime,
+            fov_rotation_step=20.0 * u.deg,
+            location=location,
+        )
+        map_short_altaz_norotation = make_map_background_irf(
+            pointing=fixed_pointing_info,
+            ontime="42 s",
+            bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+            geom=_get_geom(fixed_pointing_info, obstime),
+            time_start=obstime - 21 * u.s,
+            fov_rotation_step=360.0 * u.deg,
+            location=location,
+        )
+        map_altaz_long_norotation = make_map_background_irf(
+            pointing=fixed_pointing_info,
+            ontime="4200 s",
+            bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+            geom=_get_geom(fixed_pointing_info, obstime),
+            time_start=obstime - 2100 * u.s,
+            fov_rotation_step=360.0 * u.deg,
+            location=location,
+        )
     # Check that background normalisations are consistent
     assert_allclose(np.sum(map_long_altaz.data), np.sum(map_long_radec.data), rtol=1e-2)
     assert np.isclose(
@@ -465,7 +477,8 @@ def test_make_edisp_kernel_map():
 
     geom = WcsGeom.create(10, binsz=0.5, axes=[ereco, etrue])
     pointing = SkyCoord(0, 0, frame="icrs", unit="deg")
-    edispmap = make_edisp_kernel_map(edisp, pointing, geom)
+    with pytest.warns(GammapyDeprecationWarning):
+        edispmap = make_edisp_kernel_map(edisp, pointing, geom)
 
     kernel = edispmap.get_edisp_kernel(position=pointing)
     assert_allclose(kernel.pdf_matrix[:, 0], (1.0, 1.0, 0.0, 0.0, 0.0, 0.0), atol=1e-14)
@@ -1017,3 +1030,42 @@ def test_integrate_project_irf_on_geom():
         (ref4 + ref4) / 2 * omega21,
         bkg_sky.data[0, 2, 1],
     )
+
+
+@requires_data()
+def test_check_run_pair_validity():
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
+    obs_ids = [23523, 23526, 23559, 23592]
+    on_observations = datastore.get_observations(obs_ids)
+    off_obs_ids = [23736, 21851, 22022, 26827]
+    off_observations = datastore.get_observations(off_obs_ids)
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.8 TeV", "20 TeV", 8, name="energy_true"
+    )
+    with pytest.raises(ValueError):
+        check_run_pair_validity(
+            on_observations, off_observations[:-1], energy_axis_true
+        )
+
+    table = check_run_pair_validity(on_observations, off_observations, energy_axis_true)
+    assert table.colnames == [
+        "obs_id",
+        "off_obs_id",
+        "zenith_on",
+        "zenith_off",
+        "delta_zenith",
+        "zenith_ok",
+        "aeff_max_frac_deviation",
+        "aeff_ok",
+    ]
+    assert len(table) == 4
+    # pairing and identity are carried through positionally
+    assert_allclose(table["obs_id"], obs_ids)
+    assert_allclose(table["off_obs_id"], off_obs_ids)
+    assert_allclose(table["delta_zenith"].value, [2.19, 4.06, 2.48, 1.00], rtol=1e-2)
+    assert np.all(table["zenith_ok"])
+    assert_allclose(
+        table["aeff_max_frac_deviation"].value, [0.306, 0.134, 0.112, 0.171], atol=1e-2
+    )
+    assert not np.all(table["aeff_ok"])

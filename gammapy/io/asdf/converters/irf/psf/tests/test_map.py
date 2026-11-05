@@ -8,6 +8,7 @@ from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 import astropy.units as u
 
 asdf = pytest.importorskip("asdf")
+asdf.get_config().validate_on_read = True
 pytest.importorskip("asdf.testing")
 
 

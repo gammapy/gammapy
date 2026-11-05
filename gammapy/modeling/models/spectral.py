@@ -323,7 +323,33 @@ class SpectralModel(ModelBase):
             The energy at which the statistical error in the computed flux is smallest.
             If no minimum is found, NaN will be returned.
         """
-        x_unit = self.reference.unit
+        if isinstance(self, CompoundSpectralModel):
+            models = (self.model1, self.model2)
+            if any(isinstance(model, CompoundSpectralModel) for model in models):
+                raise ValueError(
+                    "Pivot energy cannot be computed for a CompoundSpectralModel "
+                    "contained within another CompoundSpectralModel."
+                )
+            for model in models:
+                reference = getattr(model, "reference", None)
+                if reference is not None:
+                    break
+            else:
+                names = ", ".join(type(model).__name__ for model in models)
+                raise ValueError(
+                    "Pivot energy cannot be computed for this CompoundSpectralModel "
+                    f"as none of its models ({names}) has a reference energy."
+                )
+        else:
+            reference = getattr(self, "reference", None)
+
+        if reference is None:
+            raise ValueError(
+                f"Pivot energy cannot be computed for the "
+                f"{self.__class__.__name__} model."
+            )
+
+        x_unit = reference.unit
 
         def min_func(x):
             """Function to minimise."""
@@ -331,7 +357,7 @@ class SpectralModel(ModelBase):
             dnde, dnde_errn, dnde_errp = self.evaluate_error(x * x_unit, n_samples=500)
             return np.sqrt(dnde_errn**2 + dnde_errp**2) / dnde
 
-        bounds = [np.log(self.reference.value) - 3, np.log(self.reference.value) + 3]
+        bounds = [np.log(reference.value) - 3, np.log(reference.value) + 3]
 
         std = np.std(min_func(x=np.linspace(bounds[0], bounds[1], 100)))
         if std < 1e-5:
@@ -1330,10 +1356,10 @@ class BrokenPowerLawSpectralModel(SpectralModel):
     Parameters
     ----------
     index1 : `~astropy.units.Quantity`
-        :math:`\Gamma1`.
+        :math:`\Gamma_1`.
         Default is 2.
     index2 : `~astropy.units.Quantity`
-        :math:`\Gamma2`.
+        :math:`\Gamma_2`.
         Default is 2.
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`.
@@ -1984,12 +2010,13 @@ class LogParabola2SpectralModel(SpectralModel):
         This is the peak in E^2 x dN/dE and is given by:
 
         .. math::
-            E_{Peak} = E_{0} \exp{ (2 - \alpha) / (2 * \beta)}
+            E_{Peak} = \sqrt{E_{0} E_{\mathrm{s}}} \exp{ (2 - \alpha) / (2 * \beta)}
         """
         escale = self.escale.quantity
         alpha = self.alpha.quantity
         beta = self.beta.quantity
-        return escale * np.exp((2 - alpha) / (2 * beta))
+        reference = self.reference.quantity
+        return np.sqrt(escale * reference) * np.exp((2 - alpha) / (2 * beta))
 
 
 class LogParabolaNormSpectralModel(SpectralModel):
@@ -2247,7 +2274,7 @@ class TemplateNDSpectralModel(SpectralModel):
         args = list(kwargs.values())
         return self.evaluate(energy, *args)
 
-    def write(self, overwrite=False, filename=None):
+    def write(self, overwrite=False, filename=None, hdu="SKYMAP", checksum=False):
         """
         Write the map.
 
@@ -2260,6 +2287,11 @@ class TemplateNDSpectralModel(SpectralModel):
             Filename of the template model. By default, the template model
             will be saved with the `TemplateNDSpectralModel.filename` attribute.
             If `filename` is provided, this attribute will be used.
+        hdu : str, optional
+            Name of the HDU. Default is "SKYMAP".
+        checksum : bool, optional
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
         if filename is not None:
             self.filename = filename
@@ -2268,14 +2300,18 @@ class TemplateNDSpectralModel(SpectralModel):
         elif os.path.isfile(self.filename) and not overwrite:
             log.warning("Template file already exits, and overwrite is False")
         else:
-            self.map.write(self.filename, overwrite=overwrite)
+            self.map.write(
+                self.filename, overwrite=overwrite, hdu=hdu, checksum=checksum
+            )
+            self._hdu = hdu
 
     @classmethod
     def from_dict(cls, data, **kwargs):
         data = data["spectral"]
         filename = data["filename"]
-        m = RegionNDMap.read(filename)
+        m = RegionNDMap.read(filename, hdu=data.get("hdu"))
         model = cls(m, filename=filename)
+        model._hdu = data.get("hdu", "SKYMAP")
         for idx, p in enumerate(model.parameters):
             par = p.to_dict()
             par.update(data["parameters"][idx])
@@ -2287,6 +2323,9 @@ class TemplateNDSpectralModel(SpectralModel):
         data = super().to_dict(full_output)
         data["spectral"]["filename"] = self.filename
         data["spectral"]["unit"] = str(self.map.unit)
+        hdu = getattr(self, "_hdu", "SKYMAP")
+        if hdu != "SKYMAP":
+            data["spectral"]["hdu"] = hdu
         return data
 
 
@@ -2579,6 +2618,18 @@ class NaimaSpectralModel(SpectralModel):
             parameters.append(Parameter("B", B))
             parameters.append(Parameter("radius", radius, frozen=True))
 
+        if "Eemin" in self.radiative_model.param_names:
+            for name in ["Eemin", "Eemax"]:
+                value = getattr(self.radiative_model, name)
+                parameter = Parameter(name, value, frozen=True)
+                parameters.append(parameter)
+
+        if "Epmin" in self.radiative_model.param_names:
+            for name in ["Epmin", "Epmax"]:
+                value = getattr(self.radiative_model, name)
+                parameter = Parameter(name, value, frozen=True)
+                parameters.append(parameter)
+
         self.default_parameters = Parameters(parameters)
         self.ssc_energy = np.logspace(-7, 9, 100) * u.eV
         super().__init__()
@@ -2651,6 +2702,14 @@ class NaimaSpectralModel(SpectralModel):
 
         if "B" in self.radiative_model.param_names:
             self.radiative_model.B = self.B.quantity
+
+        if "Eemin" in self.radiative_model.param_names:
+            self.radiative_model.Eemin = self.Eemin.quantity
+            self.radiative_model.Eemax = self.Eemax.quantity
+
+        if "Epmin" in self.radiative_model.param_names:
+            self.radiative_model.Epmin = self.Epmin.quantity
+            self.radiative_model.Epmax = self.Epmax.quantity
 
     def evaluate(self, energy, *args):
         """Evaluate the model.

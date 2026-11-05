@@ -1,6 +1,11 @@
 r"""
-Dark Matter Indirect Detection with Gammapy: Basics
-===================================================
+Dark Matter indirect detection: Modeling the Expected Signal
+============================================================
+
+Learn how to model gamma-ray signals from dark matter annihilation and decay.
+
+Introduction
+------------
 
 Weakly Interacting Massive Particles (WIMPs) are among the most
 compelling candidates for Dark Matter (DM). If they exist, WIMPs can
@@ -368,7 +373,7 @@ print(f"D-factor integrated on 0.1 deg circle: {total_dfact:.3g}")
 #   these expected names, a `mapping_dict` must be provided to map them
 #   accordingly.
 #
-# Currently, the default source is PPPC4DMID.
+# Currently, the default source is CosmiXs.
 #
 # The :class:`~gammapy.astro.darkmatter.PrimaryFlux` class in Gammapy
 # interpolates these tables and returns dN/dE as a spectral model that can
@@ -402,7 +407,7 @@ channels = ["tau", "mu", "b", "Z", "h"]
 fig, ax = plt.subplots(figsize=(7, 5))
 
 for channel in channels:
-    fluxes = PrimaryFlux(mDM=mDM, channel=channel)
+    fluxes = PrimaryFlux(mDM=mDM, channel=channel, source="pppc4")
     fluxes.plot(
         energy_bounds=[mDM / 100, mDM],
         ax=ax,

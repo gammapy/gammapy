@@ -22,8 +22,8 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=2.0",
-    "scipy>=1.13,<1.18",
-    "astropy>=6.1.5,<8.0",  # AnchoredEllipse fix
+    "scipy>=1.13",
+    "astropy>=6.1.5",  # AnchoredEllipse fix
     "regions>=0.9.0,!=0.12",
     "pyyaml>=5.3",
     "click>=8.0",
@@ -206,6 +206,9 @@ line-ending = "auto"
 
 # formatting of code example in docstring.
 docstring-code-format = true
+
+[tool.codespell]
+ignore-words-list = "dne,egal,esy,hist,indx,livetime,livetimes,nd,ned,merrors,NotIn,OptIn,slac,unparseable,compiletime,THIRDPARTY,inout"
 
 # Including towncrier to create the changelog
 [tool.towncrier]

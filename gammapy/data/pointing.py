@@ -36,7 +36,7 @@ def _check_coord_frame(coord_or_frame, expected_frame, name):
     if not (is_frame or is_coord):
         raise TypeError(
             f"{name} must be a 'astropy.coordinates.SkyCoord'"
-            "or {expected_frame} instance"
+            f" or {expected_frame.__name__} instance"
         )
 
     if is_coord:

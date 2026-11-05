@@ -20,6 +20,7 @@ from gammapy.modeling.models import (
 from numpy.testing import assert_allclose
 
 asdf = pytest.importorskip("asdf")
+asdf.get_config().validate_on_read = True
 pytest.importorskip("asdf.testing")
 
 
