@@ -424,3 +424,57 @@ Please give feedback and suggest additions to this page!
         # The new observation and the new events table can be serialised independently
         obs2.write("new_obs.fits.gz", overwrite=True)
         obs2.write("events.fits.gz", include_irfs=False, overwrite=True)
+
+
+.. dropdown:: Write and read Gammapy objects with ASDF
+    :name: dropdown-ASDF
+
+    Besides FITS, some Gammapy objects can be written to and read from files in
+    the ASDF (Advanced Scientific Data Format) format.
+
+    ASDF is a hierarchically-structured, human-readable data format that
+    stores numerical data in binary blocks along with the YAML metadata in one file.
+    Objects are validated against YAML schemas on read and write. The format
+    also supports memory mapping and compression.
+
+    ASDF support requires the optional ``asdf`` and ``asdf-astropy`` packages.
+    They can be installed together with Gammapy using
+    ``pip install gammapy[asdf]``.
+
+    Gammapy registers its ASDF extension automatically when ``asdf`` is
+    installed, so users can use Gammapy's ASDF support without any manual setup.
+
+    **Gammapy objects that support ASDF:**
+
+    - `~gammapy.maps`: `~gammapy.maps.MapAxis`, `~gammapy.maps.TimeMapAxis`,
+      `~gammapy.maps.LabelMapAxis`, `~gammapy.maps.MapAxes`,
+      `~gammapy.maps.WcsGeom`, `~gammapy.maps.HpxGeom`,
+      `~gammapy.maps.RegionGeom`, `~gammapy.maps.WcsNDMap`,
+      `~gammapy.maps.HpxNDMap`, `~gammapy.maps.RegionNDMap`, `~gammapy.maps.Maps`
+    - `~gammapy.data`: `~gammapy.data.GTI`
+    - `~gammapy.irf`: `~gammapy.irf.PSFMap`, `~gammapy.irf.RecoPSFMap`,
+      `~gammapy.irf.EDispMap`, `~gammapy.irf.EDispKernelMap`
+    - `~gammapy.datasets`: `~gammapy.datasets.MapDataset`,
+      `~gammapy.datasets.MapDatasetOnOff`
+    - `~gammapy.modeling.models`: `~gammapy.modeling.models.Models`
+
+
+    **Example: write an HpxNDMap object to ASDF and read it back**
+
+    .. testcode::
+
+        import astropy.units as u
+        import asdf
+        from gammapy.maps import HpxGeom, HpxNDMap, MapAxis
+
+        axes = [MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy")]
+        geom = HpxGeom(
+          nside=8, nest=False, frame="galactic", region="DISK(110.,75.,10.)", axes=axes)
+
+        m = HpxNDMap(geom, unit=1 / (u.cm**2 / u.s), meta={"telescope": "HESS"})
+
+        with asdf.AsdfFile({"map": m}) as af:
+          af.write_to("Hpxmap.asdf")
+
+        with asdf.open("Hpxmap.asdf") as af:
+          map_reloaded = af["map"]
