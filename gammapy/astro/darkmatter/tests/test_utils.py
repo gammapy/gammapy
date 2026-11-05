@@ -291,6 +291,22 @@ def test_integrate_los_zero_impact_anticenter(geom):
     assert_quantity_allclose(actual, expected)
 
 
+def test_integrate_los_zero_impact_center(geom):
+    jfactory = JFactory(
+        geom=geom,
+        profile=profiles.NFWProfile(),
+        distance=1 * u.kpc,
+        rmax=2 * u.kpc,
+    )
+
+    with pytest.raises(ValueError, match="central-pixel integration"):
+        jfactory._integrate_los(
+            impact=0 * u.kpc,
+            separation=0,
+            ndecade=100,
+        )
+
+
 @requires_data()
 def test_dmfluxmap_annihilation(jfact_annihilation):
     energy_min = 0.1 * u.TeV

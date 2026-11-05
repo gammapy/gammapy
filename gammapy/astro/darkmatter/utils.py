@@ -70,9 +70,6 @@ class JFactory:
         s_min = np.maximum(-los_half_length, observer)
         s_max = los_half_length
 
-        if s_min >= s_max:
-            return 0 * integral_unit
-
         if impact.value == 0:
             if s_min <= 0 * s_min.unit <= s_max:
                 raise ValueError(
