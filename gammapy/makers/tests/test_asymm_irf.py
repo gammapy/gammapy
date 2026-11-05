@@ -8,7 +8,6 @@ from astropy.coordinates import SkyCoord, EarthLocation
 from gammapy.data import Observation, FixedPointingInfo
 from gammapy.irf import IRF
 from gammapy.makers import MapDatasetMaker
-from gammapy.makers.utils import make_edisp_kernel_map
 from gammapy.maps import MapAxes, MapAxis, WcsGeom
 
 
@@ -126,7 +125,7 @@ def test_aeff_3d(aeff_3d):
     )
 
 
-def test_edisp_3d(edisp_3d):
+def test_edisp_3d(aeff_3d, edisp_3d):
     energy = [1, 2] * u.TeV
     migra = np.array([0.98, 0.97, 0.7])
     fov_lon = [0.1, 1.5] * u.deg
@@ -147,5 +146,11 @@ def test_edisp_3d(edisp_3d):
     pointing = SkyCoord(2, 1, unit="deg")
     geom = WcsGeom.create(10, binsz=0.5, axes=[ereco, etrue], skydir=pointing)
 
-    edispmap = make_edisp_kernel_map(edisp_3d, pointing, geom)
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(fixed_icrs=pointing),
+        location=EarthLocation(lon=0, lat=0),
+        livetime=42 * u.hour,
+        irfs={"aeff": aeff_3d, "edisp": edisp_3d},
+    )
+    edispmap = MapDatasetMaker.make_edisp_kernel(geom=geom, observation=test_obs)
     assert_allclose(edispmap.edisp_map.data[3][1][5][5], 0.623001, rtol=1e-3)
