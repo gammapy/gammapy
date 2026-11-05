@@ -219,26 +219,28 @@ def test_map_background_2d(bkg_2d, fixed_pointing_info):
     geom = WcsGeom.create(
         npix=(3, 3), binsz=4.0, axes=[axis], skydir=skydir.galactic, frame="galactic"
     )
-    bkg = make_map_background_irf(
-        pointing=skydir,
-        ontime="42 s",
-        bkg=bkg_2d,
-        geom=geom,
-        time_start=obstime,
-        fov_rotation_step=1.0 * u.deg,
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        bkg = make_map_background_irf(
+            pointing=skydir,
+            ontime="42 s",
+            bkg=bkg_2d,
+            geom=geom,
+            time_start=obstime,
+            fov_rotation_step=1.0 * u.deg,
+        )
 
     assert_allclose(bkg.data[:, 1, 1], [1.869025, 0.186903], rtol=1e-5)
 
     # Check that function works also passing the FixedPointingInfo
-    bkg_fpi = make_map_background_irf(
-        pointing=fixed_pointing_info,
-        ontime="42 s",
-        bkg=bkg_2d,
-        geom=geom,
-        time_start=obstime,
-        fov_rotation_step=1.0 * u.deg,
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        bkg_fpi = make_map_background_irf(
+            pointing=fixed_pointing_info,
+            ontime="42 s",
+            bkg=bkg_2d,
+            geom=geom,
+            time_start=obstime,
+            fov_rotation_step=1.0 * u.deg,
+        )
     assert_allclose(bkg.data, bkg_fpi.data, rtol=1e-5)
 
 
@@ -291,19 +293,20 @@ def geom(map_type, ebounds, skydir):
     ],
 )
 def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
-    m = make_map_background_irf(
-        pointing=fixed_pointing_info,
-        ontime="42 s",
-        bkg=bkg_3d,
-        geom=geom(
-            map_type=pars["map_type"],
-            ebounds=pars["ebounds"],
-            skydir=fixed_pointing_info.fixed_icrs,
-        ),
-        time_start=Time("2020-01-01T20:00"),
-        fov_rotation_step=1.0 * u.deg,
-        oversampling=10,
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        m = make_map_background_irf(
+            pointing=fixed_pointing_info,
+            ontime="42 s",
+            bkg=bkg_3d,
+            geom=geom(
+                map_type=pars["map_type"],
+                ebounds=pars["ebounds"],
+                skydir=fixed_pointing_info.fixed_icrs,
+            ),
+            time_start=Time("2020-01-01T20:00"),
+            fov_rotation_step=1.0 * u.deg,
+            oversampling=10,
+        )
 
     assert m.data.shape == pars["shape"]
     assert m.unit == ""
@@ -312,9 +315,10 @@ def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
 
 @requires_data()
 def test_make_map_background_irf_constant(fixed_pointing_info_aligned):
-    m = make_map_background_irf_with_symmetry(
-        fpi=fixed_pointing_info_aligned, symmetry="constant"
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        m = make_map_background_irf_with_symmetry(
+            fpi=fixed_pointing_info_aligned, symmetry="constant"
+        )
     for d in m.data:
         assert_allclose(d[1, :], d[1, 0])  # Constant along lon
         assert_allclose(d[0, 1], d[2, 1])  # Symmetric along lat
@@ -326,9 +330,10 @@ def test_make_map_background_irf_constant(fixed_pointing_info_aligned):
 
 @requires_data()
 def test_make_map_background_irf_sym(fixed_pointing_info_aligned):
-    m = make_map_background_irf_with_symmetry(
-        fpi=fixed_pointing_info_aligned, symmetry="symmetric"
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        m = make_map_background_irf_with_symmetry(
+            fpi=fixed_pointing_info_aligned, symmetry="symmetric"
+        )
     for d in m.data:
         assert_allclose(d[1, 0], d[1, 2], rtol=1e-4)  # Symmetric along lon
         assert_allclose(d[0, 1], d[2, 1], rtol=1e-4)  # Symmetric along lat
@@ -336,9 +341,10 @@ def test_make_map_background_irf_sym(fixed_pointing_info_aligned):
 
 @requires_data()
 def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
-    m = make_map_background_irf_with_symmetry(
-        fpi=fixed_pointing_info_aligned, symmetry="asymmetric"
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        m = make_map_background_irf_with_symmetry(
+            fpi=fixed_pointing_info_aligned, symmetry="asymmetric"
+        )
     for d in m.data:
         # TODO:
         #  Dimensions of skymap data are [energy, lat, lon] (and is
@@ -355,15 +361,16 @@ def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
 def test_make_map_background_irf_skycoord(fixed_pointing_info_aligned):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
     position = fixed_pointing_info_aligned.fixed_icrs
-    with pytest.raises(TypeError):
-        make_map_background_irf(
-            pointing=position,
-            ontime="42 s",
-            bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
-            geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=position),
-            time_start=Time("2020-01-01T20:00:00"),
-            fov_rotation_step=1.0 * u.deg,
-        )
+    with pytest.warns(GammapyDeprecationWarning):
+        with pytest.raises(TypeError):
+            make_map_background_irf(
+                pointing=position,
+                ontime="42 s",
+                bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+                geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=position),
+                time_start=Time("2020-01-01T20:00:00"),
+                fov_rotation_step=1.0 * u.deg,
+            )
 
 
 @requires_data()
@@ -381,52 +388,53 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
     obstime = Time("2020-01-01T20:00:00")
     location = observatory_locations["ctao_south"]
 
-    map_long_altaz = make_map_background_irf(
-        pointing=fixed_pointing_info,
-        ontime="42000 s",
-        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
-        geom=_get_geom(fixed_pointing_info, obstime),
-        time_start=obstime,
-        fov_rotation_step=20.0 * u.deg,
-        location=location,
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        map_long_altaz = make_map_background_irf(
+            pointing=fixed_pointing_info,
+            ontime="42000 s",
+            bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+            geom=_get_geom(fixed_pointing_info, obstime),
+            time_start=obstime,
+            fov_rotation_step=20.0 * u.deg,
+            location=location,
+        )
 
-    map_short_altaz = make_map_background_irf(
-        pointing=fixed_pointing_info,
-        ontime="42 s",
-        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
-        geom=_get_geom(fixed_pointing_info, obstime),
-        time_start=obstime + "20979 s",
-        fov_rotation_step=20.0 * u.deg,
-        location=location,
-    )
-    map_long_radec = make_map_background_irf(
-        pointing=fixed_pointing_info,
-        ontime="42000 s",
-        bkg=bkg_3d_custom("asymmetric", "RADEC"),
-        geom=_get_geom(fixed_pointing_info, obstime),
-        time_start=obstime,
-        fov_rotation_step=20.0 * u.deg,
-        location=location,
-    )
-    map_short_altaz_norotation = make_map_background_irf(
-        pointing=fixed_pointing_info,
-        ontime="42 s",
-        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
-        geom=_get_geom(fixed_pointing_info, obstime),
-        time_start=obstime - 21 * u.s,
-        fov_rotation_step=360.0 * u.deg,
-        location=location,
-    )
-    map_altaz_long_norotation = make_map_background_irf(
-        pointing=fixed_pointing_info,
-        ontime="4200 s",
-        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
-        geom=_get_geom(fixed_pointing_info, obstime),
-        time_start=obstime - 2100 * u.s,
-        fov_rotation_step=360.0 * u.deg,
-        location=location,
-    )
+        map_short_altaz = make_map_background_irf(
+            pointing=fixed_pointing_info,
+            ontime="42 s",
+            bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+            geom=_get_geom(fixed_pointing_info, obstime),
+            time_start=obstime + "20979 s",
+            fov_rotation_step=20.0 * u.deg,
+            location=location,
+        )
+        map_long_radec = make_map_background_irf(
+            pointing=fixed_pointing_info,
+            ontime="42000 s",
+            bkg=bkg_3d_custom("asymmetric", "RADEC"),
+            geom=_get_geom(fixed_pointing_info, obstime),
+            time_start=obstime,
+            fov_rotation_step=20.0 * u.deg,
+            location=location,
+        )
+        map_short_altaz_norotation = make_map_background_irf(
+            pointing=fixed_pointing_info,
+            ontime="42 s",
+            bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+            geom=_get_geom(fixed_pointing_info, obstime),
+            time_start=obstime - 21 * u.s,
+            fov_rotation_step=360.0 * u.deg,
+            location=location,
+        )
+        map_altaz_long_norotation = make_map_background_irf(
+            pointing=fixed_pointing_info,
+            ontime="4200 s",
+            bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+            geom=_get_geom(fixed_pointing_info, obstime),
+            time_start=obstime - 2100 * u.s,
+            fov_rotation_step=360.0 * u.deg,
+            location=location,
+        )
     # Check that background normalisations are consistent
     assert_allclose(np.sum(map_long_altaz.data), np.sum(map_long_radec.data), rtol=1e-2)
     assert np.isclose(
