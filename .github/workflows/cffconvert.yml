@@ -45,7 +45,7 @@ jobs:
           overwrite: true
 
       - name: commit changes
-        uses: stefanzweifel/git-auto-commit-action@v7.1.0
+        uses: stefanzweifel/git-auto-commit-action@v7.2.1
         if: success()
         with:
           commit_author: GitHub Actions <actions@github.com>
