@@ -51,50 +51,66 @@ class JFactory:
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
 
-    def _integrate_los_branch(self, impact, radius_min, radius_max, ndecade):
-        """Integrate one radial line-of-sight branch."""
-        exponent = 2 if self.annihilation else 1
-        unit = radius_max.unit
-
-        impact = impact.to(unit)
-        radius_min = radius_min.to(unit)
-        radius_max = radius_max.to(unit)
-
-        if impact.value == 0:
-            return self.profile.integral(
-                radius_min, radius_max, 0, ndecade, self.annihilation, self.distance
-            )
-
-        logmin = np.log10(radius_min.value)
-        logmax = np.log10(radius_max.value)
-        n = max(2, int((logmax - logmin) * ndecade))
-
-        t_min = np.arccosh(np.maximum((radius_min / impact).to_value(""), 1))
-        t_max = np.arccosh(np.maximum((radius_max / impact).to_value(""), 1))
-        t = np.linspace(t_min, t_max, n)
-
-        radius = impact * np.cosh(t)
-        values = self.profile(radius) ** exponent * radius
-
-        return np.trapezoid(values, t)
-
     def _integrate_los(self, impact, separation, ndecade):
         """Integrate the physical forward line of sight."""
         distance = self.distance
         rmax = self.rmax
+        exponent = 2 if self.annihilation else 1
+        integral_unit = u.Unit("GeV2 cm-5" if self.annihilation else "GeV cm-2")
 
-        if distance < rmax:
-            integral = self._integrate_los_branch(impact, distance, rmax, ndecade)
-            if separation < np.pi / 2:
-                integral += 2 * self._integrate_los_branch(
-                    impact, impact, distance, ndecade
+        if distance >= rmax and np.cos(separation) <= 0:
+            return 0 * integral_unit
+
+        discriminant = rmax**2 - impact**2
+        if discriminant <= 0 * rmax.unit**2:
+            return 0 * integral_unit
+
+        los_half_length = np.sqrt(discriminant)
+        observer = -distance * np.cos(separation)
+        s_min = np.maximum(-los_half_length, observer)
+        s_max = los_half_length
+
+        if impact.value == 0:
+            if s_min <= 0 * s_min.unit <= s_max:
+                raise ValueError(
+                    "The zero-impact central line of sight must be handled by "
+                    "the central-pixel integration."
                 )
-            return integral
 
-        if separation < np.pi / 2 and impact < rmax:
-            return 2 * self._integrate_los_branch(impact, impact, rmax, ndecade)
+            unit = s_min.unit
+            radial_decades = np.log10((s_max / s_min).to_value(""))
+            n = max(2, int(radial_decades * ndecade))
+            s = (
+                np.geomspace(
+                    s_min.to_value(unit),
+                    s_max.to_value(unit),
+                    n,
+                )
+                * unit
+            )
 
-        return 0 * u.Unit("GeV2 cm-5" if self.annihilation else "GeV cm-2")
+            return np.trapezoid(self.profile(s) ** exponent, s)
+
+        t_min = np.arcsinh((s_min / impact).to_value(""))
+        t_max = np.arcsinh((s_max / impact).to_value(""))
+
+        radius_start = np.sqrt(impact**2 + s_min**2)
+        radius_end = np.sqrt(impact**2 + s_max**2)
+        if s_min <= 0 * s_min.unit <= s_max:
+            radius_closest = impact
+        else:
+            radius_closest = np.minimum(radius_start, radius_end)
+
+        radial_decades = np.log10(
+            (radius_start / radius_closest).to_value("")
+        ) + np.log10((radius_end / radius_closest).to_value(""))
+        n = max(2, int(radial_decades * ndecade))
+
+        t = np.linspace(t_min, t_max, n)
+        radius = impact * np.cosh(t)
+        values = self.profile(radius) ** exponent * radius
+
+        return np.trapezoid(values, t)
 
     def _integrate_central_pixel(self, ndecade, rtol, max_subdivision):
         """Adaptively average the line-of-sight integral over the central pixel."""
@@ -191,27 +207,32 @@ class JFactory:
         .. math::
             r_\perp = D \sin\theta.
 
-        The integration is split into two regions:
-
-        1. :math:`D < r_{\max}`: the observer is inside the integration radius.
-        Directions with :math:`\theta < \pi / 2` cross the inner radial interval
-        twice, while directions with :math:`\theta \geq \pi / 2` contain only
-        the outward branch.
-
-        2. :math:`D \geq r_{\max}`: the observer is outside the integration radius.
-        The line of sight contributes only when it points toward the halo and
-        intersects the integration sphere, i.e. when :math:`\theta < \pi / 2`
-        and :math:`r_\perp < r_{\max}`.
-
-        Each radial branch is evaluated using
+        Defining the signed coordinate
 
         .. math::
-            \mathrm dl =
-            \frac{r}{\sqrt{r^2-r_\perp^2}}\,\mathrm dr.
+            s = l - D \cos\theta,
 
-        The apparent singularity at :math:`r = r_\perp` is integrable. To avoid
-        evaluating it directly, each radial branch is integrated with the
-        substitution :math:`r = r_\perp\cosh t`.
+        gives :math:`r^2 = r_\perp^2 + s^2`. The physical forward ray
+        (:math:`l \geq 0`) and the integration sphere
+        (:math:`r \leq r_{\max}`) define the limits
+
+        .. math::
+            s_{\min} = \max\left(-\sqrt{r_{\max}^2-r_\perp^2},
+            -D\cos\theta\right), \qquad
+            s_{\max} = \sqrt{r_{\max}^2-r_\perp^2}.
+
+        If these domains do not overlap, the integral is zero. Otherwise, for
+        non-zero impact parameter, the line of sight is evaluated continuously
+        using
+
+        .. math::
+            s = r_\perp\sinh t, \qquad
+            r = r_\perp\cosh t, \qquad
+            \mathrm ds = r\,\mathrm dt.
+
+        A zero-impact line of sight that does not cross the halo center is
+        integrated directly in positive :math:`s`. The central direction is
+        handled by the adaptive central-pixel integration.
         """
         if not np.isfinite(central_pixel_rtol) or central_pixel_rtol <= 0:
             raise ValueError("central_pixel_rtol must be a finite positive number.")
