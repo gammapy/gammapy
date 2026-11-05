@@ -304,7 +304,7 @@ class MapDatasetMaker(Maker):
         observation : `~gammapy.data.Observation`
             Observation container.
         use_region_center : bool, optional
-            Utilised for a `~gammapy.maps.RegionGeom`  geometry.
+            Utilised for a `~gammapy.maps.RegionGeom` geometry.
             If True, consider the values at the region center.
             If False, average over the whole region.
             Default is True.
@@ -339,7 +339,7 @@ class MapDatasetMaker(Maker):
         observation : `~gammapy.data.Observation`
             Observation container.
         use_region_center : bool, optional
-            Utilised for a `~gammapy.maps.RegionGeom`  geometry.
+            Utilised for a `~gammapy.maps.RegionGeom` geometry.
             If True, consider the values at the region center.
             If False, average over the whole region.
             Default is True.
