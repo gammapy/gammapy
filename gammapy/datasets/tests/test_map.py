@@ -649,6 +649,13 @@ def test_downsample():
     with pytest.raises(ValueError):
         dataset.downsample(2, axis_name="energy")
 
+    with pytest.raises(
+        ValueError,
+        match="Invalid 'axis_name': rad. "
+        "Possible options are: 'energy', 'energy_true', or None.",
+    ):
+        dataset.downsample(2, axis_name="rad")
+
 
 def test_downsample_energy(geom, geom_etrue):
     # This checks that downsample and resample_energy_axis give identical results
@@ -673,6 +680,42 @@ def test_downsample_energy(geom, geom_etrue):
         dataset_downsampled.edisp.edisp_map.data[:, :, 0, 0],
         dataset_resampled.edisp.edisp_map.data[:, :, 0, 0],
     )
+
+
+@requires_data()
+def test_downsample_energy_true(geom):
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=5, name="energy_true")
+    geom_et = WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+    dataset = get_map_dataset(geom, geom_et)
+    counts = Map.from_geom(geom, data=np.ones(geom.data_shape))
+    mask_safe = Map.from_geom(geom, data=np.ones(geom.data_shape), dtype="bool")
+    dataset.counts = counts
+    dataset.mask_safe = mask_safe
+
+    factor = 5
+    downsampled = dataset.downsample(factor=factor, axis_name="energy_true")
+
+    assert_allclose(downsampled.counts.data, dataset.counts.data)
+    assert_allclose(downsampled.background.data, dataset.background.data)
+    assert_allclose(downsampled.mask_safe.data, dataset.mask_safe.data)
+    assert downsampled.exposure.data.shape == (
+        dataset.exposure.data.shape[0] // factor,
+        dataset.exposure.data.shape[1],
+        dataset.exposure.data.shape[2],
+    )
+    assert_allclose(np.mean(downsampled.exposure.data), np.mean(dataset.exposure.data))
+
+    with pytest.raises(
+        ValueError,
+        match="Number of energy_true bins \\(5\\) is not divisible by 2",
+    ):
+        dataset.downsample(2, axis_name="energy_true")
 
 
 @requires_data()
@@ -2157,6 +2200,19 @@ def test_downsample_onoff():
     assert downsampled.counts.data.sum() == dataset_onoff.counts.data.sum()
     assert downsampled.counts_off.data.sum() == dataset_onoff.counts_off.data.sum()
     assert_allclose(downsampled.alpha.data, 0.5)
+
+    axis = MapAxis.from_energy_bounds(1, 10, 4, unit="TeV", name="energy_true")
+    geom_et = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
+
+    exposure = Map.from_geom(geom_et, data=np.ones((4, 10, 10)))
+    dataset_onoff.exposure = exposure
+    downsampled2 = dataset_onoff.downsample(2, axis_name="energy_true")
+
+    assert_allclose(dataset_onoff.counts, downsampled2.counts)
+    assert_allclose(dataset_onoff.counts_off, downsampled2.counts_off)
+    assert_allclose(
+        np.mean(dataset_onoff.exposure.data), np.mean(downsampled2.exposure.data)
+    )
 
 
 @requires_data()

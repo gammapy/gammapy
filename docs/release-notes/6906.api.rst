@@ -1,0 +1,1 @@
+Deprecate `gammapy.makers.utils.make_edisp_map` and `gammapy.makers.utils.make_edisp_kernel_map`.
