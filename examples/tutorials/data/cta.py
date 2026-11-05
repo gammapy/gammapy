@@ -23,11 +23,6 @@ consortium, you can use the simulated dataset from:
 - the CTAO Science Data Challenge of 2024 (see `here <https://ctaoobservatory.sharepoint.com/:f:/r/sites/share-open-data/Shared%20Documents/Reference%20datasets/Internal%20Science%20Data%20Challenge?csf=1&web=1&e=gNuFzI>`__
   for CTAO members)
 
-Gammapy fully supports the FITS data formats (events, IRFs) used in CTA
-1DC and SDC. The XML sky model format is not supported, but are also not needed
-to analyse the data, you have to specify your model via the Gammapy YAML
-model format, or Python code, as shown below.
-
 You can also use Gammapy to simulate CTAO data and evaluate CTAO performance
 using the CTAO response files. Two sets of responses are available for different
 array layouts:
@@ -323,8 +318,8 @@ plt.show()
 #
 # With the following command we can see what the XML file looks like
 # (uncomment it if you have installed `xmltodict`).
- 
- 
+
+
 # !tail -n 20 $CTADATA/models/models_gps.xml
 
 ######################################################################
