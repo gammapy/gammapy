@@ -368,6 +368,23 @@ def test_region_nd_io_gadf_rad_axis(tmpdir):
     assert m_new.data.shape == (3, 2, 1, 1)
 
 
+def test_region_nd_io_gadf_more_than_5_axes(tmpdir):
+    energy_axis = MapAxis.from_edges([1, 3, 10] * u.TeV, name="energy")
+    axes = [energy_axis] + [
+        MapAxis.from_nodes([0, 1, 2], name=f"par{idx}", unit="") for idx in range(6)
+    ]
+    m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=axes)
+    m.data = np.arange(np.prod(m.data.shape)).reshape(m.data.shape)
+
+    m.write(tmpdir / "test.fits", format="gadf")
+
+    m_new = RegionNDMap.read(tmpdir / "test.fits", format="gadf")
+
+    assert m_new.geom.axes.names == ["energy"] + [f"par{idx}" for idx in range(6)]
+    assert m_new.data.shape == (3, 3, 3, 3, 3, 3, 2, 1, 1)
+    assert_allclose(m_new.data, m.data)
+
+
 def test_region_nd_hdulist():
     energy_axis = MapAxis.from_edges([1, 3, 10] * u.TeV, name="energy")
     m = RegionNDMap.create(region="icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
