@@ -279,7 +279,7 @@ plt.show()
 
 
 ######################################################################
-# Finally you can write the extracted datasets to disk using the GADF
+# Finally, you can write the extracted datasets to disk using the GADF
 # format.
 #
 
