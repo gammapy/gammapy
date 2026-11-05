@@ -83,11 +83,14 @@ class JFactory:
             unit = s_min.unit
             radial_decades = np.log10((s_max / s_min).to_value(""))
             n = max(2, int(radial_decades * ndecade))
-            s = np.geomspace(
-                s_min.to_value(unit),
-                s_max.to_value(unit),
-                n,
-            ) * unit
+            s = (
+                np.geomspace(
+                    s_min.to_value(unit),
+                    s_max.to_value(unit),
+                    n,
+                )
+                * unit
+            )
 
             return np.trapezoid(self.profile(s) ** exponent, s)
 
