@@ -18,6 +18,7 @@ from gammapy.data.ivoa import (
     make_obs_table,
     to_obscore_table,
 )
+from gammapy.data import HDUIndexTable
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 
@@ -146,6 +147,10 @@ def test_make_hdu_table(fetched_list):
         assert len(hdu_tab) == (len(fetched_list) + 2)
     else:
         assert len(hdu_tab) == 6 * len(fetched_list)
+
+    for row in hdu_tab:
+        assert row["HDU_TYPE"] in HDUIndexTable.VALID_HDU_TYPE
+        assert row["HDU_CLASS"] in HDUIndexTable.VALID_HDU_CLASS
 
 
 @requires_data()
