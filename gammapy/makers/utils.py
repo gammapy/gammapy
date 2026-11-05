@@ -172,6 +172,7 @@ def _map_spectrum_weight(map, spectrum=None):
     return map * weights.reshape(shape.astype(int))
 
 
+@deprecated("2.2", alternative="MapDatasetMaker.make_background")
 def make_map_background_irf(
     pointing,
     ontime,

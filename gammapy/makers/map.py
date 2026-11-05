@@ -5,14 +5,15 @@ from astropy.table import Table
 import numpy as np
 from regions import PointSkyRegion
 from gammapy.datasets import MapDatasetMetaData
+from gammapy.data import Observation, FixedPointingInfo, PointingMode
 from gammapy.irf import EDispMap, EDispKernelMap, PSFMap, FoVAlignment
-from gammapy.data import Observation
 from gammapy.maps import Map
 from .core import Maker
 from .utils import (
     make_counts_rad_max,
-    make_map_background_irf,
     project_irf_on_geom,
+    integrate_project_irf_on_geom,
+    _compute_rotation_time_steps,
 )
 
 __all__ = ["MapDatasetMaker"]
@@ -232,7 +233,16 @@ class MapDatasetMaker(Maker):
 
         return exposure
 
-    def make_background(self, geom, observation):
+    @staticmethod
+    def make_background(
+        geom,
+        observation,
+        use_region_center=True,
+        interp_missing_data=True,
+        pad_offset=True,
+        oversampling=None,
+        fov_rotation_step=1 * u.deg,
+    ):
         """Make background map.
 
         Parameters
@@ -241,6 +251,23 @@ class MapDatasetMaker(Maker):
             Reference geometry.
         observation : `~gammapy.data.Observation`
             Observation container.
+        use_region_center : bool, optional
+            For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
+            If False, average over the whole region.
+            Default is True.
+        interp_missing_data : bool, optional
+            Interpolate missing values in background 3d map.
+            Default is True, have to be set to True for CTAO IRF.
+        pad_offset : bool, optional
+            Pad one bin in offset for 2D background map.
+            This avoids extrapolation at edges and use the nearest value.
+            Default is True.
+        oversampling : int, optional
+            Oversampling factor in energy, used for the background model evaluation.
+            Default is None.
+        fov_rotation_step : `~astropy.units.Quantity`
+            Maximum rotation error to create sub-time bins if the IRF is in 3D and in AltAz.
+            Default is 1.0 deg.
 
         Returns
         -------
@@ -248,6 +275,7 @@ class MapDatasetMaker(Maker):
             Background map.
         """
         bkg = observation.bkg
+
         with u.add_enabled_units([u.def_unit("transit", u.sday)]):
             if isinstance(bkg, Map):
                 if not bkg.unit or bkg.unit.is_equivalent(u.Unit("")):
@@ -273,25 +301,48 @@ class MapDatasetMaker(Maker):
                         f"Background unit {observation.bkg.unit} is not supported"
                     )
 
-        use_region_center = getattr(self, "use_region_center", True)
+        time_start = observation.tstart
+        ontime = observation.observation_time_duration
+        location = observation.observatory_earth_location
+        pointing = observation.pointing
 
-        if self.background_interp_missing_data:
+        if interp_missing_data:
             bkg.interp_missing_data(axis_name="energy")
 
-        if self.background_pad_offset and bkg.has_offset_axis:
+        if pad_offset and bkg.has_offset_axis:
             bkg = bkg.pad(1, mode="edge", axis_name="offset")
 
-        return make_map_background_irf(
-            pointing=observation.pointing,
-            ontime=observation.observation_time_duration,
-            bkg=bkg,
-            geom=geom,
-            time_start=observation.tstart,
-            fov_rotation_step=self.fov_rotation_step,
-            oversampling=self.background_oversampling,
-            use_region_center=use_region_center,
-            location=observation.observatory_earth_location,
-        )
+        fov_frame = observation.get_fov_frame(observation.tmid, FoVAlignment.RADEC)
+        if not bkg.has_offset_axis and bkg.fov_alignment == FoVAlignment.ALTAZ:
+            if not isinstance(pointing, FixedPointingInfo):
+                raise TypeError(
+                    "make_map_background_irf requires FixedPointingInfo if "
+                    "BackgroundIRF.fov_alignement is ALTAZ",
+                )
+            times = _compute_rotation_time_steps(
+                time_start, time_start + ontime, fov_rotation_step, pointing, location
+            )
+            fov_frame = observation.get_fov_frame(times, FoVAlignment.ALTAZ)
+        else:
+            if (
+                isinstance(pointing, FixedPointingInfo)
+                and pointing.mode == PointingMode.DRIFT
+            ):
+                raise NotImplementedError(
+                    "Drift pointing mode is not supported for background calculation."
+                )
+            fov_frame = observation.get_fov_frame(observation.tmid, FoVAlignment.RADEC)
+
+        if oversampling is not None:
+            geom = geom.upsample(factor=oversampling, axis_name="energy")
+
+        bkg_map = integrate_project_irf_on_geom(geom, bkg, fov_frame, use_region_center)
+        bkg_map *= ontime
+
+        if oversampling is not None:
+            bkg_map = bkg_map.downsample(factor=oversampling, axis_name="energy")
+
+        return bkg_map.to_unit("")
 
     @staticmethod
     def make_edisp(geom, observation, use_region_center=True):
@@ -491,7 +542,13 @@ class MapDatasetMaker(Maker):
 
         if "background" in self.selection:
             kwargs["background"] = self.make_background(
-                dataset.counts.geom, observation
+                dataset.counts.geom,
+                observation,
+                use_region_center=use_region_center,
+                interp_missing_data=self.background_interp_missing_data,
+                pad_offset=self.background_pad_offset,
+                oversampling=self.background_oversampling,
+                fov_rotation_step=self.fov_rotation_step,
             )
 
         if "psf" in self.selection:
