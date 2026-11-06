@@ -305,7 +305,7 @@ class TestFermi4FGLObject:
 
     @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
     def test_sky_model(self, ref):
-        self.cat[ref["idx"]].sky_model
+        _ = self.cat[ref["idx"]].sky_model
 
     def test_flux_points(self):
         flux_points = self.source.flux_points
@@ -763,7 +763,7 @@ class TestFermi2PCObject:
 
     @pytest.mark.parametrize("ref", SOURCES_2PC, ids=lambda _: _["name"])
     def test_sky_model(self, ref):
-        self.cat[ref["idx"]].sky_model
+        _ = self.cat[ref["idx"]].sky_model
 
     def test_flux_points(self):
         flux_points = self.source.flux_points
@@ -875,7 +875,7 @@ class TestFermi3PCObject:
         assert_allclose(p["lat_0"].value, -45.17635419)
 
     def test_sky_model(self, ref=SOURCES_3PC[0]):
-        self.cat[ref["idx"]].sky_model
+        _ = self.cat[ref["idx"]].sky_model
 
     def test_flux_points(self, ref=SOURCES_3PC[0]):
         flux_points = self.cat[ref["idx"]].flux_points
@@ -919,7 +919,7 @@ class TestFermi3PCObject:
         assert_allclose(profile.data[10], 1287.9535, rtol=1e-3)
 
         with pytest.raises(KeyError):
-            self.cat["J1826-1256"].pulse_profile_radio
+            _ = self.cat["J1826-1256"].pulse_profile_radio
 
     def test_best_fit(self, ref=SOURCES_3PC[1]):
         profile = self.cat[ref["idx"]].pulse_profile_best_fit

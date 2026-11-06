@@ -211,7 +211,7 @@ class HpxGeom(Geom):
             idx_local = unravel_hpx_index(retval, self._npix)
 
         m = np.any(np.stack([t == INVALID_INDEX.int for t in idx_local]), axis=0)
-        for i, t in enumerate(idx_local):
+        for i, _t in enumerate(idx_local):
             idx_local[i][m] = INVALID_INDEX.int
 
         if not ravel:

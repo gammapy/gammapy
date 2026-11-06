@@ -13,7 +13,7 @@ from .core import Estimator
 __all__ = ["weighted_chi2_parameter", "EnergyDependentMorphologyEstimator"]
 
 
-def weighted_chi2_parameter(results_edep, parameters=["sigma"]):
+def weighted_chi2_parameter(results_edep, parameters=None):
     r"""Calculate the weighted chi-squared value for the parameters of interest.
 
     The chi-squared parameter is defined as follows:
@@ -49,6 +49,8 @@ def weighted_chi2_parameter(results_edep, parameters=["sigma"]):
     are independent, which cannot be guaranteed in this use case.
 
     """
+    if parameters is None:
+        parameters = ["sigma"]
     chi2_value = []
     df = []
     for parameter in parameters:

@@ -289,6 +289,7 @@ class EDispKernel(IRF):
                     warnings.warn(
                         f"Checksum verification failed for HDU {hdulist[0]} of {filename}.",
                         UserWarning,
+                        stacklevel=2,
                     )
             table_drm = Table.read(filename, hdu="DRM")
             table_drm["ENERG_LO"].unit = "MeV"

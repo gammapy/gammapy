@@ -136,7 +136,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
         distances = []
         center = self.regions[0].center
 
-        for idx, region in enumerate(self.regions):
+        for _idx, region in enumerate(self.regions):
             if isinstance(region, CircleAnnulusSkyRegion):
                 distance = (region.inner_radius + region.outer_radius) / 2.0
             else:
