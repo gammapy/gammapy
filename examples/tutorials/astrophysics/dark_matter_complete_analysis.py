@@ -125,7 +125,7 @@ The steps followed in this tutorial are:
 
 # sphinx_gallery_thumbnail_number = 5
 from gammapy.datasets import MapDataset, Datasets
-from gammapy.maps import MapAxis, WcsGeom
+from gammapy.maps import WcsGeom
 from gammapy.modeling.models import (
     FoVBackgroundModel,
     Models,
@@ -143,7 +143,6 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 ######################################################################
