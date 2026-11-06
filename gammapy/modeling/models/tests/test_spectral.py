@@ -1538,3 +1538,36 @@ def test_bpl_evalaute_array():
         np.ones(3) * 0.5 * u.TeV,
     )
     assert values.shape == (2, 3)
+
+
+def _big_endian(values):
+    return np.asarray(values, dtype=">f8")
+
+
+@pytest.mark.parametrize(
+    "make_model",
+    [
+        lambda: TemplateSpectralModel(
+            energy=_big_endian([1, 3, 10]) * u.TeV,
+            values=_big_endian([1e-11, 3e-12, 5e-13]) * u.Unit("cm-2 s-1 TeV-1"),
+        ),
+        lambda: PiecewiseNormSpectralModel(
+            energy=_big_endian([1, 3, 10]) * u.TeV, norms=[1, 2, 3]
+        ),
+        lambda: EBLAbsorptionNormSpectralModel(
+            _big_endian([1, 2, 3]) * u.keV,
+            _big_endian([0, 1]) * u.Unit(""),
+            u.Quantity(np.ones((2, 3)), ""),
+            redshift=0.5,
+            alpha_norm=1,
+        ),
+    ],
+    ids=["template", "piecewise_norm", "ebl_absorption_norm"],
+)
+def test_to_dict_big_endian(make_model):
+    model = make_model()
+    data = model.to_dict()["spectral"]
+
+    assert_allclose(data["energy"]["data"], model.energy.value)
+    new_model = model.__class__.from_dict({"spectral": data})
+    assert_allclose(new_model.energy, model.energy)
