@@ -208,28 +208,17 @@ points. They are stored in the ``stat_scan`` quantity of
 Probability density function of the normal distribution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``distrib`` statistic approximates the likelihood using a Gaussian
-probability density function, with a cumulative probability for upper
-limits. It uses the flux uncertainties to describe the probability of
-the measured flux given the flux predicted by the model.
-Upper limits are treated as censored measurements.
+The ``distrib`` statistic approximates the likelihood assuming Gaussian measurement errors. Flux measurements are described by a Gaussian probability density function, while upper limits are represented by the corresponding cumulative probability.
 
-The statistic approximates the likelihood of each flux point by a Gaussian,
-and treats upper limits as constrained measurements.
-The likelihood is proportional to the normal probability density function:
+Assuming Gaussian measurement errors, the likelihood is given by the normal probability density function:
 
 .. math::
     \mathcal{L}(f_i \mid m_i) = \frac{1}{\sqrt{2\pi}\sigma_i} \\
     \exp\left[-\frac{(f_i-m_i)^2}{2\sigma_i^2}\right].
 
-The corresponding contribution to the fit statistic is proportional to
-the squared normalised residual. For measured flux points, this has the
-same quadratic dependence on the residual as the chi-squared statistic;
-**the two differ in the treatment of upper limit**
+For symmetric uncertainties, it reduces to the same quadratic form as the chi-squared statistic. **Unlike the chi-squared statistic, it can also account for asymmetric uncertainties and upper limits.**
 
-For an upper limit, the likelihood is the probability
-that the flux lies below the limit given the model prediction, i.e. the
-Gaussian cumulative distribution function (CDF):
+For an upper limit, the measurement is unknown and only constrained to lie below the reported limit. The likelihood is obtained by marginalizing over these unreported measurements, resulting in a Gaussian cumulative distribution function (CDF) for Gaussian measurement errors:
 
 .. math::
     \Phi(x) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{x}  \exp\left(-\frac{t^2}{2}\right),dt \\
