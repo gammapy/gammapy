@@ -183,7 +183,7 @@ display(results_table)
 # The chi-squared value for each parameter of interest
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# We can also utilise the `~gammapy.estimators.energydependence.weighted_chi2_parameter`
+# We can also utilise the `~gammapy.estimators.energydependentmorphology.weighted_chi2_parameter`
 # function for each parameter.
 #
 # The weighted chi-squared significance for the ``sigma``, ``lat_0`` and ``lon_0`` values.

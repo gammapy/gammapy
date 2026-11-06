@@ -845,13 +845,6 @@ counts.fill_events(events)
 # -  ``"nearest"`` : Return value of nearest pixel (no interpolation).
 # -  ``"linear"`` : Interpolation with first order polynomial. This is the
 #    only interpolation method that is supported for all map types.
-# -  ``quadratic`` : Interpolation with second order polynomial.
-# -  ``cubic`` : Interpolation with third order polynomial.
-#
-# Note that ``"quadratic"`` and ``"cubic"`` interpolation are currently only
-# supported for WCS-based maps with regular geometry (e.g. 2D or ND with
-# the same geometry in every image plane). ``"linear"`` and higher order
-# interpolation by pixel coordinates is only supported for WCS-based maps.
 #
 # In the following example we create a new map and fill it by
 # interpolating another map:

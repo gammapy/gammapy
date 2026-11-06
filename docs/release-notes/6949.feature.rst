@@ -1,0 +1,1 @@
+Remove the limit of 5 non-spatial axes when reading a `~gammapy.maps.RegionNDMap` with gadf format.

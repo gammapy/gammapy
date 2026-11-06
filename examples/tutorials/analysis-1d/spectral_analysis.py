@@ -279,10 +279,8 @@ plt.show()
 
 
 ######################################################################
-# Finally you can write the extracted datasets to disk using the OGIP (default)
-# format (PHA, ARF, RMF, BKG, see
-# `here <https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/ogip/index.html>`__
-# for details):
+# Finally, you can write the extracted datasets to disk using the GADF
+# format.
 #
 
 path = Path("spectrum_analysis")

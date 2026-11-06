@@ -31,9 +31,6 @@ from gammapy.irf import (
 )
 from gammapy.irf.io import COMMON_IRF_HEADERS, IRF_DL3_HDU_SPECIFICATION
 from gammapy.makers import MapDatasetMaker
-from gammapy.makers.utils import (
-    make_edisp_kernel_map,
-)
 from gammapy.maps import MapAxis, WcsGeom
 
 ######################################################################
@@ -430,7 +427,14 @@ etrue = MapAxis.from_energy_bounds(0.5, 2, 6, unit="TeV", name="energy_true")
 ereco = MapAxis.from_energy_bounds(0.5, 2, 3, unit="TeV", name="energy")
 geom = WcsGeom.create(10, binsz=0.5, axes=[ereco, etrue], skydir=sky_target)
 
-edispmap = make_edisp_kernel_map(edisp3d, sky_target, geom)
+obs = Observation.create(
+    pointing=pointing,
+    location=obs_loc,
+    livetime=livetime,
+    irfs={"aeff": aeff_3d, "edisp": edisp3d},
+)
+
+edispmap = MapDatasetMaker.make_edisp_kernel(geom, obs)
 
 edispmap.peek()
 plt.show()
