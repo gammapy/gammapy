@@ -6,6 +6,8 @@ from gammapy.stats.utils import (
     sigma_to_ts_sensitivity,
     ts_to_sigma_sensitivity,
 )
+import pytest
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 def test_sigma_ts_conversion():
@@ -27,6 +29,12 @@ def test_sigma_ts_conversion():
     assert_allclose(ts, ts_ref)
     sigma = ts_to_sigma(ts, df=df)
     assert_allclose(sigma, sigma_ref)
+
+    with pytest.warns(GammapyDeprecationWarning, match="ts_asimov"):
+        ts_to_sigma(ts, df=df, ts_asimov=10)
+
+    with pytest.warns(GammapyDeprecationWarning, match="n_sigma_asimov"):
+        sigma_to_ts(sigma_ref, df=df, n_sigma_asimov=10)
 
 
 def test_sigma_ts_sensitivity_conversion():

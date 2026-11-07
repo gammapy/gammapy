@@ -3,12 +3,13 @@
 import numpy as np
 from scipy.stats import ncx2, chi2
 from scipy.optimize import brentq
-
+from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["sigma_to_ts", "ts_to_sigma"]
 
 
-def sigma_to_ts(n_sigma, df=1):
+@deprecated_renamed_argument("n_sigma_asimov", None, "2.2")
+def sigma_to_ts(n_sigma, df=1, n_sigma_asimov=0):
     """Convert number of sigma to delta ts.
 
     Assumes that the TS follows a chi2 distribution according to Wilks theorem [1].
@@ -23,7 +24,10 @@ def sigma_to_ts(n_sigma, df=1):
         Significance in number of sigma.
     df : int, optional
         Number of degree of freedom. Default is 1.
-
+    n_sigma_asimov : float, optional
+        Significance in number of sigma in the Asimov dataset.
+        Should only be used for sensitivity computations. Default is 0.
+        Deprecated since v2.2.
     Returns
     -------
     ts : float
@@ -89,7 +93,8 @@ def sigma_to_ts_sensitivity(n_sigma, df=1):
     return ts
 
 
-def ts_to_sigma(ts, df=1):
+@deprecated_renamed_argument("ts_asimov", None, "2.2")
+def ts_to_sigma(ts, df=1, ts_asimov=0):
     """Convert delta ts to number of sigma.
 
     Assumes that the TS follows a chi2 distribution according to Wilks theorem [1].
@@ -104,7 +109,10 @@ def ts_to_sigma(ts, df=1):
         Test statistic value.
     df : int, optional
         Number of degree of freedom. Default is 1.
-
+    ts_asimov : float, optional
+        TS value in the Asimov dataset.
+        Should only be used for sensitivity computations. Default is 0.
+        Deprecated since v2.2.
     Returns
     -------
     n_sigma : float
