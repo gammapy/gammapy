@@ -8,7 +8,7 @@ from gammapy.datasets.actors import DatasetsActor
 from gammapy.modeling import Fit, stat_profile_ul_scipy
 from gammapy.modeling.selection import NestedModelSelection
 from gammapy.modeling.parameter import restore_parameters_status
-from gammapy.stats.utils import ts_to_sigma
+from gammapy.stats.utils import ts_to_sigma_sensitivity
 from gammapy.utils.roots import find_roots
 from .core import Estimator
 
@@ -517,7 +517,7 @@ class ParameterSensitivityEstimator:
         """Call the Test Statistics function."""
         self.parameter.value = value
         ts_asimov = self.test.ts_asimov(datasets)
-        return ts_to_sigma(ts_asimov, ts_asimov=ts_asimov) - self.n_sigma
+        return ts_to_sigma_sensitivity(ts_asimov) - self.n_sigma
 
     def parameter_matching_significance(self, datasets):
         """Parameter value  matching the target significance."""
