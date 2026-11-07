@@ -351,6 +351,7 @@ class FluxCollectionEstimator:
         regardless of this option.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
+
             * "errn-errp": estimate asymmetric errors on flux.
 
         Fit solver computes upper limits if sqrt(TS) < n_sigma_ul.
