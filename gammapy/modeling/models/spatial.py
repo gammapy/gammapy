@@ -1853,7 +1853,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
         data = super().to_dict(full_output=full_output)
         for key, value in self.coords._data.items():
             data["spatial"][key] = {
-                "data": value.data.tolist(),
+                "data": value.value.tolist(),
                 "unit": str(value.unit),
             }
         return data
