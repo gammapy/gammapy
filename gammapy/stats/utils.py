@@ -4,6 +4,7 @@ import numpy as np
 from scipy.stats import ncx2, chi2
 from scipy.optimize import brentq
 from gammapy.utils.deprecation import deprecated_renamed_argument
+from gammapy.utils.roots import find_roots
 
 __all__ = ["sigma_to_ts", "ts_to_sigma"]
 
@@ -88,9 +89,8 @@ def sigma_to_ts_sensitivity(n_sigma, df=1):
         return 0.0
 
     # solve for nc = ts
-    ts = brentq(f, 0, q_med)
-
-    return ts
+    roots, _ = find_roots(f, 0, q_med)
+    return roots[0]
 
 
 @deprecated_renamed_argument("ts_asimov", None, "2.2")
