@@ -1571,7 +1571,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
     def to_dict(self, full_output=False):
         data = super().to_dict(full_output=full_output)
         data["spectral"]["energy"] = {
-            "data": self.energy.data.tolist(),
+            "data": self.energy.value.tolist(),
             "unit": str(self.energy.unit),
         }
         data["spectral"]["interp"] = self._interp
@@ -2145,11 +2145,11 @@ class TemplateSpectralModel(SpectralModel):
     def to_dict(self, full_output=False):
         data = super().to_dict(full_output)
         data["spectral"]["energy"] = {
-            "data": self.energy.data.tolist(),
+            "data": self.energy.value.tolist(),
             "unit": str(self.energy.unit),
         }
         data["spectral"]["values"] = {
-            "data": self.values.data.tolist(),
+            "data": self.values.value.tolist(),
             "unit": str(self.values.unit),
         }
 
@@ -2375,11 +2375,11 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         param = u.Quantity(self.param)
         if self.filename is None:
             data["spectral"]["energy"] = {
-                "data": self.energy.data.tolist(),
+                "data": self.energy.value.tolist(),
                 "unit": str(self.energy.unit),
             }
             data["spectral"]["param"] = {
-                "data": param.data.tolist(),
+                "data": param.value.tolist(),
                 "unit": str(param.unit),
             }
             data["spectral"]["values"] = {
