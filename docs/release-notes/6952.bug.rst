@@ -1,0 +1,1 @@
+Fix ``to_dict()`` of `~gammapy.modeling.models.TemplateSpectralModel`, `~gammapy.modeling.models.PiecewiseNormSpectralModel`, `~gammapy.modeling.models.EBLAbsorptionNormSpectralModel` and `~gammapy.modeling.models.PiecewiseNormSpatialModel` failing on big-endian arrays.
