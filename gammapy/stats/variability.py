@@ -106,7 +106,7 @@ def compute_fpp(flux, flux_err, axis=0):
     flux = flux.swapaxes(0, axis).T
 
     s_square = np.nansum((flux[..., 1:] - flux[..., :-1]) ** 2, axis=-1) / (
-        n_points.T - 1
+        2 * (n_points.T - 1)
     )
     sig_square = np.nansum(flux_err**2, axis=axis) / n_points
     fpp = np.sqrt(np.abs(s_square.T - sig_square)) / flux_mean
