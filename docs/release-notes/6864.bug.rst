@@ -1,0 +1,1 @@
+Add `gammapy.stats.utils.ts_to_sigma_sensitivity` and `gammapy.stats.utils.sigma_to_ts_sensitivity` as separate functions and fix computation with more than one degree of freedom
