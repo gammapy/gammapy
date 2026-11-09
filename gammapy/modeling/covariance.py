@@ -26,9 +26,10 @@ class Covariance:
     def __init__(self, parameters, data=None):
         self.parameters = parameters
         if data is None:
-            data = np.diag([p.error**2 for p in self.parameters])
-
-        self._data = np.asanyarray(data, dtype=float)
+            self._data = None
+            self._variance = np.array([p.error**2 for p in self.parameters])
+        else:
+            self._data = np.asanyarray(data, dtype=float)
 
     @property
     def shape(self):
@@ -39,6 +40,8 @@ class Covariance:
     @property
     def data(self):
         """Covariance data as a `~numpy.ndarray`."""
+        if self._data is None:
+            self._data = np.diag(self._variance)
         return self._data
 
     @data.setter
@@ -125,7 +128,7 @@ class Covariance:
             Sub-covariance.
         """
         idx = [self.parameters.index(par) for par in parameters]
-        data = self._data[np.ix_(idx, idx)]
+        data = self.data[np.ix_(idx, idx)]
         return self.__class__(parameters=parameters, data=data)
 
     def set_subcovariance(self, covar):
@@ -138,7 +141,7 @@ class Covariance:
         """
         if is_ray_initialized():
             # This copy is required to make the covariance setting work with ray
-            self._data = self._data.copy()
+            self._data = self.data.copy()
 
         idx = [self.parameters.index(par) for par in covar.parameters]
 
@@ -146,7 +149,7 @@ class Covariance:
             self.data[idx, :] = 0
             self.data[:, idx] = 0
 
-        self._data[np.ix_(idx, idx)] = covar.data
+        self.data[np.ix_(idx, idx)] = covar.data
 
     def plot_correlation(self, figsize=None, **kwargs):
         """Plot correlation matrix.
@@ -221,7 +224,10 @@ class CovarianceMixin:
     """Mixin class for covariance property on multi-components models."""
 
     def _check_covariance(self):
-        if not self.parameters == self._covariance.parameters:
+        if (
+            self._covariance is None
+            or not self.parameters == self._covariance.parameters
+        ):
             self._covariance = Covariance.from_stack(
                 [model.covariance for model in self._models]
             )

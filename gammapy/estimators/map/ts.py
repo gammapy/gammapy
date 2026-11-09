@@ -18,7 +18,7 @@ from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from gammapy.maps import Map, MapAxis, Maps
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash
-from gammapy.stats.utils import ts_to_sigma
+from gammapy.stats.utils import ts_to_sigma_sensitivity
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.compilation import get_fit_statistics_compiled
 from gammapy.utils.deprecation import deprecated_renamed_argument
@@ -722,7 +722,7 @@ class SimpleMapDataset:
         """Predicted number of counts."""
         return self.background + norm * self.model
 
-    def stat_sum(self, norm):
+    def stat_sum_likelihood(self, norm):
         """Statistics sum."""
         return self._cash_sum_compiled(self.counts, self.npred(norm))
 
@@ -839,8 +839,8 @@ class BrentqFluxEstimator(Estimator):
         with np.errstate(invalid="ignore", divide="ignore"):
             norm_err = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
 
-        stat = dataset.stat_sum(norm=norm)
-        stat_null = dataset.stat_sum(norm=0)
+        stat = dataset.stat_sum_likelihood(norm=norm)
+        stat_null = dataset.stat_sum_likelihood(norm=0)
 
         return {
             "norm": norm,
@@ -858,7 +858,7 @@ class BrentqFluxEstimator(Estimator):
         norm_err = result["norm_err"]
 
         def ts_diff(x):
-            return (stat_best + n_sigma**2) - dataset.stat_sum(x)
+            return (stat_best + n_sigma**2) - dataset.stat_sum_likelihood(x)
 
         if positive:
             min_norm = norm
@@ -927,9 +927,7 @@ class BrentqFluxEstimator(Estimator):
 
         def sigma_diff(x):
             ts_asimov = dataset.stat_sum_asimov_null(x) - dataset.stat_sum_asimov(x)
-            return (
-                ts_to_sigma(ts_asimov, ts_asimov=ts_asimov) - self.n_sigma_sensitivity
-            )
+            return ts_to_sigma_sensitivity(ts_asimov) - self.n_sigma_sensitivity
 
         min_norm = norm / 1000.0
         max_norm = norm * 1000.0
@@ -1024,8 +1022,8 @@ class BrentqFluxEstimator(Estimator):
         with np.errstate(invalid="ignore", divide="ignore"):
             norm_err = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
 
-        stat = dataset.stat_sum(norm=norm)
-        stat_null = dataset.stat_sum(norm=0)
+        stat = dataset.stat_sum_likelihood(norm=norm)
+        stat_null = dataset.stat_sum_likelihood(norm=0)
 
         return {
             "norm": norm,
@@ -1072,7 +1070,7 @@ class BrentqFluxEstimator(Estimator):
         norm = result["norm"]
         result["npred"] = dataset.npred(norm=norm).sum()
         result["npred_excess"] = result["npred"] - dataset.npred(norm=0).sum()
-        result["stat"] = dataset.stat_sum(norm=norm)
+        result["stat"] = dataset.stat_sum_likelihood(norm=norm)
 
         return result
 

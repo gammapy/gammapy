@@ -65,6 +65,8 @@ dependencies:
   - sphinx-gallery
   - sphinx-design
   - sphinx-copybutton
+  - sphinx-automodapi
+  - numpydoc
   - tox
   - pydata-sphinx-theme
   - pre-commit
@@ -79,8 +81,10 @@ dependencies:
   # - cffconvert
   - pyinstrument
   - memray
-  # build tools required to compile sherpa from source via pip below
-  # (its bundled "region" library needs a yacc/lex parser generator and make)
+  # build tools required to compile sherpa from source
+  - fftw
+  - cmake
+  - pkg-config
   - bison
   - flex
   - make
@@ -90,3 +94,4 @@ dependencies:
       - PyGithub
       - pypandoc
       - sherpa>=4.17
+      - sphinx-changelog

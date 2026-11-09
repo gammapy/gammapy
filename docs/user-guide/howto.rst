@@ -146,7 +146,7 @@ Please give feedback and suggest additions to this page!
     via a hypothesis test. You fit two models: one including the source or component and one without it. Then,
     compute the difference in the test statistic (TS) between the two fits to determine the
     significance or p-value. To obtain the test statistic, call
-    `~gammapy.modeling.Dataset.stat_sum` for the model corresponding to your two
+    `~gammapy.modeling.Datasets.stat_sum_likelihood` for the model corresponding to your two
     hypotheses (or take this value from the print output when running the fit), and
     take the difference. Note that in Gammapy, the fit statistic is defined as
     :math:`S = - 2 * log(L)` for likelihood :math:`L`, such that :math:`TS = S_0 - S_1`. See

@@ -1,0 +1,27 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id : "asdf://gammapy.org/gammapy/schemas/maps/labelmapaxis-1.0.0"
+
+title: |
+  Represents LabelMapAxis.
+
+description: |
+     Support the serialization of LabelMapAxis which represents a map axis using labels.
+
+type: object
+properties:
+  name:
+    type: string
+    description: |
+      Axis name.
+  labels:
+    type: array
+    items:
+      type: string
+    description: |
+      Labels to be used for the axis nodes.
+
+required : [labels]
+additionalProperties: false
+...

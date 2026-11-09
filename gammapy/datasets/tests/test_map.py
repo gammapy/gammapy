@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, EarthLocation
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
@@ -36,7 +36,6 @@ from gammapy.irf import (
     RecoPSFMap,
 )
 from gammapy.makers import MapDatasetMaker
-from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import (
     HpxGeom,
     LabelMapAxis,
@@ -148,12 +147,15 @@ def get_exposure(geom_etrue):
     )
     aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
-    exposure_map = make_map_exposure_true_energy(
-        pointing=SkyCoord(1, 0.5, unit="deg", frame="galactic"),
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(
+            fixed_icrs=SkyCoord(1, 0.5, unit="deg", frame="galactic").icrs
+        ),
+        location=EarthLocation(lon=0, lat=0),
         livetime=1 * u.hr,
-        aeff=aeff,
-        geom=geom_etrue,
+        irfs={"aeff": aeff},
     )
+    exposure_map = MapDatasetMaker.make_exposure(geom=geom_etrue, observation=test_obs)
     return exposure_map
 
 
@@ -162,6 +164,7 @@ def get_psf():
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
+    aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
     geom = WcsGeom.create(
         skydir=(0, 0),
@@ -171,12 +174,16 @@ def get_psf():
         axes=[RAD_AXIS_DEFAULT, psf.axes["energy_true"]],
     )
 
-    return make_psf_map(
-        psf=psf,
-        pointing=SkyCoord(0, 0.5, unit="deg", frame="galactic"),
-        geom=geom,
-        exposure_map=Map.from_geom(geom.squash("rad"), unit="cm2 s"),
+    test_obs = Observation.create(
+        pointing=FixedPointingInfo(
+            fixed_icrs=SkyCoord(0, 0.5, unit="deg", frame="galactic").icrs
+        ),
+        location=EarthLocation(lon=0, lat=0),
+        livetime=30 * u.minute,
+        irfs={"aeff": aeff, "psf": psf},
     )
+
+    return MapDatasetMaker.make_psf(geom, test_obs)
 
 
 @requires_data()
@@ -274,10 +281,10 @@ def test_map_dataset_weight(sky_model, geom, geom_etrue):
 
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit
-    assert_allclose(dataset.stat_sum(), 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 12824.506311)
 
     dataset.mask_fit = dataset.mask_fit * 3.0
-    assert_allclose(dataset.stat_sum(), 3.0 * 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 3.0 * 12824.506311)
 
     dataset = get_map_dataset(geom, geom_etrue, weighted=True)
     assert dataset.stat_type == "cash_weighted"
@@ -287,10 +294,10 @@ def test_map_dataset_weight(sky_model, geom, geom_etrue):
 
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit
-    assert_allclose(dataset.stat_sum(), 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 12824.506311)
 
     dataset.mask_fit = dataset.mask_fit * 3.0
-    assert_allclose(dataset.stat_sum(), 3.0 * 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 3.0 * 12824.506311)
 
     dataset = get_map_dataset(geom, geom_etrue, weighted=True)
     assert dataset.stat_type == "cash_weighted"
@@ -300,7 +307,7 @@ def test_map_dataset_weight(sky_model, geom, geom_etrue):
 
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit * 3.0
-    assert_allclose(dataset.stat_sum(), 3.0 * 12824.506311)
+    assert_allclose(dataset.stat_sum_likelihood(), 3.0 * 12824.506311)
 
 
 def test_map_dataset_name():
@@ -641,6 +648,13 @@ def test_downsample():
     with pytest.raises(ValueError):
         dataset.downsample(2, axis_name="energy")
 
+    with pytest.raises(
+        ValueError,
+        match="Invalid 'axis_name': rad. "
+        "Possible options are: 'energy', 'energy_true', or None.",
+    ):
+        dataset.downsample(2, axis_name="rad")
+
 
 def test_downsample_energy(geom, geom_etrue):
     # This checks that downsample and resample_energy_axis give identical results
@@ -665,6 +679,42 @@ def test_downsample_energy(geom, geom_etrue):
         dataset_downsampled.edisp.edisp_map.data[:, :, 0, 0],
         dataset_resampled.edisp.edisp_map.data[:, :, 0, 0],
     )
+
+
+@requires_data()
+def test_downsample_energy_true(geom):
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=5, name="energy_true")
+    geom_et = WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+    dataset = get_map_dataset(geom, geom_et)
+    counts = Map.from_geom(geom, data=np.ones(geom.data_shape))
+    mask_safe = Map.from_geom(geom, data=np.ones(geom.data_shape), dtype="bool")
+    dataset.counts = counts
+    dataset.mask_safe = mask_safe
+
+    factor = 5
+    downsampled = dataset.downsample(factor=factor, axis_name="energy_true")
+
+    assert_allclose(downsampled.counts.data, dataset.counts.data)
+    assert_allclose(downsampled.background.data, dataset.background.data)
+    assert_allclose(downsampled.mask_safe.data, dataset.mask_safe.data)
+    assert downsampled.exposure.data.shape == (
+        dataset.exposure.data.shape[0] // factor,
+        dataset.exposure.data.shape[1],
+        dataset.exposure.data.shape[2],
+    )
+    assert_allclose(np.mean(downsampled.exposure.data), np.mean(dataset.exposure.data))
+
+    with pytest.raises(
+        ValueError,
+        match="Number of energy_true bins \\(5\\) is not divisible by 2",
+    ):
+        dataset.downsample(2, axis_name="energy_true")
 
 
 @requires_data()
@@ -880,7 +930,7 @@ def test_prior_stat_sum(sky_model, geom, geom_etrue):
     uniformprior = UniformPrior(min=0, max=1, weight=1)
 
     datasets.models.parameters["amplitude"].prior = uniformprior
-    assert_allclose(datasets._stat_sum_likelihood(), 12825.9370, rtol=1e-3)
+    assert_allclose(datasets.stat_sum_likelihood(), 12825.9370, rtol=1e-3)
     assert_allclose(datasets.stat_sum(), 12825.9370, rtol=1e-3)
 
     datasets.models.parameters["amplitude"].value = -1e-12
@@ -1495,11 +1545,15 @@ def test_map_dataset_on_off_to_asimov(images):
     dataset = get_map_dataset_onoff(images)
 
     npred_sum = dataset.npred().data.sum()
-
     asimov_dataset = dataset._to_asimov_dataset()
     counts_asimov = asimov_dataset.counts.data.sum()
+    assert_allclose(npred_sum, counts_asimov, rtol=1e-3)
 
-    assert_allclose(npred_sum, counts_asimov)
+    dataset.counts = None
+    asimov_dataset1 = dataset._to_asimov_dataset()
+    counts_asimov1 = asimov_dataset1.counts.data.sum()
+    assert_allclose(npred_sum, counts_asimov1, rtol=1e-3)
+    assert asimov_dataset1.counts_off == dataset.counts_off
 
 
 @requires_data()
@@ -2145,6 +2199,19 @@ def test_downsample_onoff():
     assert downsampled.counts.data.sum() == dataset_onoff.counts.data.sum()
     assert downsampled.counts_off.data.sum() == dataset_onoff.counts_off.data.sum()
     assert_allclose(downsampled.alpha.data, 0.5)
+
+    axis = MapAxis.from_energy_bounds(1, 10, 4, unit="TeV", name="energy_true")
+    geom_et = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
+
+    exposure = Map.from_geom(geom_et, data=np.ones((4, 10, 10)))
+    dataset_onoff.exposure = exposure
+    downsampled2 = dataset_onoff.downsample(2, axis_name="energy_true")
+
+    assert_allclose(dataset_onoff.counts, downsampled2.counts)
+    assert_allclose(dataset_onoff.counts_off, downsampled2.counts_off)
+    assert_allclose(
+        np.mean(dataset_onoff.exposure.data), np.mean(downsampled2.exposure.data)
+    )
 
 
 @requires_data()

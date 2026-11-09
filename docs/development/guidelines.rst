@@ -9,7 +9,7 @@ by any contributor to Gammapy. We warmly welcome new contributors to Gammapy.
 
 * Any Gammapy activity should respect the `Code of Conduct <https://gammapy.org/CoC.html>`__
   of the project.
-* If you are new to Gammapy please read the :ref:<new-contributor> steps in addition
+* If you are new to Gammapy please read the :ref:`new-contributor` steps in addition
   the ones outlined here.
 * Before beginning work on a pull request (PR), you should comment on an issue
   (ideally labeled ``package-novice``) to express your interest, and propose

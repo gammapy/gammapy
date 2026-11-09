@@ -49,7 +49,9 @@ def signal_model():
     table["NORM"] = norm / norm.max()
     t_ref = Time("2000-01-01")
     table.meta = dict(MJDREFI=t_ref.mjd, MJDREFF=0, TIMEUNIT="s", TIMESYS="utc")
-    temporal_model = LightCurveTemplateTemporalModel.from_table(table)
+    temporal_model = LightCurveTemplateTemporalModel.from_table(
+        table, interp_kwargs={"fill_value": None}
+    )
 
     return SkyModel(
         spatial_model=spatial_model,
@@ -132,7 +134,9 @@ def get_energy_dependent_temporal_model():
 
     m = RegionNDMap.from_geom(data=data.value, geom=geom, unit=data.unit)
     t_ref = Time(51544.00074287037, format="mjd", scale="tt")
-    return LightCurveTemplateTemporalModel(m, t_ref=t_ref)
+    return LightCurveTemplateTemporalModel(
+        m, t_ref=t_ref, interp_kwargs={"fill_value": None}
+    )
 
 
 @pytest.fixture()
@@ -184,7 +188,9 @@ def test_evaluate_timevar_source(energy_dependent_temporal_sky_model, dataset):
     assert_allclose(npred.data[:, 50, 0, 0], [0.729098, 1.442345, 1.869792], rtol=2e-4)
 
     filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
-    temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
+    temporal_model = LightCurveTemplateTemporalModel.read(
+        filename, format="map", interp_kwargs={"fill_value": None}
+    )
     temporal_model.t_ref.value = 51544.00074287037
     dataset.models[0].temporal_model = temporal_model
     evaluator = dataset.evaluators["test-source"]
@@ -667,6 +673,29 @@ def test_mde_run(dataset, models, caplog, tmp_path):
 def test_irf_alpha_config(dataset, models):
     irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
+    )
+    livetime = 1.0 * u.hr
+    pointing = FixedPointingInfo(
+        fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
+    )
+    obs = Observation.create(
+        obs_id=1001,
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
+        location=LOCATION,
+    )
+
+    dataset.models = models
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.run(dataset=dataset, observation=obs)
+    assert events is not None
+
+
+@requires_data()
+def test_irf_beta_config(dataset, models):
+    irfs = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/cta-caldb/Prod6-CTAO-South-20deg-AverageAz-2LSTs14MSTs37SSTs-dark-180000s-v1.0.fits.gz"
     )
     livetime = 1.0 * u.hr
     pointing = FixedPointingInfo(

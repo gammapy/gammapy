@@ -1,24 +1,10 @@
 .. _quickstart-setup:
 
-Recommended Setup
------------------
+Downloading tutorials and datasets
+----------------------------------
 
-We recommend using :ref:`virtual environments <virtual-envs>`, to do so
-execute the following commands in the terminal:
-
-.. substitution-code-block:: console
-
-    curl -O https://gammapy.org/download/install/gammapy-|release|-environment.yml
-    conda env create -f gammapy-|release|-environment.yml
-
-.. note::
-
-    On Windows, you have to open up the conda environment file and delete the
-    line with ``healpy``. This is an optional dependency that
-    currently isn't available on Windows.
-
-.. note::
-    ``sherpa`` is not part of the environment file provided because it is built from source via pip and needs extra build tools. If required, install it with ``python -m pip install sherpa`` after making the build tools available, e.g. ``conda install -c conda-forge bison flex make``.
+Once a virtual environment is created, download the tutorial
+notebooks and example datasets to get started.
 
 **The best way to get started and learn Gammapy is to understand the** :ref:`package_structure`.
 You can download the Gammapy tutorial notebooks and the example

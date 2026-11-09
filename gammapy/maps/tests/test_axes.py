@@ -666,6 +666,11 @@ def test_timeaxis_table(time_intervals):
     assert table.colnames == ["START", "STOP"]
     assert len(table["START"]) == axis.nbin
     assert (table["START"] == axis.time_min).all()
+    assert table["START"].format == "isot"
+    assert table["STOP"].format == "isot"
+    # Check that the values actually parse as isot
+    Time(table["START"].value, format="isot")
+    Time(table["STOP"].value, format="isot")
 
 
 def test_pix_to_coord_time_axis(time_intervals):
@@ -1013,6 +1018,34 @@ def test_map_axis_format_plot_xaxis():
     ax1 = axis.format_plot_xaxis(ax=ax)
     assert ax1.xaxis.units == u.Unit("TeV")
     assert " ".join(ax1.axes.axes.get_xlabel().split()[:2]) == "True Energy"
+
+
+def test_map_axis_format_plot_xaxis_narrow_log():
+    # A log x-axis spanning less than one decade
+    # must not produce overlapping scientific-notation minor tick labels.
+    narrow = MapAxis.from_energy_bounds("1 TeV", "1.2 TeV", nbin=20, name="energy")
+    wide = MapAxis.from_energy_bounds("0.03 TeV", "300 TeV", nbin=20, name="energy")
+
+    def tick_labels(axis):
+        with mpl_plot_check():
+            ax = plt.gca()
+            with quantity_support():
+                ax.hist(axis.center, bins=axis.edges)
+        axis.format_plot_xaxis(ax=ax)
+        ax.figure.canvas.draw()
+        major = [t.get_text() for t in ax.get_xticklabels(minor=False) if t.get_text()]
+        minor = [t.get_text() for t in ax.get_xticklabels(minor=True) if t.get_text()]
+        return major, minor
+
+    major_narrow, minor_narrow = tick_labels(narrow)
+    # No overlapping minor labels and plain scalar major labels
+    assert minor_narrow == []
+    assert all("times" not in lbl and "10^" not in lbl for lbl in major_narrow)
+
+    # Wide range is unaffected: no minor labels and no scalar override
+    major_wide, minor_wide = tick_labels(wide)
+    assert minor_wide == []
+    assert any("mathdefault" in lbl for lbl in major_wide)
 
 
 def test_time_format(time_intervals):

@@ -1,0 +1,1 @@
+Add ASDF serialization support for `~gammapy.maps.TimeMapAxis` and `~gammapy.maps.LabelMapAxis` .

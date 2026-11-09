@@ -1,0 +1,1 @@
+Fix issue in Fermi-LAT tutorial where dimmest sources are used for fitting rather than brightest.

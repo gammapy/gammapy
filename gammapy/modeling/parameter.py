@@ -73,9 +73,9 @@ class Parameter:
         Scale (sometimes used in fitting).
     unit : `~astropy.units.Unit` or str, optional
         Unit. Default is "".
-    min : float, str or `~astropy.units.quantity`, optional
+    min : float, str or `~astropy.units.Quantity`, optional
         Minimum (sometimes used in fitting). If `None`, set to `numpy.nan`. Default is None.
-    max : float, str or `~astropy.units.quantity`, optional
+    max : float, str or `~astropy.units.Quantity`, optional
         Maximum (sometimes used in fitting). Default is `numpy.nan`.
     frozen : bool, optional
         Frozen (used in fitting).  Default is False.

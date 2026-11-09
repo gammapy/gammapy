@@ -238,4 +238,4 @@ class _MapDatasetActorBackend(MapDataset, RayBackendMixin):
         for key, value in to_update.items():
             setattr(self, key, value)
         self.models.parameters.free_parameters.value = values
-        return self.stat_sum()
+        return self.stat_sum_likelihood()

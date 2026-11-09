@@ -1,0 +1,39 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id : "asdf://gammapy.org/gammapy/schemas/maps/timemapaxis-1.0.0"
+
+title: |
+  Represents TimeMapAxis.
+
+description: |
+  Support the serialization of TimeMapAxis which represents a time axis built into gammapy.
+
+type: object
+properties:
+  name:
+    type: string
+    description: |
+      Time axis name.
+  edges_min:
+    tag: "tag:stsci.edu:asdf/unit/quantity-1.*"
+    description: |
+       Array of bin edges minimum values.
+  edges_max:
+    tag: "tag:stsci.edu:asdf/unit/quantity-1.*"
+    description: |
+      Array of bin edges maximum values.
+  reference_time:
+    tag: "tag:stsci.edu:asdf/time/time-*"
+    description: |
+      Reference time used for the time axis.
+  interp:
+    type: string
+    enum: [lin]
+    description: |
+      Interpolation method used to transform between
+      axis and pixel coordinates. Only 'lin' is supported.
+
+required: [edges_min, edges_max, reference_time]
+additionalProperties: false
+...

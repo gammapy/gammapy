@@ -2,7 +2,7 @@
 import pytest
 import logging
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
@@ -20,9 +20,11 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplatePhaseCurveTemporalModel,
 )
+from gammapy.maps import MapAxis
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.utils.time import time_ref_to_dict
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 # TODO: add light-curve test case from scratch
@@ -41,9 +43,62 @@ def test_light_curve_str(light_curve):
 
 @requires_data()
 def test_light_curve_evaluate(light_curve):
+    past_t_min = Time(
+        light_curve.t_ref.quantity
+        + light_curve.map.geom.axes["time"].edges[0]
+        - 0.01 * u.day,
+        format="mjd",
+    )
+    past_t_max = Time(
+        light_curve.t_ref.quantity
+        + light_curve.map.geom.axes["time"].edges[-1]
+        + 0.01 * u.day,
+        format="mjd",
+    )
     t = Time(59500, format="mjd")
     val = light_curve(t)
     assert_allclose(val, 0.015512, rtol=1e-5)
+    assert_equal(
+        light_curve._interp_kwargs,
+        {"method": "linear", "values_scale": "lin", "fill_value": 0},
+    )
+
+    val = light_curve(past_t_min)
+    assert_allclose(val, 0.0, rtol=1e-7)
+
+    val = light_curve(past_t_max)
+    assert_allclose(val, 0.0, rtol=1e-7)
+
+    light_curve._interp_kwargs["fill_value"] = 2
+    val = light_curve(past_t_max)
+    assert_allclose(val, 2.0, rtol=1e-7)
+
+    light_curve._interp_kwargs["fill_value"] = np.nan
+    val = light_curve(past_t_max)
+    assert_allclose(val, np.nan)
+
+    new_map = light_curve.map.to_cube(
+        [MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", 1)]
+    )
+    new_curve = LightCurveTemplateTemporalModel(new_map, filename="_")
+    assert_equal(
+        new_curve._interp_kwargs,
+        {"method": "linear", "values_scale": "log", "fill_value": -np.inf},
+    )
+
+    with pytest.warns(GammapyDeprecationWarning):
+        new_curve = LightCurveTemplateTemporalModel(new_map, filename="_", method="log")
+        assert_equal(
+            new_curve._interp_kwargs,
+            {"method": "log", "values_scale": "log", "fill_value": -np.inf},
+        )
+    new_curve = LightCurveTemplateTemporalModel(
+        new_map, filename="_", interp_kwargs={"method": "log"}
+    )
+    assert_equal(
+        new_curve._interp_kwargs,
+        {"method": "log", "values_scale": "log", "fill_value": -np.inf},
+    )
 
 
 @requires_data()
@@ -583,3 +638,45 @@ def test_template_temporal_model_format():
     temporal_model = LightCurveTemplateTemporalModel.read(path)
     mod_dict = temporal_model.to_dict()
     assert mod_dict["temporal"]["format"] == "table"
+
+
+def test_lightcurve_temporal_integral_broadcasting():
+    time = np.arange(0, 10, 0.06) * u.hour
+    table = Table()
+    table["TIME"] = time
+    table["NORM"] = np.ones(len(time))
+    table.meta = {"MJDREFI": 55197.0, "MJDREFF": 0, "TIMEUNIT": "hour"}
+
+    temporal_model = LightCurveTemplateTemporalModel.from_table(table)
+
+    time_start = Time("2010-01-01T00:00:00") + np.array([[1, 3], [5, 7]]) * u.hour
+    time_stop = Time("2010-01-01T00:00:00") + np.array([[2, 3.5], [6, 8]]) * u.hour
+
+    val = temporal_model.integral(time_start, time_stop)
+
+    assert val.shape == (2, 2)
+    assert np.all(np.isfinite(val))
+
+def test_phase_curve_model_scale_serialisation(tmp_path):
+    phase = np.linspace(0.0, 1, 101)
+    norm = np.sin(phase * np.pi)
+
+    table = Table(data={"PHASE": phase, "NORM": norm})
+
+    t_ref = Time("2028-06-01", scale="tdb")
+    phase_model = TemplatePhaseCurveTemporalModel(
+        table=table,
+        filename=tmp_path / "test_scale.fits",
+        t_ref=t_ref.mjd * u.d,
+        scale="tt",
+    )
+
+    phase_model.write()
+
+    model_dict = phase_model.to_dict()
+    assert model_dict["temporal"]["scale"] == "tt"
+
+    new_model = TemplatePhaseCurveTemporalModel.from_dict(model_dict)
+
+    assert new_model.scale == "tt"
+    assert_allclose(new_model(t_ref), 0.1298182, rtol=3e-8)

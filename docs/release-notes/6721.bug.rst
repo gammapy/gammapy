@@ -1,0 +1,1 @@
+Fixes incorrect calling of dataset for frozen models in `~gammapy.estimators.FluxCollectionEstimator`.

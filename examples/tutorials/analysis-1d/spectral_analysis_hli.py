@@ -234,7 +234,7 @@ print(analysis.observations.ids)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Now we proceed to the data reduction. In the config file we have chosen
-# a WCS map geometry, energy axis and decided to stack the maps. We can
+# a 1D region geometry, energy axis and decided to stack the maps. We can
 # run the reduction using `.get_datasets()`:
 #
 

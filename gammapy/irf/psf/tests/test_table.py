@@ -80,6 +80,12 @@ def test_psf_3d_containment_radius(psf_3d):
     assert_allclose(q.value, [0.123261, 0.13131], rtol=1e-2)
     assert q.shape == (2,)
 
+    q = psf_3d.containment(rad=0.6 * u.deg, offset=1.5 * u.deg, energy_true=1 * u.TeV)
+    assert_allclose(q.value, [0.9975152960199243], rtol=1e-3)
+
+    q = psf_3d.containment(rad=0.7 * u.deg, offset=1.5 * u.deg, energy_true=1 * u.TeV)
+    assert_allclose(q.value, [0.999864], rtol=1e-4)
+
 
 @requires_data()
 def test_psf_3d_plot_vs_rad(psf_3d):

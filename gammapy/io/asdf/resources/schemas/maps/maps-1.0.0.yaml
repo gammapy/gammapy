@@ -1,0 +1,19 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://gammapy.org/gammapy/schemas/maps/maps-1.0.0"
+
+title: |
+  Represents Maps.
+
+description: |
+  Support the serialization of Maps which is a dictionary containing Map objects sharing the same geometry.
+
+type: object
+additionalProperties:
+  anyOf:
+    - tag: "asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0"
+    - tag: "asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0"
+    - tag: "asdf://gammapy.org/gammapy/tags/maps/regionndmap-1.0.0"
+
+...

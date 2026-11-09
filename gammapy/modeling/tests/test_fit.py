@@ -41,7 +41,7 @@ class MyDataset(Dataset):
     def models(self):
         return self._models
 
-    def stat_sum(self):
+    def stat_sum_likelihood(self):
         # self._model.parameters = parameters
         x, y, z = [p.value for p in self.models.parameters.unique_parameters]
         x_opt, y_opt, z_opt = 2, 3e2, 4e-2
@@ -133,11 +133,11 @@ def test_run(backend):
 def test_run_scale_transform_change_sqrt():
     dataset = MyDataset()
     fit = Fit(backend="minuit")
-    stat_ref = dataset.stat_sum()
+    stat_ref = dataset.stat_sum_likelihood()
     for par in dataset.models.parameters:
         par.scale_transform = "sqrt"
-    dataset.stat_sum()
-    assert_allclose(dataset.stat_sum(), stat_ref)
+    dataset.stat_sum_likelihood()
+    assert_allclose(dataset.stat_sum_likelihood(), stat_ref)
 
     result = fit.run([dataset])
     pars = dataset.models.parameters
@@ -175,12 +175,12 @@ def test_run_scale_transform_change_sqrt():
 def test_run_scale_transform_change_log():
     dataset = MyDataset()
     fit = Fit(backend="minuit")
-    stat_ref = dataset.stat_sum()
+    stat_ref = dataset.stat_sum_likelihood()
     for par in dataset.models.parameters:
         par.scale_method = "factor1"
         par.scale_transform = "log"
-    dataset.stat_sum()
-    assert_allclose(dataset.stat_sum(), stat_ref)
+    dataset.stat_sum_likelihood()
+    assert_allclose(dataset.stat_sum_likelihood(), stat_ref)
 
     result = fit.run([dataset])
     pars = dataset.models.parameters
