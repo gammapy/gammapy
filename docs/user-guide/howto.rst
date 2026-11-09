@@ -430,7 +430,7 @@ Please give feedback and suggest additions to this page!
     :name: dropdown-ASDF
 
     Besides FITS, some Gammapy objects can be written to and read from files in
-    the ASDF (Advanced Scientific Data Format) format.
+    the `ASDF <https://www.asdf-format.org/en/latest/overview.html>`__ (Advanced Scientific Data Format) format.
 
     ASDF is a hierarchically-structured, human-readable data format that
     stores numerical data in binary blocks along with the YAML metadata in one file.
@@ -446,14 +446,6 @@ Please give feedback and suggest additions to this page!
 
     **Gammapy objects that support ASDF:**
 
-    - `~gammapy.maps`: `~gammapy.maps.MapAxis`, `~gammapy.maps.TimeMapAxis`,
-      `~gammapy.maps.LabelMapAxis`, `~gammapy.maps.MapAxes`,
-      `~gammapy.maps.WcsGeom`, `~gammapy.maps.HpxGeom`,
-      `~gammapy.maps.RegionGeom`, `~gammapy.maps.WcsNDMap`,
-      `~gammapy.maps.HpxNDMap`, `~gammapy.maps.RegionNDMap`, `~gammapy.maps.Maps`
-    - `~gammapy.data`: `~gammapy.data.GTI`
-    - `~gammapy.irf`: `~gammapy.irf.PSFMap`, `~gammapy.irf.RecoPSFMap`,
-      `~gammapy.irf.EDispMap`, `~gammapy.irf.EDispKernelMap`
     - `~gammapy.datasets`: `~gammapy.datasets.MapDataset`,
       `~gammapy.datasets.MapDatasetOnOff`
     - `~gammapy.modeling.models`: `~gammapy.modeling.models.Models`
