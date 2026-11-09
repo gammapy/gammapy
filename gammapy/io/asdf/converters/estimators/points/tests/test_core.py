@@ -117,3 +117,17 @@ def test_fluxpoints_roundtrip_real(tmp_path):
     with asdf.open(file_path) as af:
         result = af["fluxpoints"]
         assert_fluxpoints_equal(result, fp)
+
+
+@requires_data()
+def test_fluxpoints_roundtrip_template_model(tmp_path):
+    file_path = tmp_path / "test.asdf"
+    fp = FluxPoints.read("$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits")
+
+    with asdf.AsdfFile() as af:
+        af["fluxpoints"] = fp
+        af.write_to(file_path)
+
+    with asdf.open(file_path) as af:
+        result = af["fluxpoints"]
+        assert_fluxpoints_equal(result, fp)
