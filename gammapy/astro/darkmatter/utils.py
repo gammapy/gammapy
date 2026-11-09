@@ -106,7 +106,10 @@ class JFactory:
         ) + np.log10((radius_end / radius_closest).to_value(""))
         n = max(2, int(radial_decades * ndecade))
 
-        t = np.linspace(t_min, t_max, n)
+        t = np.linspace(t_min, t_max, max(n, 3))
+        if t_min < 0 < t_max:
+            t = np.union1d(t, [0.0])
+
         radius = impact * np.cosh(t)
         values = self.profile(radius) ** exponent * radius
 
