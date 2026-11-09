@@ -36,7 +36,6 @@ from gammapy.irf import (
     RecoPSFMap,
 )
 from gammapy.makers import MapDatasetMaker
-from gammapy.makers.utils import make_psf_map
 from gammapy.maps import (
     HpxGeom,
     LabelMapAxis,
