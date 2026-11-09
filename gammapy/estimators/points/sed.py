@@ -376,6 +376,7 @@ class FluxCollectionEstimator:
     ...     energy_edges=[1.0, 3.0, 10.0] * u.TeV,
     ...     models=[model_fce],
     ... )
+    >>> results = fce.run(dataset)
     """
 
     tag = "FluxCollectionEstimator"
