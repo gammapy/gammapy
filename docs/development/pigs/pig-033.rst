@@ -55,7 +55,7 @@ headers, but no HDU is compared with a definition of the format.
 v0.3: the release "mainly contains a change to allow wide-field instruments to
 use the format, namely the removal of the right ascension / declination pointing
 coordinates as mandatory and the elevation of the ``OBS_MODE`` keyword to a
-required keyword with defined values" [GADF-releases]_. Gammapy has no
+required keyword with defined values" `GADF-releases`_ . Gammapy has no
 representation of this difference, so it can neither validate against a chosen
 version nor report which version a file actually satisfies.
 
@@ -94,7 +94,7 @@ Use cases
 Validate a product or a file
 ----------------------------
 
-A producer can validate a table, a header or an HDU without a data store:
+One can validate a table, a header or an HDU without a data store:
 
 .. code-block:: python
 
@@ -161,7 +161,7 @@ all 630 HDUs of the data set are compliant. The full reports are kept in
 The selection can be restricted with ``obs_id`` and ``hdu_class``. With
 ``strict=True``, all HDUs are checked first and a single ``ValueError`` then
 lists every non-compliant HDU, which suits continuous integration of a data
-archive. The summary is an astropy ``Table`` and can be saved with
+archive. The summary is an astropy `~astropy.table.Table` and can be saved with
 ``summary.write("validation.ecsv")``.
 
 Validate through the existing checks
@@ -179,7 +179,7 @@ same output format as the other checks:
 Proposed design
 ===============
 
-The design has the three parts of the Abstract, each building on the previous
+The design encompasses the three parts outlined in the abstract, each building on the previous
 one:
 
 1. **Format registry and DefinitionValidator.** A format is described as data,
@@ -284,7 +284,7 @@ definitions carry no ``dtype``. Names that are not in a definition are allowed,
 since FITS headers and tables are open. A keyword value of ``""``, ``[]`` or
 ``None`` counts as absent.
 
-As an example, the GADF v0.3 EVENTS rules of the Motivation read:
+As an example, the GADF v0.3 EVENTS rules read:
 
 .. code-block:: python
 
@@ -432,7 +432,7 @@ Integration in the DataStore
   is also caught. Classes that the format does not define (for instance the
   maps) are resolved from the header. ``observation_metadata`` rows, which point
   to the EVENTS header, are skipped since the EVENTS HDU is already checked. It
-  returns the summary table of the Use cases, stores the reports in
+  returns the summary table of the use cases, stores the reports in
   ``validation``, and logs a single summary line (for example ``GADF validation:
   3/6 HDUs compliant``).
 * ``DataStore.from_dir(..., validate=False)`` and ``from_file(...,
@@ -497,10 +497,10 @@ by a Pydantic model, with mixins for keyword groups and a model validator
 enforcing the mandatory keywords. It was replaced for four reasons:
 
 * the models were both containers and validators, and validation ran at
-  construction, whether wanted or not;
+  construction (whether wanted or not);
 * the version-specific and conditional rules could not live in the models and
   were kept in separate registries, so the mandatory keywords of one HDU were
-  spread over five places, which disagreed in places;
+  spread over five places (which disagreed in places);
 * default values filled in by the models were indistinguishable from values
   present in the file, which needed a dedicated mechanism to tell apart;
 * the 19 header and mixin classes needed for GADF made the specification hard
@@ -549,8 +549,8 @@ reports more and takes longer.
 Implementation plan
 ===================
 
-The implementation is split into three pull requests, one per part of the
-design, each with its tests:
+The implementation will be split into three pull requests. One for each part of the
+design, and thoroughly tested:
 
 1. **Registry and DefinitionValidator.** ``gammapy.io.fits.registries``
    (``DATA_FORMATS_MODELS``, ``compose_header``, the generic FITS keyword
