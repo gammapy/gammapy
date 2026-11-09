@@ -48,7 +48,7 @@ check the :doc:`/tutorials/starting/analysis_2` or
 ###################################################################
 # Setup
 # -----
-import numpy as np
+
 import astropy.units as u
 import matplotlib.pyplot as plt
 from astropy.coordinates import SkyCoord
