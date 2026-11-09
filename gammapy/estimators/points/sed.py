@@ -356,6 +356,27 @@ class FluxCollectionEstimator:
 
         Fit solver computes upper limits if sqrt(TS) < n_sigma_ul.
         Sampler solver always compute errn-errp and ul.
+
+    Examples
+    --------
+    >>> from astropy.coordinates import SkyCoord
+    >>> import astropy.units as u
+    >>> from gammapy.datasets import MapDataset
+    >>> from gammapy.estimators import FluxCollectionEstimator
+    >>> from gammapy.modeling.models import FoVBackgroundModel, SkyModel
+    >>> dataset = MapDataset.read(
+    ...     "$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", name="dataset-cta"
+    ... )
+    >>> model = SkyModel.create("pl", "point", name="gc")
+    >>> model.spatial_model.position = SkyCoord("0d", "0d", frame="galactic")
+    >>> model_bkg = FoVBackgroundModel(dataset_name=dataset.name)
+    >>> dataset.models = [model, model_bkg]
+    >>> model_fce = dataset.models["gc"]
+    >>> fce = FluxCollectionEstimator(
+    ...     energy_edges=[1.0, 3.0, 10.0] * u.TeV,
+    ...     models=[model_fce],
+    ... )
+    >>> results = fce.run(dataset)
     """
 
     tag = "FluxCollectionEstimator"
