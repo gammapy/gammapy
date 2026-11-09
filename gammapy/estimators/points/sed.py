@@ -362,7 +362,7 @@ class FluxCollectionEstimator:
     >>> from astropy.coordinates import SkyCoord
     >>> import astropy.units as u
     >>> from gammapy.datasets import MapDataset
-    >>> from gammapy.estimators.points.sed import FluxCollectionEstimator
+    >>> from gammapy.estimators import FluxCollectionEstimator
     >>> from gammapy.modeling.models import FoVBackgroundModel, SkyModel
     >>> dataset = MapDataset.read(
     ...     "$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", name="dataset-cta"
