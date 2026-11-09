@@ -166,8 +166,8 @@ Different fit statistics are available for `~gammapy.datasets.FluxPointsDataset`
 and can be selected with the ``stat_type`` argument:
 
 - chi2
-- profile
 - distrib
+- profile
 
 The methods differ in the likelihood information they use and in their
 treatment of upper limits. For a comparison of these statistics on
@@ -185,7 +185,7 @@ The chi-squared statistic is given by:
 .. math::
     \chi^2 = \sum_i \frac{(f_i - m_i)^2}{\sigma_i^2}
 
-This method is straightforward and appropriate each measurement can be well
+This method is straightforward and if appropriate each measurement can be well
 approximated by a Gaussian. It reduces each point to a value and an
 uncertainty, so any asymmetry or non-Gaussian shape of the per-bin likelihood
 is lost. **Upper limits are completely ignored.**
@@ -226,8 +226,8 @@ probability, see Equation C7 of `Mohanty et al (2013)`_.
 Likelihood profile
 ^^^^^^^^^^^^^^^^^^
 
-The two previous methods assume Gaussian measurement errors, the ``profile`` statistic
-is different however, as it uses the likelihood profile associated with each
+While the two previous methods assume Gaussian measurement errors, the ``profile`` statistic
+is different as it uses the likelihood profile associated with each
 flux point interpolated at the flux predicted by the model.
 The profile describes how the fit statistic varies
 as a function of the flux normalisation, relative to its best-fit value.
@@ -235,7 +235,7 @@ as a function of the flux normalisation, relative to its best-fit value.
 Because the profile is defined for every bin, whether or not the source is
 significantly detected there, upper limits need no special treatment: they
 enter the fit through the same profile as any other point.
-**This makes** ``profile`` **the most complete of the three statistics.**
+**This makes** ``profile`` **the most accurate of the three statistics.**
 
 It requires the profiles to have been computed when estimating the flux
 points. They are stored in the ``stat_scan`` quantity of
