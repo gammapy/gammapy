@@ -216,11 +216,7 @@ Gaussian cumulative distribution function (CDF) for Gaussian measurement errors:
     \Phi(x) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{x}  \exp\left(-\frac{t^2}{2}\right),dt \\
     = \frac{1}{2} \left[1+\operatorname{erf}\left(\frac{x}{\sqrt{2}}\right)\right].
 
-A upper limit thus contributes negligibly when the model prediction lies much
-below, and a strong penalty when the model exceeds it.
-
-For the treatment of upper limits using an integrated Gaussian
-probability, see Equation C7 of `Mohanty et al (2013)`_.
+For a detailed derivation, see Equation C7 of `Mohanty et al (2013)`_.
 
 
 Likelihood profile
