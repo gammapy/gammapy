@@ -268,33 +268,43 @@ def test_integrate_los_geometric_path_length(
     assert_quantity_allclose(actual, expected, rtol=1e-5)
 
 
-def test_integrate_los_branch_zero_impact_positive_radius():
-    geom = WcsGeom.create(binsz=1, npix=2)
-    profile = profiles.NFWProfile()
+def test_integrate_los_zero_impact_anticenter(geom):
+    density = 1 * u.GeV / u.cm**3
+
+    def constant_profile(radius):
+        return np.ones(np.shape(radius)) * density
+
     jfactory = JFactory(
         geom=geom,
-        profile=profile,
-        distance=8.33 * u.kpc,
-        rmax=1 * u.kpc,
+        profile=constant_profile,
+        distance=1 * u.kpc,
+        rmax=2 * u.kpc,
     )
 
-    radius_min = 1 * u.kpc
-    radius_max = 4 * u.kpc
-
-    actual = jfactory._integrate_los_branch(
-        0 * u.kpc, radius_min, radius_max, ndecade=100
-    )
-
-    desired = profile.integral(
-        rmin=radius_min,
-        rmax=radius_max,
-        separation=0,
+    actual = jfactory._integrate_los(
+        impact=0 * u.kpc,
+        separation=np.pi,
         ndecade=100,
-        squared=True,
-        distance=8.33 * u.kpc,
+    )
+    expected = density**2 * 1 * u.kpc
+
+    assert_quantity_allclose(actual, expected)
+
+
+def test_integrate_los_zero_impact_center(geom):
+    jfactory = JFactory(
+        geom=geom,
+        profile=profiles.NFWProfile(),
+        distance=1 * u.kpc,
+        rmax=2 * u.kpc,
     )
 
-    assert_quantity_allclose(actual, desired)
+    with pytest.raises(ValueError, match="central-pixel integration"):
+        jfactory._integrate_los(
+            impact=0 * u.kpc,
+            separation=0,
+            ndecade=100,
+        )
 
 
 @requires_data()
