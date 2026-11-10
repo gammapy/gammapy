@@ -335,25 +335,23 @@ def run_mc():
     plt.show()
 
 
+######################################################################
 #
 # .. image:: ../../_static/freq_UL_bands.png
-#
-#
-#
-#
+
 ######################################################################
 # As the observed upper limits lie inside the bands, the data are consistent with
 # background only. If they fall below the yellow band, the background has
 # fluctuated down (or is overestimated).
-
+#
 # In the limit of high counts, the median expected upper limit and the sensitivity (at the
 # same ``n_sigma``) are expected to be equal. With few counts, as here,
 # the expected upper limit lies above the sensitivity, and the bands are the
 # appropriate reference for the observed upper limits.
-#
+
+
 ######################################################################
-#
-# .. _bayesain_upper_lims:
+# .. _bayesian_upper_lims:
 #
 # Bayesian upper limits
 # ~~~~~~~~~~~~~~~~~~~~~
@@ -418,7 +416,6 @@ ax.set_xlabel("Energy [TeV]")
 ax.set_ylabel(f"dnde upper limit, 99.8% [{unit.to_string('latex_inline')}]")
 ax.legend()
 plt.show()
-
 # sphinx_gallery_thumbnail_number = 6
 
 ######################################################################
@@ -453,7 +450,8 @@ plt.show()
 #   renormalises the posterior over the physical region. The Bayesian upper
 #   limit therefore reacts much less to downward fluctuations, and it stays
 #   closer to the sensitivity.
-#
+
+######################################################################
 # Profiling versus marginalisation
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -492,9 +490,9 @@ plt.show()
 # correlated in a non-linear way, when a parameter is close to a boundary, or
 # when a nuisance parameter is so poorly constrained by the data that its
 # prior dominates.
-#
+
+
 ######################################################################
-#
 # .. _integral_upper_lims:
 #
 # Integral upper limits
@@ -503,7 +501,7 @@ plt.show()
 # To compute the integral upper limits between certain energies,
 # one can simply run the estimators, eg `~gammapy.estimators.FluxPointsEstimator`
 # with one bin in energy.
-#
+
 emin = energy_edges[0]
 emax = energy_edges[-1]
 fpe2 = FluxPointsEstimator(
