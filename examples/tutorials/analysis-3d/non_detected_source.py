@@ -45,6 +45,7 @@ import astropy.units as u
 import logging
 
 logging.getLogger("ultranest").setLevel(logging.WARNING)
+logging.getLogger("ultranest").propagate = False
 
 from gammapy.datasets import MapDataset, Datasets
 from gammapy.estimators import FluxPointsEstimator, ExcessMapEstimator
