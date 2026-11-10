@@ -444,29 +444,27 @@ Please give feedback and suggest additions to this page!
     Gammapy registers its ASDF extension automatically when ``asdf`` is
     installed, so users can use Gammapy's ASDF support without any manual setup.
 
-    **Gammapy objects that support ASDF:**
+    Currently `~gammapy.datasets.MapDataset` and `~gammapy.modeling.models.Models` are serializable with ASDF.
 
-    - `~gammapy.datasets`: `~gammapy.datasets.MapDataset`,
-      `~gammapy.datasets.MapDatasetOnOff`
-    - `~gammapy.modeling.models`: `~gammapy.modeling.models.Models`
-
-
-    **Example: write an HpxNDMap object to ASDF and read it back**
+    **Example: write Models to ASDF and read them back**
 
     .. testcode::
 
-        import astropy.units as u
         import asdf
-        from gammapy.maps import HpxGeom, HpxNDMap, MapAxis
+        from gammapy.modeling.models import (
+            GaussianSpatialModel,
+            Models,
+            PowerLawSpectralModel,
+            SkyModel,
+        )
 
-        axes = [MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy")]
-        geom = HpxGeom(
-          nside=8, nest=False, frame="galactic", region="DISK(110.,75.,10.)", axes=axes)
+        spatial_model = GaussianSpatialModel(
+            lon_0="10 deg", lat_0="5 deg", sigma="0.5 deg", frame="galactic"
+        )
+        models = Models([SkyModel(PowerLawSpectralModel(), spatial_model, name="source")])
 
-        m = HpxNDMap(geom, unit=1 / (u.cm**2 / u.s), meta={"telescope": "HESS"})
+        with asdf.AsdfFile({"models": models}) as af:
+            af.write_to("models.asdf")
 
-        with asdf.AsdfFile({"map": m}) as af:
-          af.write_to("Hpxmap.asdf")
-
-        with asdf.open("Hpxmap.asdf") as af:
-          map_reloaded = af["map"]
+        with asdf.open("models.asdf") as af:
+            models_reloaded = af["models"]
