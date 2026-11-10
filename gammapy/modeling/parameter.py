@@ -12,7 +12,6 @@ from astropy.table import Table
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.scripts import make_name
 
-
 __all__ = ["Parameter", "Parameters", "PriorParameter", "PriorParameters"]
 
 log = logging.getLogger(__name__)
@@ -574,7 +573,8 @@ class Parameter:
         return value
 
     def _inverse_transform_derivative(self, factor):
-        """Inverse transform from factor (used by the optimizer) to value.
+        """Derivative of the inverse transform. Used to create covariance matrix from
+        factor matrix.
 
         Parameters
         ----------
