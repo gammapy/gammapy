@@ -605,7 +605,7 @@ E_max = mass_DM
 #
 
 ann_model = DarkMatterSpectralModel(
-    mass=mass_DM,
+    mDM=mass_DM,
     channel=channel,
     # source = 'cosmixs' # Here the source is also a parameter, since this class wraps Primary flux.
     # annihilation = True # By default the spectral model is set for the annihilation case
@@ -637,7 +637,7 @@ jfactory_dec = JFactory(
 dfact_draco = jfactory_dec.compute_jfactor()
 
 dec_model = DarkMatterSpectralModel(
-    mass=mass_DM,
+    mDM=mass_DM,
     channel=channel,
     annihilation=False,  # Must set the annihilation flag to False to indicate a Decay scenario
 )
