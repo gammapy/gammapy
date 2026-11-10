@@ -885,6 +885,12 @@ def test_monochromatic_to_from_dict_roundtrip():
     assert new_flux.sigma_rel == flux.sigma_rel
 
 
+@pytest.mark.parametrize("mDM", [0 * u.GeV, -1 * u.TeV])
+def test_monochromatic_invalid_mass(mDM):
+    with pytest.raises(ValueError, match="mDM must be strictly positive"):
+        MonochromaticPrimaryFlux(mDM=mDM)
+
+
 # ---------------------------------------------------------------------------
 # VIBPrimaryFlux
 # ---------------------------------------------------------------------------
@@ -1044,6 +1050,12 @@ def test_box_to_from_dict_roundtrip():
     assert_quantity_allclose(new_flux.mDM, flux.mDM)
     assert_quantity_allclose(new_flux.mPhi1, flux.mPhi1)
     assert_quantity_allclose(new_flux.mPhi2, flux.mPhi2)
+
+
+@pytest.mark.parametrize("mDM", [0 * u.GeV, -1 * u.TeV])
+def test_box_invalid_mass(mDM):
+    with pytest.raises(ValueError, match="mDM must be strictly positive"):
+        BoxPrimaryFlux(mDM=mDM, mPhi=100 * u.GeV)
 
 
 # ---------------------------------------------------------------------------
