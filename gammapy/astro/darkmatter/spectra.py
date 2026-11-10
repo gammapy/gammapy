@@ -16,6 +16,7 @@ from gammapy.modeling.models import (
     PRIOR_REGISTRY,
     SpectralModel,
     TemplateNDSpectralModel,
+    GaussianSpectralModel,
 )
 from gammapy.utils.deprecation import (
     GammapyDeprecationWarning,
@@ -39,37 +40,27 @@ log = logging.getLogger(__name__)
 
 
 class MonochromaticPrimaryFlux(SpectralModel):
-    tag = ["MonochromaticPrimaryFlux", "dm-mono"]
-
     """Monochromatic gamma-ray line from dark matter annihilation.
 
     Implements the spectral shape for χχ → γγ (two-photon final state) and
     χχ → γX (one photon plus a massive counterpart X, e.g. χχ → γZ or
     χχ → γh). The line is approximated as a narrow Gaussian centered at the
-    kinematic line energy, to provide a smooth, differentiable spectral
-    shape suitable for likelihood-based fitting.
+    kinematic line energy. This class gives the photon yield per
+    annihilation, dN/dE in GeV⁻¹, not a flux: it is meant to be used as
+    ``primary_flux`` of `DarkMatterSpectralModel`, which provides the
+    normalization and the astrophysical factor.
 
     Parameters
     ----------
     mDM : `~astropy.units.Quantity`
-        Dark matter particle mass. Must be convertible to GeV and strictly
+        Dark matter particle mass. Must be strictly positive.
         positive.
-    n_gamma_photons : {1, 2}
-        Number of monochromatic gamma-ray photons produced per annihilation
-        event. Use ``2`` for the two-photon channel (χχ → γγ) and ``1`` for
-        the one-photon-plus-counterpart channel (χχ → γX).
-    counterpart : str or None, optional
-        Label identifying the massive counterpart particle X for the
-        one-photon channel (e.g. ``"z"`` for the γZ channel, ``"h"`` for the
-        γh channel). Required and validated when ``n_gamma_photons=1``.
-        Must be ``None`` (or will be reset to ``None`` with a warning) when
-        ``n_gamma_photons=2``, since no counterpart is involved.
-    counterpart_mass : float or `~astropy.units.Quantity` or None, optional
-        Mass of the counterpart particle, in GeV if given as a bare number.
-        If ``counterpart`` is ``"z"`` or ``"h"``, the standard Z or Higgs
-        boson mass is used automatically when this is ``None``. For any
-        other counterpart label not present in the internal registry, this
-        value must be provided explicitly.
+    counterpart_mass : `~astropy.units.Quantity`, optional
+        Mass of the particle X produced together with the photon
+        (χχ → γX). Default is 0 GeV, which corresponds to χχ → γγ (two
+        photons per annihilation); any non-zero value gives one photon per
+        annihilation. Reference values: Z boson 91.1876 GeV, Higgs boson
+        125.20 GeV.
     sigma_rel : float, optional
         Relative width of the Gaussian approximation to the spectral line,
         expressed as a fraction of the line energy E₀ (i.e.
@@ -78,59 +69,60 @@ class MonochromaticPrimaryFlux(SpectralModel):
     Warns
     -----
     UserWarning
-        If ``counterpart`` is set while ``n_gamma_photons=2``; the
-        counterpart is ignored and reset to ``None``.
-    UserWarning
         If the line energy E₀ falls outside the energy range passed to
         `evaluate`, in which case the returned spectrum is effectively zero
         everywhere.
 
     Examples
     --------
-    Two-photon line at mDM = 1 TeV::
+    Two-photon line (χχ → γγ) at mDM = 1 TeV::
 
         >>> import astropy.units as u
-        >>> flux = MonochromaticPrimaryFlux(mDM=1*u.TeV, n_gamma_photons=2)
+        >>> from gammapy.astro.darkmatter import (
+        ...     DarkMatterSpectralModel,
+        ...     MonochromaticPrimaryFlux,
+        ... )
+        >>> flux = MonochromaticPrimaryFlux(mDM=1 * u.TeV)
 
-    One-photon line with a Z-boson counterpart::
+    One-photon line with a Z-boson counterpart (χχ → γZ)::
 
         >>> flux = MonochromaticPrimaryFlux(
-        ...     mDM=1*u.TeV, n_gamma_photons=1, counterpart="z"
+        ...     mDM=1 * u.TeV, counterpart_mass=91.1876 * u.GeV
         ... )
+
+    Use it as the primary flux of a dark matter spectral model::
+
+        >>> model = DarkMatterSpectralModel(
+        ...     mDM=1 * u.TeV,
+        ...     channel=None,
+        ...     primary_flux=flux,
+        ...     factor=3.41e19 * u.Unit("GeV2 cm-5"),
+        ... )
+
     References
     ----------
     `Bergström & Snellman (1988), "Observable monochromatic photons from cosmic photino
     annihilation"
-    DOI:10.1103/PhysRevD.37.3737 <https://journals.aps.org/prd/abstract/10.1103/PhysRevD.37.3737>_
+    DOI:10.1103/PhysRevD.37.3737 <https://journals.aps.org/prd/abstract/10.1103/PhysRevD.37.3737>`_
     """
-    counterparts_particles = {
-        "z": {"mass": 91.1876 * u.GeV},  # Channel Z-gamma
-        "h": {"mass": 125.20 * u.GeV},  # Channel Higgs-gamma
-    }
 
-    DEFAULT_SIGMA_REL = 0.01
+    tag = ["MonochromaticPrimaryFlux", "dm-mono"]
 
     def __init__(
         self,
         mDM,
-        n_gamma_photons,
-        counterpart=None,
-        counterpart_mass=None,
-        sigma_rel=None,
+        counterpart_mass=0 * u.GeV,
+        sigma_rel=0.01,
     ):
         self.mDM = mDM
-        self.n_gamma_photons = n_gamma_photons
-        self.counterpart = counterpart
         self.counterpart_mass = counterpart_mass
-        self.sigma_rel = sigma_rel if sigma_rel is not None else self.DEFAULT_SIGMA_REL
+        self.sigma_rel = sigma_rel
         super().__init__()
 
     def get_line_energy(self):
         """Compute the gamma-ray line energy E₀.
 
-        For the two-photon channel (``n_gamma_photons=2``), the line
-        energy equals the dark matter mass, ``E_0 = mDM``. For the
-        one-photon channel (``n_gamma_photons=1``), the line energy is
+        The line energy is
         reduced by the kinematics of producing the massive counterpart X,
         ``E_0 = mDM * (1 - counterpart_mass**2 / (4 * mDM**2))``.
 
@@ -140,10 +132,10 @@ class MonochromaticPrimaryFlux(SpectralModel):
             Energy of the monochromatic gamma-ray line.
         """
 
-        if self.n_gamma_photons == 2:
-            return self.mDM
-        else:
-            return self.mDM * (1 - (self.counterpart_mass**2) / (4 * self.mDM**2))
+        if self.counterpart_mass >= 2 * self.mDM:
+            raise ValueError("Kinematically forbidden: counterpart_mass >= 2 * mDM.")
+
+        return self.mDM * (1 - self.counterpart_mass**2 / (4 * self.mDM**2))
 
     def evaluate(self, energy):
         """Evaluate the monochromatic primary flux spectrum dN/dE.
@@ -151,7 +143,7 @@ class MonochromaticPrimaryFlux(SpectralModel):
         The spectral line is represented as a Gaussian of relative width
         ``sigma_rel`` centered on the line energy E₀ (as returned by
         `get_line_energy`), normalized so that its integral equals
-        ``n_gamma_photons`` (i.e. the total photon yield per annihilation).
+         the total photon yield per annihilation.
 
         Parameters
         ----------
@@ -171,64 +163,29 @@ class MonochromaticPrimaryFlux(SpectralModel):
             zero over the requested energy range.
         """
         E_0 = self.get_line_energy()
-        sigma = self.sigma_rel * E_0
-
-        x = (energy - E_0) / sigma
-        dN_dE = (self.n_gamma_photons / (np.sqrt(2 * np.pi) * sigma)) * np.exp(
-            -0.5 * x**2
+        return GaussianSpectralModel.evaluate(
+            energy,
+            amplitude=self.n_gamma_photons,
+            mean=E_0,
+            sigma=self.sigma_rel * E_0,
         )
-
-        return dN_dE.to("GeV-1")
 
     @property
     def mDM(self):
         """Dark matter mass."""
         return self._mDM
 
-    @u.quantity_input(mDM="energy")
     @mDM.setter
+    @u.quantity_input(value="energy")
     def mDM(self, value):
-        if value.value <= 0:
+        if value <= 0 * u.GeV:
             raise ValueError("mDM must be strictly positive.")
-        self._mDM = u.Quantity(value)
+        self._mDM = value
 
     @property
     def n_gamma_photons(self):
         """Number of gamma photons produced."""
-        return self._n_gamma_photons
-
-    @n_gamma_photons.setter
-    def n_gamma_photons(self, value):
-        if value is None or value not in (1, 2):
-            raise ValueError(
-                "Number of produced photons must be 1 or 2 for this "
-                "monochromatic line spectrum."
-            )
-        self._n_gamma_photons = value
-
-    @property
-    def counterpart(self):
-        """Counterpart particle for the monochromatic line."""
-        return self._counterpart
-
-    @counterpart.setter
-    def counterpart(self, value):
-        if self.n_gamma_photons == 1 and value is None:
-            raise ValueError(
-                "Counterpart particle must be indicated for a "
-                "monochromatic line with 1 photon."
-            )
-
-        self._counterpart = value
-
-        if self.n_gamma_photons == 2 and value is not None:
-            warnings.warn(
-                "The counterpart parameter is ignored since you are "
-                "studying a 2-photon channel.",
-                UserWarning,
-                stacklevel=2,
-            )
-            self._counterpart = None
+        return 2 if self.counterpart_mass == 0 * u.GeV else 1
 
     @property
     def counterpart_mass(self):
@@ -236,32 +193,11 @@ class MonochromaticPrimaryFlux(SpectralModel):
         return self._counterpart_mass
 
     @counterpart_mass.setter
+    @u.quantity_input(value="energy")
     def counterpart_mass(self, value):
-        if self.counterpart is not None:
-            if self.counterpart not in self.counterparts_particles:
-                if value is None:
-                    raise ValueError(
-                        f"Since the indicated counterpart particle "
-                        f"'{self.counterpart}' is not in the registry, "
-                        "its mass must be provided by the user."
-                    )
-                self._counterpart_mass = value * u.GeV
-            else:
-                mass_val = (
-                    value
-                    if value is not None
-                    else self.counterparts_particles[self.counterpart]["mass"]
-                )
-                self._counterpart_mass = u.Quantity(mass_val, u.GeV).to(u.GeV)
-
-            if 2 * self.mDM <= self._counterpart_mass:
-                raise ValueError(
-                    f"Kinematically forbidden: the available energy "
-                    f"is not enough to produce the counterpart particle "
-                    f"(mass = {self._counterpart_mass})."
-                )
-        else:
-            self._counterpart_mass = None
+        if value < 0 * u.GeV:
+            raise ValueError("Contuerpart mass must be strictly non negative.")
+        self._counterpart_mass = value
 
     def to_dict(self, full_output=False):
         """Serialize the model to a dictionary.
@@ -281,13 +217,7 @@ class MonochromaticPrimaryFlux(SpectralModel):
         return {
             "type": "MonochromaticPrimaryFlux",
             "mDM": self.mDM.to_string(),
-            "n_gamma_photons": self.n_gamma_photons,
-            "counterpart": self.counterpart,
-            "counterpart_mass": (
-                self.counterpart_mass.to_string()
-                if self.counterpart_mass is not None
-                else None
-            ),
+            "counterpart_mass": self.counterpart_mass.to_string(),
             "sigma_rel": self.sigma_rel,
         }
 
@@ -309,14 +239,8 @@ class MonochromaticPrimaryFlux(SpectralModel):
         """
         return cls(
             mDM=u.Quantity(data["mDM"]),
-            n_gamma_photons=data["n_gamma_photons"],
-            counterpart=data.get("counterpart"),
-            counterpart_mass=(
-                u.Quantity(data["counterpart_mass"])
-                if data.get("counterpart_mass")
-                else None
-            ),
-            sigma_rel=data.get("sigma_rel"),
+            counterpart_mass=u.Quantity(data["counterpart_mass"]),
+            sigma_rel=data["sigma_rel"],
         )
 
 
@@ -397,12 +321,12 @@ class VIBPrimaryFlux(SpectralModel):
         """Dark matter mass."""
         return self._mDM
 
-    @u.quantity_input(mDM="energy")
     @mDM.setter
+    @u.quantity_input(value="energy")
     def mDM(self, value):
-        if value.value <= 0:
+        if value <= 0 * u.GeV:
             raise ValueError("mDM must be strictly positive.")
-        self._mDM = u.Quantity(value)
+        self._mDM = value
 
     def to_dict(self, full_output=False):
         """Serialize the model to a dictionary.
@@ -549,12 +473,12 @@ class BoxPrimaryFlux(SpectralModel):
         """Dark matter mass."""
         return self._mDM
 
-    @u.quantity_input(mDM="energy")
     @mDM.setter
+    @u.quantity_input(value="energy")
     def mDM(self, value):
-        if value.value <= 0:
+        if value <= 0 * u.GeV:
             raise ValueError("mDM must be strictly positive.")
-        self._mDM = u.Quantity(value)
+        self._mDM = value
 
     @property
     def energies_phi(self):
@@ -1154,7 +1078,16 @@ class PrimaryFlux(ContinuumPrimaryFlux):
     pass
 
 
-PRIMARY_FLUX_REGISTRY = {cls.tag[0]: cls for cls in (ContinuumPrimaryFlux, PrimaryFlux)}
+PRIMARY_FLUX_REGISTRY = {
+    cls.tag[0]: cls
+    for cls in (
+        ContinuumPrimaryFlux,
+        PrimaryFlux,
+        MonochromaticPrimaryFlux,
+        VIBPrimaryFlux,
+        BoxPrimaryFlux,
+    )
+}
 
 # ---------------------------------------------------------------------------
 # Spectral model
