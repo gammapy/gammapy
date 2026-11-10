@@ -54,12 +54,11 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    create_crab_spectral_model,
     FoVBackgroundModel,
     Models,
 )
 from gammapy.estimators import FluxCollectionEstimator
-from gammapy.modeling import Fit, Parameter, Sampler
+from gammapy.modeling import Parameter, Sampler
 from gammapy.modeling.models import UniformPrior
 from gammapy.visualization import plot_distribution
 
@@ -162,7 +161,8 @@ plt.show()
 # To prevent the fit from drifting to unrelated positions, we freeze the spatial parameters.
 # Alternatively, you can constrain the parameter ranges to stay within your expected region.
 # We also add a background model with a free normalisation to account for uncertainties
-# in the background. You can add more complex background corrections like a piecewise # # one, or keep the tilt free, etc
+# in the background. You can add more complex background corrections such as letting the tilt
+# tilt free, or a piecewise correction.
 #
 #
 spectral_model = PowerLawSpectralModel()
@@ -190,7 +190,7 @@ print(LLR["fit_results"].parameters.to_table())
 ######################################################################
 # The test statistic is ``ts ~ 4.6``. Note that here we have
 # only 1 free parameter, the amplitude, and thus, we can assume the simple conversion
-# significance = :math:`\sqrt{ts} \approx 2.14`.
+# significance = :math:`\sqrt{ts} \approx 2.14 \sigma`.
 # Therefore, the observed fluctuations are not significant above the background at the
 # typically required level of 5-sigma.
 # Next, we will estimate the differential upper limits of the source.
@@ -217,7 +217,7 @@ print(LLR["fit_results"].parameters.to_table())
 #   We will constrain the amplitude to positive values to remain in the physical
 #   realm.
 # - The **confidence level** and the **method**. Always report both, and, for a
-#   Bayesian UL, also report the prior.
+#   Bayesian UL, also report the **prior**.
 #
 #
 # .. _frequentist_upper_lims:
@@ -229,7 +229,9 @@ print(LLR["fit_results"].parameters.to_table())
 # *coverage*: if the observation were repeated many times, the interval
 # ``[0, UL]`` would contain the true flux in the stated fraction of the
 # repetitions (e.g. 95%). It is **not** the probability that the flux lies
-# below the UL. In Gammapy, the UL is the flux at which the fit statistic rises
+# below the UL. 
+# 
+# In Gammapy, the UL is the flux at which the fit statistic rises
 # by ``n_sigma_ul**2`` above its minimum (on the high-flux side). Asymptotically,
 # this corresponds to a one-sided confidence level: ``n_sigma_ul=2`` (the default)
 # gives ΔTS = 4, i.e. ~97.7%, and ``n_sigma_ul=1.645`` gives 95%.
