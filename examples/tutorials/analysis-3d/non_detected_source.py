@@ -83,7 +83,7 @@ plt.show()
 # We will first use the `~gammapy.estimators.ExcessMapEstimator` for a quick check to see if
 # there are any potential sources in the field. The ``correlation_radius`` should be around the
 # size of the source you are searching for. You may also use the
-# `~gammapy.estimators.TSMapEstimator`.
+# `~gammapy.estimators.TSMapEstimator` which uses a forward folding approach.
 
 estimator = ExcessMapEstimator(
     selection_optional="all",
@@ -100,7 +100,7 @@ fig, (ax1, ax2) = plt.subplots(
     figsize=(11, 4), subplot_kw={"projection": lima_maps.geom.wcs}, ncols=2
 )
 ax1.set_title("Significance map")
-significance_map.plot(ax=ax1, add_cbar=True, cmap="coolwarm")
+significance_map.plot(ax=ax1, add_cbar=True, cmap="coolwarm", vmin=-4, vmax=4)
 ax2.set_title("Excess map")
 excess_map.plot(ax=ax2, add_cbar=True, cmap="coolwarm")
 plt.show()
@@ -161,10 +161,9 @@ plt.show()
 # To prevent the fit from drifting to unrelated positions, we freeze the spatial parameters.
 # Alternatively, you can constrain the parameter ranges to stay within your expected region.
 # We also add a background model with a free normalisation to account for uncertainties
-# in the background. You can add more complex background corrections such as letting the tilt
-# tilt free, or a piecewise correction.
+# in the background. You can add more complex background corrections such as letting the tilt free, or a piecewise correction, etc.
 #
-#
+
 spectral_model = PowerLawSpectralModel()
 spatial_model = PointSpatialModel(lon_0=187 * u.deg, lat_0=2.6 * u.deg, frame="icrs")
 spatial_model.lat_0.frozen = True
@@ -191,15 +190,15 @@ print(LLR["fit_results"].parameters.to_table())
 # The test statistic is ``ts ~ 4.6``. Note that here we have
 # only 1 free parameter, the amplitude, and thus, we can assume the simple conversion
 # significance = :math:`\sqrt{ts} \approx 2.14 \sigma`.
-# Therefore, the observed fluctuations are not significant above the background at the
-# typically required level of 5-sigma.
+# Therefore, the observed fluctuations are not significant above the background at
+# the typically required level of 5-sigma.
 # Next, we will estimate the differential upper limits of the source.
 
 ###############################################################################
 # Differential upper limits
 # ~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# As a source is not significantly detected, a measured flux would mostly
+# As the source is not significantly detected, a measured flux would mostly
 # reflect background fluctuations. Instead, we quote an **upper limit (UL)**:
 # the largest flux that is still compatible with the data, at a chosen
 # confidence level. We compute it in two ways: first a frequentist UL from the
@@ -229,8 +228,8 @@ print(LLR["fit_results"].parameters.to_table())
 # *coverage*: if the observation were repeated many times, the interval
 # ``[0, UL]`` would contain the true flux in the stated fraction of the
 # repetitions (e.g. 95%). It is **not** the probability that the flux lies
-# below the UL. 
-# 
+# below the UL.
+#
 # In Gammapy, the UL is the flux at which the fit statistic rises
 # by ``n_sigma_ul**2`` above its minimum (on the high-flux side). Asymptotically,
 # this corresponds to a one-sided confidence level: ``n_sigma_ul=2`` (the default)
@@ -240,8 +239,8 @@ print(LLR["fit_results"].parameters.to_table())
 # all other parameters, including the index, stay fixed. Here we use
 # ``n_sigma_ul=3`` to get the 99.87% UL.
 #
-# For computation reasons, we keep the background normalisation frozen, but in a real
-# analysis, you should keep it free and use `reoptimize=True`.
+# For computation reasons, we keep the background normalisation frozen,
+# but **in a real analysis, you should keep it free and use** `reoptimize=True`.
 
 sky_model.parameters["amplitude"].value = 1e-12
 sky_model.parameters["index"].value = 2.0
@@ -253,9 +252,7 @@ fpe = FluxPointsEstimator(
     energy_edges=energy_edges,
     n_sigma_ul=3,
     n_sigma_sensitivity=3,
-    n_jobs=12,
     source="source",
-    reoptimize=True,
 )
 
 fp1 = fpe.run(dataset)
@@ -301,9 +298,7 @@ def run_mc():
         toy = dataset.copy(name=f"toy-{idx}")
         toy.models = None
         toy.fake(random_state=idx)
-        toy.models = Models(
-            [sky_model.copy(name="source"), FoVBackgroundModel(dataset_name=toy.name)]
-        )
+        toy.models = sky_model.copy(name="source")
         fp_toy = fpe.run(toy)
         dnde_ul_toys.append(fp_toy.dnde_ul.quantity.squeeze())
 
@@ -342,10 +337,13 @@ def run_mc():
 # .. image:: ../../_static/freq_UL_bands.png
 
 ######################################################################
-# As the observed upper limits lie inside the bands, the data are consistent with
-# background only. If they fall below the yellow band, the background has
-# fluctuated down (or is overestimated).
-#
+# If the observed upper limits lie inside the bands, it impplies the data are
+# consistent with background only.
+# For the ones ones where they fall below the yellow band, the background has
+# fluctuated down (or is overestimated). To avoid this, you should always
+# *reoptimize the parameters of the other models, specially the background model*.
+# If they still occur, such points should be treated with caution as they
+# may exclude fluxes the observation was not sensitive to
 # In the limit of high counts, the median expected upper limit and the sensitivity (at the
 # same ``n_sigma``) are expected to be equal. With few counts, as here,
 # the expected upper limit lies above the sensitivity, and the bands are the
