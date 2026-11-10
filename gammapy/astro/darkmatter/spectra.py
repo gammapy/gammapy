@@ -38,29 +38,7 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-class _DarkMatterMassValidator:
-    """DM mass validator for primary flux models."""
-
-    @property
-    def mDM(self):
-        """Dark matter particle mass."""
-        return self._mDM
-
-    @mDM.setter
-    def mDM(self, value):
-        try:
-            val = u.Quantity(value).to_value("GeV")
-        except u.UnitConversionError:
-            raise u.UnitConversionError(
-                f"mDM must have energy units (e.g. GeV, TeV), "
-                f"got: {u.Quantity(value).unit}"
-            )
-        if val <= 0:
-            raise ValueError("mDM must be strictly positive.")
-        self._mDM = u.Quantity(value)
-
-
-class MonochromaticPrimaryFlux(_DarkMatterMassValidator, SpectralModel):
+class MonochromaticPrimaryFlux(SpectralModel):
     tag = ["MonochromaticPrimaryFlux", "dm-mono"]
 
     """Monochromatic gamma-ray line from dark matter annihilation.
@@ -126,8 +104,8 @@ class MonochromaticPrimaryFlux(_DarkMatterMassValidator, SpectralModel):
     DOI:10.1103/PhysRevD.37.3737 <https://journals.aps.org/prd/abstract/10.1103/PhysRevD.37.3737>_
     """
     counterparts_particles = {
-        "z": {"mass": 91.2},  # Channel Z-gamma
-        "h": {"mass": 125.1},  # Channel Higgs-gamma
+        "z": {"mass": 91.1876 * u.GeV},  # Channel Z-gamma
+        "h": {"mass": 125.20 * u.GeV},  # Channel Higgs-gamma
     }
 
     DEFAULT_SIGMA_REL = 0.01
@@ -200,19 +178,19 @@ class MonochromaticPrimaryFlux(_DarkMatterMassValidator, SpectralModel):
             -0.5 * x**2
         )
 
-        E_0_gev = E_0.to_value("GeV")
-        e_min = energy.to_value("GeV").min()
-        e_max = energy.to_value("GeV").max()
-        if E_0_gev < e_min or E_0_gev > e_max:
-            warnings.warn(
-                f"The energy line E₀ = {E_0_gev:.3f} GeV is outside the "
-                f"energy range [{e_min:.3f}, {e_max:.3f}] GeV. "
-                "The returned spectrum will be effectively zero.",
-                UserWarning,
-                stacklevel=2,
-            )
-
         return dN_dE.to("GeV-1")
+
+    @property
+    def mDM(self):
+        """Dark matter mass."""
+        return self._mDM
+
+    @u.quantity_input(mDM="energy")
+    @mDM.setter
+    def mDM(self, value):
+        if value.value <= 0:
+            raise ValueError("mDM must be strictly positive.")
+        self._mDM = u.Quantity(value)
 
     @property
     def n_gamma_photons(self):
@@ -342,7 +320,7 @@ class MonochromaticPrimaryFlux(_DarkMatterMassValidator, SpectralModel):
         )
 
 
-class VIBPrimaryFlux(_DarkMatterMassValidator, SpectralModel):
+class VIBPrimaryFlux(SpectralModel):
     """Virtual Internal Bremsstrahlung (VIB) spectral shape.
 
     Describes the gamma-ray spectrum from internal bremsstrahlung in dark
@@ -414,6 +392,18 @@ class VIBPrimaryFlux(_DarkMatterMassValidator, SpectralModel):
 
         return (dN_dx / self.mDM).to("GeV-1")
 
+    @property
+    def mDM(self):
+        """Dark matter mass."""
+        return self._mDM
+
+    @u.quantity_input(mDM="energy")
+    @mDM.setter
+    def mDM(self, value):
+        if value.value <= 0:
+            raise ValueError("mDM must be strictly positive.")
+        self._mDM = u.Quantity(value)
+
     def to_dict(self, full_output=False):
         """Serialize the model to a dictionary.
 
@@ -450,7 +440,7 @@ class VIBPrimaryFlux(_DarkMatterMassValidator, SpectralModel):
         return cls(mDM=u.Quantity(data["mDM"]))
 
 
-class BoxPrimaryFlux(_DarkMatterMassValidator, SpectralModel):
+class BoxPrimaryFlux(SpectralModel):
     """Box-shaped spectral signal from χχ → φφ → γγγγ.
 
     Describes the gamma-ray spectrum resulting from dark matter
@@ -553,6 +543,18 @@ class BoxPrimaryFlux(_DarkMatterMassValidator, SpectralModel):
             dN_dE[in_box1] += 2.0 / delta_E
 
         return dN_dE.to("GeV-1")
+
+    @property
+    def mDM(self):
+        """Dark matter mass."""
+        return self._mDM
+
+    @u.quantity_input(mDM="energy")
+    @mDM.setter
+    def mDM(self, value):
+        if value.value <= 0:
+            raise ValueError("mDM must be strictly positive.")
+        self._mDM = u.Quantity(value)
 
     @property
     def energies_phi(self):
