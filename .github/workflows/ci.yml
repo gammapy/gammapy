@@ -47,7 +47,7 @@ jobs:
             tox_env: 'py313-test'
             gammapy_data: true
             allowed_fail: false
-          - os: macos-14
+          - os: macos-15
             python: '3.11'
             tox_env: 'py311-test'
             allowed_fail: false
