@@ -384,7 +384,13 @@ norm_bayes = Parameter("norm", value=1, prior=UniformPrior(min=0, max=norm_max))
 
 sampler = Sampler(
     backend="ultranest",
-    options={"min_num_live_points": 300, "frac_remain": 0.3, "log_dir": None},
+    options={
+        "min_num_live_points": 300,
+        "frac_remain": 0.3,
+        "log_dir": None,
+        "show_status": False,
+        "viz_callback": False,
+    },
 )
 
 fce_bayes = FluxCollectionEstimator(
@@ -411,6 +417,8 @@ ax.set_xlabel("Energy [TeV]")
 ax.set_ylabel(f"dnde upper limit, 99.8% [{unit.to_string('latex_inline')}]")
 ax.legend()
 plt.show()
+
+# sphinx_gallery_thumbnail_number = 6
 
 ######################################################################
 # Comparing the two upper limits
