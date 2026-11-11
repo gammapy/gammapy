@@ -1,0 +1,1 @@
+Fix error in `gammapy.data.ivoa.make_hdu_table`.

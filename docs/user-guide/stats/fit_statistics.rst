@@ -27,8 +27,8 @@ The likelihood functions used currently in Gammapy are:
 
 .. _cash:
 
-Cash : Poisson data with background model
------------------------------------------
+Cash: Poisson data with background model
+----------------------------------------
 
 The number of counts, :math:`n`, is a Poisson random variable of mean value
 :math:`\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}}`. The former is the expected
@@ -61,8 +61,8 @@ Here's an example for the `~gammapy.stats.cash` statistic::
 
 .. _wstat:
 
-WStat : Poisson data with background measurement
-------------------------------------------------
+WStat: Poisson data with background measurement
+-----------------------------------------------
 
 In the absence of a reliable background model, it is possible to use a second
 measurement containing only background to estimate it.
@@ -97,9 +97,15 @@ function by the `~gammapy.datasets.MapDatasetOnOff` and the `~gammapy.datasets.S
 Caveat
 ^^^^^^
 
-- Since WStat takes into account background estimation uncertainties and makes no assumption such as a background model, it usually gives larger statistical uncertainties on the fitted parameters. If a background model exists, to properly compare with parameters estimated using the Cash statistics, one should include some systematic uncertainty on the background model.
+- Since WStat takes into account background estimation uncertainties and makes no assumption such
+as a background model, it usually gives larger statistical uncertainties on the fitted parameters.
+If a background model exists, to properly compare with parameters estimated using the Cash
+statistics, one should include some systematic uncertainty on the background model.
 
-- Note also that at very low counts, WStat is known to result in biased estimates. This can be an issue when studying the high energy behaviour of faint sources. When performing spectral fits with WStat, it is recommended to randomize observations and check whether the resulting fitted parameters distributions are consistent with the input values.
+- Note also that at very low counts, WStat is known to result in biased estimates. This can be an
+issue when studying the high energy behaviour of faint sources. When performing spectral fits with
+WStat, it is recommended to randomize observations and check whether the resulting fitted parameters
+distributions are consistent with the input values.
 
 
 Example
@@ -150,8 +156,94 @@ statistics page`_ with the substitutions:
     \mu_{\mathrm{bkg}} = t_b \cdot m_b \\
     \alpha = t_s / t_b  \\
 
+
+.. _fpd_methods_stats:
+
+`~gammapy.datasets.FluxPointsDataset`: Available statistical methods
+--------------------------------------------------------------------
+
+Different fit statistics are available for `~gammapy.datasets.FluxPointsDataset`,
+and can be selected with the ``stat_type`` argument:
+
+- chi2
+- distrib
+- profile
+
+The methods differ in the likelihood information they use and in their
+treatment of upper limits. For a comparison of these statistics on
+fitting precomputed flux points please refer to
+:ref:`this example <1d-tutorial-stats>`.
+These three methods are described below.
+
+Chi squared
+^^^^^^^^^^^
+
+The ``chi2`` statistic evaluates the chi-squared statistic based on measured flux
+measurements and their uncertainties and model predictions.
+The chi-squared statistic is given by:
+
+.. math::
+    \chi^2 = \sum_i \frac{(f_i - m_i)^2}{\sigma_i^2}
+
+This method is straightforward and if appropriate each measurement can be well
+approximated by a Gaussian. It reduces each point to a value and an
+uncertainty, so any asymmetry or non-Gaussian shape of the per-bin likelihood
+is lost. **Upper limits are completely ignored.**
+
+Probability density function of the normal distribution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``distrib`` statistic approximates the likelihood assuming Gaussian measurement errors.
+Flux measurements are described by a Gaussian probability density function, while upper limits
+are represented by the corresponding cumulative probability.
+
+Assuming Gaussian measurement errors, the likelihood is given by the normal probability density
+function:
+
+.. math::
+    \mathcal{L}(f_i \mid m_i) = \frac{1}{\sqrt{2\pi}\sigma_i} \\
+    \exp\left[-\frac{(f_i-m_i)^2}{2\sigma_i^2}\right].
+
+For symmetric uncertainties, it reduces to the same quadratic form as the chi-squared statistic.
+**Unlike the chi-squared statistic, it can also account for asymmetric uncertainties and upper**
+**limits.**
+
+For an upper limit, the measurement is unknown and only constrained to lie below the reported limit.
+The likelihood is obtained by marginalizing over these unreported measurements, resulting in a
+Gaussian cumulative distribution function (CDF) for Gaussian measurement errors:
+
+.. math::
+    \Phi(x) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{x}  \exp\left(-\frac{t^2}{2}\right),dt \\
+    = \frac{1}{2} \left[1+\operatorname{erf}\left(\frac{x}{\sqrt{2}}\right)\right].
+
+For a detailed derivation, see Equation C7 of `Mohanty et al (2013)`_.
+
+
+Likelihood profile
+^^^^^^^^^^^^^^^^^^
+
+While the two previous methods assume Gaussian measurement errors, the ``profile`` statistic
+is different as it uses the likelihood profile associated with each
+flux point interpolated at the flux predicted by the model.
+The profile describes how the fit statistic varies
+as a function of the flux normalisation, relative to its best-fit value.
+
+Because the profile is defined for every bin, whether or not the source is
+significantly detected there, upper limits need no special treatment: they
+enter the fit through the same profile as any other point.
+**This makes** ``profile`` **the most accurate of the three statistics.**
+
+It requires the profiles to have been computed when estimating the flux
+points. They are stored in the ``stat_scan`` quantity of
+`~gammapy.estimators.FluxPoints`, and are produced by
+`~gammapy.estimators.FluxPointsEstimator` when "scan" is included in
+``selection_optional``.
+
+
 Further references
 ------------------
 
 * `Sherpa statistics page`_
 * `XSpec manual statistics page`_
+
+.. _Mohanty et al (2013): https://iopscience.iop.org/article/10.1088/0004-637X/773/2/168/pdf

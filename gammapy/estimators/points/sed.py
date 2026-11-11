@@ -63,6 +63,12 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     n_sigma_ul : float, optional
         Number of sigma to use for upper limit computation. Must be a positive value.
         Default is 2.
+
+        .. note::
+           The upper limit is one-sided: ``n_sigma_ul=1.645`` corresponds to a 95%
+           confidence level (ΔTS = 2.71), and ``n_sigma_ul=2`` to 97.7%. The asymmetric
+           errors (``n_sigma``) are two-sided: ``n_sigma=1`` gives a 68.3% interval.
+
     n_sigma_sensitivity : float, optional
         Sigma to use for sensitivity computation. Must be a positive value.
         Default is 5.
@@ -351,10 +357,32 @@ class FluxCollectionEstimator:
         regardless of this option.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
+
             * "errn-errp": estimate asymmetric errors on flux.
 
         Fit solver computes upper limits if sqrt(TS) < n_sigma_ul.
         Sampler solver always compute errn-errp and ul.
+
+    Examples
+    --------
+    >>> from astropy.coordinates import SkyCoord
+    >>> import astropy.units as u
+    >>> from gammapy.datasets import MapDataset
+    >>> from gammapy.estimators import FluxCollectionEstimator
+    >>> from gammapy.modeling.models import FoVBackgroundModel, SkyModel
+    >>> dataset = MapDataset.read(
+    ...     "$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", name="dataset-cta"
+    ... )
+    >>> model = SkyModel.create("pl", "point", name="gc")
+    >>> model.spatial_model.position = SkyCoord("0d", "0d", frame="galactic")
+    >>> model_bkg = FoVBackgroundModel(dataset_name=dataset.name)
+    >>> dataset.models = [model, model_bkg]
+    >>> model_fce = dataset.models["gc"]
+    >>> fce = FluxCollectionEstimator(
+    ...     energy_edges=[1.0, 3.0, 10.0] * u.TeV,
+    ...     models=[model_fce],
+    ... )
+    >>> results = fce.run(dataset)
     """
 
     tag = "FluxCollectionEstimator"

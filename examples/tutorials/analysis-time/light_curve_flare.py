@@ -21,7 +21,7 @@ A typical example is given by the flare of PKS 2155-304 during the night
 from July 29 to 30 2006. See the `following
 article <https://ui.adsabs.harvard.edu/abs/2009A%26A...502..749A/abstract>`__.
 
-**Objective: Compute the light curve of a PKS 2155-304 flare on 5
+**Objective: Compute the light curve of a PKS 2155-304 flare on 10
 minutes time intervals, i.e. smaller than the duration of individual
 observations.**
 
@@ -53,7 +53,7 @@ In summary, we have to:
 
 Here, we will use the PKS 2155-304 observations from the
 `H.E.S.S. first public test data release <https://hess-experiment.eu/releases/>`__.
-We will use time intervals of 5 minutes
+We will use time intervals of 10 minutes
 duration. The tutorial is implemented with the intermediate level API.
 
 Setup
