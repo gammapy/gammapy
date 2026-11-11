@@ -23,10 +23,10 @@ from gammapy.modeling.models import (
     SuperExpCutoffPowerLaw4FGLDR3SpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
 )
-from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.testing import (
     assert_quantity_allclose,
+    assert_str_equal,
     assert_time_allclose,
     requires_data,
 )
@@ -219,7 +219,7 @@ def test_4FGL_DR4(ref):
     actual = str(cat[ref["idx"]])
     with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
         expected = fh.read()
-    assert actual == expected
+    assert_str_equal(actual, expected)
 
 
 @requires_data()
@@ -251,7 +251,7 @@ class TestFermi4FGLObject:
         with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
             expected = fh.read()
 
-        assert actual == expected
+        assert_str_equal(actual, expected)
 
     @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
     def test_spectral_model(self, ref):
@@ -445,7 +445,7 @@ class TestFermi3FGLObject:
         with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
             expected = fh.read()
 
-        assert actual == expected
+        assert_str_equal(actual, expected)
 
     @pytest.mark.parametrize("ref", SOURCES_3FGL, ids=lambda _: _["name"])
     def test_spectral_model(self, ref):
@@ -584,7 +584,7 @@ class TestFermi3FHLObject:
         with open(get_pkg_data_filename("data/3fhl_j2301.9+5855e.txt")) as fh:
             expected = fh.read()
 
-        assert actual == expected
+        assert_str_equal(actual, expected)
 
     def test_position(self):
         position = self.source.position
@@ -656,7 +656,7 @@ class TestFermi4FHLObject:
         with open(get_pkg_data_filename("data/4fhl_J0006.0+7319e.txt")) as fh:
             expected = fh.read()
 
-        assert actual == expected
+        assert_str_equal(actual, expected)
 
     def test_position(self):
         position = self.source.position
@@ -731,7 +731,7 @@ class TestFermi2PCObject:
         with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
             expected = fh.read()
 
-        assert actual == expected
+        assert_str_equal(actual, expected)
 
     def test_position(self):
         position = self.source.position
@@ -837,7 +837,7 @@ class TestFermi3PCObject:
         with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
             expected = fh.read()
 
-        assert actual == expected
+        assert_str_equal(actual, expected)
 
     def test_position(self):
         position = self.source.position

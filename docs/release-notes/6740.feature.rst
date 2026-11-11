@@ -1,0 +1,1 @@
+Add `~gammapy.datasets.MapDataset.downsample` functionality for the ``energy_true`` axis, fix `~gammapy.data.IRFMap.downsample` behaviour, and restrict the axes for downsampling.

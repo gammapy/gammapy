@@ -12,7 +12,6 @@ from astropy.table import Table
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.scripts import make_name
 
-
 __all__ = ["Parameter", "Parameters", "PriorParameter", "PriorParameters"]
 
 log = logging.getLogger(__name__)
@@ -73,9 +72,9 @@ class Parameter:
         Scale (sometimes used in fitting).
     unit : `~astropy.units.Unit` or str, optional
         Unit. Default is "".
-    min : float, str or `~astropy.units.quantity`, optional
+    min : float, str or `~astropy.units.Quantity`, optional
         Minimum (sometimes used in fitting). If `None`, set to `numpy.nan`. Default is None.
-    max : float, str or `~astropy.units.quantity`, optional
+    max : float, str or `~astropy.units.Quantity`, optional
         Maximum (sometimes used in fitting). Default is `numpy.nan`.
     frozen : bool, optional
         Frozen (used in fitting).  Default is False.
@@ -574,7 +573,8 @@ class Parameter:
         return value
 
     def _inverse_transform_derivative(self, factor):
-        """Inverse transform from factor (used by the optimizer) to value.
+        """Derivative of the inverse transform. Used to create covariance matrix from
+        factor matrix.
 
         Parameters
         ----------

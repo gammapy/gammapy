@@ -6,6 +6,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
+from astropy.io import fits
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling.models import (
@@ -23,6 +24,7 @@ from gammapy.modeling.models import (
     LogParabolaSpectralModel,
     LogParabola2SpectralModel,
     Model,
+    Models,
     NaimaSpectralModel,
     PiecewiseNormSpectralModel,
     PowerLaw2SpectralModel,
@@ -333,7 +335,7 @@ TEST_MODELS = [
         val_at_2TeV=u.Quantity(1.418847, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(4.397409, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(10.505849, "TeV cm-2 s-1"),
-        e_peak=7.408182 * u.TeV,
+        e_peak=2.342673 * u.TeV,
     ),
 ]
 
@@ -742,7 +744,8 @@ def test_call_plsec_4fgl_dr1():
     assert_allclose(model(4 * u.GeV), desired, rtol=1e-3)
 
 
-def test_pwl_pivot_energy():
+@requires_data()
+def test_pivot_energy():
     pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 cm-2 s-1 TeV-1")
     assert_quantity_allclose(pwl.pivot_energy, np.nan * u.TeV, rtol=1e-5)
 
@@ -765,8 +768,16 @@ def test_pwl_pivot_energy():
     ]
     assert_quantity_allclose(ecpl.pivot_energy, 1.263819 * u.TeV, rtol=5e-2)
 
+    ebl = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=0.1)
+    with pytest.raises(
+        ValueError,
+        match="Pivot energy cannot be computed for the EBLAbsorptionNormSpectralModel model.",
+    ):
+        ebl.pivot_energy
 
-def test_num_pivot_energy():
+    compound = ebl * ecpl
+    assert_quantity_allclose(compound.pivot_energy, 1.1608281 * u.TeV, rtol=5e-2)
+
     lp = LogParabolaSpectralModel(
         amplitude="5.82442e-11 cm-2 s-1 GeV-1",
         reference="17.337 GeV",
@@ -779,6 +790,23 @@ def test_num_pivot_energy():
     lp.alpha.error = "0.1126"
     lp.beta.error = "0.0670"
     assert_quantity_allclose(lp.pivot_energy, 18.198706 * u.GeV, rtol=7e-2)
+
+    compound_double = compound * ebl
+    with pytest.raises(
+        ValueError,
+        match="Pivot energy cannot be computed for a CompoundSpectralModel "
+        "contained within another CompoundSpectralModel.",
+    ):
+        compound_double.pivot_energy
+
+    compound_ebl = ebl * ebl
+    with pytest.raises(
+        ValueError,
+        match="Pivot energy cannot be computed for this CompoundSpectralModel "
+        "as none of its models \\(EBLAbsorptionNormSpectralModel, "
+        "EBLAbsorptionNormSpectralModel\\) has a reference energy.",
+    ):
+        compound_ebl.pivot_energy
 
 
 def test_template_spectral_model_evaluate_tiny():
@@ -1087,6 +1115,29 @@ class TestNaimaModel:
             energy_bounds=[10 * u.GeV, 80 * u.TeV], energy_power=2, ax=ax
         )
         assert not radiative_model._memoize
+
+    def test_electron_min_max(self):
+        import naima
+
+        particle_distribution = naima.models.ExponentialCutoffBrokenPowerLaw(
+            amplitude=2e33 / u.eV,
+            e_0=10 * u.TeV,
+            alpha_1=2.5,
+            alpha_2=2.7,
+            e_break=900 * u.GeV,
+            e_cutoff=10 * u.TeV,
+        )
+        radiative_model = naima.radiative.InverseCompton(
+            particle_distribution, seed_photon_fields=["CMB"]
+        )
+
+        model = NaimaSpectralModel(radiative_model)
+        model.Eemin.value = 1e-3
+        model.Eemax.value = 1e3
+
+        energy = np.logspace(-3, 3, 30) * u.TeV
+
+        assert_quantity_allclose(model(energy), radiative_model.flux(energy))
 
 
 class TestSpectralModelErrorPropagation:
@@ -1402,6 +1453,38 @@ def test_template_ND_EBL(tmpdir):
     assert_allclose(template.parameters["redshift"].value, 0.1)
 
 
+def test_template_ND_write_hdu_checksum(tmpdir):
+    energy_axis = MapAxis.from_bounds(
+        1.0, 100, 10, interp="log", name="energy_true", unit="GeV"
+    )
+    norm = MapAxis.from_bounds(0, 10, 10, interp="lin", name="norm", unit="")
+    region_map = RegionNDMap.create(
+        region="icrs;point(83.63, 22.01)",
+        axes=[energy_axis, norm],
+        unit="cm-2 s-1 TeV-1",
+    )
+    region_map.data += 1
+
+    filename = str(tmpdir / "template_ND_hdu.fits")
+    template = TemplateNDSpectralModel(region_map, filename=filename)
+    template.parameters["norm"].value = 2
+    template.write(hdu="TEMPLATE", checksum=True)
+
+    # FITS file: custom HDU name and checksum
+    with fits.open(filename) as hdulist:
+        assert "CHECKSUM" in hdulist["TEMPLATE"].header
+    m = RegionNDMap.read(filename, hdu="TEMPLATE", checksum=True)
+    assert_allclose(m.data, region_map.data)
+
+    # Model: YAML round trip finds the custom HDU again
+    models = Models([SkyModel(spectral_model=template, name="template")])
+    models.write(tmpdir / "models.yaml")
+    template_new = Models.read(tmpdir / "models.yaml")["template"].spectral_model
+
+    assert_allclose(template_new.map.data, region_map.data)
+    assert template_new.parameters["norm"].value == 2
+
+
 def test_incorrect_param_name():
     with pytest.raises(NameError):
         PowerLawSpectralModel(indxe=2)
@@ -1515,3 +1598,46 @@ def test_bpl_evalaute_array():
         np.ones(3) * 0.5 * u.TeV,
     )
     assert values.shape == (2, 3)
+
+
+def _big_endian(values):
+    return np.asarray(values, dtype=">f8")
+
+
+@pytest.mark.parametrize(
+    ("model_class", "kwargs"),
+    [
+        (
+            TemplateSpectralModel,
+            dict(
+                energy=_big_endian([1, 3, 10]) * u.TeV,
+                values=_big_endian([1e-11, 3e-12, 5e-13]) * u.Unit("cm-2 s-1 TeV-1"),
+            ),
+        ),
+        (
+            PiecewiseNormSpectralModel,
+            dict(
+                energy=_big_endian([1, 3, 10]) * u.TeV,
+                norms=_big_endian([1, 2, 3]) * u.Unit(""),
+            ),
+        ),
+        (
+            EBLAbsorptionNormSpectralModel,
+            dict(
+                energy=_big_endian([1, 2, 3]) * u.keV,
+                param=_big_endian([0, 1]) * u.Unit(""),
+                data=u.Quantity(np.ones((2, 3)), ""),
+                redshift=0.5,
+                alpha_norm=1,
+            ),
+        ),
+    ],
+    ids=["template", "piecewise_norm", "ebl_absorption_norm"],
+)
+def test_to_dict_big_endian(model_class, kwargs):
+    model = model_class(**kwargs)
+    data = model.to_dict()["spectral"]
+
+    assert_allclose(data["energy"]["data"], model.energy.value)
+    new_model = model_class.from_dict({"spectral": data})
+    assert_allclose(new_model.energy, model.energy)

@@ -57,6 +57,7 @@ TUTORIAL_SORT_DICT = {
     "event_sampling_nrg_depend_models.py": 5,
     "flux_profiles.py": 6,
     "non_detected_source.py": 7,
+    "onoff_analysis.py": 8,
     # time
     "light_curve.py": 0,
     "light_curve_flare.py": 1,
@@ -67,8 +68,8 @@ TUTORIAL_SORT_DICT = {
     "ebl.py": 0,
     "energy_dependent_estimation.py": 1,
     "pulsar_analysis.py": 2,
-    "dark_matter_complete_analysis.py": 5,
     "dark_matter_basics.py": 3,
+    "dark_matter_complete_analysis.py": 4,
     # scripts
     "survey_map.py": 0,
 }

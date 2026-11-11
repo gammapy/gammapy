@@ -22,8 +22,8 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=2.0",
-    "scipy>=1.13,<1.18",
-    "astropy>=6.1.5,<8.0",  # AnchoredEllipse fix
+    "scipy>=1.13",
+    "astropy>=6.1.5",  # AnchoredEllipse fix
     "regions>=0.9.0,!=0.12",
     "pyyaml>=5.3",
     "click>=8.0",
@@ -173,9 +173,7 @@ ignore = [
     # TODO: the following rules should not be ignored
     "B006","B007", "B008", "B009", "B017", "B018", "B024", "B028",
     "D101", "D103", "D200", "D202", "D208", "D209", "D214", "D215", "D301", "D404", "D409", "D410", "D411", "D419",
-    "DTZ011",
     "E741", "E501",
-    "F401",
     "N801", "N805", "N815", "N816", "N818",
     "S113", "S202", "S301", "S307", "S324",  "S603",
 ]
@@ -206,6 +204,9 @@ line-ending = "auto"
 
 # formatting of code example in docstring.
 docstring-code-format = true
+
+[tool.codespell]
+ignore-words-list = "dne,egal,esy,hist,indx,livetime,livetimes,nd,ned,merrors,NotIn,OptIn,slac,unparseable,compiletime,THIRDPARTY,inout"
 
 # Including towncrier to create the changelog
 [tool.towncrier]

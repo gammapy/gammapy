@@ -193,7 +193,7 @@ for idx in range(n_obs):
     empty_i = empty.copy(name=f"dataset-{idx}")
     dataset = maker.run(empty_i, obs)
     dataset.models = model_simu
-    dataset.fake()
+    dataset.fake(random_state=idx)  # to keep simulation results repeatable
     datasets.append(dataset)
 
 

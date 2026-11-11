@@ -15,6 +15,7 @@ from .compat import COPY_IF_NEEDED
 __all__ = [
     "assert_quantity_allclose",
     "assert_skycoord_allclose",
+    "assert_str_equal",
     "assert_time_allclose",
     "Checker",
     "mpl_plot_check",
@@ -159,6 +160,25 @@ def assert_time_allclose(actual, desired, atol=1e-3):
     assert actual.format == desired.format
     dt = actual - desired
     assert_allclose(dt.sec, 0, rtol=0, atol=atol)
+
+
+def assert_str_equal(actual, desired):
+    """Assert equality of two multi-line strings, ignoring trailing whitespace.
+
+    Each line is compared after removing its trailing whitespace. This makes
+    comparisons robust to padding differences, e.g. fixed-width FITS string
+    columns which are returned padded or not depending on the astropy version.
+
+    Parameters
+    ----------
+    actual : str
+        Actual string.
+    desired : str
+        Desired string.
+    """
+    actual_lines = [line.rstrip() for line in actual.splitlines()]
+    desired_lines = [line.rstrip() for line in desired.splitlines()]
+    assert actual_lines == desired_lines
 
 
 def assert_quantity_allclose(actual, desired, rtol=1.0e-7, atol=None, **kwargs):
