@@ -66,7 +66,7 @@ A demonstration of a Bayesian analysis using the nested sampling technique.
 # (N*(N-1)/2 contour plots to generate). In addition, it is more robust
 # to the choice of initialisation, requires less human intervention and
 # is therefore readily integrated in pipeline analysis. In Gammapy, we
-# provide several NS backends UltraNest and Nautilus. UltraNest is a widely package
+# provide several NS backends: UltraNest and Nautilus. UltraNest is a package
 # that implements the NS algorithm and is used in many astrophysical applications.
 # Nautilus is a more recent implementation of the NS algorithm that exploits neural networks to learn a likelihood function emulator to propose new live points.
 # It is designed to be faster and more efficient than UltraNest,
