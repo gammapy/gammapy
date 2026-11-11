@@ -237,6 +237,9 @@ print(LLR["fit_results"].parameters.to_table())
 # By default (``reoptimize=False``), only the normalisation is fitted in each bin;
 # all other parameters, including the index, stay fixed. Here we use
 # ``n_sigma_ul=1.645`` to get the 95% UL.
+
+# Note that in the case of a detection, n_sigma=2 still corresponds to ΔTS = 4 but is associated to a two-sided confidence level of 95%.
+# In order to perform a comparison between the frequentist and Bayesian 95% ULs, we should specify n_sigma_ul=1.645 in the frequentist approach.
 #
 # For computation reasons, we keep the background normalisation frozen,
 # but **in a real analysis, you should keep it free and use** `reoptimize=True`.
@@ -270,8 +273,8 @@ plt.show()
 # Expected upper limits (Brazil bands)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# An observed upper limit comes from a single realisation of the data. To see
-# how unusual it is, we compare it with the distribution of upper limits we would
+# An observed upper limit comes from a single realisation of the data.
+# Repeated experiments of the same expected background (e.g. lightcurves) will lead to different Poisson realizations of the background and will yield different upper limit values. To see how unusual it is, we compare it with the distribution of upper limits we would
 # expect *if there were no source*. We simulate many *background-only datasets*,
 # compute the upper limits for each one in the same way as above, and take the
 # median and the 68% and 95% ranges. These form the so-called Brazil bands.
