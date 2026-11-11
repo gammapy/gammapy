@@ -50,6 +50,12 @@ class LightCurveEstimator(FluxPointsEstimator):
     n_sigma_ul : float, optional
         Number of sigma to use for upper limit computation. Must be a positive value.
         Default is 2.
+
+        .. note::
+           The upper limit is one-sided: ``n_sigma_ul=1.645`` corresponds to a 95%
+           confidence level (ΔTS = 2.71), and ``n_sigma_ul=2`` to 97.7%. The asymmetric
+           errors (``n_sigma``) are two-sided: ``n_sigma=1`` gives a 68.3% interval.
+
     selection_optional : list of str, optional
         Which steps to execute. Available options are:
 
