@@ -205,7 +205,7 @@ print(LLR["fit_results"].parameters.to_table())
 # profile likelihood, then a Bayesian UL from the posterior distribution.
 # The two answer different questions, as discussed at the end of this notebook.
 #
-# The upper limit is what we actually obtained from this particular
+# The upper limit is the maximum flux compatible with this particular
 # data set, and is *not* an estimate of the true source flux.
 # The upper limits also depends on:
 #
@@ -227,8 +227,7 @@ print(LLR["fit_results"].parameters.to_table())
 # A frequentist UL is the output of a procedure with a guaranteed
 # *coverage*: if the observation were repeated many times, the interval
 # ``[0, UL]`` would contain the true flux in the stated fraction of the
-# repetitions (e.g. 95%). It is **not** the probability that the flux lies
-# below the UL.
+# repetitions (e.g. 95%).
 #
 # In Gammapy, the UL is the flux at which the fit statistic rises
 # by ``n_sigma_ul**2`` above its minimum (on the high-flux side). Asymptotically,
@@ -262,12 +261,12 @@ fp1.plot(sed_type="dnde")
 plt.show()
 
 ######################################################################
-# Expected upper limits (Brazil bands) and sensitivity
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Expected upper limits (Brazil bands)
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # An observed upper limit comes from a single realisation of the data. To see
 # how unusual it is, we compare it with the distribution of upper limits we would
-# expect if there were no source. We simulate many *background-only datasets*,
+# expect *if there were no source*. We simulate many *background-only datasets*,
 # compute the upper limits for each one in the same way as above, and take the
 # median and the 68% and 95% ranges. These form the so-called Brazil bands.
 #
@@ -277,19 +276,12 @@ plt.show()
 # Instead of running many simulations, a quick alternative is the Asimov
 # approximation of `Cowan et al. (2011) <https://arxiv.org/abs/1007.1727>`__.
 # A single fit to the Asimov dataset (counts equal to the predicted background,
-# with no fluctuations) gives the median expected upper limit and its ±1σ and ±2σ
-# bands.
-# The `~gammapy.estimators.FluxPointsEstimator` computes the
-# flux that would give an ``n_sigma_sensitivity`` detection (default 5) on an
-# Asimov dataset, i.e. in the median case. It answers the question: *would this
-# source have been detectable with this exposure and IRFs?* It does not include
-# conditions such as a minimum number of gamma rays
-# (see :doc:`/tutorials/analysis-1d/cta_sensitivity`), and it depends on the
-# analysis configuration.
+# with no fluctuations) gives the median expected upper limit.
+#
 
 
 def run_mc():
-    n_toys = 100  # increase for smoother bands; this is the slow step
+    n_toys = 100
 
     dnde_ul_toys = []
     for idx in range(n_toys):
@@ -308,6 +300,21 @@ def run_mc():
         dnde_ul_toys, [2.5, 16, 50, 84, 97.5], axis=0
     )
 
+    # Compute the Asimov UL
+    asimov = dataset.copy(name="asimov")
+
+    npred_bkg = asimov.npred_background()
+    asimov.counts.data[...] = npred_bkg.data
+
+    asimov.models = Models(
+        [
+            sky_model.copy(name="source"),
+            FoVBackgroundModel(dataset_name=asimov.name),
+        ]
+    )
+
+    fp_asimov = fpe.run(asimov)
+
     energy = fp1.energy_ref.to_value("TeV")
 
     ax = fp1.plot(sed_type="dnde", label="Observed UL", color="black", lw=2)
@@ -317,14 +324,15 @@ def run_mc():
     ax.fill_between(
         energy, p16, p84, color="limegreen", alpha=0.3, label="Expected UL, 68%"
     )
-    ax.plot(energy, p50, "--", label="Expected UL, median", color="blue")
+    ax.plot(energy, p50, linestyle="dotted", label="Expected UL, median", color="blue")
     ax.plot(
         energy,
-        fp1.dnde_sensitivity.quantity.squeeze().to_value(unit),
+        fp_asimov.dnde_ul.quantity.squeeze().to_value(unit),
         linestyle="dashdot",
-        label="Sensitivity ",
+        label="Asimov UL",
         color="red",
     )
+
     ax.loglog()
     ax.set_xlabel("Energy [TeV]")
     ax.set_ylabel(f"dnde [{unit.to_string('latex_inline')}]")
@@ -337,18 +345,14 @@ def run_mc():
 # .. image:: ../../_static/freq_UL_bands.png
 
 ######################################################################
-# If the observed upper limits lie inside the bands, it impplies the data are
+# If the observed upper limits lie inside the bands, it implies the data are
 # consistent with background only.
-# For the ones ones where they fall below the yellow band, the background has
-# fluctuated down (or is overestimated). To avoid this, you should always
+# For the ones ones where they fall below the yellow band, the background
+# is overestimated. To avoid this, you should always
 # *reoptimize the parameters of the other models, specially the background model*.
 # If they still occur, such points should be treated with caution as they
-# may exclude fluxes the observation was not sensitive to
-# In the limit of high counts, the median expected upper limit and the sensitivity (at the
-# same ``n_sigma``) are expected to be equal. With few counts, as here,
-# the expected upper limit lies above the sensitivity, and the bands are the
-# appropriate reference for the observed upper limits.
-
+# may exclude fluxes the observation was not sensitive to. This usually indicates
+# background systematics that have not been accounted for.
 
 ######################################################################
 # .. _bayesian_upper_lims:
@@ -362,10 +366,8 @@ def run_mc():
 #
 # This requires a prior on every free parameter. To keep the example simple,
 # we fix the spectral index and the position, so the amplitude is the only
-# free parameter. We use a uniform prior starting at zero. This builds the
-# physical boundary (no negative fluxes) directly into the result.
-# Its upper bound must lie well above the upper
-# limits.
+# free parameter. We use a uniform prior starting at zero.
+# Its upper bound must lie well above the upper limits.
 #
 # **Note:** a Bayesian upper limit depends on the choice of prior. A prior that is
 # uniform in amplitude is the usual choice for upper limits. A log-uniform prior
@@ -375,7 +377,7 @@ def run_mc():
 # `~gammapy.estimators.FluxCollectionEstimator` fits the same normalisation per
 # energy bin as above. It can use either a `~gammapy.modeling.Fit` or a
 # `~gammapy.modeling.Sampler` as solver. With a sampler, the upper limit is the
-# ``Φ(n_sigma_ul)`` quantile of the posterior of the normalisation.
+# ``\Phi(n_sigma_ul)`` quantile of the posterior of the normalisation.
 # While reporting results, always quote the used prior.
 
 norm_max = 40
@@ -428,70 +430,20 @@ plt.show()
 # - **Frequentist (profile likelihood) upper limit.** This is a statement about
 #   the *procedure*. If the experiment were repeated many times, the intervals
 #   it produces would contain the true flux in a fixed fraction of the
-#   repetitions (this is called *coverage*). It says nothing about how probable
-#   any particular flux value is, and it does not use a prior.
+#   repetitions (this is called *coverage*). In this approach, the other free
+#   parameters ("nuisance parameters") are re-fitted to their best values.
 #
 # - **Bayesian credible upper limit.** This is a statement about the flux,
 #   given the data we actually observed and the prior we chose: "there is a 99.8%
 #   probability that the flux lies below this value". It depends heavily on the
-#   choice of the prior.
+#   choice of the prior. The nuisance parameters are integrated out.
+#   Every value contributes, weighted by its likelihood and its prior
 #
 # In the regime of many counts, with the best fit far from zero and a flat
 # prior, the two results converge. In that limit the
 # likelihood is close to a Gaussian, and the remaining difference is only the
 # confidence-level convention.
 #
-# They differ most in exactly the situation of this tutorial: a non-detection
-# near the physical boundary of zero flux.
-#
-# - Due to downward fluctuations of the background, frequentist upper limits can
-#   become very small, excluding fluxes that the observation could never have detected.
-# - The uniform prior starting at zero removes the unphysical region and
-#   renormalises the posterior over the physical region. The Bayesian upper
-#   limit therefore reacts much less to downward fluctuations, and it stays
-#   closer to the sensitivity.
-
-######################################################################
-# Profiling versus marginalisation
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# A real analysis usually has other free parameters besides the one we want to
-# constrain, like the other sources in the field, etc. These are called *nuisance
-# parameters* (θ). The two approaches treat them in different ways when constraining the
-# parameter of  interest (μ, here the amplitude).
-#
-# - **Profiling (frequentist).** For each value of μ, the nuisance parameters
-#   are re-fitted to their best values:
-#
-#   .. math:: L_{\rm prof}(\mu) = \max_{\theta} L(\mu, \theta)
-#
-#   In Gammapy this is what ``reoptimize=True`` does, in
-#   `~gammapy.modeling.Fit.stat_profile` and in the estimators.
-#   The default of `~gammapy.estimators.FluxPointsEstimator` is
-#   ``reoptimize=False``. In that case the other parameters are kept *fixed* at
-#   their current values. This is neither profiling nor marginalisation, and it
-#   makes the upper limits too tight when the nuisance parameters are not well
-#   constrained.
-#
-# - **Marginalisation (Bayesian).** The nuisance parameters are integrated out.
-#   Every value of θ contributes, weighted by its likelihood and its prior:
-#
-#   .. math:: p(\mu \mid D) \propto \int L(\mu, \theta)\, \pi(\mu, \theta)\, {\rm d}\theta
-#
-#   With a sampler, marginalisation needs no extra work. Each column of
-#   ``result.samples`` is already a sample of the marginal posterior of that
-#   parameter, so a histogram of one column is its marginal distribution.
-#
-# Profiling keeps only the *best* nuisance values for each μ. Marginalisation
-# also counts *how many* nuisance values are compatible with the data, i.e. the
-# volume of the allowed region. The two give the same result when the
-# likelihood is close to Gaussian in θ, with a width that does not depend on μ.
-# They differ when the likelihood is skewed, when μ and θ are strongly
-# correlated in a non-linear way, when a parameter is close to a boundary, or
-# when a nuisance parameter is so poorly constrained by the data that its
-# prior dominates.
-
-
 ######################################################################
 # .. _integral_upper_lims:
 #
