@@ -560,20 +560,6 @@ class HDMSpectraPrimaryFlux(SpectralModel):
     `DarkMatterSpectralModel` passes ``mDM / 2`` to the primary-flux model;
     this gives the decay energy fraction ``x = 2 E / mDM``.
 
-    Examples
-    --------
-    Create a primary-flux model and serialize its configuration::
-
-        >>> import astropy.units as u
-        >>> from gammapy.astro.darkmatter.spectra import HDMSpectraPrimaryFlux
-        >>> primary = HDMSpectraPrimaryFlux(
-        ...     mDM=1 * u.TeV,
-        ...     initialstate="b",
-        ...     hdm_data_file="HDMSpectra/data/HDMSpectra.hdf5",
-        ... )
-        >>> data = primary.to_dict()
-        >>> restored = HDMSpectraPrimaryFlux.from_dict(data)
-
     The path in ``hdm_data_file`` must exist both when creating and restoring
     the model. The HDMSpectra package is needed to evaluate the restored model.
     """
