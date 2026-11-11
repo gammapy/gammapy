@@ -236,12 +236,12 @@ print(LLR["fit_results"].parameters.to_table())
 # The `~gammapy.estimators.FluxPointsEstimator` computes one UL per energy bin.
 # By default (``reoptimize=False``), only the normalisation is fitted in each bin;
 # all other parameters, including the index, stay fixed. Here we use
-# ``n_sigma_ul=3`` to get the 99.87% UL.
+# ``n_sigma_ul=1.645`` to get the 95% UL.
 #
 # For computation reasons, we keep the background normalisation frozen,
 # but **in a real analysis, you should keep it free and use** `reoptimize=True`.
 
-sky_model.parameters["amplitude"].value = 1e-12
+sky_model.parameters["amplitude"].value = 1e-13
 sky_model.parameters["index"].value = 2.0
 sky_model.freeze(model_type="spatial")
 
@@ -249,16 +249,22 @@ energy_edges = dataset.geoms["geom"].axes["energy"].edges
 fpe = FluxPointsEstimator(
     selection_optional=["ul", "sensitivity"],
     energy_edges=energy_edges,
-    n_sigma_ul=3,
-    n_sigma_sensitivity=3,
+    n_sigma_ul=1.645,
     source="source",
 )
 
 fp1 = fpe.run(dataset)
 
+######################################################################
+# It is useful to plot the upper limits along with fit statistic as a
+# density plot to see the TS difference in each bin.
 
-fp1.plot(sed_type="dnde")
+fp1.plot(sed_type="dnde", color="black")
+fp1.plot_ts_profiles(sed_type="dnde")
 plt.show()
+
+# It can also be useful to visualise the likelihood profile for
+# diagnostic purposes, as explained in `:doc:`/tutorials/details/fitting`.
 
 ######################################################################
 # Expected upper limits (Brazil bands)
@@ -281,8 +287,8 @@ plt.show()
 
 
 def run_mc():
-    n_toys = 100
-
+    # Simulate
+    n_toys = 100  # increase for smoother bands
     dnde_ul_toys = []
     for idx in range(n_toys):
         if idx % 10 == 0:
@@ -315,6 +321,7 @@ def run_mc():
 
     fp_asimov = fpe.run(asimov)
 
+    # Plot
     energy = fp1.energy_ref.to_value("TeV")
 
     ax = fp1.plot(sed_type="dnde", label="Observed UL", color="black", lw=2)
@@ -380,7 +387,7 @@ def run_mc():
 # ``\Phi(n_sigma_ul)`` quantile of the posterior of the normalisation.
 # While reporting results, always quote the used prior.
 
-norm_max = 40
+norm_max = 100
 norm_bayes = Parameter("norm", value=1, prior=UniformPrior(min=0, max=norm_max))
 
 sampler = Sampler(
@@ -397,7 +404,7 @@ sampler = Sampler(
 fce_bayes = FluxCollectionEstimator(
     energy_edges=energy_edges,
     models=[sky_model],
-    n_sigma_ul=3,
+    n_sigma_ul=1.645,
     norm=norm_bayes,
     solver=sampler,
 )
@@ -415,7 +422,7 @@ ax.plot(
 )
 ax.loglog()
 ax.set_xlabel("Energy [TeV]")
-ax.set_ylabel(f"dnde upper limit, 99.8% [{unit.to_string('latex_inline')}]")
+ax.set_ylabel(f"dnde upper limit, 95% [{unit.to_string('latex_inline')}]")
 ax.legend()
 plt.show()
 # sphinx_gallery_thumbnail_number = 6
