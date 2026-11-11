@@ -133,7 +133,12 @@ from gammapy.modeling.models import (
     PointSpatialModel,
 )
 from gammapy.modeling import select_nested_models
-from gammapy.astro.darkmatter import DarkMatterDecaySpectralModel, profiles, JFactory
+from gammapy.astro.darkmatter import (
+    DarkMatterSpectralModel,
+    profiles,
+    JFactory,
+    add_factor_prior,
+)
 from gammapy.modeling import Fit, stat_profile_ul_scipy
 from gammapy.estimators import ParameterEstimator
 
@@ -222,12 +227,17 @@ pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 # Integration of DFactor within that region
 total_dfact = pix_reg.to_mask().multiply(dfact).sum()
 
-spectral_model = DarkMatterDecaySpectralModel(
-    mass=massDM,
+spectral_model = DarkMatterSpectralModel(
+    mDM=massDM,
     channel=channel,
-    jfactor=total_dfact,
+    factor=total_dfact,
     scale=0,  # Example so we do NOT get a signal
+    annihilation=False,
 )
+
+# We add a prior on the model so the nuisance treatment provides a more realistic result.
+# As an example we are going to set a 0.03 dex deviation on the DFactor.
+add_factor_prior(spectral_model, 0.03)
 
 # Combined model
 sky_model = SkyModel(
@@ -275,9 +285,10 @@ dataset.peek()
 # meaningful range. Typically, the background normalization is left free
 # to absorb residual mismatches between the assumed and true background
 # level, while the spectral shape parameters (e.g. the DM mass or the
-# spectral channel) are kept fixed to the values under study, leaving only
+# spectral channel) are kept fixed to the values under study, leaving
 # the ``scale`` parameter (related to ⟨σv⟩ or 1/τ_χ, depending on
-# whether we are studying annihilation or decay) free to vary. During the
+# whether we are studying annihilation or decay) and ``factor`` parameter, in case
+# of applying a prior, free to vary. During the
 # fit, the optimizer adjusts all free parameters of the model to maximize
 # the Poisson likelihood between the observed (or simulated) counts and
 # the model prediction, while all fixed parameters remain at their assumed
@@ -292,7 +303,7 @@ dataset.peek()
 #
 
 # First check the parameters of the model
-print(dataset.models.to_parameters_table())
+dataset.models.to_parameters_table()
 
 
 ######################################################################
@@ -746,11 +757,12 @@ def compute_dm_exclusion_curve():
     for mass in masses:
         print(f"  mass = {mass}  ...", end=" ")
 
-        spectral_model_m = DarkMatterDecaySpectralModel(
-            mass=mass,
-            channel=channel,
-            jfactor=total_dfact,
+        spectral_model_m = DarkMatterSpectralModel(
+            mDM=mass, channel=channel, factor=total_dfact, annihilation=False
         )
+
+        add_factor_prior(spectral_model_m, 0.03)
+
         spectral_model_m.scale.value = 0
         spectral_model_m.scale.frozen = True
         spectral_model_m.scale.min = 0
@@ -966,11 +978,15 @@ def plot_exclusion_curve(results):
 #     for i in range(n_realizations):
 
 #         # Recreate spectral model with this mass
-#         spectral_model_i = DarkMatterDecaySpectralModel(
-#             mass=mass,
+#         spectral_model_i = DarkMatterSpectralModel(
+#             mDM=mass,
 #             channel=channel,
-#             jfactor=total_dfact,
+#             factor=total_dfact,
+#             annihilation=False
 #         )
+#
+#         add_factor_prior(spectral_model_i, 0.03)
+#
 #         spectral_model_i.scale.value  = 0
 #         spectral_model_i.scale.frozen = True
 #         spectral_model_i.scale.min    = 0
