@@ -27,7 +27,8 @@ to quantify non-detections. There are two distinct approaches to consider:
   any position (i.e. UL map).
 - Test the presence of emission from a potential source with given position and morphology and compute
   integral and differential UL.
-- Use both frequentist and Bayesian approaches for computing the ULs.
+
+We will use both frequentist and Bayesian approaches for computing the ULs.
 
 """
 
@@ -241,7 +242,7 @@ print(LLR["fit_results"].parameters.to_table())
 # Note that in the case of a detection, n_sigma=2 still corresponds to ΔTS = 4 but is associated to a two-sided confidence level of 95%.
 # In order to perform a comparison between the frequentist and Bayesian 95% ULs, we should specify n_sigma_ul=1.645 in the frequentist approach.
 #
-# For computation reasons, we keep the background normalisation frozen,
+# For computational reasons here, we keep the background normalisation frozen,
 # but **in a real analysis, you should keep it free and use** `reoptimize=True`.
 
 sky_model.parameters["amplitude"].value = 1e-13
@@ -250,7 +251,7 @@ sky_model.freeze(model_type="spatial")
 
 energy_edges = dataset.geoms["geom"].axes["energy"].edges
 fpe = FluxPointsEstimator(
-    selection_optional=["ul", "sensitivity"],
+    selection_optional="all",
     energy_edges=energy_edges,
     n_sigma_ul=1.645,
     source="source",
@@ -357,8 +358,8 @@ def run_mc():
 ######################################################################
 # If the observed upper limits lie inside the bands, it implies the data are
 # consistent with background only.
-# For the ones ones where they fall below the yellow band, the background
-# is overestimated. To avoid this, you should always
+# If they fall below the yellow band, the background is overestimated.
+# To avoid this, you should always
 # *reoptimize the parameters of the other models, specially the background model*.
 # If they still occur, such points should be treated with caution as they
 # may exclude fluxes the observation was not sensitive to. This usually indicates
