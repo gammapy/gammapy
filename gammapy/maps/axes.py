@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 from astropy.io import fits
-from astropy.table import Column, Table, hstack
+from astropy.table import Column, Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
 
@@ -2117,9 +2117,10 @@ class MapAxes(Sequence):
             "ogip-arf",
         ]:
             axes.append(MapAxis.from_table(table, format=format))
+
         elif format == "gadf":
-            # This limits the max number of axes to 5
-            for idx in range(5):
+            # This limits the max number of axes to 99 - above the fits keyword limit is reached.
+            for idx in range(99):
                 axcols = table.meta.get("AXCOLS{}".format(idx + 1))
                 if axcols is None:
                     break

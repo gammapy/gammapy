@@ -18,7 +18,7 @@ from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from gammapy.maps import Map, MapAxis, Maps
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash
-from gammapy.stats.utils import ts_to_sigma
+from gammapy.stats.utils import ts_to_sigma_sensitivity
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.compilation import get_fit_statistics_compiled
 from gammapy.utils.deprecation import deprecated_renamed_argument
@@ -101,6 +101,12 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     n_sigma_ul : float, optional
         Number of sigma for flux upper limits. Must be a positive value.
         Default is 2.
+
+        .. note::
+           The upper limit is one-sided: ``n_sigma_ul=1.645`` corresponds to a 95%
+           confidence level (ΔTS = 2.71), and ``n_sigma_ul=2`` to 97.7%. The asymmetric
+           errors (``n_sigma``) are two-sided: ``n_sigma=1`` gives a 68.3% interval.
+
     n_sigma_sensitivity : float, optional
         Number of sigma for flux sensitivity. Must be a positive value.
         Default is 5.
@@ -927,9 +933,7 @@ class BrentqFluxEstimator(Estimator):
 
         def sigma_diff(x):
             ts_asimov = dataset.stat_sum_asimov_null(x) - dataset.stat_sum_asimov(x)
-            return (
-                ts_to_sigma(ts_asimov, ts_asimov=ts_asimov) - self.n_sigma_sensitivity
-            )
+            return ts_to_sigma_sensitivity(ts_asimov) - self.n_sigma_sensitivity
 
         min_norm = norm / 1000.0
         max_norm = norm * 1000.0
