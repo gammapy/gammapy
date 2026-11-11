@@ -21,7 +21,6 @@ from gammapy.stats import cash
 from gammapy.stats.utils import ts_to_sigma
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.compilation import get_fit_statistics_compiled
-from gammapy.utils.deprecation import deprecated_renamed_argument
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.roots import find_roots
 
@@ -101,6 +100,12 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     n_sigma_ul : float, optional
         Number of sigma for flux upper limits. Must be a positive value.
         Default is 2.
+
+        .. note::
+           The upper limit is one-sided: ``n_sigma_ul=1.645`` corresponds to a 95%
+           confidence level (ΔTS = 2.71), and ``n_sigma_ul=2`` to 97.7%. The asymmetric
+           errors (``n_sigma``) are two-sided: ``n_sigma=1`` gives a 68.3% interval.
+
     n_sigma_sensitivity : float, optional
         Number of sigma for flux sensitivity. Must be a positive value.
         Default is 5.
