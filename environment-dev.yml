@@ -81,7 +81,7 @@ dependencies:
   # - cffconvert
   - pyinstrument
   - memray
-  # build tools to compile sherpa from source
+  # build tools required to compile sherpa from source
   - fftw
   - cmake
   - pkg-config
