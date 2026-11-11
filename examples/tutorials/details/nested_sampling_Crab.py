@@ -66,21 +66,25 @@ A demonstration of a Bayesian analysis using the nested sampling technique.
 # (N*(N-1)/2 contour plots to generate). In addition, it is more robust
 # to the choice of initialisation, requires less human intervention and
 # is therefore readily integrated in pipeline analysis. In Gammapy, we
-# used the NS implementation of the UltraNest package
-# (see `here <https://johannesbuchner.github.io/UltraNest/>`__ for more information), one of the
-# leading package in Astronomy (already used in Cosmology and in
-# X-rays).
+# provide several NS backends: UltraNest and Nautilus. UltraNest is a package
+# that implements the NS algorithm and is used in many astrophysical applications.
+# Nautilus is a more recent implementation of the NS algorithm that exploits neural networks to learn a likelihood function emulator to propose new live points.
+# It is designed to be faster and more efficient than UltraNest,
+# especially for high-dimensional problems.
 # For a nice visualisation of the NS method see here : `sampling
 # visualisation <https://johannesbuchner.github.io/UltraNest/method.html#visualisation>`__.
 # And for a tutorial of UltraNest applied to X-ray fitting with concrete examples and questions see : `BXA
 # Tutorial <https://peterboorman.com/tutorial_bxa.html>`__.
 #
-#
+# See the UltraNest docs `here <https://johannesbuchner.github.io/UltraNest/>`__).
 # **Note: please cite UltraNest if used for a paper**
-#
 # If you are using the "UltraNest" library for a paper, please follow its citation scheme:
 # `Cite UltraNest <https://johannesbuchner.github.io/UltraNest/issues.html#how-should-i-cite-ultranest>`__.
 #
+# See the Nautilus docs `here <https://nautilus-sampler.readthedocs.io/>`__).
+# **Note: please cite Nautilus if used for a paper**
+# If you are using the "Nautilus" library for a paper, please follow its citation scheme:
+# `Cite Nautilus <https://nautilus-sampler.readthedocs.io/en/latest/#attribution>`__.
 #
 
 ######################################################################
@@ -195,13 +199,34 @@ print(datasets.models)
 #    For time consuming analysis, it is highly recommended to use that option to monitor
 #    the run and restart it in case of a crash (with ``resume=True``).
 #
+# More information about the UltraNest options can be found in the `UltraNest
+# docs <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler>`__.
+#
+# More information about the Nautilus options can be found in the `Nautilus
+# docs <https://nautilus-sampler.readthedocs.io/en/latest/api_high.html>`__.
+#
+# A few useful options for Nautilus are:
+# - ``n_live``: number of live points. Equivalent of ``min_num_live_points`` in UltraNest.
+#    Due to a different methodology the recommended number of live points should be higher than in UltraNest (1000-3000) while still being faster in high-dimensional problems.
+# - ``f_live``: fraction of the evidence fromlive points to use for convergence. Equivalent of ``frac_remain`` in UltraNest.
+# - ``pool``: Pool used for parallelization of likelihood calls and sampler calculations.
+# - ``filepath``: file path with .hdf5 extension (not directory path) where the output files will be stored.
+#
+# **Backend comparison:** For a comparison between the two backends methods,
+# see `here <https://nautilus-sampler.readthedocs.io/en/latest/discussion/nested_sampling.html>`__.
+# For a gamma-ray analysis, current testing shows that UltraNest can be faster (or equivalent) than Nautilus for low-dimensional problems (1-5 parameters)
+# and Nautilus is faster for high-dimensional problems (>10 parameters) but this of course case specific.
+# If your analysis is dominated by likelihood evaluation time, the parallelisation of the likelihood evaluation
+# in Nautilus (using multiprocessing, just setting pool=nCPUs in the sampler options) has a simpler setup than UltraNest (MPI) and can be more efficient on laptops.
+# Notably, multiprocessing with Nautilus can work in a Jupyter notebook while MPI with UltraNest is not supported in a notebook.
+#
 # **Important note:** unlike the MCMC method, you don’t need to define the
 # number of steps for which the sampler will run. The algorithm will
 # automatically stop once a convergence criteria has been reached.
 #
 
 options = {
-    "min_num_live_points": 300,
+    "min_num_live_points": 400,
     "frac_remain": 0.3,
     "log_dir": None,
 }
