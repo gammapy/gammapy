@@ -413,12 +413,12 @@ fp_bayes = fce_bayes.run(Datasets([dataset]))["flux_points"]["source"]
 fig, ax = plt.subplots()
 unit = u.Unit("cm-2 s-1 TeV-1")
 energy = fp_bayes.energy_ref.to_value("TeV")
-fp1.plot(ax=ax, fmt="o-", label="Frequentist")
+fp1.plot(ax=ax, fmt="o-", label="Frequentist UL")
 ax.plot(
     energy,
     fp_bayes.dnde_ul.quantity.squeeze().to_value(unit),
     "s--",
-    label="Bayesian (uniform prior, norm ≥ 0)",
+    label="Bayesian Limit (uniform prior, norm ≥ 0)",
 )
 ax.loglog()
 ax.set_xlabel("Energy [TeV]")
