@@ -2,8 +2,8 @@
 Bayesian model selection
 ========================
 
-An overview of Bayesian model selection combining gammapy with ultranest
-and arziv packages.
+An overview of Bayesian model selection combining Gammapy with UltraNest
+and ArviZ packages.
 
 """
 
@@ -17,7 +17,7 @@ and arziv packages.
 # https://arviz-devs.github.io/EABM/Chapters/Sensitivity_checks.html
 #
 # Most of the text is directly taken from this reference and examples have
-# been adapted to a gamma-ray analysis with gammapy.
+# been adapted to a gamma-ray analysis with Gammapy.
 #
 # Here we are going to focus on the following questions:
 #    - What are the common information criterion used for model selection nowadays ?
@@ -168,8 +168,8 @@ bms = BayesianModelSelection(
 
 
 ######################################################################
-# Next we can run the sampler on a given datasets for a set of
-# alternative_models. No other options are accepted in the run method.
+# Next we can run the sampler on a given dataset for a set of
+# alternative_models. No other option is accepted in the run method.
 #
 
 # %%capture
@@ -180,7 +180,7 @@ bms_results = bms.run(datasets, alternative_models)
 # Exploring the results
 # ---------------------
 #
-# The sampler has finished to evaluate all models. Let’s start by looking
+# The sampler has finished to evaluating all the models. Let’s start by looking
 # at the results for one.
 #
 
@@ -206,7 +206,7 @@ inference_result.parameters_table()
 
 
 ######################################################################
-# We can visualize the distributions with `plot_dist` function of arviz:
+# We can visualize the distributions with `plot_dist` function of ArviZ:
 #
 
 az.plot_dist(
@@ -216,7 +216,7 @@ plt.show()
 
 
 ######################################################################
-# or the make a corner plot
+# or make a corner plot
 #
 
 with az.rc_context(
@@ -264,7 +264,7 @@ plt.show()
 
 
 ######################################################################
-# Information criterions
+# Information criteria
 # ----------------------
 #
 # Bayes Factor
@@ -276,9 +276,9 @@ plt.show()
 #
 # .. math:: BF_{10} = \frac{P(D \mid M_1)}{P(D \mid M_0)}
 #
-# - **:math:`P(D \mid M_1)`**: The probability of the data given model
+# - **:math:`P(D \mid M_1)`**: the probability of the data given model
 #   :math:`M_1` (marginal likelihood or *evidence*).
-# - **:math:`P(D \mid M_0)`**: The probability of the data given model
+# - **:math:`P(D \mid M_0)`**: the probability of the data given model
 #   :math:`M_0`.
 #
 # If :math:`BF_{10} > 1`, the data favors model :math:`M_1`. If
@@ -334,12 +334,12 @@ plt.show()
 #
 # .. math:: \text{AIC} = 2k - 2\ln(\hat{L})
 #
-# - **Goodness of Fit (:math:`-2\ln(\hat{L})`):** Measures how well the
+# - **Goodness of Fit (:math:`-2\ln(\hat{L})`):** measures how well the
 #   model fits the observed data using the maximum likelihood estimate
 #   (:math:`\hat{L}`). A better model yields a lower deviance.
-# - **Complexity Penalty (:math:`2k`):** Penalizes the model based on its
+# - **Complexity Penalty (:math:`2k`):** penalizes the model based on its
 #   exact number of free parameters (:math:`k`) to prevent overfitting.
-# - **Goal:** When comparing competing models on the same dataset, the
+# - **Goal:** when comparing competing models on the same dataset, the
 #   model with the **lowest AIC** is preferred.
 # - **Limitation in Bayesian Inference:** AIC relies on a single point
 #   estimate (the Maximum Likelihood Estimate) and assumes flat priors,
@@ -375,7 +375,7 @@ plt.show()
 # |                            |                       | usually be discarded. |
 # +----------------------------+-----------------------+-----------------------+
 #
-# (Note: Values falling in the gaps—such as 2 to 4 or 7 to 10—represent
+# (Note: values falling in the gaps — such as 2 to 4 or 7 to 10 — represent
 # smooth transitions between these categories rather than hard cutoffs).
 #
 # ELPD: Expected Log-Predictive Density
@@ -388,18 +388,18 @@ plt.show()
 #
 # .. math:: \text{ELPD} = \sum_{i=1}^{n} \int p_t(\tilde{y}_i) \log p(\tilde{y}_i \mid y) \, d\tilde{y}_i
 #
-# - **Why it is more Bayesian than AIC:** Standard **AIC** relies on a
+# - **Why it is more Bayesian than AIC:** standard **AIC** relies on a
 #   single point estimate (the Maximum Likelihood Estimate,
 #   :math:`\hat{\theta}_{\text{MLE}}`) to compute goodness of fit. In
 #   contrast, ELPD integrates over the **full posterior distribution**
 #   :math:`p(\theta \mid y)`, naturally accounting for parameter
 #   uncertainty.
-# - **The Missing Penalization Term:** Because the true data-generating
+# - **The Missing Penalization Term:** because the true data-generating
 #   distribution :math:`p_t(\tilde{y}_i)` is unknown, we must approximate
 #   ELPD using our observed sample :math:`y` (computing the *log pointwise
 #   predictive density*, or **lppd**). Evaluating the model on the same
 #   data used to analyse it introduces **optimistic overfitting bias**.
-# - **How Penalization is Added:** To correct for overfitting, Bayesian
+# - **How Penalization is Added:** to correct for overfitting, Bayesian
 #   information criteria subtract an estimated **effective number of
 #   parameters** (:math:`p_{\text{LOO}}`) from the in-sample analysis:
 #
@@ -407,7 +407,7 @@ plt.show()
 #
 #   *(Note: can be multiplied by :math:`-2` to place it on the deviance
 #   scale).*
-# - **Asymptotic Equivalence to AIC:** As the sample size grows large
+# - **Asymptotic Equivalence to AIC:** as the sample size grows large
 #   (:math:`n \to \infty`) and the influence of the prior vanishes, the
 #   posterior distribution converges to a normal distribution centered at
 #   the MLE. Under these conditions, the effective number of parameters
@@ -466,7 +466,7 @@ plt.show()
 # Model comparison
 # ----------------
 #
-# Wewe can have a look at the statistics summary table for all models
+# We can have a look at the statistics summary table for all models
 #
 
 # lower is better
@@ -514,8 +514,8 @@ print("LP is favored at", sigma, "sigma")
 #   standard error on the elpd difference, which is plotted in the
 #   comparison plot below.
 #
-# The logz is more affected by the choice of prior it penalize much more
-# the models with more effective degree of freedom, this effect is
+# The logz is more affected by the choice of priors. It penalizes much more
+# the models with more effective degrees of freedom, this effect is
 # amplified the weaker the prior is (because in that case the logz
 # integrate over a larger “irrelevant” parameter space). We see also that
 # using logz to compare models with different prior strength might reflect
@@ -525,7 +525,7 @@ print("LP is favored at", sigma, "sigma")
 
 
 ######################################################################
-# As our statistics come with errors more robust comparisons can be done
+# As our statistics come with errors, more robust comparisons can be done
 # with the methods implemented in `arziv.compare` that we can call from
 # our results object:
 #
@@ -593,7 +593,7 @@ print(
 # speaking the entropy of a distribution is high when the distribution is
 # spread out and low when the distribution is concentrated.
 #
-# In the context of prior elicitation maximum entropy can be a guiding
+# In the context of prior elicitation, maximum entropy can be a guiding
 # principle to pick priors. According to this principle we should choose
 # the prior that maximizes the entropy, subject to known constraints of
 # the prior (`Jaynes
