@@ -34,8 +34,9 @@ TUTORIAL_SORT_DICT = {
     "model_management.py": 10,
     "fitting.py": 11,
     "nested_sampling_Crab.py": 12,
-    "estimators.py": 13,
-    "parameter_ul.py": 14,
+    "bayesian_model_selection.py": 13,
+    "estimators.py": 14,
+    "parameter_ul.py": 15,
     #  data analysis
     #  1d
     "cta_sensitivity.py": 0,
