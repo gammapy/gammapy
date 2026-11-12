@@ -744,9 +744,9 @@ class DarkMatterSpectralModel(SpectralModel):
     mDM : `~astropy.units.Quantity`
         Dark matter particle mass.
     channel : str
-        Channel or initial state for the primary spectrum. For PPPC4, CosmiXs,
-        or a custom table, see `ContinuumPrimaryFlux.channel_registry`. For
-        ``source="hdmspectra"``, this is an HDMSpectra initial state such as
+        Annihilation/Decay channel or initial state for the primary spectrum. 
+        For PPPC4, CosmiXs, or a custom table, see `ContinuumPrimaryFlux.channel_registry`. 
+        For HDMSpectra, this is an HDMSpectra initial state such as
         ``"b"`` or ``"W"``; its supported labels are defined by HDMSpectra.
     scale : float, optional
         Dimensionless normalization parameter applied multiplicatively to
@@ -779,10 +779,10 @@ class DarkMatterSpectralModel(SpectralModel):
           (extensions ``.dat``, ``.txt``, ``.csv``, or ``.ecsv``).
         * ``"hdmspectra"``: Bauer et al. (2021) HDMSpectra computation.
 
-        For a custom file path, the table must contain ``"mDM"`` and
+        If a custom file path is provided, it must contain ``"mDM"`` and
         ``"Log[10,x]"`` columns (after applying ``mapping_dict`` if given),
-        plus a column for the requested channel using the internal channel
-        registry naming convention.
+        plus columns named after the requested annihilation channel(s)
+        using the internal channel registry naming convention.
 
     hdm_data_file : str or `~pathlib.Path`, optional
         Path to the HDMSpectra HDF5 data file. Required when
