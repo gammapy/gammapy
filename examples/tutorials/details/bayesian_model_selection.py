@@ -306,9 +306,16 @@ plt.show()
 # | **> 100**                      | Decisive evidence                   |
 # +--------------------------------+-------------------------------------+
 #
-# Bayes factor can also be used for model comparison of non-nested models.
+# The Savage–Dickey density ratio provides a simple shortcut to compute
+# the Bayes factor when comparing a nested null hypothesis.
+# In that case instead of computing difficult marginal likelihoods
+# for both models separately, you only fit the broader model (\(M_{1}\))
+# and compare its prior and posterior densities evaluated at the null point
+# \(\theta _{0}\):
 #
-# The `plot_bf` function of arviz we can be used to compute the Bayes factor
+# .. math:: BF_{10} = \frac{P(\theta=\theta_0 \mid D, M_1)}{P(\theta=\theta_0 \mid M_1)}
+#
+# The `plot_bf` function of arviz we can be used to compute this quantiy
 # and visualise how much we gained between the prior and the posterior.
 # Here we show this for the `alpha` parameter.
 # According to Jeffreys’ scale, a :math:`BF_{01} = \frac{1}{BF_{10}} = 20`
@@ -325,8 +332,13 @@ plt.show()
 
 
 ######################################################################
+# Bayes factors evaluate the entire model, including its specific prior
+# assumptions, to determine which explains the data better overall.
+# Because of this prior sensitivity, other methods which
+# judge models strictly on predictive accuracy are preferred
+# when priors are only used for regularization.
+# This include notably the ELDP discussed in the following.
 #
-
 
 ######################################################################
 # AIC: Akaike Information Criterion
@@ -357,8 +369,8 @@ plt.show()
 # by Burnham & Anderson (2002):
 #
 # +----------------------------+-----------------------+-----------------------+
-# | :math:`\Delta\text{AIC}_i` | Level of Empirical    | Interpretation        |
-# |                            | Support for Model     |                       |
+# | :math:`\Delta\text{AIC}_i` | Level of empirical    | Interpretation        |
+# |                            | support for model     | for model :math:`i`   |
 # |                            | :math:`i`             |                       |
 # +============================+=======================+=======================+
 # | **:math:`0 - 2`**          | **Substantial**       | The model is nearly   |
@@ -518,7 +530,7 @@ print("LP is favored at", sigma, "sigma")
 # integrate over a larger “irrelevant” parameter space). We see also that
 # using logz to compare models with different prior strength might reflect
 # more the prior relative strength than actual differences between the
-# models. So it should not be used for model comparison.
+# models. So logz should not be used for model comparison.
 #
 
 
