@@ -14,6 +14,7 @@ from .profiles import (
 )
 from .spectra import (
     ContinuumPrimaryFlux,
+    DarkMatterSpectralModel,
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
     PrimaryFlux,
@@ -24,6 +25,7 @@ __all__ = [
     "add_factor_prior",
     "ContinuumPrimaryFlux",
     "PrimaryFlux",
+    "DarkMatterSpectralModel",
     "DarkMatterAnnihilationSpectralModel",
     "DarkMatterDecaySpectralModel",
     "JFactory",
@@ -35,6 +37,6 @@ __all__ = [
     "NFWProfile",
     "ZhaoProfile",
 ]
-
+SPECTRAL_MODEL_REGISTRY.append(DarkMatterSpectralModel)
 SPECTRAL_MODEL_REGISTRY.append(DarkMatterAnnihilationSpectralModel)
 SPECTRAL_MODEL_REGISTRY.append(DarkMatterDecaySpectralModel)

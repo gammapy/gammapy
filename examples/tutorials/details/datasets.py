@@ -86,7 +86,7 @@ print(dataset_empty)
 # The printout shows the key summary information of the dataset, such as
 # total counts, fit statistics, model information etc.
 #
-# `~gammapy.datasets.MapDataset.from_geom` has additional keywords, that can be used to
+# `~gammapy.datasets.MapDataset.create` has additional keywords, that can be used to
 # define the binning of the IRF related maps:
 #
 

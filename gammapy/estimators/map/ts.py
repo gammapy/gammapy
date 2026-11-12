@@ -3,7 +3,6 @@
 
 import warnings
 from itertools import repeat
-import logging
 
 import astropy.units as u
 import numpy as np
@@ -19,7 +18,7 @@ from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from gammapy.maps import Map, MapAxis, Maps
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash
-from gammapy.stats.utils import ts_to_sigma
+from gammapy.stats.utils import ts_to_sigma_sensitivity
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.compilation import get_fit_statistics_compiled
 from gammapy.utils.deprecation import deprecated_renamed_argument
@@ -34,8 +33,6 @@ from ..utils import (
     estimate_exposure_reco_energy,
 )
 from .core import FluxMaps
-
-log = logging.getLogger(__name__)
 
 __all__ = ["TSMapEstimator"]
 
@@ -104,9 +101,15 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     n_sigma_ul : float, optional
         Number of sigma for flux upper limits. Must be a positive value.
         Default is 2.
+
+        .. note::
+           The upper limit is one-sided: ``n_sigma_ul=1.645`` corresponds to a 95%
+           confidence level (ΔTS = 2.71), and ``n_sigma_ul=2`` to 97.7%. The asymmetric
+           errors (``n_sigma``) are two-sided: ``n_sigma=1`` gives a 68.3% interval.
+
     n_sigma_sensitivity : float, optional
         Number of sigma for flux sensitivity. Must be a positive value.
-        Default is same as 'n_sigma_ul'.
+        Default is 5.
     threshold : float, optional
         If the test statistic value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time. Default is None.
@@ -208,7 +211,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         downsampling_factor=None,
         n_sigma=1,
         n_sigma_ul=2,
-        n_sigma_sensitivity=None,
+        n_sigma_sensitivity=5,
         threshold=None,
         rtol=0.01,
         selection_optional=None,
@@ -239,11 +242,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         self.downsampling_factor = downsampling_factor
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
-        if n_sigma_sensitivity is None:
-            n_sigma_sensitivity = n_sigma_ul
-            log.info(
-                f"By default, 'n_sigma_sensitivity' is set to the same value as 'n_sigma_ul', i.e., {n_sigma_ul}."
-            )
         self.n_sigma_sensitivity = n_sigma_sensitivity
         self.threshold = threshold
         self.rtol = rtol
@@ -686,11 +684,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         maps["success"].data = maps["success"].data.astype(bool)
 
-        meta = {
-            "n_sigma": self.n_sigma,
-            "n_sigma_ul": self.n_sigma_ul,
-            "n_sigma_sensitivy": self.n_sigma_sensitivity,
-        }
+        meta = {"n_sigma": self.n_sigma, "n_sigma_ul": self.n_sigma_ul}
         return FluxMaps(
             data=maps,
             reference_model=self.kernel_model,
@@ -795,7 +789,7 @@ class BrentqFluxEstimator(Estimator):
         rtol,
         n_sigma,
         n_sigma_ul,
-        n_sigma_sensitivity=None,
+        n_sigma_sensitivity=5,
         selection_optional=None,
         max_niter=100,
         ts_threshold=None,
@@ -804,12 +798,6 @@ class BrentqFluxEstimator(Estimator):
         self.rtol = rtol
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
-        if n_sigma_sensitivity is None:
-            n_sigma_sensitivity = n_sigma_ul
-            log.info(
-                f"By default, 'n_sigma_sensitivity' is set to the same value as 'n_sigma_ul', i.e., {n_sigma_ul}."
-            )
-
         self.n_sigma_sensitivity = n_sigma_sensitivity
         self.selection_optional = selection_optional
         self.max_niter = max_niter
@@ -945,9 +933,7 @@ class BrentqFluxEstimator(Estimator):
 
         def sigma_diff(x):
             ts_asimov = dataset.stat_sum_asimov_null(x) - dataset.stat_sum_asimov(x)
-            return (
-                ts_to_sigma(ts_asimov, ts_asimov=ts_asimov) - self.n_sigma_sensitivity
-            )
+            return ts_to_sigma_sensitivity(ts_asimov) - self.n_sigma_sensitivity
 
         min_norm = norm / 1000.0
         max_norm = norm * 1000.0

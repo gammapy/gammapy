@@ -1,0 +1,33 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://gammapy.org/gammapy/schemas/irf/edispkernelmap-1.0.0"
+
+title: |
+  Represents EDispKernelMap.
+
+description: |
+     Support the serialization of EDispKernelMap, which represents an energy
+     dispersion kernel map with (energy, energy_true) axes.
+
+type: object
+properties:
+  edisp_kernel_map:
+    anyOf:
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/regionndmap-1.0.0"
+    description: |
+      Holds the energy dispersion probability values as a Map object,
+      with two non-spatial axes, in this order: energy and energy_true.
+  exposure_map:
+    anyOf:
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/wcsndmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/hpxndmap-1.0.0"
+      - tag: "asdf://gammapy.org/gammapy/tags/maps/regionndmap-1.0.0"
+    description: |
+      Optional field holding exposure-weighting values as a Map.
+
+required: [edisp_kernel_map]
+additionalProperties: false
+...

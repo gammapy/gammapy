@@ -416,6 +416,11 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
         For the GADF format, a MapDataset serialisation is used.
 
+        .. note::
+
+            Since Gammapy v2.1 the default format of this function
+            changed from 'ogip' to None.
+
         Parameters
         ----------
         filename : `~pathlib.Path` or str
@@ -463,6 +468,11 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         Can be serialised either as a `MapDataset` with a `RegionGeom`
         following the GADF specifications, or as per the OGIP format.
         For OGIP formats specs, see `OGIPDatasetWriter`.
+
+        .. note::
+
+            Since Gammapy v2.1 the default format of this function
+            changed from 'ogip' to 'gadf'.
 
         Parameters
         ----------

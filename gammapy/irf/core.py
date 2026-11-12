@@ -408,6 +408,12 @@ class IRF(metaclass=abc.ABCMeta):
 
         """
         cumsum = self.cumsum(axis_name=axis_name)
+
+        if axis_name in kwargs:
+            axis = self.axes[axis_name]
+            coord = u.Quantity(kwargs[axis_name], axis.unit, copy=COPY_IF_NEEDED)
+            kwargs[axis_name] = np.clip(coord, axis.edges[0], axis.edges[-1])
+
         return cumsum.evaluate(**kwargs)
 
     def normalize(self, axis_name):
@@ -1036,7 +1042,7 @@ class IRFMap:
     def downsample(self, factor, axis_name=None, weights=None):
         """Downsample the dimension of the spatial axes or a non-spatial axis by a given factor.
 
-        It is not recommended to use this function on a `~gammapy.irf.PSFMap` rad axis.
+        It is not possible to use this function on a `~gammapy.irf.PSFMap` rad axis.
 
         Parameters
         ----------
@@ -1053,7 +1059,13 @@ class IRFMap:
         map : `IRFMap`
             Downsampled IRF map.
         """
-        if not axis_name:
+        if (axis_name not in self.downsample_axes) and (axis_name is not None):
+            raise ValueError(
+                f"Invalid 'axis_name': {axis_name}. "
+                f"Possible options are: {self.downsample_axes} or None."
+            )
+
+        if axis_name in [None, "energy_true"]:
             preserve_counts = False
         else:
             preserve_counts = True
@@ -1067,7 +1079,7 @@ class IRFMap:
         if self.exposure_map:
             if axis_name in [None, "energy_true"]:
                 exposure_map = self.exposure_map.downsample(
-                    factor=factor, axis_name=axis_name, preserve_counts=preserve_counts
+                    factor=factor, axis_name=axis_name, preserve_counts=False
                 )
             else:
                 exposure_map = self.exposure_map.copy()

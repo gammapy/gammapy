@@ -1,0 +1,1 @@
+Add `~gammapy.visualization.plotters.BasePlotter` class, first building plot for the new Plotters API defined in PIG 31.

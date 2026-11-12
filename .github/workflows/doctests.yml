@@ -27,3 +27,10 @@ jobs:
 
       - name: Run doctests
         run: pytest --doctest-glob="*.rst" docs/ --ignore=docs/development/pigs/
+
+      - name: slack notification
+        uses: rtCamp/action-slack-notify@v2
+        if: failure()
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_CI_WEBHOOK }}
+          SLACK_MESSAGE: 'doctest run failed'

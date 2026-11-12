@@ -389,7 +389,7 @@ class PSFKing(ParametricPSF):
 
     Parameters
     ----------
-    axes : list of `MapAxis` or `MapAxes`
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
         Data axes, required are ["energy_true", "offset"].
     meta : dict
         Metadata dictionary.
