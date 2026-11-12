@@ -19,12 +19,11 @@ and arziv packages.
 # Most of the text is directly taken from this reference and examples have
 # been adapted to a gamma-ray analysis with gammapy.
 #
-# Here we are going to focus on the following questions: - What are the
-# common information criterion used for model selection nowadays ? - how
-# model comparison is sensitive to the choice of prior ? - how the
-# parameter posterior is sensitive to the choice of prior ?
+# Here we are going to focus on the following questions:
+#    - What are the common information criterion used for model selection nowadays ?
+#    - how model comparison is sensitive to the choice of prior ?
+#    - how the parameter posterior is sensitive to the choice of prior ?
 #
-
 
 ######################################################################
 # Proposed approach
@@ -46,6 +45,7 @@ and arziv packages.
 #
 
 # sphinx_gallery_thumbnail_number = 5
+import arviz as az
 import matplotlib.pyplot as plt
 import numpy as np
 from gammapy.datasets import Datasets
@@ -56,18 +56,21 @@ from gammapy.modeling.models import (
     UniformPrior,
     LogUniformPrior,
     GaussianPrior,
+    create_crab_spectral_model,
+    Models,
 )
-import arviz as az
 
-from gammapy.modeling.sampler import Sampler
+from gammapy.modeling import Sampler
+from gammapy.modeling import BayesianModelSelection
+from gammapy.stats.utils import ts_to_sigma
 
 
 ######################################################################
 # Loading the spectral datasets
 # -----------------------------
 #
-# Here we will load a few Crab 1D spectral data for which we will do a
-# fit.
+# Here we will load a few Crab 1D spectral data for which we will do the
+# analysis.
 #
 
 path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
@@ -86,15 +89,14 @@ datasets = Datasets(datasets.stack_reduce())
 #
 # Now we want to define the spectral model that will be fitted to the
 # data. The Crab spectra will be fitted here with as a powerlaw or a log
-# parabola with prior of different strengtht (names are qualitatives).
+# parabola with prior of different strength (names are indicatives).
 #
 
-# create as set of alternative models with different spectral shape and prior strengtht
-from gammapy.modeling.models import create_crab_spectral_model, Models
+# create as set of alternative models with different spectral shape and prior strength
 
 alternative_models = {}
 models_types = ["lp", "pl"]
-prior_types = ["uniformative", "magic-strong"]
+prior_types = ["uniformative", "strong"]
 
 for model_type in models_types:
     for prior_type in prior_types:
@@ -160,8 +162,6 @@ sampler = Sampler(backend="ultranest", options=options)
 # We define a `BayesianModelSelection` that will run the inference
 #
 
-from gammapy.modeling.selection import BayesianModelSelection
-
 bms = BayesianModelSelection(
     sampler, posterior_downsample_factor=4, n_prior_samples=1000
 )
@@ -191,7 +191,7 @@ inference_result = bms_results["lp(uniformative)"]
 # Parameters values
 # ~~~~~~~~~~~~~~~~~
 #
-# Within a Bayesian analysis, the concept of best-fit has to be viewed
+# Within a Bayesian analysis, the concept of "best-fit" has to be viewed
 # differently from what is done in a gradient descent fit.
 #
 # The output of the Bayesian analysis is the posterior distribution and
@@ -218,8 +218,6 @@ plt.show()
 ######################################################################
 # or the make a corner plot
 #
-
-import matplotlib.pyplot as plt
 
 with az.rc_context(
     rc={
@@ -287,7 +285,7 @@ plt.show()
 # :math:`BF_{10} < 1`, the data favors model :math:`M_0`.
 #
 # A standard scale (proposed by Harold Jeffreys) is used to classify the
-# strength of the evidence:
+# t of the evidence:
 #
 # +--------------------------------+-------------------------------------+
 # | Bayes Factor (:math:`BF_{10}`) | Interpretation                      |
@@ -337,7 +335,7 @@ plt.show()
 #
 # - **Goodness of Fit (:math:`-2\ln(\hat{L})`):** Measures how well the
 #   model fits the observed data using the maximum likelihood estimate
-#   (:math:`\hat{L}`). A better fit yields a lower deviance.
+#   (:math:`\hat{L}`). A better model yields a lower deviance.
 # - **Complexity Penalty (:math:`2k`):** Penalizes the model based on its
 #   exact number of free parameters (:math:`k`) to prevent overfitting.
 # - **Goal:** When comparing competing models on the same dataset, the
@@ -399,10 +397,10 @@ plt.show()
 #   distribution :math:`p_t(\tilde{y}_i)` is unknown, we must approximate
 #   ELPD using our observed sample :math:`y` (computing the *log pointwise
 #   predictive density*, or **lppd**). Evaluating the model on the same
-#   data used to fit it introduces **optimistic overfitting bias**.
+#   data used to analyse it introduces **optimistic overfitting bias**.
 # - **How Penalization is Added:** To correct for overfitting, Bayesian
 #   information criteria subtract an estimated **effective number of
-#   parameters** (:math:`p_{\text{LOO}}`) from the in-sample fit:
+#   parameters** (:math:`p_{\text{LOO}}`) from the in-sample analysis:
 #
 #   .. math:: \widehat{\text{ELPD}} = \text{lppd} - p_{\text{LOO}}
 #
@@ -438,7 +436,7 @@ plt.show()
 # cross-validation with p = 1.
 #
 # One downside of cross-validation is that it is computationally
-# expensive. We need to fit the model times, and if we have a large
+# expensive. We need to evaluate the model times, and if we have a large
 # dataset, this can be very expensive. But lucky us, by being Bayesian we
 # can approximately compute LOO-CV in a very fast way using importance
 # sampling. The method used here is the Pareto-Smooth Importance Sampling
@@ -459,9 +457,6 @@ elpd
 # of parameters.
 #
 
-import arviz as az
-import matplotlib.pyplot as plt
-
 az.plot_khat(elpd)
 plt.show()
 
@@ -479,14 +474,14 @@ bms_results.stats_table()
 
 ######################################################################
 # For the same model type we can see that the effective degree of freedom
-# decreases as the prior strengtht increases.
+# decreases as the prior strength increases.
 #
 
 
 ######################################################################
 # | Now let’s can compare the different models to a reference model.
 # | So H0 will be the reference model taken as the powerl-law with
-#   uniformation prior `pl(uniformative)` and H1 each of the other
+#   uniformative prior `pl(uniformative)` and H1 each of the other
 #   models.
 #
 
@@ -494,15 +489,13 @@ bms_results.stats_table()
 stats_difference_table = bms_results.stats_difference_table(
     reference_models_name="pl(uniformative)"
 )
-stats_difference_table
+print(stats_difference_table)
 
 
 ######################################################################
 # As our simple test models are nested we can use Wilks theorem to scale
 # ts=-2logl into significance in sigma
 #
-
-from gammapy.stats.utils import ts_to_sigma
 
 ts = stats_difference_table["-2logl"][0]
 dof = stats_difference_table["dof"][0]
@@ -524,7 +517,7 @@ print("LP is favored at", sigma, "sigma")
 # the models with more effective degree of freedom, this effect is
 # amplified the weaker the prior is (because in that case the logz
 # integrate over a larger “irrelevant” parameter space). We see also that
-# using logz to compare models with different prior strengtht might reflect
+# using logz to compare models with different prior strength might reflect
 # more the prior relative strength than actual differences between the
 # models. So it should not be used for model comparison.
 #
@@ -579,7 +572,7 @@ plt.show()
 
 bms_results["lp(uniformative)"].prior_sensitivity_table()
 
-bms_results["lp(magic-strong)"].prior_sensitivity_table()
+bms_results["lp(strong)"].prior_sensitivity_table()
 
 print(
     bms_results.prior_sensitivity_table()
