@@ -864,6 +864,38 @@ def test_hdm_primary_flux_missing_optional_dependency(monkeypatch, tmp_path):
         flux(500 * u.GeV)
 
 
+def test_hdm_primary_flux_allowed_channels(monkeypatch, tmp_path):
+    data_file = tmp_path / "HDMSpectra.hdf5"
+    data_file.touch()
+    hdm_module = ModuleType("HDMSpectra")
+    hdm_module.__path__ = []
+    pclid_module = ModuleType("HDMSpectra.pclid")
+    pclid_module.str_i = np.array(["b", "W"])
+    monkeypatch.setitem(sys.modules, "HDMSpectra", hdm_module)
+    monkeypatch.setitem(sys.modules, "HDMSpectra.pclid", pclid_module)
+
+    flux = HDMSpectraPrimaryFlux(
+        mDM=1 * u.TeV,
+        initialstate="b",
+        hdm_data_file=data_file,
+    )
+
+    assert flux.allowed_channels() == ["b", "W"]
+
+
+def test_hdm_dark_matter_model_requires_data_file():
+    with pytest.raises(
+        ValueError,
+        match="hdm_data_file is required when source is 'hdmspectra'",
+    ):
+        DarkMatterSpectralModel(
+            mDM=1 * u.TeV,
+            channel="b",
+            source="hdmspectra",
+            factor=3.41e19 * u.Unit("GeV2 cm-5"),
+        )
+
+
 def test_hdm_primary_flux_serialization_roundtrip(tmp_path):
     data_file = tmp_path / "HDMSpectra.hdf5"
     data_file.touch()
