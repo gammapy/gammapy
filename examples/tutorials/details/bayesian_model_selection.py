@@ -45,7 +45,7 @@ and arziv packages.
 # As usual, we’ll start with some setup …
 #
 
-# imports
+# sphinx_gallery_thumbnail_number = 5
 import matplotlib.pyplot as plt
 import numpy as np
 from gammapy.datasets import Datasets
