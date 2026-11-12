@@ -108,8 +108,7 @@ def compute_fpp(flux, flux_err, axis=0):
     diff_square = (flux[..., 1:] - flux[..., :-1]) ** 2
     # a NaN point removes the differences on both sides of it
     n_pairs = np.count_nonzero(~np.isnan(diff_square), axis=-1)
-    with np.errstate(invalid="ignore"):
-        s_square = np.nansum(diff_square, axis=-1) / (2 * n_pairs)
+    s_square = np.nansum(diff_square, axis=-1) / (2 * n_pairs)
     sig_square = np.nansum(flux_err**2, axis=axis) / n_points
     fpp = np.sqrt(np.abs(s_square.T - sig_square)) / flux_mean
 
