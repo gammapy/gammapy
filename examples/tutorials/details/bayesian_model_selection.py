@@ -529,9 +529,8 @@ print("LP is favored at", sigma, "sigma")
 # integrate over a larger “irrelevant” parameter space). We see also that
 # using logz to compare models with different prior strength might reflect
 # more the prior relative strength than actual differences between the
-# models. So logz should not be used for model comparison.
+# models.
 #
-
 
 ######################################################################
 # As our statistics come with errors, more robust comparisons can be done
@@ -609,3 +608,13 @@ print(
 # This is a way to choose a prior that is as vague as possible, given the
 # information we have.
 #
+# Take away message
+# ~~~~~~~~~~~~~~~~~
+#
+# **Because of its prior sensitivity, log Z (and Bayes factors) should generally be
+# avoided for model comparison, and ELPD should be preferred.**
+# Compared to AIC, ELPD has the advantage of providing uncertainty estimates
+# (standard errors), which allow you to better assess how distinguishable the models are.
+# However, the computational cost of estimating ELPD is considerably higher than AIC.
+# Prior sensitivity diagnostics are just as important as information criteria
+# for assessing the compatibility of the models with the data and whether conclusions are robust.
