@@ -196,7 +196,7 @@ inference_result = bms_results["lp(uninformative)"]
 ######################################################################
 # Parameters values
 # ~~~~~~~~~~~~~~~~~
-##
+#
 # The output of the Bayesian analysis is the posterior distribution and
 # there is no “best-fit” output. One has to define, based on the
 # posteriors, what we want to consider as “best-fit” and several options
@@ -372,18 +372,18 @@ plt.show()
 # |                            | support for model     | for model :math:`i`   |
 # |                            | :math:`i`             |                       |
 # +============================+=======================+=======================+
-# | **:math:`0 - 2`**          | **Substantial**       | The model is nearly   |
+# | **0 - 2**                  | **Substantial**       | The model is nearly   |
 # |                            |                       | indistinguishable     |
 # |                            |                       | from the best model   |
 # |                            |                       | and should be         |
 # |                            |                       | strongly considered.  |
 # +----------------------------+-----------------------+-----------------------+
-# | **:math:`4 - 7`**          | **Considerably less** | The model has         |
+# | **4 - 7**                  | **Considerably less** | The model has         |
 # |                            |                       | noticeably weaker     |
 # |                            |                       | support compared to   |
 # |                            |                       | the best model.       |
 # +----------------------------+-----------------------+-----------------------+
-# | **:math:`> 10`**           | **Essentially none**  | The model is very     |
+# | **> 10**                   | **Essentially none**  | The model is very     |
 # |                            |                       | unlikely to be the    |
 # |                            |                       | best explanation for  |
 # |                            |                       | the data and can      |
@@ -420,7 +420,7 @@ plt.show()
 #
 #   .. math:: \widehat{\text{ELPD}} = \text{lppd} - p_{\text{LOO}}
 #
-#   *(Note: can be multiplied by :math:`-2` to place it on the deviance
+#   *(Note: can be multiplied by -2 to place it on the deviance
 #   scale).*
 # - **Asymptotic Equivalence to AIC:** as the sample size grows large
 #   (:math:`n \to \infty`) and the influence of the prior vanishes, the
