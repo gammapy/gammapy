@@ -92,8 +92,7 @@ datasets = Datasets(datasets.stack_reduce())
 # Model definition
 # ----------------
 #
-# Now we want to define the spectral model that will be fitted to the
-# data. The Crab spectra will be fitted here with as a powerlaw or a log
+# The Crab spectra will be modelled here with as a powerlaw or a log
 # parabola with prior of different strength (names are indicatives).
 #
 
@@ -490,7 +489,7 @@ bms_results.stats_table().pprint(max_width=-1)
 
 
 ######################################################################
-# | Now let’s can compare the different models to a reference model.
+# | Now let’s compare the different models to a reference model.
 # | So H0 will be the reference model taken as the powerl-law with
 #   uninformative prior `pl(uninformative)` and H1 each of the other
 #   models.
