@@ -68,12 +68,13 @@ A demonstration of a Bayesian analysis using the nested sampling technique.
 # is therefore readily integrated in pipeline analysis. In Gammapy, we
 # provide several NS backends: UltraNest and Nautilus. UltraNest is a package
 # that implements the NS algorithm and is used in many astrophysical applications.
-# Nautilus is a more recent implementation of the NS algorithm that exploits neural networks to learn a likelihood function emulator to propose new live points.
+# Nautilus is a more recent implementation of the NS algorithm that exploits
+# neural networks to learn a likelihood function emulator to propose new live points.
 # It is designed to be faster and more efficient than UltraNest,
 # especially for high-dimensional problems.
-# For a nice visualisation of the NS method see here : `sampling
+# For a nice visualisation of the NS method see here: `sampling
 # visualisation <https://johannesbuchner.github.io/UltraNest/method.html#visualisation>`__.
-# And for a tutorial of UltraNest applied to X-ray fitting with concrete examples and questions see : `BXA
+# And for a tutorial of UltraNest applied to X-ray fitting with concrete examples and questions see: `BXA
 # Tutorial <https://peterboorman.com/tutorial_bxa.html>`__.
 #
 # See the UltraNest docs `here <https://johannesbuchner.github.io/UltraNest/>`__).
@@ -181,7 +182,7 @@ print(datasets.models)
 # change them via the ``options`` dictionary, using the backend's own option names.
 # Gammapy passes each option to the backend sampler constructor or to its ``run`` method.
 # Here is a short description of the most relevant UltraNest options that you
-# could change :
+# could change:
 #
 # -  ``min_num_live_points``: minimum number of live points throughout the run.
 #    More points allow to discover multiple peaks if existing, but is
@@ -206,19 +207,29 @@ print(datasets.models)
 # docs <https://nautilus-sampler.readthedocs.io/en/latest/api_high.html>`__.
 #
 # A few useful options for Nautilus are:
-# - ``n_live``: number of live points. Equivalent of ``min_num_live_points`` in UltraNest.
-#    Due to a different methodology the recommended number of live points should be higher than in UltraNest (1000-3000) while still being faster in high-dimensional problems.
-# - ``f_live``: fraction of the evidence fromlive points to use for convergence. Equivalent of ``frac_remain`` in UltraNest.
-# - ``pool``: Pool used for parallelization of likelihood calls and sampler calculations.
-# - ``filepath``: file path with .hdf5 extension (not directory path) where the output files will be stored.
+#
+# -  ``n_live``: number of live points. Equivalent of ``min_num_live_points``
+#    in UltraNest. Due to a different methodology the recommended number of
+#    live points should be higher than in UltraNest (1000-3000) while still
+#    being faster in high-dimensional problems.
+# -  ``f_live``: fraction of the evidence from live points to use for
+#    convergence. Equivalent of ``frac_remain`` in UltraNest.
+# -  ``pool``: Pool used for parallelization of likelihood calls and sampler
+#    calculations.
+# -  ``filepath``: file path with .hdf5 extension (not directory path) where
+#    the output files will be stored.
 #
 # **Backend comparison:** For a comparison between the two backends methods,
 # see `here <https://nautilus-sampler.readthedocs.io/en/latest/discussion/nested_sampling.html>`__.
-# For a gamma-ray analysis, current testing shows that UltraNest can be faster (or equivalent) than Nautilus for low-dimensional problems (1-5 parameters)
-# and Nautilus is faster for high-dimensional problems (>10 parameters) but this of course case specific.
-# If your analysis is dominated by likelihood evaluation time, the parallelisation of the likelihood evaluation
-# in Nautilus (using multiprocessing, just setting pool=nCPUs in the sampler options) has a simpler setup than UltraNest (MPI) and can be more efficient on laptops.
-# Notably, multiprocessing with Nautilus can work in a Jupyter notebook while MPI with UltraNest is not supported in a notebook.
+# For a gamma-ray analysis, current testing shows that UltraNest can be faster
+# (or equivalent) than Nautilus for low-dimensional problems (1-5 parameters)
+# and Nautilus is faster for high-dimensional problems (>10 parameters) but
+# this of course case specific. If your analysis is dominated by likelihood
+# evaluation time, the parallelisation of the likelihood evaluation in Nautilus
+# (using multiprocessing, just setting pool=nCPUs in the sampler options) has a
+# simpler setup than UltraNest (MPI) and can be more efficient on laptops.
+# Notably, multiprocessing with Nautilus can work in a Jupyter notebook while
+# MPI with UltraNest is not supported in a notebook.
 #
 # **Important note:** unlike the MCMC method, you don’t need to define the
 # number of steps for which the sampler will run. The algorithm will
