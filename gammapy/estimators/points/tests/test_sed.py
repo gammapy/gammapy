@@ -972,3 +972,59 @@ def test_confidence_failure_fallback_to_scan():
     assert_allclose(results.norm_ul.data.flatten()[0], 0.6908785888971987, rtol=1e-5)
     assert np.isnan(results.norm_errn.data.flatten()[0])
     assert_allclose(results.norm_errp.data.flatten()[0], 0.2669708627581299, rtol=1e-5)
+
+
+@pytest.mark.parametrize("failing_bin", [0, 1, 2])
+def test_run_fallback_scan_in_single_energy_bin(monkeypatch, failing_bin):
+    energy = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6)
+    energy_true = MapAxis.from_energy_bounds(
+        "0.5 TeV", "20 TeV", nbin=12, name="energy_true"
+    )
+    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.1)", axes=[energy])
+
+    dataset = SpectrumDataset.create(
+        geom=geom, energy_axis_true=energy_true, name="test"
+    )
+    dataset.exposure.quantity = 1e10 * u.Unit("m2 s")
+    dataset.background.data += 10.0
+    dataset.mask_safe.data[...] = True
+    dataset.models = SkyModel(PowerLawSpectralModel(), name="source")
+    dataset.fake(random_state=0)
+
+    confidence = Fit.confidence
+    calls = []
+
+    # confidence function set to fail on a specific bin to get deterministic failure
+    def confidence_failing_in_one_bin(self, *args, **kwargs):
+        result = confidence(self, *args, **kwargs)
+        if len(calls) == failing_bin:
+            result["success"] = False
+        calls.append(1)
+        return result
+
+    # Replace Fit.confidence with this function for this specific test
+    monkeypatch.setattr(Fit, "confidence", confidence_failing_in_one_bin)
+
+    estimator = FluxPointsEstimator(
+        energy_edges=[1, 2, 5, 10] * u.TeV,
+        source="source",
+        selection_optional=["ul"],
+        n_jobs=1,
+    )
+    fp = estimator.run(datasets=[dataset])
+
+    assert len(calls) == 3
+    assert "stat_scan" in fp.available_quantities
+
+    norm_axis = fp.stat_scan.geom.axes["norm"]
+    assert_allclose(norm_axis.center, estimator.norm.scan_values)
+
+    stat_scan = fp.stat_scan.data.squeeze()
+    assert stat_scan.shape == (3, estimator.norm.scan_n_values)
+    for idx in range(3):
+        if idx == failing_bin:
+            assert np.all(np.isfinite(stat_scan[idx]))
+        else:
+            assert np.all(np.isnan(stat_scan[idx]))
+
+    assert np.all(np.isfinite(fp.norm_ul.data))
