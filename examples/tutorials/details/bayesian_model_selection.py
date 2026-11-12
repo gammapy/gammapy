@@ -12,7 +12,7 @@ and ArviZ packages.
 # Context
 # -------
 #
-# For a general overview see:
+# For a general overview see the arviz guides:
 # - https://arviz-devs.github.io/EABM/Chapters/Model_comparison.html -
 # - https://arviz-devs.github.io/EABM/Chapters/Sensitivity_checks.html
 #
@@ -24,7 +24,14 @@ and ArviZ packages.
 # - how model comparison is sensitive to the choice of prior ?
 # - how the parameter posterior is sensitive to the choice of prior ?
 #
-
+# Prerequisites
+# -------------
+# - This is an advanced tutorial that requires to be familiar with gammapy
+#   modeling features and statistics.
+# - Knowledge Bayesian analysis and nested sampling, see
+#   the :doc:`/tutorials/details/nested_sampling_Crab` tutorial.
+# - Reading the arviz guides previously mentioned could be a useful start.
+#
 ######################################################################
 # Proposed approach
 # -----------------
