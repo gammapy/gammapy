@@ -277,7 +277,7 @@ plt.show()
 # :math:`M_1` and :math:`M_0` (given a dataset :math:`D`) is the ratio of
 # their marginal likelihoods:
 #
-# .. math:: BF_{10} = \frac{P(D \mid M_1)}{P(D \mid M_0)}
+# .. math:: BF_{10} = \frac{P(D \mid M_1)}{P(D \mid M_0)} = \frac{Z_1}{Z_0}}
 #
 # - :math:`P(D \mid M_1)`: the probability of the data given model
 #   :math:`M_1` (marginal likelihood or *evidence*).
@@ -308,7 +308,7 @@ plt.show()
 # The Savage–Dickey density ratio provides a simple shortcut to compute
 # the Bayes factor when comparing a nested null hypothesis.
 # In that case instead of computing difficult marginal likelihoods
-# for both models separately, you only fit the broader model (\(M_{1}\))
+# for both models separately, it is only computed for the broader model (\(M_{1}\))
 # and compare its prior and posterior densities evaluated at the null point
 # \(\theta _{0}\):
 #
@@ -336,7 +336,7 @@ plt.show()
 # Because of this prior sensitivity, other methods which
 # judge models strictly on predictive accuracy are preferred
 # when priors are only used for regularization.
-# This include notably the ELDP discussed in the following.
+# This includes notably the ELDP discussed in the following.
 #
 
 ######################################################################
