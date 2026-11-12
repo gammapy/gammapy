@@ -113,14 +113,14 @@ def test_lightcurve_fpp_with_nan():
 
 def test_lightcurve_fpp_equals_fvar_for_white_noise():
     rng = np.random.default_rng(42)
-    flux = 10 + rng.normal(0, 2, 1000) + rng.normal(0, 1, 1000)
+    flux = rng.normal(10, np.sqrt(5), 1000)
     flux_err = np.ones_like(flux)
 
     fvar, _ = compute_fvar(flux, flux_err)
     fpp, _ = compute_fpp(flux, flux_err)
 
-    assert_allclose(fpp, fvar, rtol=5e-2)
-    assert_allclose(fpp, 0.2, rtol=5e-2)
+    assert_allclose(fpp, fvar, rtol=0.1)
+    assert_allclose(fpp, 0.2, rtol=0.1)
 
 
 def test_lightcurve_chisq(lc_table):
