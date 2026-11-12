@@ -89,16 +89,28 @@ def test_lightcurve_fpp():
 
     fpp, fpp_err = compute_fpp(flux, flux_err)
 
-    assert_allclose(fpp, [0.84071398, 0.11661904])
-    assert_allclose(fpp_err, [0.06664148, 0.10099505])
+    # the second light curve has no two consecutive valid points
+    assert_allclose(fpp, [0.84071398, np.nan], rtol=1e-6)
+    assert_allclose(fpp_err, [0.06664148, np.nan], rtol=1e-6)
 
     flux_1d = np.array([1e-11, 3e-11, 1e-11])
     flux_err_1d = np.array([0.1e-11, 0.3e-11, 0.1e-11])
 
     fpp_1d, fpp_err_1d = compute_fpp(flux_1d, flux_err_1d)
 
-    assert_allclose(fpp_1d, [0.84071398])
-    assert_allclose(fpp_err_1d, [0.06664148])
+    assert_allclose(fpp_1d, [0.84071398], rtol=1e-6)
+    assert_allclose(fpp_err_1d, [0.06664148], rtol=1e-6)
+
+
+def test_lightcurve_fpp_with_nan():
+    # the NaN removes the differences on both sides of it, leaving 3 pairs
+    flux = np.array([1, 3, np.nan, 2, 4, 1]) * 1e-11
+    flux_err = np.array([0.1, 0.1, np.nan, 0.1, 0.1, 0.1]) * 1e-11
+
+    fpp, fpp_err = compute_fpp(flux, flux_err)
+
+    assert_allclose(fpp, 0.76376262, rtol=1e-6)
+    assert_allclose(fpp_err, 0.02034588, rtol=1e-6)
 
 
 def test_lightcurve_fpp_equals_fvar_for_white_noise():
