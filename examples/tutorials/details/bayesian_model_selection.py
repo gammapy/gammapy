@@ -116,7 +116,7 @@ for model_type in models_types:
                     min=1e-14, max=1e-8
                 )
                 model.spectral_model.alpha.prior = UniformPrior(min=0, max=10)
-                model.spectral_model.beta.prior = UniformPrior(min=-5, max=5)
+                model.spectral_model.beta.prior = UniformPrior(min=0, max=10)
             elif "strong" in prior_type:
                 model.spectral_model.amplitude.prior = LogUniformPrior(
                     min=1e-11, max=1e-10
