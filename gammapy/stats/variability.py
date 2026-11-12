@@ -1,8 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import numpy as np
 import scipy.stats as stats
 import astropy.units as u
 from gammapy.utils.random import get_random_state
+
+log = logging.getLogger(__name__)
 
 __all__ = [
     "compute_fvar",
@@ -108,6 +111,11 @@ def compute_fpp(flux, flux_err, axis=0):
     diff_square = (flux[..., 1:] - flux[..., :-1]) ** 2
     # a NaN point removes the differences on both sides of it
     n_pairs = np.count_nonzero(~np.isnan(diff_square), axis=-1)
+    if np.any(n_pairs == 0):
+        log.warning(
+            "No two consecutive valid flux points, so F_pp cannot be computed and is set to NaN."
+        )
+        n_pairs = np.where(n_pairs > 0, n_pairs, np.nan)
     s_square = np.nansum(diff_square, axis=-1) / (2 * n_pairs)
     sig_square = np.nansum(flux_err**2, axis=axis) / n_points
     fpp = np.sqrt(np.abs(s_square.T - sig_square)) / flux_mean
