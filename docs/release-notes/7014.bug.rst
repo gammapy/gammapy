@@ -1,1 +1,1 @@
-Fix the normalisation of `~gammapy.stats.compute_fpp`: the squared differences of consecutive points are now divided by ``2 (N - 1)``, as in Edelson et al. (2002), so that F_pp equals F_var for white noise. Differences next to a NaN point are no longer counted in the normalisation.
+Fix the normalisation of `~gammapy.stats.compute_fpp` to match Edelson et al. (2002), also when the light curve has NaN values.

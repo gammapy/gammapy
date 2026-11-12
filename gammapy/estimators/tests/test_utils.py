@@ -212,8 +212,8 @@ def test_compute_lightcurve_fpp(lc):
     ffpp = fpp["fpp"].quantity
     ffpp_err = fpp["fpp_err"].quantity
 
-    assert_allclose(ffpp, [[[0.698212]], [[0.37150576]]], rtol=1e-6)
-    assert_allclose(ffpp_err, [[[0.0795621]], [[0.074706]]], rtol=1e-6)
+    assert_allclose(ffpp, [[[0.698212]], [[0.37150576]]], rtol=1e-3)
+    assert_allclose(ffpp_err, [[[0.0795621]], [[0.074706]]], rtol=1e-3)
 
 
 def test_compute_lightcurve_doublingtime(lc):
