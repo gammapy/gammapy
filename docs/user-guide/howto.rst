@@ -451,20 +451,9 @@ Please give feedback and suggest additions to this page!
     .. testcode::
 
         import asdf
-        from gammapy.modeling.models import (
-            GaussianSpatialModel,
-            Models,
-            PowerLawSpectralModel,
-            SkyModel,
-        )
-
-        spatial_model = GaussianSpatialModel(
-            lon_0="10 deg", lat_0="5 deg", sigma="0.5 deg", frame="galactic"
-        )
-        models = Models([SkyModel(PowerLawSpectralModel(), spatial_model, name="source")])
-
+        from gammapy.modeling.models import Models, SkyModel
+        models = Models([SkyModel.create("pl", "point", name="source")])
         with asdf.AsdfFile({"models": models}) as af:
             af.write_to("models.asdf")
-
         with asdf.open("models.asdf") as af:
             models_reloaded = af["models"]
