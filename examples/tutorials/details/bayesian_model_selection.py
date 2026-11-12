@@ -12,17 +12,17 @@ and ArviZ packages.
 # Context
 # -------
 #
-# For a general overview see: -
-# https://arviz-devs.github.io/EABM/Chapters/Model_comparison.html -
-# https://arviz-devs.github.io/EABM/Chapters/Sensitivity_checks.html
+# For a general overview see:
+# - https://arviz-devs.github.io/EABM/Chapters/Model_comparison.html -
+# - https://arviz-devs.github.io/EABM/Chapters/Sensitivity_checks.html
 #
 # Most of the text is directly taken from this reference and examples have
 # been adapted to a gamma-ray analysis with Gammapy.
 #
 # Here we are going to focus on the following questions:
-#    - What are the common information criterion used for model selection nowadays ?
-#    - how model comparison is sensitive to the choice of prior ?
-#    - how the parameter posterior is sensitive to the choice of prior ?
+# - What are the common information criterion used for model selection nowadays ?
+# - how model comparison is sensitive to the choice of prior ?
+# - how the parameter posterior is sensitive to the choice of prior ?
 #
 
 ######################################################################
@@ -247,8 +247,8 @@ plt.show()
 ######################################################################
 # **Note: Why does ArviZ default to an 89% Credible Interval?**
 #
-# Unlike frequentist tools that default to **95%**, ArviZ sets its default
-# credible interval probability (`stats.ci_prob`) to **0.89 (89%)** for
+# Unlike frequentist tools that default to 95%, ArviZ sets its default
+# credible interval probability (`stats.ci_prob`) to 0.89 (89%) for
 # two main reasons:
 #
 # - **Avoiding “Significance” Misinterpretation:** Popularized by Richard
@@ -279,9 +279,9 @@ plt.show()
 #
 # .. math:: BF_{10} = \frac{P(D \mid M_1)}{P(D \mid M_0)}
 #
-# - **:math:`P(D \mid M_1)`**: the probability of the data given model
+# - :math:`P(D \mid M_1)`: the probability of the data given model
 #   :math:`M_1` (marginal likelihood or *evidence*).
-# - **:math:`P(D \mid M_0)`**: the probability of the data given model
+# - :math:`P(D \mid M_0)`: the probability of the data given model
 #   :math:`M_0`.
 #
 # If :math:`BF_{10} > 1`, the data favors model :math:`M_1`. If
@@ -349,10 +349,10 @@ plt.show()
 #
 # .. math:: \text{AIC} = 2k - 2\ln(\hat{L})
 #
-# - **Goodness of Fit (:math:`-2\ln(\hat{L})`):** measures how well the
+# - **Goodness of Fit** (:math:`-2\ln(\hat{L})`): measures how well the
 #   model fits the observed data using the maximum likelihood estimate
 #   (:math:`\hat{L}`). A better model yields a lower deviance.
-# - **Complexity Penalty (:math:`2k`):** penalizes the model based on its
+# - **Complexity Penalty** (:math:`2k`): penalizes the model based on its
 #   exact number of free parameters (:math:`k`) to prevent overfitting.
 # - **Goal:** when comparing competing models on the same dataset, the
 #   model with the **lowest AIC** is preferred.
