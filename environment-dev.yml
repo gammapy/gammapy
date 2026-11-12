@@ -51,6 +51,8 @@ dependencies:
   - arviz>=1
   - xarray
   - nautilus-sampler
+  - asdf
+  - asdf-astropy
   # dev dependencies
   - codespell
   - jinja2
