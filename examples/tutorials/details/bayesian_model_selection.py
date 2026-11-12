@@ -65,6 +65,11 @@ from gammapy.modeling import BayesianModelSelection
 from gammapy.stats.utils import ts_to_sigma
 
 
+import warnings
+
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+
 ######################################################################
 # Loading the spectral datasets
 # -----------------------------
@@ -96,7 +101,7 @@ datasets = Datasets(datasets.stack_reduce())
 
 alternative_models = {}
 models_types = ["lp", "pl"]
-prior_types = ["uniformative", "strong"]
+prior_types = ["uninformative", "strong"]
 
 for model_type in models_types:
     for prior_type in prior_types:
@@ -107,12 +112,12 @@ for model_type in models_types:
         ref_model = create_crab_spectral_model("magic_lp")
 
         if model_type == "lp":
-            if "uniformative" in prior_type:
+            if "uninformative" in prior_type:
                 model.spectral_model.amplitude.prior = LogUniformPrior(
                     min=1e-14, max=1e-8
                 )
                 model.spectral_model.alpha.prior = UniformPrior(min=0, max=10)
-                model.spectral_model.beta.prior = UniformPrior(min=0, max=10)
+                model.spectral_model.beta.prior = UniformPrior(min=-5, max=5)
             elif "strong" in prior_type:
                 model.spectral_model.amplitude.prior = LogUniformPrior(
                     min=1e-11, max=1e-10
@@ -124,7 +129,7 @@ for model_type in models_types:
                     mu=ref_model.beta.value, sigma=0.1
                 )
         elif model_type == "pl":
-            if "uniformative" in prior_type:
+            if "uninformative" in prior_type:
                 model.spectral_model.amplitude.prior = LogUniformPrior(
                     min=1e-14, max=1e-8
                 )
@@ -138,7 +143,7 @@ for model_type in models_types:
                 )
         alternative_models[model_name] = Models(model)
 
-alternative_models
+print(alternative_models)
 
 
 ######################################################################
@@ -150,6 +155,8 @@ options = {
     "min_num_live_points": 300,
     "frac_remain": 0.2,
     "log_dir": None,
+    "viz_callback": False,
+    "show_status": False,
 }
 
 sampler = Sampler(backend="ultranest", options=options)
@@ -168,11 +175,11 @@ bms = BayesianModelSelection(
 
 
 ######################################################################
-# Next we can run the sampler on a given dataset for a set of
-# alternative_models. No other option is accepted in the run method.
+# Next we can run `BayesianModelSelection` that will run a sampler
+# on the datasets for each of the alternative_models.
+# No other option is accepted in the run method.
 #
 
-# %%capture
 bms_results = bms.run(datasets, alternative_models)
 
 
@@ -184,23 +191,20 @@ bms_results = bms.run(datasets, alternative_models)
 # at the results for one.
 #
 
-inference_result = bms_results["lp(uniformative)"]
+inference_result = bms_results["lp(uninformative)"]
 
 
 ######################################################################
 # Parameters values
 # ~~~~~~~~~~~~~~~~~
-#
-# Within a Bayesian analysis, the concept of "best-fit" has to be viewed
-# differently from what is done in a gradient descent fit.
-#
+##
 # The output of the Bayesian analysis is the posterior distribution and
 # there is no “best-fit” output. One has to define, based on the
 # posteriors, what we want to consider as “best-fit” and several options
 # are possible: - mean - median - mode - maximum likelihood value
 #
-# By default the mean values are assigned to the model parameter values
-#
+# Note that gammapy assigns the mean as the model parameter values
+# but the other options would also be relevant choices.
 
 inference_result.parameters_table()
 
@@ -222,7 +226,7 @@ plt.show()
 with az.rc_context(
     rc={
         "stats.point_estimate": "median",
-        "stats.ci_kind": "hdi",
+        "stats.ci_kind": "hdi",  # Highest Density Interval (HDI)
         "stats.ci_prob": 0.89,  # Optional: sets HDI probability mass (default is 0.89)
     }
 ):
@@ -399,9 +403,9 @@ plt.show()
 #   ELPD using our observed sample :math:`y` (computing the *log pointwise
 #   predictive density*, or **lppd**). Evaluating the model on the same
 #   data used to analyse it introduces **optimistic overfitting bias**.
-# - **How Penalization is Added:** to correct for overfitting, Bayesian
-#   information criteria subtract an estimated **effective number of
-#   parameters** (:math:`p_{\text{LOO}}`) from the in-sample analysis:
+# - **How Penalization is Added:** to correct for overfitting, an
+#   **effective number of parameters** (:math:`p_{\text{LOO}}`)
+#   is estimated from the in-sample analysis:
 #
 #   .. math:: \widehat{\text{ELPD}} = \text{lppd} - p_{\text{LOO}}
 #
@@ -415,15 +419,9 @@ plt.show()
 #   and :math:`-2 \times \widehat{\text{ELPD}}` **asymptotically converges
 #   to AIC**.
 #
-
-
-######################################################################
 # **PSIS-LOO-CV : Pareto-smoothed importance sampling leave-one-out
 # cross-validation**
 #
-
-
-######################################################################
 # The penalization term :math:`p_{\text{LOO}}` is computed using
 # cross-validation.
 #
@@ -433,8 +431,8 @@ plt.show()
 # subset (called the validation set or testing set). Leave-p-out
 # cross-validation involves using p observations as the validation set and
 # the remaining observations as the training set. Leave-one-out
-# cross-validation (LOOCV) is a particular case of leave-p-out
-# cross-validation with p = 1.
+# cross-validation (LOO-CV) is a particular case of leave-k-out
+# cross-validation with k = 1.
 #
 # One downside of cross-validation is that it is computationally
 # expensive. We need to evaluate the model times, and if we have a large
@@ -447,7 +445,7 @@ plt.show()
 #
 
 elpd = inference_result.elpd
-elpd
+print(elpd)
 
 
 ######################################################################
@@ -470,7 +468,7 @@ plt.show()
 #
 
 # lower is better
-bms_results.stats_table()
+bms_results.stats_table().pprint(max_width=-1)
 
 
 ######################################################################
@@ -482,15 +480,15 @@ bms_results.stats_table()
 ######################################################################
 # | Now let’s can compare the different models to a reference model.
 # | So H0 will be the reference model taken as the powerl-law with
-#   uniformative prior `pl(uniformative)` and H1 each of the other
+#   uninformative prior `pl(uninformative)` and H1 each of the other
 #   models.
 #
 
 # lower => H0 is better
 stats_difference_table = bms_results.stats_difference_table(
-    reference_models_name="pl(uniformative)"
+    reference_models_name="pl(uninformative)"
 )
-print(stats_difference_table)
+stats_difference_table.pprint(max_width=-1)
 
 
 ######################################################################
@@ -531,7 +529,7 @@ print("LP is favored at", sigma, "sigma")
 #
 
 az_comparison = bms_results.compare(method="BB-pseudo-BMA")
-az_comparison
+print(az_comparison.to_string())
 
 
 ######################################################################
@@ -567,11 +565,10 @@ plt.show()
 # 0.05 indicates weak or noninformative likelihood.
 #
 # The result can also be visualized with `psense_summary` function from
-# `arviz_stats` (which is part of `arziv["preview"]` package) that is
-# attavhed to our result object as `prior_sensitivity_table`
+# `arviz_stats that is attached to our result object as `prior_sensitivity_table`
 #
 
-bms_results["lp(uniformative)"].prior_sensitivity_table()
+bms_results["lp(uninformative)"].prior_sensitivity_table()
 
 bms_results["lp(strong)"].prior_sensitivity_table()
 
