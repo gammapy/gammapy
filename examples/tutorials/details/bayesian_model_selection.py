@@ -92,7 +92,7 @@ datasets = Datasets(datasets.stack_reduce())
 # parabola with prior of different strength (names are indicatives).
 #
 
-# create as set of alternative models with different spectral shape and prior strength
+# create as set of alternative models with different spectral shapes and prior strengths
 
 alternative_models = {}
 models_types = ["lp", "pl"]
@@ -302,11 +302,15 @@ plt.show()
 # | **> 100**                      | Decisive evidence                   |
 # +--------------------------------+-------------------------------------+
 #
-# | Bayes factor can also be used for model comparison of non-nested
-#   models, it increases if the model difference is more significative.
-# | Here we can see how much we gained between the prior and the
-#   posterior.
+# Bayes factor can also be used for model comparison of non-nested models.
 #
+# The `plot_bf` function of arviz we can be used to compute the Bayes factor
+# and visualise how much we gained between the prior and the posterior.
+# Here we show this for the `alpha` parameter.
+# According to Jeffreys’ scale, a :math:`BF_{01} = \frac{1}{BF_{10}} = 20`
+# indicates **strong evidence** that the true value is equal to the
+# reference value (grey line).
+
 
 az.plot_bf(
     inference_result.inference_data,
@@ -317,9 +321,6 @@ plt.show()
 
 
 ######################################################################
-# According to Jeffreys’ scale, a :math:`BF_{01} = \frac{1}{BF_{10}} = 20`
-# indicates **strong evidence** that the true value is equal to the
-# reference value (grey line).
 #
 
 
