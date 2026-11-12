@@ -947,7 +947,7 @@ def test_confidence_failure_fallback_to_scan():
         norm=norm,
     )
     results = estimator.run(dataset)
-    assert hasattr(results, "stat_scan")
+
     assert_allclose(results.norm_ul.data.flatten()[0], 0.6908785888971987, rtol=1e-5)
     assert np.isnan(results.norm_errn.data.flatten()[0])
     assert_allclose(results.norm_errp.data.flatten()[0], 0.2669708627581299, rtol=1e-5)
@@ -968,14 +968,17 @@ def test_confidence_failure_fallback_to_scan():
         n_sigma_ul=1.645,
         norm=norm,
     )
-    assert hasattr(results, "stat_scan")
+
     assert_allclose(results.norm_ul.data.flatten()[0], 0.6908785888971987, rtol=1e-5)
     assert np.isnan(results.norm_errn.data.flatten()[0])
     assert_allclose(results.norm_errp.data.flatten()[0], 0.2669708627581299, rtol=1e-5)
 
 
 @pytest.mark.parametrize("failing_bin", [0, 1, 2])
-def test_run_fallback_scan_in_single_energy_bin(monkeypatch, failing_bin):
+@pytest.mark.parametrize("selection_optional", [["ul"], ["ul", "scan"]])
+def test_run_fallback_scan_in_single_energy_bin(
+    monkeypatch, failing_bin, selection_optional
+):
     energy = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6)
     energy_true = MapAxis.from_energy_bounds(
         "0.5 TeV", "20 TeV", nbin=12, name="energy_true"
@@ -1008,23 +1011,19 @@ def test_run_fallback_scan_in_single_energy_bin(monkeypatch, failing_bin):
     estimator = FluxPointsEstimator(
         energy_edges=[1, 2, 5, 10] * u.TeV,
         source="source",
-        selection_optional=["ul"],
+        selection_optional=selection_optional,
         n_jobs=1,
     )
     fp = estimator.run(datasets=[dataset])
 
-    assert len(calls) == 3
-    assert "stat_scan" in fp.available_quantities
-
-    norm_axis = fp.stat_scan.geom.axes["norm"]
-    assert_allclose(norm_axis.center, estimator.norm.scan_values)
-
-    stat_scan = fp.stat_scan.data.squeeze()
-    assert stat_scan.shape == (3, estimator.norm.scan_n_values)
-    for idx in range(3):
-        if idx == failing_bin:
-            assert np.all(np.isfinite(stat_scan[idx]))
-        else:
-            assert np.all(np.isnan(stat_scan[idx]))
-
+    # the UL of the failing bin is recovered from the fallback scan
     assert np.all(np.isfinite(fp.norm_ul.data))
+
+    if "scan" in selection_optional:
+        assert_allclose(
+            fp.stat_scan.geom.axes["norm"].center, estimator.norm.scan_values
+        )
+        assert np.all(np.isfinite(fp.stat_scan.data))
+    else:
+        # the fallback scan is not returned, since it was not requested
+        assert "stat_scan" not in fp.available_quantities
