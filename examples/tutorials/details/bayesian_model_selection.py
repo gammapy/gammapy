@@ -13,25 +13,33 @@ and ArviZ packages.
 # -------
 #
 # For a general overview see the arviz guides:
-# - https://arviz-devs.github.io/EABM/Chapters/Model_comparison.html -
+#
+# - https://arviz-devs.github.io/EABM/Chapters/Model_comparison.html
 # - https://arviz-devs.github.io/EABM/Chapters/Sensitivity_checks.html
 #
 # Most of the text is directly taken from this reference and examples have
 # been adapted to a gamma-ray analysis with Gammapy.
 #
 # Here we are going to focus on the following questions:
+#
 # - What are the common information criterion used for model selection nowadays ?
 # - how model comparison is sensitive to the choice of prior ?
 # - how the parameter posterior is sensitive to the choice of prior ?
 #
+
+
+######################################################################
 # Prerequisites
 # -------------
+#
 # - This is an advanced tutorial that requires to be familiar with gammapy
 #   modeling features and statistics.
 # - Knowledge Bayesian analysis and nested sampling, see
 #   the :doc:`/tutorials/details/nested_sampling_Crab` tutorial.
 # - Reading the arviz guides previously mentioned could be a useful start.
 #
+
+
 ######################################################################
 # Proposed approach
 # -----------------
@@ -99,11 +107,11 @@ datasets = Datasets(datasets.stack_reduce())
 # Model definition
 # ----------------
 #
-# The Crab spectra will be modelled here with as a powerlaw or a log
+# The Crab spectra will be modelled here with a powerlaw or a log
 # parabola with prior of different strength (names are indicatives).
 #
 
-# create as set of alternative models with different spectral shapes and prior strengths
+# create a set of alternative models with different spectral shapes and prior strengths
 
 alternative_models = {}
 models_types = ["lp", "pl"]
