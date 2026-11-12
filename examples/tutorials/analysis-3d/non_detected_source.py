@@ -82,9 +82,11 @@ plt.show()
 # -----------------------
 #
 # We will first use the `~gammapy.estimators.ExcessMapEstimator` for a quick check to see if
-# there are any potential sources in the field. The ``correlation_radius`` should be around the
-# size of the source you are searching for. You may also use the
-# `~gammapy.estimators.TSMapEstimator` which uses a forward folding approach.
+# there are any potential sources in the field. The ``correlation_radius`` should be
+# roughly the quadratic sum of the PSF size (at low energies) and the source size
+# you are searching for. You may also use the
+# `~gammapy.estimators.TSMapEstimator` which uses a forward folding approach, where
+# you can directly specify the spatial model you are probing.
 
 estimator = ExcessMapEstimator(
     selection_optional="all",
@@ -163,7 +165,8 @@ plt.show()
 # Alternatively, you can constrain the parameter ranges to stay within your expected region.
 # We also add a background model with a free normalisation to account for uncertainties
 # in the background. You can add more complex background corrections such as letting
-# the tilt free, or a piecewise correction, etc.
+# the tilt free, or a piecewise correction, or add additional models like a diffuse
+# gamma-ray background, etc.
 #
 
 spectral_model = PowerLawSpectralModel()
@@ -237,16 +240,16 @@ print(LLR["fit_results"].parameters.to_table())
 # gives ΔTS = 4, i.e. ~97.7%, and ``n_sigma_ul=1.645`` gives 95%.
 # The `~gammapy.estimators.FluxPointsEstimator` computes one UL per energy bin.
 # By default (``reoptimize=False``), only the normalisation is fitted in each bin;
-# all other parameters, including the index, stay fixed. Here we use
-# ``n_sigma_ul=1.645`` to get the 95% UL.
+# all other parameters stay fixed. Here we use ``n_sigma_ul=1.645`` to get the 95% UL,
+# which is standardly quoted in published results.
 #
 # Note that in the case of a detection, n_sigma=2 still corresponds to ΔTS = 4
 # but is associated to a two-sided confidence level of 95%.
-# In order to perform a comparison between the frequentist and Bayesian 95% ULs,
-# we should specify n_sigma_ul=1.645 in the frequentist approach.
 #
 # For computational reasons here, we keep the background normalisation frozen,
 # but **in a real analysis, you should keep it free and use** `reoptimize=True`.
+# The `reoptimize` configuration does not change the dof, so the above
+# mentioned sigma to confidence interval remains unchanged.
 
 sky_model.parameters["amplitude"].value = 1e-13
 sky_model.parameters["index"].value = 2.0
@@ -455,7 +458,7 @@ plt.show()
 #   given the data we actually observed and the prior we chose: "there is a 99.8%
 #   probability that the flux lies below this value". It depends heavily on the
 #   choice of the prior. The nuisance parameters are integrated out.
-#   Every value contributes, weighted by its likelihood and its prior
+#   Every value contributes, weighted by its likelihood and its prior.
 #
 # In the regime of many counts, with the best fit far from zero and a flat
 # prior, the two results converge. In that limit the
