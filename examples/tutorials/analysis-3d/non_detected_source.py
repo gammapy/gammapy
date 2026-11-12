@@ -154,15 +154,16 @@ plt.show()
 # The difference in test statistic (TS) between the two cases indicates the
 # significance of the alternative hypothesis.
 #
-# For this purpose, we can utilise the function `~gammapy.modeling.select_nested_models` which
-# performs these comparisons internally.
-# As the null hypothesis, :math:`H_0`, corresponds to the case of no source, we set the amplitude to 0, in other words
-# the source has no flux.
+# For this purpose, we utilise the function `~gammapy.modeling.select_nested_models`
+# which performs these comparisons internally. As the null hypothesis,
+# :math:`H_0`, corresponds to the case of no source, we set the amplitude to 0,
+# in other words the source has no flux.
 #
 # To prevent the fit from drifting to unrelated positions, we freeze the spatial parameters.
 # Alternatively, you can constrain the parameter ranges to stay within your expected region.
 # We also add a background model with a free normalisation to account for uncertainties
-# in the background. You can add more complex background corrections such as letting the tilt free, or a piecewise correction, etc.
+# in the background. You can add more complex background corrections such as letting
+# the tilt free, or a piecewise correction, etc.
 #
 
 spectral_model = PowerLawSpectralModel()
@@ -238,9 +239,11 @@ print(LLR["fit_results"].parameters.to_table())
 # By default (``reoptimize=False``), only the normalisation is fitted in each bin;
 # all other parameters, including the index, stay fixed. Here we use
 # ``n_sigma_ul=1.645`` to get the 95% UL.
-
-# Note that in the case of a detection, n_sigma=2 still corresponds to ΔTS = 4 but is associated to a two-sided confidence level of 95%.
-# In order to perform a comparison between the frequentist and Bayesian 95% ULs, we should specify n_sigma_ul=1.645 in the frequentist approach.
+#
+# Note that in the case of a detection, n_sigma=2 still corresponds to ΔTS = 4
+# but is associated to a two-sided confidence level of 95%.
+# In order to perform a comparison between the frequentist and Bayesian 95% ULs,
+# we should specify n_sigma_ul=1.645 in the frequentist approach.
 #
 # For computational reasons here, we keep the background normalisation frozen,
 # but **in a real analysis, you should keep it free and use** `reoptimize=True`.
@@ -267,18 +270,22 @@ fp1.plot(sed_type="dnde", color="black")
 fp1.plot_ts_profiles(sed_type="dnde")
 plt.show()
 
+######################################################################
 # It can also be useful to visualise the likelihood profile for
-# diagnostic purposes, as explained in `:doc:`/tutorials/details/fitting`.
+# diagnostic purposes, as explained in :doc:`/tutorials/details/fitting`.
 
 ######################################################################
 # Expected upper limits (Brazil bands)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # An observed upper limit comes from a single realisation of the data.
-# Repeated experiments of the same expected background (e.g. lightcurves) will lead to different Poisson realizations of the background and will yield different upper limit values. To see how unusual it is, we compare it with the distribution of upper limits we would
-# expect *if there were no source*. We simulate many *background-only datasets*,
-# compute the upper limits for each one in the same way as above, and take the
-# median and the 68% and 95% ranges. These form the so-called Brazil bands.
+# Repeated experiments of the same expected background (e.g. lightcurves) will
+# lead to different Poisson realizations of the background and will yield
+# different upper limit values. To see how unusual it is, we compare it with the
+# distribution of upper limits we would expect *if there were no source*.
+# We simulate many *background-only datasets*, compute the upper limits for each
+# one in the same way as above, and take the median and the 68% and 95% ranges.
+# These form the so-called Brazil bands.
 #
 # Since this is computationally intensive, we will avoid executing it in this
 # notebook, but show only the static plot.
@@ -454,7 +461,8 @@ plt.show()
 # prior, the two results converge. In that limit the
 # likelihood is close to a Gaussian, and the remaining difference is only the
 # confidence-level convention.
-#
+
+
 ######################################################################
 # .. _integral_upper_lims:
 #
