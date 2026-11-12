@@ -101,6 +101,12 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     n_sigma_ul : float, optional
         Number of sigma for flux upper limits. Must be a positive value.
         Default is 2.
+
+        .. note::
+           The upper limit is one-sided: ``n_sigma_ul=1.645`` corresponds to a 95%
+           confidence level (ΔTS = 2.71), and ``n_sigma_ul=2`` to 97.7%. The asymmetric
+           errors (``n_sigma``) are two-sided: ``n_sigma=1`` gives a 68.3% interval.
+
     n_sigma_sensitivity : float, optional
         Number of sigma for flux sensitivity. Must be a positive value.
         Default is 5.
