@@ -62,7 +62,7 @@ distributed = [
     "ray[default]>=2.9,<2.55; python_version < '3.14'",
     "ray[default]>=2.55; python_version >= '3.14'",
 ]
-hdmspectra = [
+darkmatter = [
     "HDMSpectra @ git+https://github.com/nickrodd/HDMSpectra.git",
 ]
 extra = [
