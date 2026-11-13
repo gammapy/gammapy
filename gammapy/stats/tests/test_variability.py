@@ -89,16 +89,38 @@ def test_lightcurve_fpp():
 
     fpp, fpp_err = compute_fpp(flux, flux_err)
 
-    assert_allclose(fpp, [1.19448734, 0.11661904])
-    assert_allclose(fpp_err, [0.06648574, 0.10099505])
+    assert_allclose(fpp, [0.84071398, np.nan], rtol=1e-3)
+    assert_allclose(fpp_err, [0.06664148, np.nan], rtol=1e-3)
 
     flux_1d = np.array([1e-11, 3e-11, 1e-11])
     flux_err_1d = np.array([0.1e-11, 0.3e-11, 0.1e-11])
 
     fpp_1d, fpp_err_1d = compute_fpp(flux_1d, flux_err_1d)
 
-    assert_allclose(fpp_1d, [1.19448734])
-    assert_allclose(fpp_err_1d, [0.06648574])
+    assert_allclose(fpp_1d, [0.84071398], rtol=1e-3)
+    assert_allclose(fpp_err_1d, [0.06664148], rtol=1e-3)
+
+
+def test_lightcurve_fpp_with_nan():
+    flux = np.array([1, 3, np.nan, 2, 4, 1]) * 1e-11
+    flux_err = np.array([0.1, 0.1, np.nan, 0.1, 0.1, 0.1]) * 1e-11
+
+    fpp, fpp_err = compute_fpp(flux, flux_err)
+
+    assert_allclose(fpp, 0.76376262, rtol=1e-3)
+    assert_allclose(fpp_err, 0.02034588, rtol=1e-3)
+
+
+def test_lightcurve_fpp_equals_fvar_for_white_noise():
+    rng = np.random.default_rng(42)
+    flux = rng.normal(10, np.sqrt(5), 1000)
+    flux_err = np.ones_like(flux)
+
+    fvar, _ = compute_fvar(flux, flux_err)
+    fpp, _ = compute_fpp(flux, flux_err)
+
+    assert_allclose(fpp, fvar, rtol=0.1)
+    assert_allclose(fpp, 0.2, rtol=0.1)
 
 
 def test_lightcurve_chisq(lc_table):
