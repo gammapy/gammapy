@@ -113,7 +113,7 @@ def compute_fpp(flux, flux_err, axis=0):
     n_pairs = np.count_nonzero(~np.isnan(diff_square), axis=-1)
     if np.any(n_pairs == 0):
         log.warning(
-            "No two consecutive valid flux points, so F_pp cannot be computed and is set to NaN."
+            "No two consecutive valid flux points were found. Therefore, F_pp cannot be computed and has been set to NaN."
         )
         n_pairs = np.where(n_pairs > 0, n_pairs, np.nan)
     s_square = np.nansum(diff_square, axis=-1) / (2 * n_pairs)
