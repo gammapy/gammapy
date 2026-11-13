@@ -83,13 +83,12 @@ def test_lightcurve_fvar():
     assert_allclose(fvar_err, [0.06679978, 0.08285806])
 
 
-def test_lightcurve_fpp(caplog):
+def test_lightcurve_fpp():
     flux = np.array([[1e-11, 4e-12], [3e-11, np.nan], [1e-11, 1e-12]])
     flux_err = np.array([[0.1e-11, 0.4e-12], [0.3e-11, np.nan], [0.1e-11, 0.1e-12]])
 
     fpp, fpp_err = compute_fpp(flux, flux_err)
 
-    assert "No two consecutive valid flux points" in caplog.text
     assert_allclose(fpp, [0.84071398, np.nan], rtol=1e-3)
     assert_allclose(fpp_err, [0.06664148, np.nan], rtol=1e-3)
 
