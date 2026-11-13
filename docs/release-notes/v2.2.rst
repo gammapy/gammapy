@@ -2,7 +2,88 @@
 
 .. _gammapy_2p2_release:
 
-2.2 (Unreleased)
-================
+2.2 (xx November, 2026)
+======================
 
-No changes yet
+- Released: xx November, 2026
+- New contributors: 6 (Marked with * in the list)
+- Total contributors: 31
+- Total merged PRs: 192
+
+
+Summary
+-------
+
+Gammapy v2.2 is a new feature release with a number of performance improvements, new features and bug fixes.
+The main themes include new tools for Bayesian inference, a broad overhaul of the dark matter module, and ASDF
+serialization of the core data structures.
+
+Python 3.14 and 3.15 in now supported, and issues encountered with `regions` in the previous versions are
+now resolved. Two new notebooks have been added and the CTAO notebook significantly updated.
+
+The dark matter module has been substantially refactored and extended in this release.
+The spectral model classes have been unified into a single class handling both annihilation and decay,
+with improved parameter validation and an overall cleaner code structure.
+`CosmiXs` is now the default source for dark matter spectra, replacing `PPPC4DMID`;
+note that this changes the results of analyses that relied on the previous default.
+Users can also provide their own custom spectra from a file.
+The computation of astrophysical factors has been improved, with corrections for extragalactic sources,
+the line-of-sight geometry and the treatment of the central pixel.
+Notably, uncertainties on the astrophysical factor can now be included as a
+nuisance parameter profiled in the likelihood fit,
+so that limits on the annihilation cross-section or decay lifetime account for the
+uncertainty on the target's dark matter distribution, yielding more realistic
+and typically more conservative constraints. The documentation and tutorials have been updated accordingly,
+with new and improved tutorials covering both a basic introduction and a complete analysis.
+
+Maps, geometries (WCS, HEALPix, region), map axes,
+GTIs, IRF maps, Datasets and Models can now be written to and read from ASDF. This is the groundwork for storing a
+complete analysis state in a single, self-describing file, and is a part of an overhaul of the I/O code in Gammapy.
+An associated entry in the `HowTo` is added as an explanation for ASDF serialisation.
+
+The 4FGL catalog is updated, with support for the FL16Y list. A new `OnOffDatasetMaker` with an associated tutorial is provided
+for background estimation with paired off runs. The .. _nautilus: https://nautilus-sampler.readthedocs.io/en/latest/
+is now available as a ``Sampler`` backend, which is better suited for higher dimensionality problems, and
+``LogNormalPrior`` and ``SamplesKDEPrior`` are introduced.
+
+Significant additions have been made to our estimator package:
+Previously, hidden failures sometimes used to occur at low statistics, causing very low upper limits. This has now
+been corrected. If a failure is detected during the fit for upper limit computation, the method internally switches to
+upper limit computation using likelihood profiles. The upper limit tutorial has been updated with more information.
+A preliminary implementation of a new
+``RegularizedFluxPointsEstimator`` is introduced for flux point computation in true-energy space
+with a given regularisation, and will be documented in future releases.
+
+
+Contributors
+------------
+
+- Fabio Acero
+-* Syed Ahnaf Raza
+-* Nicki R. Bond
+- Tomas Bylund
+- Marie-Sophie Carrasco
+- R. Alexander Cerviño-Cortínez
+- Axel Donath
+- Katharina Egg
+- Gabriel Emery
+- Esther
+- Kirsty Feijen
+-* Júlia Gouvêa Mamprim
+- Lea Heckmann
+- Basmala Hekal
+- Bruno Khélifi
+-* Ahmed Mahmoud
+- Daniel Morcuende
+- Laura Olivera-Nieto
+- Michele Peresano
+- Natthan Pigoux
+- Fabio Pintore
+- Tobias Preis
+- Maxime Regeard
+- Quentin Remy
+- Atreyee Sinha
+- Régis Terrier
+- Tim Unbehaun
+- Thomas Vuillaume
+-* Ziheng Wang
