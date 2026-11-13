@@ -269,10 +269,12 @@ class ParameterEstimator(Estimator):
         profile = self.fit.stat_profile(
             datasets=datasets, parameter=parameter, reoptimize=self.reoptimize
         )
-        results = {
-            f"{parameter.name}_scan": scan_values,
-            "stat_scan": profile["stat_scan"],
-        }
+
+        results = {}
+
+        if "scan" in self.selection_optional:
+            results[f"{parameter.name}_scan"] = scan_values
+            results["stat_scan"] = profile["stat_scan"]
 
         if estimate_err and "errn-errp" in self.selection_optional:
             results[f"{parameter.name}_errn"] = _get_error_from_scan(

@@ -884,3 +884,34 @@ def test_lightcurve_stacking():
     results_stacked = estimator.run(stacked_datasets)
     table_stack_outside = results_stacked.to_table()
     assert_allclose(table_stack["stat_null"], table_stack_outside["stat_null"])
+
+
+@pytest.mark.parametrize("failing_bin", [0, 1])
+def test_lightcurve_fallback_scan_in_single_time_bin(monkeypatch, failing_bin):
+    datasets = Datasets(get_spectrum_datasets())
+
+    confidence = Fit.confidence
+    calls = []
+
+    # confidence function set to fail on a specific bin to get deterministic failure
+    def confidence_failing_in_one_bin(self, *args, **kwargs):
+        result = confidence(self, *args, **kwargs)
+        if len(calls) == failing_bin:
+            result["success"] = False
+        calls.append(1)
+        return result
+
+    # Replace Fit.confidence with this function for this specific test
+    monkeypatch.setattr(Fit, "confidence", confidence_failing_in_one_bin)
+
+    estimator = LightCurveEstimator(
+        energy_edges=[1, 30] * u.TeV,
+        selection_optional=["ul"],
+        n_jobs=1,
+    )
+    lightcurve = estimator.run(datasets)
+
+    assert lightcurve.geom.axes["time"].nbin == 2
+    # the fallback scan is used for the UL but not returned, since not requested
+    assert "stat_scan" not in lightcurve.available_quantities
+    assert np.all(np.isfinite(lightcurve.norm_ul.data))
