@@ -404,7 +404,6 @@ def test_wcs_nd_map_pad_axis():
     m.data += np.array([1, 2]).reshape((-1, 1, 1))
 
     m_pad = m.pad(axis_name="axis", pad_width=1, mode="edge")
-    m_pad.data
 
     assert_allclose(m_pad.data[:, 1, 1], [1, 1, 2, 2])
 

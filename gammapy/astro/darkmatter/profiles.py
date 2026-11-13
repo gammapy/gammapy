@@ -20,12 +20,18 @@ __all__ = [
     "ZhaoProfile",
 ]
 
+RHO_S = 1 * u.Unit("GeV / cm3")
+
 
 class DMProfile(abc.ABC):
     """DMProfile model base class."""
 
     LOCAL_DENSITY = 0.3 * u.GeV / (u.cm**3)
     """Local dark matter density as given in reference 2"""
+
+    @abc.abstractmethod
+    def evaluate(self, *args, **kwargs):
+        """Evaluate the profile. Must be implemented by subclasses."""
 
     def __call__(self, radius):
         """Call evaluate method of derived classes."""
@@ -183,13 +189,13 @@ class ZhaoProfile(DMProfile):
     Default scale radius as given in reference 2 (same as for NFW profile)
     """
 
-    def __init__(
-        self, r_s=None, alpha=None, beta=None, gamma=None, rho_s=1 * u.Unit("GeV / cm3")
-    ):
+    def __init__(self, r_s=None, alpha=None, beta=None, gamma=None, rho_s=None):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
         alpha = self.DEFAULT_ALPHA if alpha is None else alpha
         beta = self.DEFAULT_BETA if beta is None else beta
         gamma = self.DEFAULT_GAMMA if gamma is None else gamma
+        if rho_s is None:
+            rho_s = RHO_S
         self.parameters = Parameters(
             [
                 Parameter("r_s", u.Quantity(r_s)),
@@ -233,8 +239,10 @@ class NFWProfile(DMProfile):
     DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, rho_s=1 * u.Unit("GeV / cm3")):
+    def __init__(self, r_s=None, rho_s=None):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
+        if rho_s is None:
+            rho_s = RHO_S
         self.parameters = Parameters(
             [Parameter("r_s", u.Quantity(r_s)), Parameter("rho_s", u.Quantity(rho_s))]
         )
@@ -278,9 +286,11 @@ class EinastoProfile(DMProfile):
     DEFAULT_ALPHA = 0.17
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, alpha=None, rho_s=1 * u.Unit("GeV / cm3")):
+    def __init__(self, r_s=None, alpha=None, rho_s=None):
         alpha = self.DEFAULT_ALPHA if alpha is None else alpha
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
+        if rho_s is None:
+            rho_s = RHO_S
 
         self.parameters = Parameters(
             [
@@ -321,8 +331,10 @@ class IsothermalProfile(DMProfile):
     DEFAULT_SCALE_RADIUS = 4.38 * u.kpc
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, rho_s=1 * u.Unit("GeV / cm3")):
+    def __init__(self, r_s=None, rho_s=None):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
+        if rho_s is None:
+            rho_s = RHO_S
 
         self.parameters = Parameters(
             [Parameter("r_s", u.Quantity(r_s)), Parameter("rho_s", u.Quantity(rho_s))]
@@ -357,8 +369,10 @@ class BurkertProfile(DMProfile):
     DEFAULT_SCALE_RADIUS = 12.67 * u.kpc
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, rho_s=1 * u.Unit("GeV / cm3")):
+    def __init__(self, r_s=None, rho_s=None):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
+        if rho_s is None:
+            rho_s = RHO_S
 
         self.parameters = Parameters(
             [Parameter("r_s", u.Quantity(r_s)), Parameter("rho_s", u.Quantity(rho_s))]
@@ -395,8 +409,10 @@ class MooreProfile(DMProfile):
     DEFAULT_SCALE_RADIUS = 30.28 * u.kpc
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, rho_s=1 * u.Unit("GeV / cm3")):
+    def __init__(self, r_s=None, rho_s=None):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
+        if rho_s is None:
+            rho_s = RHO_S
 
         self.parameters = Parameters(
             [Parameter("r_s", u.Quantity(r_s)), Parameter("rho_s", u.Quantity(rho_s))]
