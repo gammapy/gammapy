@@ -744,8 +744,8 @@ class DarkMatterSpectralModel(SpectralModel):
     mDM : `~astropy.units.Quantity`
         Dark matter particle mass.
     channel : str
-        Annihilation/Decay channel or initial state for the primary spectrum. 
-        For PPPC4, CosmiXs, or a custom table, see `ContinuumPrimaryFlux.channel_registry`. 
+        Annihilation/Decay channel or initial state for the primary spectrum.
+        For PPPC4, CosmiXs, or a custom table, see `ContinuumPrimaryFlux.channel_registry`.
         For HDMSpectra, this is an HDMSpectra initial state such as
         ``"b"`` or ``"W"``; its supported labels are defined by HDMSpectra.
     scale : float, optional
