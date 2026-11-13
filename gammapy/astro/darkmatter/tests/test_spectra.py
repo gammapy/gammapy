@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import sys
 import warnings
+from types import ModuleType, SimpleNamespace
 
 import astropy.units as u
 import numpy as np
@@ -13,6 +15,7 @@ from gammapy.astro.darkmatter import (
     DarkMatterSpectralModel,
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
+    HDMSpectraPrimaryFlux,
     PrimaryFlux,
 )
 from gammapy.modeling.models import Models, SkyModel
@@ -712,3 +715,226 @@ def test_dm_spectral_model_generic_primary_flux():
     flux = model(10 * u.GeV)
     assert flux.unit.is_equivalent("cm-2 s-1 TeV-1")
     assert flux.value > 0
+
+
+def test_hdm_primary_flux_masks_unsupported_x(monkeypatch, tmp_path):
+    data_file = tmp_path / "HDMSpectra.hdf5"
+    data_file.touch()
+    calls = {}
+
+    def fake_spec(finalstate, initialstate, x, mass, data, annihilation):
+        calls["finalstate"] = finalstate
+        calls["initialstate"] = initialstate
+        calls["x"] = x.copy()
+        calls["mass"] = mass
+        calls["data"] = data
+        calls["annihilation"] = annihilation
+        return np.full_like(x, 2.0)
+
+    hdm_module = ModuleType("HDMSpectra")
+    hdm_module.HDMSpectra = SimpleNamespace(spec=fake_spec)
+    monkeypatch.setitem(sys.modules, "HDMSpectra", hdm_module)
+
+    mass = 1 * u.TeV
+    flux = HDMSpectraPrimaryFlux(
+        mDM=mass,
+        initialstate="b",
+        hdm_data_file=data_file,
+    )
+    energies = np.array([0.5e-6, 5e-5, 0.5, 1.1]) * mass
+
+    with pytest.warns(UserWarning, match="below 1e-4"):
+        actual = flux(energies)
+
+    expected = np.array([0, 2 / 1000, 2 / 1000, 0]) / u.GeV
+    assert_quantity_allclose(actual, expected)
+    assert_allclose(calls["x"], [5e-5, 0.5])
+    assert calls["mass"] == 1000
+    assert calls["initialstate"] == "b"
+    assert calls["finalstate"] == 22
+    assert calls["data"] == data_file
+    assert calls["annihilation"] is True
+
+
+@pytest.mark.parametrize("path_kind", ["missing", "directory"])
+def test_hdm_primary_flux_rejects_invalid_data_file(tmp_path, path_kind):
+    data_file = tmp_path / "missing.hdf5" if path_kind == "missing" else tmp_path
+    with pytest.raises(FileNotFoundError, match="HDMSpectra data file not found"):
+        HDMSpectraPrimaryFlux(
+            mDM=1 * u.TeV,
+            initialstate="b",
+            hdm_data_file=data_file,
+        )
+
+
+def test_hdm_primary_flux_units_shape_and_boundary_values(monkeypatch, tmp_path):
+    data_file = tmp_path / "HDMSpectra.hdf5"
+    data_file.touch()
+    calls = {}
+
+    def fake_spec(finalstate, initialstate, x, mass, data, annihilation):
+        calls["x"] = x.copy()
+        calls["mass"] = mass
+        return 2 * x
+
+    hdm_module = ModuleType("HDMSpectra")
+    hdm_module.HDMSpectra = SimpleNamespace(spec=fake_spec)
+    monkeypatch.setitem(sys.modules, "HDMSpectra", hdm_module)
+
+    flux = HDMSpectraPrimaryFlux(
+        mDM=1 * u.TeV,
+        initialstate="b",
+        hdm_data_file=data_file,
+    )
+
+    with pytest.warns(UserWarning, match="below 1e-4"):
+        actual = flux(np.array([1e-6, 1]) * u.TeV)
+
+    assert_allclose(calls["x"], [1e-6, 1])
+    assert calls["mass"] == 1000
+    assert actual.shape == (2,)
+    assert_quantity_allclose(actual, np.array([2e-9, 2e-3]) / u.GeV)
+
+    scalar = flux(500 * u.GeV)
+    assert scalar.shape == ()
+    assert_quantity_allclose(scalar, 1e-3 / u.GeV)
+
+
+def test_hdm_primary_flux_all_out_of_range_returns_zero(monkeypatch, tmp_path):
+    data_file = tmp_path / "HDMSpectra.hdf5"
+    data_file.touch()
+    calls = []
+
+    def fake_spec(*args, **kwargs):
+        calls.append((args, kwargs))
+        return np.ones_like(args[2])
+
+    hdm_module = ModuleType("HDMSpectra")
+    hdm_module.HDMSpectra = SimpleNamespace(spec=fake_spec)
+    monkeypatch.setitem(sys.modules, "HDMSpectra", hdm_module)
+
+    flux = HDMSpectraPrimaryFlux(
+        mDM=1 * u.TeV,
+        initialstate="b",
+        hdm_data_file=data_file,
+    )
+    actual = flux(np.array([0.5e-6, 1.01]) * u.TeV)
+
+    assert_quantity_allclose(actual, np.zeros(2) / u.GeV)
+    assert calls == []
+
+
+def test_hdm_primary_flux_rejects_non_finite_energy(tmp_path):
+    data_file = tmp_path / "HDMSpectra.hdf5"
+    data_file.touch()
+    flux = HDMSpectraPrimaryFlux(
+        mDM=1 * u.TeV,
+        initialstate="b",
+        hdm_data_file=data_file,
+    )
+
+    with pytest.raises(ValueError, match="Energy values must be finite"):
+        flux(np.nan * u.GeV)
+
+
+def test_hdm_primary_flux_rejects_incompatible_energy_units(tmp_path):
+    data_file = tmp_path / "HDMSpectra.hdf5"
+    data_file.touch()
+    flux = HDMSpectraPrimaryFlux(
+        mDM=1 * u.TeV,
+        initialstate="b",
+        hdm_data_file=data_file,
+    )
+
+    with pytest.raises(u.UnitConversionError):
+        flux(1 * u.s)
+
+
+def test_hdm_primary_flux_missing_optional_dependency(monkeypatch, tmp_path):
+    data_file = tmp_path / "HDMSpectra.hdf5"
+    data_file.touch()
+    monkeypatch.setitem(sys.modules, "HDMSpectra", None)
+    flux = HDMSpectraPrimaryFlux(
+        mDM=1 * u.TeV,
+        initialstate="b",
+        hdm_data_file=data_file,
+    )
+
+    with pytest.raises(ImportError, match=r"gammapy\[hdmspectra\]"):
+        flux(500 * u.GeV)
+
+
+def test_hdm_primary_flux_allowed_channels(monkeypatch, tmp_path):
+    data_file = tmp_path / "HDMSpectra.hdf5"
+    data_file.touch()
+    hdm_module = ModuleType("HDMSpectra")
+    hdm_module.__path__ = []
+    pclid_module = ModuleType("HDMSpectra.pclid")
+    pclid_module.str_i = np.array(["b", "W"])
+    monkeypatch.setitem(sys.modules, "HDMSpectra", hdm_module)
+    monkeypatch.setitem(sys.modules, "HDMSpectra.pclid", pclid_module)
+
+    flux = HDMSpectraPrimaryFlux(
+        mDM=1 * u.TeV,
+        initialstate="b",
+        hdm_data_file=data_file,
+    )
+
+    assert flux.allowed_channels() == ["b", "W"]
+
+
+def test_hdm_dark_matter_model_requires_data_file():
+    with pytest.raises(
+        ValueError,
+        match="hdm_data_file is required when source is 'hdmspectra'",
+    ):
+        DarkMatterSpectralModel(
+            mDM=1 * u.TeV,
+            channel="b",
+            source="hdmspectra",
+            factor=3.41e19 * u.Unit("GeV2 cm-5"),
+        )
+
+
+def test_hdm_primary_flux_serialization_roundtrip(tmp_path):
+    data_file = tmp_path / "HDMSpectra.hdf5"
+    data_file.touch()
+    primary = HDMSpectraPrimaryFlux(
+        mDM=1 * u.TeV,
+        initialstate="b",
+        finalstate="gamma",
+        hdm_data_file=data_file,
+    )
+
+    restored_primary = HDMSpectraPrimaryFlux.from_dict(primary.to_dict())
+
+    assert_quantity_allclose(restored_primary.mDM, primary.mDM)
+    assert restored_primary.initialstate == primary.initialstate
+    assert restored_primary.finalstate == primary.finalstate
+    assert restored_primary.hdm_data_file == primary.hdm_data_file
+
+
+def test_hdm_dark_matter_model_serialization_roundtrip(tmp_path):
+    data_file = tmp_path / "HDMSpectra.hdf5"
+    data_file.touch()
+    model = DarkMatterSpectralModel(
+        mDM=1 * u.TeV,
+        channel="b",
+        source="hdmspectra",
+        factor=3.41e19 * u.Unit("GeV2 cm-5"),
+        hdm_data_file=data_file,
+    )
+    model.scale.value = 2.5
+    model.factor.frozen = False
+
+    restored = DarkMatterSpectralModel.from_dict(model.to_dict())
+
+    assert isinstance(restored.primary_flux, HDMSpectraPrimaryFlux)
+    assert_quantity_allclose(restored.primary_flux.mDM, model.primary_flux.mDM)
+    assert restored.primary_flux.initialstate == "b"
+    assert restored.primary_flux.finalstate == 22
+    assert restored.primary_flux.hdm_data_file == data_file
+    assert restored.source == "hdmspectra"
+    assert_quantity_allclose(restored.factor.quantity, model.factor.quantity)
+    assert restored.factor.frozen is False
+    assert_allclose(restored.scale.value, 2.5)
