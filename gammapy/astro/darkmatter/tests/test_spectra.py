@@ -9,12 +9,18 @@ from astropy.table import Table
 from numpy.testing import assert_allclose
 
 from gammapy.astro.darkmatter import (
+    BoxPrimaryFlux,
+    MonochromaticPrimaryFlux,
+    VIBPrimaryFlux,
     ContinuumPrimaryFlux,
     DarkMatterSpectralModel,
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
     PrimaryFlux,
 )
+from gammapy.datasets import SpectrumDataset
+from gammapy.irf import EDispKernelMap
+from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling.models import Models, SkyModel
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 from gammapy.astro.darkmatter.utils import add_factor_prior
@@ -712,3 +718,411 @@ def test_dm_spectral_model_generic_primary_flux():
     flux = model(10 * u.GeV)
     assert flux.unit.is_equivalent("cm-2 s-1 TeV-1")
     assert flux.value > 0
+
+
+# ---------------------------------------------------------------------------
+# Line-like primary fluxes used through DarkMatterSpectralModel
+# ---------------------------------------------------------------------------
+
+
+def test_dm_spectral_model_with_monochromatic_primary_flux():
+    mDM = 1 * u.TeV
+    mono_flux = MonochromaticPrimaryFlux(mDM=mDM, counterpart_mass=91.1876 * u.GeV)
+
+    model = DarkMatterSpectralModel(
+        mDM=mDM,
+        channel=None,
+        primary_flux=mono_flux,
+        factor=3.41e19 * u.Unit("GeV2 cm-5"),
+    )
+    assert model(mono_flux.get_line_energy()).value > 0
+
+    new_model = DarkMatterSpectralModel.from_dict(model.to_dict())
+    new_flux = new_model.primary_flux
+    assert isinstance(new_flux, MonochromaticPrimaryFlux)
+    assert new_flux.n_gamma_photons == 1
+    assert_quantity_allclose(new_flux.counterpart_mass, 91.1876 * u.GeV)
+
+
+def test_dm_spectral_model_with_box_primary_flux():
+    mDM = 1 * u.TeV
+    box_flux = BoxPrimaryFlux(mDM=mDM, mPhi=[100, 50] * u.GeV)
+
+    model = DarkMatterSpectralModel(
+        mDM=mDM,
+        channel=None,
+        primary_flux=box_flux,
+        factor=3.41e19 * u.Unit("GeV2 cm-5"),
+    )
+
+    new_model = DarkMatterSpectralModel.from_dict(model.to_dict())
+    assert isinstance(new_model.primary_flux, BoxPrimaryFlux)
+    assert_quantity_allclose(new_model.primary_flux.mPhi1, box_flux.mPhi1)
+    assert_quantity_allclose(new_model.primary_flux.mPhi2, box_flux.mPhi2)
+
+
+def test_dm_decay_with_vib_primary_flux():
+    """In decay, DarkMatterSpectralModel sets the primary flux mass to mDM / 2."""
+    mDM = 2 * u.TeV
+    vib_flux = VIBPrimaryFlux(mDM=mDM)
+
+    model = DarkMatterSpectralModel(
+        mDM=mDM,
+        channel=None,
+        primary_flux=vib_flux,
+        factor=3.41e19 * u.Unit("GeV cm-2"),
+        annihilation=False,
+    )
+    assert_quantity_allclose(model.primary_flux.mDM, mDM / 2)
+
+    new_model = DarkMatterSpectralModel.from_dict(model.to_dict())
+    assert isinstance(new_model.primary_flux, VIBPrimaryFlux)
+    assert_quantity_allclose(new_model.primary_flux.mDM, mDM / 2)
+
+
+def test_dm_decay_monochromatic_line_energy():
+    """χ → γγ in decay: the line sits at mDM / 2."""
+    mDM = 2 * u.TeV
+    model = DarkMatterSpectralModel(
+        mDM=mDM,
+        channel=None,
+        primary_flux=MonochromaticPrimaryFlux(mDM=mDM),
+        annihilation=False,
+    )
+    assert_quantity_allclose(model.primary_flux.get_line_energy(), mDM / 2)
+
+
+def test_dm_decay_box_kinematically_forbidden():
+    """Allowed for mDM but not for the mDM / 2 used in decay."""
+    model = DarkMatterSpectralModel(
+        mDM=1 * u.TeV,
+        channel=None,
+        primary_flux=BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=[900] * u.GeV),
+        annihilation=False,
+    )
+    with pytest.raises(ValueError, match="Kinematically forbidden"):
+        model(300 * u.GeV)
+
+
+# ---------------------------------------------------------------------------
+# MonochromaticPrimaryFlux
+# ---------------------------------------------------------------------------
+
+
+def test_monochromatic_two_photon():
+    """χχ → γγ: line at mDM and two photons per annihilation."""
+    mDM = 1 * u.TeV
+    flux = MonochromaticPrimaryFlux(mDM=mDM)
+
+    assert flux.n_gamma_photons == 2
+    assert_quantity_allclose(flux.get_line_energy(), mDM)
+
+    energy = np.linspace(0.5, 1.5, 20001) * u.TeV
+    dnde = flux(energy)
+    assert dnde.unit == u.Unit("GeV-1")
+    integral = np.trapezoid(dnde.to_value("TeV-1"), energy.to_value("TeV"))
+    assert_allclose(integral, 2.0, rtol=1e-3)
+
+
+@pytest.mark.parametrize("counterpart_mass", [91.1876, 125.20] * u.GeV)
+def test_monochromatic_one_photon(counterpart_mass):
+    """χχ → γX: line below mDM and one photon per annihilation."""
+    mDM = 1 * u.TeV
+    flux = MonochromaticPrimaryFlux(mDM=mDM, counterpart_mass=counterpart_mass)
+
+    assert flux.n_gamma_photons == 1
+    expected = mDM * (1 - counterpart_mass**2 / (4 * mDM**2))
+    assert_quantity_allclose(flux.get_line_energy(), expected)
+
+    energy = np.linspace(0.5, 1.5, 20001) * u.TeV
+    integral = np.trapezoid(flux(energy).to_value("TeV-1"), energy.to_value("TeV"))
+    assert_allclose(integral, 1.0, rtol=1e-3)
+
+
+def test_monochromatic_custom_sigma_rel():
+    """The peak height scales as 1 / sigma, with sigma = sigma_rel * E_0."""
+    flux = MonochromaticPrimaryFlux(mDM=1 * u.TeV, sigma_rel=0.05)
+    assert flux.sigma_rel == 0.05
+
+    peak = flux(1 * u.TeV)
+    expected = 2 / (np.sqrt(2 * np.pi) * 0.05 * 1 * u.TeV)
+    assert_quantity_allclose(peak, expected)
+
+
+def test_monochromatic_kinematically_forbidden():
+    with pytest.raises(ValueError, match="Kinematically forbidden"):
+        MonochromaticPrimaryFlux(mDM=10 * u.GeV, counterpart_mass=91.1876 * u.GeV)
+
+
+def test_monochromatic_negative_counterpart_mass():
+    with pytest.raises(ValueError, match="negative"):
+        MonochromaticPrimaryFlux(mDM=1 * u.TeV, counterpart_mass=-1 * u.GeV)
+
+
+@pytest.mark.parametrize(
+    "kwargs, error",
+    [
+        ({"mDM": 1 * u.m}, u.UnitsError),
+        ({"mDM": 1.0}, TypeError),
+        ({"mDM": 1 * u.TeV, "counterpart_mass": 91.1876 * u.m}, u.UnitsError),
+        ({"mDM": 1 * u.TeV, "counterpart_mass": 91.1876}, TypeError),
+    ],
+)
+def test_monochromatic_wrong_units(kwargs, error):
+    with pytest.raises(error):
+        MonochromaticPrimaryFlux(**kwargs)
+
+
+def test_monochromatic_to_from_dict_roundtrip():
+    flux = MonochromaticPrimaryFlux(
+        mDM=1 * u.TeV, counterpart_mass=91.1876 * u.GeV, sigma_rel=0.02
+    )
+    new_flux = MonochromaticPrimaryFlux.from_dict(flux.to_dict())
+
+    assert_quantity_allclose(new_flux.mDM, flux.mDM)
+    assert_quantity_allclose(new_flux.counterpart_mass, flux.counterpart_mass)
+    assert new_flux.n_gamma_photons == flux.n_gamma_photons
+    assert new_flux.sigma_rel == flux.sigma_rel
+
+
+@pytest.mark.parametrize("mDM", [0 * u.GeV, -1 * u.TeV])
+def test_monochromatic_invalid_mass(mDM):
+    with pytest.raises(ValueError, match="mDM must be strictly positive"):
+        MonochromaticPrimaryFlux(mDM=mDM)
+
+
+# ---------------------------------------------------------------------------
+# VIBPrimaryFlux
+# ---------------------------------------------------------------------------
+
+
+def test_vib_zero_outside_range():
+    """VIB spectrum must vanish for x <= 0 or x >= 1."""
+    flux = VIBPrimaryFlux(mDM=1 * u.TeV)
+    dnde = flux(u.Quantity([0.0, 1.0, 1.5], "TeV"))
+    assert_allclose(dnde.to_value("TeV-1"), [0.0, 0.0, 0.0])
+
+
+def test_vib_positive_in_range():
+    flux = VIBPrimaryFlux(mDM=1 * u.TeV)
+    dnde = flux(np.linspace(0.01, 0.99, 50) * u.TeV)
+    assert np.all(dnde.to_value("TeV-1") > 0)
+
+
+def test_vib_normalization():
+    """A_VIB normalizes the spectrum to one photon per annihilation."""
+    mDM = 1 * u.TeV
+    flux = VIBPrimaryFlux(mDM=mDM)
+    energy = np.linspace(1e-6, 1 - 1e-6, 200001) * mDM
+    integral = np.trapezoid(flux(energy).to_value("TeV-1"), energy.to_value("TeV"))
+    assert_allclose(integral, 1.0, rtol=1e-3)
+
+
+def test_vib_invalid_mass():
+    with pytest.raises(ValueError, match="must be strictly positive"):
+        VIBPrimaryFlux(mDM=-1 * u.TeV)
+
+
+def test_vib_wrong_units():
+    with pytest.raises(u.UnitsError):
+        VIBPrimaryFlux(mDM=1 * u.m)
+
+
+def test_vib_to_from_dict_roundtrip():
+    flux = VIBPrimaryFlux(mDM=2 * u.TeV)
+    new_flux = VIBPrimaryFlux.from_dict(flux.to_dict())
+    assert_quantity_allclose(new_flux.mDM, flux.mDM)
+
+
+# ---------------------------------------------------------------------------
+# BoxPrimaryFlux
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "mPhi",
+    [
+        100 * u.GeV,
+        [100] * u.GeV,
+        [100, 99.999] * u.GeV,
+        [100, 50] * u.GeV,
+        [50, 100] * u.GeV,
+    ],
+)
+def test_box_normalization(mPhi):
+    """χχ → φφ → 4γ: four photons per annihilation, whatever mPhi."""
+    flux = BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=mPhi)
+    energy = np.linspace(1, 1000, 200001) * u.GeV
+    integral = np.trapezoid(flux(energy).to_value("GeV-1"), energy.to_value("GeV"))
+    assert_allclose(integral, 4.0, rtol=1e-3)
+
+
+def test_box_two_distinct_masses():
+    flux = BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=[100, 50] * u.GeV)
+
+    E_phi1, E_phi2 = flux.energies_phi
+    assert not u.allclose(E_phi1, E_phi2)
+    assert flux.mPhi1 == 100 * u.GeV
+    assert flux.mPhi2 == 50 * u.GeV
+
+
+def test_box_single_scalar_mphi():
+    flux = BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=100 * u.GeV)
+    assert flux.mPhi1 == 100 * u.GeV
+    assert flux.mPhi2 == 100 * u.GeV
+
+
+def test_box_mphi_property():
+    flux = BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=100 * u.GeV)
+    assert_quantity_allclose(flux.mPhi, [100, 100] * u.GeV)
+
+    flux.mPhi = [200, 50] * u.GeV
+    assert_quantity_allclose(flux.mPhi, [200, 50] * u.GeV)
+    assert flux.mPhi1 == 200 * u.GeV
+    assert flux.mPhi2 == 50 * u.GeV
+
+    with pytest.raises(ValueError, match="1 or 2 values"):
+        flux.mPhi = [10, 20, 30] * u.GeV
+
+    # kinematics is checked when the spectrum is computed
+    flux.mPhi = [1500] * u.GeV
+    with pytest.raises(ValueError, match="Kinematically forbidden"):
+        flux(500 * u.GeV)
+
+
+def test_box_overlapping_boxes_add_up():
+    """Overlapping boxes simply add their photons, without any warning."""
+    flux = BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=[100, 99] * u.GeV)
+    energy = np.linspace(400, 600, 11) * u.GeV
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        dnde = flux(energy)
+    assert_quantity_allclose(dnde, 4 / flux.delta_E)
+
+
+@pytest.mark.parametrize(
+    "energy",
+    [500 * u.GeV, [500] * u.GeV, [[400], [500], [600]] * u.GeV],
+)
+def test_box_evaluate_shapes(energy):
+    """Scalar and multi-dimensional energies, as used by datasets and integral."""
+    flux = BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=[100] * u.GeV)
+    dnde = flux(energy)
+    assert dnde.shape == np.shape(energy)
+
+
+def test_box_integral():
+    """integral() evaluates the model on 2D energy arrays."""
+    flux = BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=[100] * u.GeV)  # box: 2.5-997.5 GeV
+    integral = flux.integral(
+        energy_min=[0.1, 1] * u.GeV, energy_max=[1, 2000] * u.GeV
+    ).to_value("")
+    assert integral.shape == (2,)
+    assert integral[0] == 0
+    # numerical integration loses a little at the sharp edges of the box
+    assert_allclose(integral[1], 4.0, rtol=5e-2)
+
+
+def test_box_kinematically_forbidden():
+    with pytest.raises(ValueError, match="Kinematically forbidden"):
+        BoxPrimaryFlux(mDM=10 * u.GeV, mPhi=[100] * u.GeV)
+
+
+def test_box_invalid_mphi_length():
+    with pytest.raises(ValueError, match="1 or 2 values"):
+        BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=[10, 20, 30] * u.GeV)
+
+
+def test_box_negative_mphi():
+    with pytest.raises(ValueError, match="must be strictly positive"):
+        BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=[-10] * u.GeV)
+
+
+def test_box_wrong_units():
+    with pytest.raises(u.UnitsError):
+        BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=[100] * u.m)
+
+
+def test_box_to_from_dict_roundtrip():
+    flux = BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=[100, 50] * u.GeV)
+    new_flux = BoxPrimaryFlux.from_dict(flux.to_dict())
+
+    assert_quantity_allclose(new_flux.mDM, flux.mDM)
+    assert_quantity_allclose(new_flux.mPhi1, flux.mPhi1)
+    assert_quantity_allclose(new_flux.mPhi2, flux.mPhi2)
+
+
+@pytest.mark.parametrize("mDM", [0 * u.GeV, -1 * u.TeV])
+def test_box_invalid_mass(mDM):
+    with pytest.raises(ValueError, match="mDM must be strictly positive"):
+        BoxPrimaryFlux(mDM=mDM, mPhi=100 * u.GeV)
+
+
+# ---------------------------------------------------------------------------
+# Line-like primary fluxes on a dataset
+# ---------------------------------------------------------------------------
+
+
+def _toy_spectrum_dataset():
+    """Spectrum dataset with flat exposure and a 10% Gaussian energy dispersion."""
+    energy_axis = MapAxis.from_energy_bounds(0.1, 100, 60, unit="TeV")
+    energy_axis_true = MapAxis.from_energy_bounds(
+        0.05, 200, 360, unit="TeV", name="energy_true"
+    )
+    geom = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_axis])
+    dataset = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true)
+    dataset.exposure.data += 1e10
+    dataset.edisp = EDispKernelMap.from_gauss(
+        energy_axis=energy_axis,
+        energy_axis_true=energy_axis_true,
+        sigma=0.1,
+        bias=0,
+        geom=dataset.exposure.geom,
+    )
+    return dataset
+
+
+@pytest.mark.parametrize(
+    "primary_flux",
+    [
+        MonochromaticPrimaryFlux(mDM=1 * u.TeV),
+        VIBPrimaryFlux(mDM=1 * u.TeV),
+        BoxPrimaryFlux(mDM=1 * u.TeV, mPhi=[300] * u.GeV),
+    ],
+)
+def test_line_primary_flux_npred(primary_flux):
+    """npred is finite, positive, and only appears below mDM (plus resolution)."""
+    dataset = _toy_spectrum_dataset()
+    model = DarkMatterSpectralModel(
+        mDM=1 * u.TeV,
+        channel=None,
+        primary_flux=primary_flux,
+        factor=3.41e19 * u.Unit("GeV2 cm-5"),
+    )
+    dataset.models = [SkyModel(spectral_model=model, name="dm")]
+
+    npred = dataset.npred().data.squeeze()
+    assert np.all(np.isfinite(npred))
+    assert npred.sum() > 0
+
+    energy = dataset.counts.geom.axes["energy"].center
+    assert_allclose(npred[energy > 2 * u.TeV], 0, atol=1e-10 * npred.sum())
+
+
+def test_monochromatic_npred_peak_at_line_energy():
+    """The predicted counts of a line peak at the line energy."""
+    dataset = _toy_spectrum_dataset()
+    # heavy counterpart so that E_0 (2.67 TeV) is clearly below mDM
+    mono_flux = MonochromaticPrimaryFlux(mDM=3 * u.TeV, counterpart_mass=2 * u.TeV)
+    model = DarkMatterSpectralModel(
+        mDM=3 * u.TeV,
+        channel=None,
+        primary_flux=mono_flux,
+        factor=3.41e19 * u.Unit("GeV2 cm-5"),
+    )
+    dataset.models = [SkyModel(spectral_model=model, name="dm")]
+
+    npred = dataset.npred().data.squeeze()
+    edges = dataset.counts.geom.axes["energy"].edges
+    i_peak = np.argmax(npred)
+    assert edges[i_peak] <= mono_flux.get_line_energy() < edges[i_peak + 1]
