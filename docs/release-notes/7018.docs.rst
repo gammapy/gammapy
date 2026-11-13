@@ -1,0 +1,1 @@
+Add a tutorial about Bayesian model selection using arviz package.
