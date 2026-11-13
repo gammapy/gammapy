@@ -42,3 +42,5 @@ tags:
   schema_uri: asdf://gammapy.org/gammapy/schemas/datasets/mapdataset-1.0.0
 - tag_uri: asdf://gammapy.org/gammapy/tags/datasets/mapdatasetonoff-1.0.0
   schema_uri: asdf://gammapy.org/gammapy/schemas/datasets/mapdatasetonoff-1.0.0
+- tag_uri: asdf://gammapy.org/gammapy/tags/estimators/fluxpoints-1.0.0
+  schema_uri: asdf://gammapy.org/gammapy/schemas/estimators/fluxpoints-1.0.0
