@@ -22,9 +22,9 @@ and ArviZ packages.
 #
 # Here we are going to focus on the following questions:
 #
-# - What are the common information criterion used for model selection nowadays?
-# - how model comparison is sensitive to the choice of prior?
-# - how the parameter posterior is sensitive to the choice of prior?
+# - What are the common information criterion used for model selection nowadays ?
+# - how model comparison is sensitive to the choice of prior ?
+# - how the parameter posterior is sensitive to the choice of prior ?
 #
 
 
@@ -110,8 +110,8 @@ datasets = Datasets(datasets.stack_reduce())
 # The Crab spectra will be modelled here with a powerlaw or a log
 # parabola with prior of different strength (names are indicatives).
 #
-#
-# Create a set of alternative models with different spectral shapes and prior strengths
+
+# create a set of alternative models with different spectral shapes and prior strengths
 
 alternative_models = {}
 models_types = ["lp", "pl"]
@@ -180,8 +180,7 @@ sampler = Sampler(backend="ultranest", options=options)
 # Defining the model selection manager
 # ------------------------------------
 #
-# We define a `~gammapy.modeling.BayesianModelSelection` that will run the
-# inference:
+# We define a `BayesianModelSelection` that will run the inference
 #
 
 bms = BayesianModelSelection(
@@ -190,8 +189,8 @@ bms = BayesianModelSelection(
 
 
 ######################################################################
-# Next we can run `~gammapy.modeling.BayesianModelSelection` that will run a
-# sampler on the datasets for each of the alternative_models.
+# Next we can run `BayesianModelSelection` that will run a sampler
+# on the datasets for each of the alternative_models.
 # No other option is accepted in the run method.
 #
 
@@ -216,16 +215,16 @@ inference_result = bms_results["lp(uninformative)"]
 # The output of the Bayesian analysis is the posterior distribution and
 # there is no “best-fit” output. One has to define, based on the
 # posteriors, what we want to consider as “best-fit” and several options
-# are possible: "mean", "median", "mode" or "maximum likelihood value".
+# are possible: - mean - median - mode - maximum likelihood value
 #
-# Note that Gammapy assigns the mean as the model parameter values
+# Note that gammapy assigns the mean as the model parameter values
 # but the other options would also be relevant choices.
 
 inference_result.parameters_table()
 
 
 ######################################################################
-# We can visualize the distributions with `~arziv.plot_dist` function of ArviZ:
+# We can visualize the distributions with `plot_dist` function of ArviZ:
 #
 
 az.plot_dist(
@@ -235,7 +234,7 @@ plt.show()
 
 
 ######################################################################
-# Or make a corner plot
+# or make a corner plot
 #
 
 with az.rc_context(
@@ -293,7 +292,7 @@ plt.show()
 # :math:`M_1` and :math:`M_0` (given a dataset :math:`D`) is the ratio of
 # their marginal likelihoods:
 #
-# .. math:: BF_{10} = \frac{P(D \mid M_1)}{P(D \mid M_0)} = \frac{Z_1}{Z_0}
+# .. math:: BF_{10} = \frac{P(D \mid M_1)}{P(D \mid M_0)} = \frac{Z_1}{Z_0}}
 #
 # - :math:`P(D \mid M_1)`: the probability of the data given model
 #   :math:`M_1` (marginal likelihood or *evidence*).
@@ -330,9 +329,9 @@ plt.show()
 #
 # .. math:: BF_{10} = \frac{P(\theta=\theta_0 \mid D, M_1)}{P(\theta=\theta_0 \mid M_1)}
 #
-# The `plot_bf` function of arviz we can be used to compute this quantity
+# The `plot_bf` function of arviz we can be used to compute this quantiy
 # and visualise how much we gained between the prior and the posterior.
-# Here we show this for the ``alpha`` parameter.
+# Here we show this for the `alpha` parameter.
 # According to Jeffreys’ scale, a :math:`BF_{01} = \frac{1}{BF_{10}} = 20`
 # indicates **strong evidence** that the true value is equal to the
 # reference value (grey line).
@@ -446,7 +445,7 @@ plt.show()
 #   and :math:`-2 \times \widehat{\text{ELPD}}` **asymptotically converges
 #   to AIC**.
 #
-# **PSIS-LOO-CV: Pareto-smoothed importance sampling leave-one-out
+# **PSIS-LOO-CV : Pareto-smoothed importance sampling leave-one-out
 # cross-validation**
 #
 # The penalization term :math:`p_{\text{LOO}}` is computed using
@@ -550,7 +549,7 @@ print("LP is favored at", sigma, "sigma")
 
 ######################################################################
 # As our statistics come with errors, more robust comparisons can be done
-# with the methods implemented in `~arziv.compare` that we can call from
+# with the methods implemented in `arziv.compare` that we can call from
 # our results object:
 #
 
@@ -573,7 +572,7 @@ pc = az.plot_compare(
 )
 
 fig = pc.viz["figure"].item()
-fig.set_size_inches(7, 4)
+fig.set_size_inches(8, 3)
 
 plt.show()
 
@@ -582,17 +581,16 @@ plt.show()
 # Prior and likelihood sensitivity diagnostics
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# ``psens`` function compute power-scaling sensitivity diagnostic. If
+# `psens` function compute power-scaling sensitivity diagnostic. If
 # power-scales the prior or likelihood and calculates how much the
 # posterior is affected.
 #
 # Higher values returned indicate greater sensitivity. Prior sensitivity
-# above 0.05 indicates informative prior. Likelihood sensitivity below
+# above 0.05 indicates informative prior*\*. Likelihood sensitivity below
 # 0.05 indicates weak or noninformative likelihood.
 #
-# The result can also be visualized with ``psense_summary`` function from
-# ``arviz_stats`` that is attached to our result object as
-# ``prior_sensitivity_table``
+# The result can also be visualized with `psense_summary` function from
+# `arviz_stats that is attached to our result object as `prior_sensitivity_table`
 #
 
 bms_results["lp(uninformative)"].prior_sensitivity_table()
@@ -605,9 +603,10 @@ print(
 
 
 ######################################################################
-# How to measure the strength of a prior?
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# How to measure the strength of a prior ?
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
+# https://arviz-devs.github.io/EABM/Chapters/Prior_elicitation.html#priors-and-entropy
 #
 # The entropy is a property of probability distributions the same way the
 # mean or variance are, actually it’s the expected value of the negative
@@ -623,8 +622,6 @@ print(
 # 2003 <https://ui.adsabs.harvard.edu/abs/2003prth.book.....J/abstract>`__).
 # This is a way to choose a prior that is as vague as possible, given the
 # information we have.
-# Further information on this is found in the arziv documentation
-# `here <https://arviz-devs.github.io/EABM/Chapters/Prior_elicitation.html#priors-and-entropy>`__
 #
 # Take away message
 # ~~~~~~~~~~~~~~~~~
