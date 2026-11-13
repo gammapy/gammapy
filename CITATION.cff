@@ -1,4 +1,4 @@
-# Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)
+# Metadata for citation of this software according to the CFF format  (https://citation-file-format.github.io/)
 cff-version: 1.2.0
 title: 'Gammapy: Python toolbox for gamma-ray astronomy'
 abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves,
@@ -8,12 +8,12 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
-date-released: 2025-07-26
+date-released: 2026-11-xx
 keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
-version: v2.0
+version: v2.2
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
@@ -31,7 +31,8 @@ authors:
   orcid: "https://orcid.org/0000-0002-6606-2816"
 - given-names: Kush
   family-names: Agarwal
-  affiliation: " Gandhi Institute of Technology and Management (GITAM) University, Visakhapatnam, India"
+  affiliation: " Gandhi Institute of Technology and Management (GITAM) University,
+    Visakhapatnam, India"
   orcid: "https://orcid.org/0009-0004-3008-3035"
 - given-names: Arnau
   family-names: Aguasca-Cabot
@@ -40,8 +41,8 @@ authors:
   orcid: "https://orcid.org/0000-0001-8816-4920"
 - given-names: Tora T.H.
   family-names: Arnesen
-  affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad de La Laguna,
-    C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
+  affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad
+    de La Laguna, C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
   orcid: "https://orcid.org/0009-0004-0816-0700"
 - given-names: Ebraam
   family-names: Ashraf
@@ -49,11 +50,13 @@ authors:
   orcid: "https://orcid.org/0009-0005-2096-3466"
 - given-names: Y. Emre
   family-names: Bahar
-  affiliation: "INAF, Osservatorio di Astrofisica e Scienza dello Spazio, via Piero Gobetti 93/3, 40129 Bologna, Italy"
+  affiliation: "INAF, Osservatorio di Astrofisica e Scienza dello Spazio, via Piero
+    Gobetti 93/3, 40129 Bologna, Italy"
   orcid: "https://orcid.org/0000-0002-4893-7615"
 - given-names: Tomas
   family-names: Bylund
-  affiliation: "LUX, Observatoire de Paris, Université PSL, Sorbonne Université, CNRS, 92190 Meudon, France"
+  affiliation: "LUX, Observatoire de Paris, Université PSL, Sorbonne Université, CNRS,
+    92190 Meudon, France"
   orcid: "https://orcid.org/0000-0003-2946-1313"
 - given-names: Marie-Sophie
   family-names: Carrasco
@@ -62,7 +65,8 @@ authors:
   orcid: "https://orcid.org/0000-0001-6484-485X"
 - given-names: Alexander
   family-names: Cerviño Cortínez
-  affiliation: "IPARCOS-UCM, Instituto de Física de Partículas y del Cosmos, and EMFTEL Department, Universidad Complutense de Madrid"
+  affiliation: "IPARCOS-UCM, Instituto de Física de Partículas y del Cosmos, and EMFTEL
+    Department, Universidad Complutense de Madrid"
   orcid: "https://orcid.org/0009-0007-1566-9507"
 - given-names: Pratham
   family-names: Chaudhary
@@ -70,7 +74,8 @@ authors:
   orcid: "https://orcid.org/0009-0000-3755-6262"
 - given-names: Yaocheng
   family-names: Chen
-  affiliation: "Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG), University of São Paulo (USP), Rua do Matão 1226, 05508-090 São Paulo, SP, Brazil"
+  affiliation: "Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG),
+    University of São Paulo (USP), Rua do Matão 1226, 05508-090 São Paulo, SP, Brazil"
   orcid: "https://orcid.org/0000-0002-8967-4911"
 - given-names: Axel
   family-names: Donath
@@ -85,6 +90,11 @@ authors:
   affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
     2, 91058 Erlangen, Germany"
   orcid: "https://orcid.org/0009-0002-4238-034X"
+- given-names: Gabriel
+  family-names: Emery
+  affiliation: "Instituto de Astrofísica de Andalucía-CSIC, Glorieta de la Astronomía
+    s/n, 18008, Granada, Spain"
+  orcid: "https://orcid.org/0000-0001-6155-4742"
 - given-names: Kirsty
   family-names: Feijen
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -92,8 +102,8 @@ authors:
   orcid: "https://orcid.org/0000-0003-1476-3714"
 - given-names: Claudio
   family-names: Galelli
-  affiliation: Laboratoire Univers et Théories, Observatoire de Paris, Université
-    PSL,\ \ Université Paris Cité, CNRS, F-92190 Meudon, France
+  affiliation: Laboratoire Univers et Théories, Observatoire de Paris,
+    Université PSL,\ \ Université Paris Cité, CNRS, F-92190 Meudon, France
   orcid: "https://orcid.org/0000-0002-7372-9703"
 - given-names: Lea
   family-names: Heckmann
@@ -102,7 +112,8 @@ authors:
   orcid: "https://orcid.org/0000-0002-6653-8407"
 - given-names: Basmala
   family-names: Hekal
-  affiliation: "Faculty of Computer and Information, Computer Science Department, Tanta University, Egypt."
+  affiliation: "Faculty of Computer and Information, Computer Science Department,
+    Tanta University, Egypt."
   orcid: "https://orcid.org/0009-0001-6071-9522"
 - given-names: Bruno
   family-names: Khélifi
@@ -115,15 +126,27 @@ authors:
   orcid: "https://orcid.org/0000-0001-7993-8189"
 - given-names: Daniel
   family-names: Morcuende
-  affiliation: "CTAO Central Organisation, Science Data Management Centre, Platanenallee 6, 15738 Zeuthen, Germany"
+  affiliation: "CTAO Central Organisation, Science Data Management Centre, Platanenallee
+    6, 15738 Zeuthen, Germany"
   orcid: https://orcid.org/0000-0001-9400-0922
 - given-names: Mireia
   family-names: Nievas Rosillo
-  affiliation: "Instituto de Astrofísica de Canarias (IAC), C/ Vía Láctea s/n, 38205 La Laguna, Tenerife, Spain"
+  affiliation: "Instituto de Astrofísica de Canarias (IAC), C/ Vía Láctea s/n, 38205
+    La Laguna, Tenerife, Spain"
   orcid: "https://orcid.org/0000-0002-8321-9168"
+- given-names: Laura
+  family-names: Olivera-Nieto
+  affiliation: "University of Amsterdam, Amsterdam, The Netherlands"
+  orcid: "https://orcid.org/0000-0002-9105-0518"
+- given-names: Michele
+  family-names: Peresano
+  affiliation: "Max-Planck-Institut für Physik, Boltzmannstraße 8, 85748 Garching
+    bei München, Germany"
+  orcid: "https://orcid.org/0000-0002-7537-7334"
 - given-names: Natthan
   family-names: Pigoux
-  affiliation: "Laboratoire Univers et Particules de Montpellier, CNRS, Université de Montpellier, Montpellier, France"
+  affiliation: "Laboratoire Univers et Particules de Montpellier, CNRS, Université
+    de Montpellier, Montpellier, France"
   orcid: "https://orcid.org/0009-0001-0100-9846"
 - given-names: Pierre
   family-names: Pichard
@@ -134,6 +157,11 @@ authors:
   family-names: Pintore
   affiliation: "INAF/IASF PALERMO, Italy"
   orcid: "https://orcid.org/0000-0002-3869-2925"
+- given-names: Tobi
+  family-names: Preis
+  affiliation: "Universität Innsbruck, Institut für Astro- und Teilchenphysik, Technikerstraße
+    25, 6020 Innsbruck, Austria"
+  orcid: "https://orcid.org/0009-0001-7110-6764"
 - given-names: Maxime
   family-names: Regeard
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -141,7 +169,7 @@ authors:
   orcid: "https://orcid.org/0000-0002-3844-6003"
 - given-names: Quentin
   family-names: Remy
-  affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
+  affiliation: "Univ Toulouse, CNES, CNRS, IRAP, Toulouse, France"
   orcid: "https://orcid.org/0000-0002-8815-6530"
 - given-names: Leander
   family-names: Schlegel
@@ -158,6 +186,24 @@ authors:
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
     Paris, France"
   orcid: "https://orcid.org/0000-0002-8219-4667"
+- given-names: Tim
+  family-names: Unbehaun
+  affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
+    2, 91058 Erlangen, Germany"
+  orcid: "https://orcid.org/0000-0002-7378-4024"
+- given-names: Nicki R. 
+  family-names: Bond
+  affiliation: "School of Physics, University College Dublin, Belfield, Dublin 4, Ireland"
+  orcid: "https://orcid.org/0009-0008-1656-4907"
+- family-names: Vuillaume
+  given-names: Thomas
+  orcid: https://orcid.org/0000-0002-5686-2078
+  email: thomas.vuillaume@lapp.in2p3.fr
+- given-names: Ahmed
+  family-names: Mahmoud
+  affiliation: "Faculty of Engineering, Systems and Biomedical Engineering,
+    Cairo University, Egypt."
+  orcid : "https://orcid.org/0009-0008-8751-0615"
 preferred-citation:
   authors:
   - family-names: "The Gammapy team"
