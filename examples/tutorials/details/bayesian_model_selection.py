@@ -32,7 +32,7 @@ and ArviZ packages.
 # Prerequisites
 # -------------
 #
-# - This is an advanced tutorial that requires to be familiar with gammapy
+# - This is an advanced tutorial that requires to be familiar with Gammapy
 #   modeling features and statistics.
 # - Knowledge Bayesian analysis and nested sampling, see
 #   the :doc:`/tutorials/details/nested_sampling_Crab` tutorial.
