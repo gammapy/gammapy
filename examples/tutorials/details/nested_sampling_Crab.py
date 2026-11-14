@@ -119,6 +119,8 @@ from gammapy.modeling.models import (
 
 from gammapy.modeling.sampler import Sampler
 
+from gammapy.estimators import FluxCollectionEstimator
+from gammapy.visualization import plot_samples_violin_vs_energy
 
 ######################################################################
 # Loading the spectral datasets
@@ -608,4 +610,49 @@ ax2.set_xlabel("Amplitude")
 
 ax2.tick_params(left=False, labelleft=False)
 
+plt.show()
+
+######################################################################
+# Flux points computation using sampler
+# ------------------------------------
+#
+#
+# The `~gammapy.estimators.FluxCollectionEstimator` estimator computes spectral flux points
+# for a *collection of sources* over a set of predefined energy bins.
+# The operation can be performed either with the standard likelihood optimizer
+# (`~gammapy.modeling.Fit`) or with a sampler
+# (`~gammapy.modeling.Sampler`), which can be used to derive asymmetric
+# errors and upper limits. Default is a Sampler with options live_points=300, frac_remain=0.3.
+# If the `solver` is a sampler the default prior is uniform between [-10, 10].
+
+options = {
+    "min_num_live_points": 400,
+    "frac_remain": 0.3,
+    "log_dir": None,
+    "viz_callback": False,
+    "show_status": False,
+}
+
+estimator_sampler = FluxCollectionEstimator(
+    energy_edges=[0.5, 1, 2, 5, 10, 50] * u.TeV,
+    models=datasets.models,
+    solver=Sampler(options=options),
+)
+results = estimator_sampler.run(datasets)
+
+######################################################################
+# To visualize the results one can use a so-called violin plot.
+# Unlike standard error bars which only shows summary statistics,
+# a violin plot shows the full probability density for each energy bin.
+
+fig, ax= plt.subplots(figsize=(8, 5), dpi=120)
+ax = plot_samples_violin_vs_energy(
+    energy_edges=results["energy_edges"],
+    samples_per_band=results["samples"]["dnde"]["crab"],
+    weights_per_band=results["samples"]["weights"],
+    energy_power=2,
+)
+results["flux_points"]["crab"].plot(ax=ax, energy_power=2, color="k", lw=1)
+plt.legend()
+plt.ylim([2e-13, 8e-11])
 plt.show()
