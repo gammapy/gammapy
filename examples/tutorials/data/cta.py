@@ -141,7 +141,7 @@ observation.peek()
 # Events
 # ~~~~~~
 #
-# Events data are directly accessible via the `events` attribute of
+# Events data are directly accessible via the ``events`` attribute of
 # the `~gammapy.data.Observation`.
 #
 #
