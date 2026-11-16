@@ -119,7 +119,7 @@ print(data_store_north)
 display(data_store_north.obs_table)
 
 ######################################################################
-# Accessing an observation can then be done directly using its OBS_ID.
+# Accessing an observation can then be done directly using its ``OBS_ID``.
 # Here we consider an observation from the Southern CTAO array.
 # A `~gammapy.data.Observation` bundles the event list and the IRFs as
 # well as Good Time Intervals (GTI) and metadata.
