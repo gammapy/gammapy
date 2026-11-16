@@ -48,6 +48,10 @@ authors:
   family-names: Ashraf
   affiliation: "Cairo University, Faculty of Engineering, Computer Engineering Department"
   orcid: "https://orcid.org/0009-0005-2096-3466"
+  - given-names: Esther
+    family-names: Michelle
+    affiliation: "Cairo University, Faculty of Engineering, Computer Engineering Department, Giza, Egypt"
+    orcid: "https://orcid.org/0009-0009-3880-5916"
 - given-names: Y. Emre
   family-names: Bahar
   affiliation: "INAF, Osservatorio di Astrofisica e Scienza dello Spazio, via Piero
@@ -197,13 +201,17 @@ authors:
   orcid: "https://orcid.org/0009-0008-1656-4907"
 - family-names: Vuillaume
   given-names: Thomas
+  affiliation: "Univ. Savoie Mont-Blanc, LAPP, CNRS, Annecy, France"
   orcid: https://orcid.org/0000-0002-5686-2078
-  email: thomas.vuillaume@lapp.in2p3.fr
 - given-names: Ahmed
   family-names: Mahmoud
   affiliation: "Faculty of Engineering, Systems and Biomedical Engineering,
     Cairo University, Egypt."
   orcid : "https://orcid.org/0009-0008-8751-0615"
+- given-names: Syed Ahnaf
+  family-names: Raza
+  affiliation: "Department of Computer Science, Bahria University, Karachi, Pakistan; VentureDive, Karachi, Pakistan"
+  orcid: "https://orcid.org/0009-0005-5218-378X"
 preferred-citation:
   authors:
   - family-names: "The Gammapy team"
