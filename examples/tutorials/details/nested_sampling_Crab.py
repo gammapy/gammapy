@@ -622,7 +622,7 @@ plt.show()
 # The operation can be performed either with the standard likelihood optimizer
 # (`~gammapy.modeling.Fit`) or with a sampler
 # (`~gammapy.modeling.Sampler`), which can be used to derive asymmetric
-# errors and upper limits. Default is a Sampler with options live_points=400, frac_remain=0.3.
+# errors and upper limits. Default is a Sampler with options live_points=300, frac_remain=0.3.
 # If the `solver` is a sampler the default prior is uniform between [-10, 10].
 
 options = {
