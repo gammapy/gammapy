@@ -65,7 +65,7 @@ from gammapy.irf import load_irf_dict_from_file
 
 
 ######################################################################
-# CTA SDC
+# CTAO SDC
 # -------
 #
 # The CTAO open data challenge
