@@ -645,12 +645,13 @@ results = estimator_sampler.run(datasets)
 # Unlike standard error bars which only shows summary statistics,
 # a violin plot shows the full probability density for each energy bin.
 
-fig, ax = plt.subplots(figsize=(8, 5), dpi=120)
-ax = plot_samples_violin_vs_energy(
+fig, ax = plt.subplots(figsize=(6.5, 4), dpi=120)
+plot_samples_violin_vs_energy(
     energy_edges=results["energy_edges"],
     samples_per_band=results["samples"]["dnde"]["crab"],
     weights_per_band=results["samples"]["weights"],
     energy_power=2,
+    ax=ax,
 )
 results["flux_points"]["crab"].plot(ax=ax, energy_power=2, color="k", lw=1)
 plt.ylim([2e-13, 8e-11])
