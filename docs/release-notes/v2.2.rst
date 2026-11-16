@@ -18,7 +18,7 @@ Gammapy v2.2 is a new feature release with a number of performance improvements,
 The main themes include new tools for Bayesian inference, a broad overhaul of the dark matter module, and ASDF
 serialization of the core data structures.
 
-Python 3.14 and 3.15 in now supported, and issues encountered with `regions` in the previous versions are
+Python 3.14 and 3.15 are now supported, and issues encountered with `regions` in the previous versions are
 now resolved. Two new notebooks have been added and the CTAO notebook significantly updated.
 
 The dark matter module has been substantially refactored and extended in this release.
@@ -67,7 +67,7 @@ Contributors
 - Axel Donath
 - Katharina Egg
 - Gabriel Emery
-- Esther
+- Esther Michelle
 - Kirsty Feijen
 -* Júlia Gouvêa Mamprim
 - Lea Heckmann
