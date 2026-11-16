@@ -10,16 +10,19 @@ from datetime import UTC, datetime
 log = logging.getLogger(__name__)
 
 
-def update_codemeta(maintainer, filename, setup_file=None):
+def update_codemeta(maintainers, filename, setup_file=None):
     log.info(f"Updating {filename}")
     # add potentially missing content
     with open(filename, "r") as f:
         data = json.load(f)
 
-    for author in data["author"]:
-        if "familyName" in author.keys() and author["familyName"] == maintainer:
-            log.info(f"Setting maintainer to {maintainer}")
-            data["maintainer"] = author
+    # for author in data["author"]:
+    #    if "familyName" in author.keys() and author["familyName"] == maintainer:
+    #        log.info(f"Setting maintainer to {maintainer}")
+    #        data["maintainer"] = author
+    data["maintainer"] = [
+        a for a in data["author"] if a.get("familyName") in maintainers
+    ]
     data["author"].insert(0, {"@type": "Organization", "name": "Gammapy team"})
     data["funding"] = [
         "10.13039/501100000780::101129751",
@@ -58,7 +61,12 @@ def update_codemeta(maintainer, filename, setup_file=None):
 
 
 @click.command()
-@click.option("--maintainer", default="Terrier", type=str, help="Maintainer name")
+@click.option(
+    "--maintainers",
+    multiple=True,
+    default=["Feijen", "Remy", "Sinha", "Terrier"],
+    help="Maintainers name.",
+)
 @click.option(
     "--filename", default="../codemeta.json", type=str, help="codemeta filename"
 )
@@ -71,10 +79,10 @@ def update_codemeta(maintainer, filename, setup_file=None):
     type=click.Choice(["DEBUG", "INFO", "WARNING"]),
     help="log level",
 )
-def cli(maintainer, filename, log_level, setup_file):
+def cli(maintainers, filename, log_level, setup_file):
     logging.basicConfig(level=log_level)
     log.setLevel(level=log_level)
-    update_codemeta(maintainer=maintainer, filename=filename, setup_file=setup_file)
+    update_codemeta(maintainers=maintainers, filename=filename, setup_file=setup_file)
 
 
 if __name__ == "__main__":
