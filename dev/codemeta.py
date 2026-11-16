@@ -58,7 +58,7 @@ def update_codemeta(maintainer, filename, setup_file=None):
 
 
 @click.command()
-@click.option("--maintainer", default="Donath", type=str, help="Maintainer name")
+@click.option("--maintainer", default="Terrier", type=str, help="Maintainer name")
 @click.option(
     "--filename", default="../codemeta.json", type=str, help="codemeta filename"
 )
