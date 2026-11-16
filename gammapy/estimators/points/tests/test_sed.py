@@ -4,6 +4,7 @@ import pytest
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
+import logging
 from numpy.testing import assert_allclose
 
 from gammapy.data import Observation, FixedPointingInfo
@@ -977,7 +978,7 @@ def test_confidence_failure_fallback_to_scan():
 @pytest.mark.parametrize("failing_bin", [0, 1, 2])
 @pytest.mark.parametrize("selection_optional", [["ul"], ["ul", "scan"]])
 def test_run_fallback_scan_in_single_energy_bin(
-    monkeypatch, failing_bin, selection_optional
+    caplog, monkeypatch, failing_bin, selection_optional
 ):
     energy = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6)
     energy_true = MapAxis.from_energy_bounds(
@@ -1007,6 +1008,7 @@ def test_run_fallback_scan_in_single_energy_bin(
 
     # Replace Fit.confidence with this function for this specific test
     monkeypatch.setattr(Fit, "confidence", confidence_failing_in_one_bin)
+    caplog.set_level(logging.INFO)
 
     estimator = FluxPointsEstimator(
         energy_edges=[1, 2, 5, 10] * u.TeV,
@@ -1014,7 +1016,13 @@ def test_run_fallback_scan_in_single_energy_bin(
         selection_optional=selection_optional,
         n_jobs=1,
     )
+
     fp = estimator.run(datasets=[dataset])
+
+    assert "INFO" in [_.levelname for _ in caplog.records]
+    assert "UL calculation with Fit.confidence() failed." in [
+        _.message for _ in caplog.records
+    ]
 
     # the UL of the failing bin is recovered from the fallback scan
     assert np.all(np.isfinite(fp.norm_ul.data))
