@@ -8,7 +8,7 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
-date-released: 2026-11-xx
+date-released: 2026-11-17
 keywords:
 - Astronomy
 - "Gamma-rays"
@@ -48,15 +48,15 @@ authors:
   family-names: Ashraf
   affiliation: "Cairo University, Faculty of Engineering, Computer Engineering Department"
   orcid: "https://orcid.org/0009-0005-2096-3466"
-  - given-names: Esther
-    family-names: Michelle
-    affiliation: "Cairo University, Faculty of Engineering, Computer Engineering Department, Giza, Egypt"
-    orcid: "https://orcid.org/0009-0009-3880-5916"
 - given-names: Y. Emre
   family-names: Bahar
   affiliation: "INAF, Osservatorio di Astrofisica e Scienza dello Spazio, via Piero
     Gobetti 93/3, 40129 Bologna, Italy"
   orcid: "https://orcid.org/0000-0002-4893-7615"
+- given-names: Nicki R. 
+  family-names: Bond
+  affiliation: "School of Physics, University College Dublin, Belfield, Dublin 4, Ireland"
+  orcid: "https://orcid.org/0009-0008-1656-4907"
 - given-names: Tomas
   family-names: Bylund
   affiliation: "LUX, Observatoire de Paris, Université PSL, Sorbonne Université, CNRS,
@@ -99,6 +99,10 @@ authors:
   affiliation: "Instituto de Astrofísica de Andalucía-CSIC, Glorieta de la Astronomía
     s/n, 18008, Granada, Spain"
   orcid: "https://orcid.org/0000-0001-6155-4742"
+- given-names: Esther
+  family-names: Michelle
+  affiliation: "Cairo University, Faculty of Engineering, Computer Engineering Department, Giza, Egypt"
+  orcid: "https://orcid.org/0009-0009-3880-5916"
 - given-names: Kirsty
   family-names: Feijen
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -109,6 +113,10 @@ authors:
   affiliation: Laboratoire Univers et Théories, Observatoire de Paris,
     Université PSL,\ \ Université Paris Cité, CNRS, F-92190 Meudon, France
   orcid: "https://orcid.org/0000-0002-7372-9703"
+- given-names: Karthik Koundinya
+  family-names: Gowrawaram
+  affiliation: "Independent researcher"
+  orcid: "https://orcid.org/0009-0003-2088-6208"
 - given-names: Lea
   family-names: Heckmann
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -128,6 +136,11 @@ authors:
   family-names: Linhoff
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
   orcid: "https://orcid.org/0000-0001-7993-8189"
+- given-names: Ahmed
+  family-names: Mahmoud
+  affiliation: "Faculty of Engineering, Systems and Biomedical Engineering,
+    Cairo University, Egypt."
+  orcid : "https://orcid.org/0009-0008-8751-0615"
 - given-names: Daniel
   family-names: Morcuende
   affiliation: "CTAO Central Organisation, Science Data Management Centre, Platanenallee
@@ -166,6 +179,10 @@ authors:
   affiliation: "Universität Innsbruck, Institut für Astro- und Teilchenphysik, Technikerstraße
     25, 6020 Innsbruck, Austria"
   orcid: "https://orcid.org/0009-0001-7110-6764"
+- given-names: Syed Ahnaf
+  family-names: Raza
+  affiliation: "Department of Computer Science, Bahria University, Karachi, Pakistan; VentureDive, Karachi, Pakistan"
+  orcid: "https://orcid.org/0009-0005-5218-378X"
 - given-names: Maxime
   family-names: Regeard
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -195,23 +212,10 @@ authors:
   affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
     2, 91058 Erlangen, Germany"
   orcid: "https://orcid.org/0000-0002-7378-4024"
-- given-names: Nicki R. 
-  family-names: Bond
-  affiliation: "School of Physics, University College Dublin, Belfield, Dublin 4, Ireland"
-  orcid: "https://orcid.org/0009-0008-1656-4907"
-- family-names: Vuillaume
-  given-names: Thomas
+- given-names: Thomas
+  family-names: Vuillaume
   affiliation: "Univ. Savoie Mont-Blanc, LAPP, CNRS, Annecy, France"
-  orcid: https://orcid.org/0000-0002-5686-2078
-- given-names: Ahmed
-  family-names: Mahmoud
-  affiliation: "Faculty of Engineering, Systems and Biomedical Engineering,
-    Cairo University, Egypt."
-  orcid : "https://orcid.org/0009-0008-8751-0615"
-- given-names: Syed Ahnaf
-  family-names: Raza
-  affiliation: "Department of Computer Science, Bahria University, Karachi, Pakistan; VentureDive, Karachi, Pakistan"
-  orcid: "https://orcid.org/0009-0005-5218-378X"
+  orcid: "https://orcid.org/0000-0002-5686-2078"
 preferred-citation:
   authors:
   - family-names: "The Gammapy team"
