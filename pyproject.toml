@@ -33,6 +33,7 @@ dependencies = [
     "matplotlib>=3.8",
     "requests",
     "tqdm",
+    "pytest-remotedata!=0.4.2",
 ]
 dynamic = ["version"]
 
