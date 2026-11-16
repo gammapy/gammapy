@@ -33,7 +33,6 @@ dependencies = [
     "matplotlib>=3.8",
     "requests",
     "tqdm",
-    "pytest-remotedata!=0.4.2",
 ]
 dynamic = ["version"]
 
@@ -81,7 +80,8 @@ cov = [
 test = [
     "pytest-astropy",
     "pytest-xdist",
-    "pytest",
+    "pytest < 9",
+    "pytest-remotedata != 0.4.2",
     "docutils",
     "sphinx",
 ]
