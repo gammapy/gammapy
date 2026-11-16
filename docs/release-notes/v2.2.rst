@@ -6,8 +6,8 @@
 ======================
 
 - Released: xx November, 2026
-- New contributors: 6 (Marked with * in the list)
-- Total contributors: 31
+- New contributors: 7 (Marked with * in the list)
+- Total contributors: 32
 - Total merged PRs: 192
 
 
@@ -59,8 +59,8 @@ Contributors
 ------------
 
 - Fabio Acero
--* Syed Ahnaf Raza
--* Nicki R. Bond
+- * Syed Ahnaf Raza
+- * Nicki R. Bond
 - Tomas Bylund
 - Marie-Sophie Carrasco
 - R. Alexander Cerviño-Cortínez
@@ -69,11 +69,12 @@ Contributors
 - Gabriel Emery
 - Esther Michelle
 - Kirsty Feijen
--* Júlia Gouvêa Mamprim
+- * Júlia Gouvêa Mamprim
 - Lea Heckmann
 - Basmala Hekal
 - Bruno Khélifi
--* Ahmed Mahmoud
+- * G. Karthik Koundinya
+- * Ahmed Mahmoud
 - Daniel Morcuende
 - Laura Olivera-Nieto
 - Michele Peresano
@@ -86,4 +87,4 @@ Contributors
 - Régis Terrier
 - Tim Unbehaun
 - Thomas Vuillaume
--* Ziheng Wang
+- * Ziheng Wang
