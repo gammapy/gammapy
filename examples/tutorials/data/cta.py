@@ -13,8 +13,7 @@ library for the Cherenkov Telescope Array Observatory (CTAO) science tools
 (`CTAO Press
 Release <https://www.ctao.org/news/ctao-adopts-the-gammapy-software-package-for-science-analysis/>`__).
 
-CTAO will start taking data in the coming years. A full simulation of 7 years of observations has been
-produced and is openly accessible to the community. You can learn how to analyse CTAO data and to use Gammapy
+CTAO will start taking data in the coming years. To prepare the community, a full simulation of 7 years of observations has been produced for open access as part of the CTAO Science Data Challenge. You can learn how to analyse CTAO data and to use Gammapy
 using these data.
 
 If you are a member of the CTAO consortium, you can also use older simulated dataset from previous internal
