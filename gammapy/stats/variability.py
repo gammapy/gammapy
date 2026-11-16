@@ -93,7 +93,8 @@ def compute_fpp(flux, flux_err, axis=0):
     Returns
     -------
     fpp, fpp_err : `~numpy.ndarray`
-        Point-to-point excess variance.
+        Point-to-point excess variance. NaN for a light curve without two
+        consecutive valid points.
 
     References
     ----------
@@ -105,9 +106,11 @@ def compute_fpp(flux, flux_err, axis=0):
     n_points = np.count_nonzero(~np.isnan(flux), axis=axis)
     flux = flux.swapaxes(0, axis).T
 
-    s_square = np.nansum((flux[..., 1:] - flux[..., :-1]) ** 2, axis=-1) / (
-        n_points.T - 1
-    )
+    diff_square = (flux[..., 1:] - flux[..., :-1]) ** 2
+    # a NaN point removes the differences on both sides of it
+    n_pairs = np.count_nonzero(~np.isnan(diff_square), axis=-1)
+    n_pairs = np.where(n_pairs > 0, n_pairs, np.nan)
+    s_square = np.nansum(diff_square, axis=-1) / (2 * n_pairs)
     sig_square = np.nansum(flux_err**2, axis=axis) / n_points
     fpp = np.sqrt(np.abs(s_square.T - sig_square)) / flux_mean
 
