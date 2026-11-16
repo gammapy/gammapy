@@ -123,7 +123,7 @@ display(data_store_north.obs_table)
 # A `~gammapy.data.Observation` bundles the event list and the IRFs as
 # well as Good Time Intervals (GTI) and metadata.
 #
-# SDC IRFs are full-containment response functions which are split in:
+# SDC IRFs are full-enclosure response functions which are split in:
 #
 # -  effective area
 # -  energy dispersion
@@ -204,7 +204,7 @@ plt.show()
 # Background
 # ~~~~~~~~~~
 #
-# The background is given as a rate in units `MeV-1 s-1 sr-1`.
+# The background is given as a rate in units ``MeV-1 s-1 sr-1``.
 #
 
 observation.bkg.peek()
