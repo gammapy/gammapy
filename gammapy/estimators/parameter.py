@@ -19,8 +19,10 @@ __all__ = ["ParameterEstimator", "ParameterSensitivityEstimator"]
 
 def _get_error_from_scan(scan_values, stat_scan, delta_ts):
     try:
+        log.info("Computing error from stat profile.")
         return stat_profile_ul_scipy(scan_values, stat_scan, delta_ts=delta_ts)
     except (ValueError, RuntimeError):
+        log.warning("Computing error from stat profile failed. Returning NaN.")
         return np.nan
 
 
@@ -215,11 +217,12 @@ class ParameterEstimator(Estimator):
             reoptimize=self.reoptimize,
         )
         if "success" in res and not res["success"]:
-            res["errp"] = np.nan
+            res["errn"] = np.nan
             res["errp"] = np.nan
         if "success_errp" in res and not (res["success_errp"] and res["success_errn"]):
+            res["errn"] = np.nan
             res["errp"] = np.nan
-            res["errp"] = np.nan
+
         return {
             f"{parameter.name}_errp": res["errp"],
             f"{parameter.name}_errn": res["errn"],
@@ -269,10 +272,12 @@ class ParameterEstimator(Estimator):
         profile = self.fit.stat_profile(
             datasets=datasets, parameter=parameter, reoptimize=self.reoptimize
         )
-        results = {
-            f"{parameter.name}_scan": scan_values,
-            "stat_scan": profile["stat_scan"],
-        }
+
+        results = {}
+
+        if "scan" in self.selection_optional:
+            results[f"{parameter.name}_scan"] = scan_values
+            results["stat_scan"] = profile["stat_scan"]
 
         if estimate_err and "errn-errp" in self.selection_optional:
             results[f"{parameter.name}_errn"] = _get_error_from_scan(
@@ -327,6 +332,7 @@ class ParameterEstimator(Estimator):
             res_value = np.nan
         if "success_errp" in res and not res["success_errp"]:
             res_value = np.nan
+
         return {f"{parameter.name}_ul": res_value}
 
     def estimate_sensitivity(self, datasets, parameter):
@@ -438,11 +444,17 @@ class ParameterEstimator(Estimator):
             if "errn-errp" in self.selection_optional:
                 res = self.estimate_errn_errp(datasets, parameter)
                 has_invalid_err = np.any(np.isnan([float(_) for _ in res.values()]))
+                if has_invalid_err:
+                    log.info(
+                        "asymmetric error calculation with Fit.confidence() failed."
+                    )
                 result.update(res)
 
             if "ul" in self.selection_optional:
                 res = self.estimate_ul(datasets, parameter)
                 has_invalid_ul = np.any(np.isnan([float(_) for _ in res.values()]))
+                if has_invalid_ul:
+                    log.info("UL calculation with Fit.confidence() failed.")
                 result.update(res)
 
             if "scan" in self.selection_optional or has_invalid_err or has_invalid_ul:
