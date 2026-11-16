@@ -622,7 +622,7 @@ plt.show()
 # The operation can be performed either with the standard likelihood optimizer
 # (`~gammapy.modeling.Fit`) or with a sampler
 # (`~gammapy.modeling.Sampler`), which can be used to derive asymmetric
-# errors and upper limits. Default is a Sampler with options live_points=300, frac_remain=0.3.
+# errors and upper limits. Default is a Sampler with options live_points=400, frac_remain=0.3.
 # If the `solver` is a sampler the default prior is uniform between [-10, 10].
 
 options = {
@@ -653,6 +653,5 @@ ax = plot_samples_violin_vs_energy(
     energy_power=2,
 )
 results["flux_points"]["crab"].plot(ax=ax, energy_power=2, color="k", lw=1)
-plt.legend()
 plt.ylim([2e-13, 8e-11])
 plt.show()
