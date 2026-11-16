@@ -13,7 +13,7 @@ keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
-version: v2.2
+version: v2.2rc1
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
@@ -53,7 +53,7 @@ authors:
   affiliation: "INAF, Osservatorio di Astrofisica e Scienza dello Spazio, via Piero
     Gobetti 93/3, 40129 Bologna, Italy"
   orcid: "https://orcid.org/0000-0002-4893-7615"
-- given-names: Nicki R. 
+- given-names: Nicki R.
   family-names: Bond
   affiliation: "School of Physics, University College Dublin, Belfield, Dublin 4, Ireland"
   orcid: "https://orcid.org/0009-0008-1656-4907"
