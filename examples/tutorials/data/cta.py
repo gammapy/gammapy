@@ -125,6 +125,7 @@ display(data_store_north.obs_table)
 # well as Good Time Intervals (GTI) and metadata.
 #
 # SDC IRFs are full-containment response functions which are split in:
+#
 # -  effective area
 # -  energy dispersion
 # -  point spread function
