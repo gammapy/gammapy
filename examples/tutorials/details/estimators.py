@@ -125,7 +125,7 @@ fp_estimator.norm.scan_max = 20
 # Note: The default scan range of the norm parameter is between 0.1 to 10. In case the upper
 # limit values lie outside this range, nan values will be returned. It may thus be useful to
 # increase this range, specially for the computation of upper limits from weak sources.
-# Normally, the `min` and `max` values are not set. We have set it in this example
+# Normally, the ``min`` and ``max`` values are not set. We have set it in this example
 # to prevent it from going negative, as might be required at times.
 #
 # The various quantities utilised in this tutorial are described here:
@@ -209,13 +209,13 @@ fp_result.dnde.slice_by_idx({"energy": slice(3, 10)})
 # Plotting the likelihood profile.
 # It is often useful to visualise the likelihood profiles to ensure that
 # the minima was scanned over for all the energy bands. This is available in
-# `fp_result.ts_scan`
+# ``fp_result.ts_scan``
 
 # The scanned points may be printed as:
 print(fp_result.ts_scan.geom.axes["norm"].center)
 
 ######################################################################
-# And the TS values are store in `fp_result.ts_scan.data`
+# The TS values are stored in ``fp_result.ts_scan.data``
 # To the plot likelihood profile for the, say, 4th energy slice:
 
 plt.plot(
