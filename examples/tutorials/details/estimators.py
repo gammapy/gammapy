@@ -126,7 +126,7 @@ fp_estimator.norm.scan_max = 20
 # limit values lie outside this range, nan values will be returned. It may thus be useful to
 # increase this range, specially for the computation of upper limits from weak sources.
 # Normally, the `min` and `max` values are not set. We have set it in this example
-# to prevent it from going negative, as might be required at time.
+# to prevent it from going negative, as might be required at times.
 #
 # The various quantities utilised in this tutorial are described here:
 #
