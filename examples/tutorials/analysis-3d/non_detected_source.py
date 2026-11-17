@@ -264,12 +264,25 @@ sky_model.parameters["amplitude"].value = 1e-13
 sky_model.parameters["index"].value = 2.0
 sky_model.freeze(model_type="spatial")
 
+norm_min = 0
+norm_max = 100
+norm = Parameter(
+    name="norm",
+    value=1,
+    min=norm_min,
+    max=norm_max,
+    scan_min=0.01,
+    scan_max=norm_max,
+    interp="log",
+)
+
 energy_edges = dataset.geoms["geom"].axes["energy"].edges
 fpe = FluxPointsEstimator(
     selection_optional="all",
     energy_edges=energy_edges,
     n_sigma_ul=1.645,
     source="source",
+    norm=norm,
 )
 
 fp1 = fpe.run(dataset)
@@ -413,8 +426,7 @@ def run_mc():
 # ``\Phi(n_sigma_ul)`` quantile of the posterior of the normalisation.
 # While reporting results, always quote the used prior.
 
-norm_max = 100
-norm_bayes = Parameter("norm", value=1, prior=UniformPrior(min=0, max=norm_max))
+norm_bayes = Parameter("norm", value=1, prior=UniformPrior(min=norm_min, max=norm_max))
 
 sampler = Sampler(
     backend="ultranest",
@@ -472,10 +484,9 @@ plt.show()
 #   choice of the prior. The nuisance parameters are integrated out.
 #   Every value contributes, weighted by its likelihood and its prior.
 #
-# In the regime of many counts, with the best fit far from zero and a flat
-# prior, the two results converge. In that limit the
-# likelihood is close to a Gaussian, and the remaining difference is only the
-# confidence-level convention.
+# In the regime of many counts, with the true value far from the bounds and a flat
+# prior, the likelihood is close to a Gaussian and the two results converge.
+# In the present case these conditions are not met, so differences are expected.
 
 
 ######################################################################
