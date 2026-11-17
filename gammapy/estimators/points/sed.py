@@ -384,7 +384,7 @@ class FluxCollectionEstimator:
     ... )
     >>> results = fce.run(dataset)
 
-    For a usage example see :ref:`here <flux-points-collection-example>.
+    For a usage example see :ref:`here <flux-points-collection-example>`.
     """
 
     tag = "FluxCollectionEstimator"
