@@ -214,12 +214,21 @@ print(LLR["fit_results"].parameters.to_table())
 # data set, and is *not* an estimate of the true source flux.
 # The upper limits also depends on:
 #
-# - The **assumed spectral shape**. Here we assume a power law with index 2. The
+# - The **assumed spectral shape**  can have an impact on the retrieved flux.
+#   Here we assume a power law with index 2. The
 #   amplitude only sets a reference flux, which is rescaled,
 #   so its value does not affect the UL as long as it is positive.
 #   In particular, *do not* use a model with a negative amplitude, as obtained above.
 #   We will constrain the amplitude to positive values to remain in the physical
-#   realm.
+#   realm.  Note that for spectral models with a sharp high-energy decline
+#   (e.g. ExpCutoff, LogParabola, or EBL-absorbed models), the best-fit amplitude
+#   in the cutoff region may predict an extremely low reference flux,
+#   leading to unreliable flux limits.
+#   A conservative workaround is to use a power-law spectral model when
+#   computing flux limits in all energy bins. While this approach is not ideal,
+#   it avoids artificially
+#   suppressing the reference flux and generally
+#   yields more conservative upper limits.
 # - The **confidence level** and the **method**. Always report both, and, for a
 #   Bayesian analysis, also report the **prior**.
 #
@@ -388,7 +397,7 @@ def run_mc():
 # .. _bayesian_upper_lims:
 #
 # Bayesian credible limits
-# ~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # An alternative to the frequentist approach above is
 # a **Bayesian credible upper limit**, the flux below which a chosen fraction
