@@ -408,7 +408,7 @@ def run_mc():
 # free parameter. We use a uniform prior starting at zero.
 # Its upper bound must lie well above the upper limits.
 #
-# %%
+#
 # .. note::
 #    A Bayesian upper credible limit depends on the choice of prior.
 #    A prior that is uniform in amplitude is the usual choice for upper limits.
