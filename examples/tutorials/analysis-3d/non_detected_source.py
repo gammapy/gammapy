@@ -273,10 +273,10 @@ fpe = FluxPointsEstimator(
 )
 
 #####################################################################
-# To avoid the norm from scanning unphysical spaces, we set a min and
-# max value on it. It is often useful to later look at the
-# `fp1.norm.data` to see that the values don't hit the edges of the scan
-# range. If so, increase the same.
+# To avoid the norm from scanning unphysical spaces, we set a ``min`` and
+# ``max`` value on it. It is often useful to later look at the
+# ``fp1.norm.data`` to see that the values don't hit the edges of the scan
+# range. If so, increase the same ``min`` and ``max`` values.
 
 fpe.norm.min = 0.01
 fpe.norm.max = 100
@@ -408,11 +408,12 @@ def run_mc():
 # free parameter. We use a uniform prior starting at zero.
 # Its upper bound must lie well above the upper limits.
 #
-# **Note:** a Bayesian upper credible limit depends on the choice of prior.
-# A prior that is uniform in amplitude is the usual choice for upper limits.
-# A log-uniform prior would favour small fluxes and give a
-# lower limit, which then depends on the
-# lower bound of the prior.
+# %%
+# .. note::
+#    A Bayesian upper credible limit depends on the choice of prior.
+#    A prior that is uniform in amplitude is the usual choice for upper limits.
+#    A log-uniform prior would favour small fluxes and give a
+#    lower limit, which then depends on the lower bound of the prior.
 #
 # `~gammapy.estimators.FluxCollectionEstimator` fits the same normalisation per
 # energy bin as above. It can use either a `~gammapy.modeling.Fit` or a
