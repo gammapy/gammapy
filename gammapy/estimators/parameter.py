@@ -22,7 +22,6 @@ def _get_error_from_scan(scan_values, stat_scan, delta_ts):
         log.info("Computing error from stat profile.")
         return stat_profile_ul_scipy(scan_values, stat_scan, delta_ts=delta_ts)
     except (ValueError, RuntimeError):
-        log.warning("Computing error from stat profile failed. Returning NaN.")
         return np.nan
 
 
