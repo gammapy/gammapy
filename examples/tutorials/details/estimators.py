@@ -139,6 +139,11 @@ fp_estimator.norm.scan_max = 20
 # -  ``reoptimize``: whether to reoptimize the flux points with other model parameters, aside from the ``norm``
 # -  ``norm``: normalisation parameter for the fit
 # -  ``n_jobs``: Number of processes used in parallel for the computation, limited to the no of CPUs
+#
+# **Important note**: the output ``energy_edges`` are taken from the parent dataset energy bins,
+# selecting the bins closest to the requested ``energy_edges``. To match the input bins directly,
+# specific binning must be defined based on the parent dataset geometry. This could be done in the following way:
+# ``energy_edges = datasets[0].geoms["geom"].axes["energy"].downsample(factor=5).edges``
 
 fp_result = fp_estimator.run(datasets=datasets)
 
