@@ -266,7 +266,7 @@ events = sampler.run(dataset, observation)
 # The output of the event-sampler is an event list with coordinates,
 # energies (true and reconstructed) and time of arrivals of the source and
 # background events. `events` is a `~gammapy.data.EventList` object
-# (for details see e.g. :doc:`/tutorials/data/cta` tutorial.).
+# (for details see e.g. :doc:`/tutorials/data/ctao` tutorial.).
 # Source and background events are flagged by the MC_ID identifier (where
 # 0 is the default identifier for the background).
 #

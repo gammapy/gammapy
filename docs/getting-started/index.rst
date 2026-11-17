@@ -130,7 +130,7 @@ Tutorials Overview
     data can be read directly using the `~gammapy.maps.Map` and
     `~gammapy.irf.core.IRFMap` classes.
 
-    :bdg-link-primary:`CTAO data tutorial <../tutorials/data/cta.html>`
+    :bdg-link-primary:`CTAO data tutorial <../tutorials/data/ctao.html>`
     :bdg-link-primary:`HESS data tutorial <../tutorials/data/hess.html>`
     :bdg-link-primary:`Fermi-LAT data tutorial <../tutorials/data/fermi_lat.html>`
 

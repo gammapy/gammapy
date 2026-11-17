@@ -74,7 +74,7 @@ class IRF(metaclass=abc.ABCMeta):
 
     Examples
     --------
-    For a usage example, see :doc:`/tutorials/data/cta` tutorial and :doc:`/tutorials/details/irfs`.
+    For a usage example, see :doc:`/tutorials/data/ctao` tutorial and :doc:`/tutorials/details/irfs`.
 
     """
 
