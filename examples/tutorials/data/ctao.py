@@ -18,11 +18,6 @@ simulation of 7 years of observations has been produced for open access as part 
 the CTAO Science Data Challenge. You can learn how to analyse CTAO data and to use
 Gammapy using these data.
 
-If you are a member of the CTAO consortium, you can also use older simulated dataset
-from previous internal CTAO data challenges which ran in 2018
-(see `here <https://forge.in2p3.fr/projects/data-challenge-1-dc-1/wiki>`__)
-and  2024 (see `here <https://ctaoobservatory.sharepoint.com/:f:/r/sites/share-open-data/Shared%20Documents/Reference%20datasets/Internal%20Science%20Data%20Challenge?csf=1&web=1&e=gNuFzI>`__)
-
 You can also use Gammapy to simulate CTAO data and evaluate CTAO performance
 using the CTAO response files. The latest ones, for the Beta array configuration
 (prod 6, 2026), are available on Zenodo: https://zenodo.org/records/22871179.
