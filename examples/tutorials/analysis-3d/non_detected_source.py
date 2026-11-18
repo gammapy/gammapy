@@ -28,7 +28,7 @@ to quantify non-detections. There are two distinct approaches to consider:
 - Test the presence of emission from a potential source with given position and morphology and compute
   integral and differential UL.
 
-We will use both frequentist and Bayesian approaches for computing the ULs.
+We will use both frequentist and Bayesian approaches for this.
 
 """
 
@@ -214,14 +214,23 @@ print(LLR["fit_results"].parameters.to_table())
 # data set, and is *not* an estimate of the true source flux.
 # The upper limits also depends on:
 #
-# - The **assumed spectral shape** can have an impact on the retrieved flux. Here we assume a power law with index 2. The
+# - The **assumed spectral shape**  can have an impact on the retrieved flux.
+#   Here we assume a power law with index 2. The
 #   amplitude only sets a reference flux, which is rescaled,
 #   so its value does not affect the UL as long as it is positive.
 #   In particular, *do not* use a model with a negative amplitude, as obtained above.
 #   We will constrain the amplitude to positive values to remain in the physical
-#   realm. Note that for spectral models with a sharp high-energy decline (e.g. ExpCutoff, LogParabola, or EBL-absorbed models), the best-fit amplitude in the cutoff region may predict an extremely low reference flux, leading to unreliable flux limits. A conservative workaround is to use a power-law spectral model when computing flux limits in all energy bins. While this approach is not ideal, it avoids artificially suppressing the reference flux and generally yields more conservative upper limits.
+#   realm.  Note that for spectral models with a sharp high-energy decline
+#   (e.g. ExpCutoff, LogParabola, or EBL-absorbed models), the best-fit amplitude
+#   in the cutoff region may predict an extremely low reference flux,
+#   leading to unreliable flux limits.
+#   A conservative workaround is to use a power-law spectral model when
+#   computing flux limits in all energy bins. While this approach is not ideal,
+#   it avoids artificially
+#   suppressing the reference flux and generally
+#   yields more conservative upper limits.
 # - The **confidence level** and the **method**. Always report both, and, for a
-#   Bayesian UL, also report the **prior**.
+#   Bayesian analysis, also report the **prior**.
 #
 #
 # .. _frequentist_upper_lims:
@@ -275,7 +284,8 @@ plt.show()
 
 ######################################################################
 # It can also be useful to visualise the likelihood profile for
-# diagnostic purposes, as explained in :doc:`/tutorials/details/fitting`.
+# diagnostic purposes, as explained in :doc:`/tutorials/details/fitting`
+# or :doc:`/tutorials/details/parameter_ul`.
 
 ######################################################################
 # Expected upper limits (Brazil bands)
@@ -302,7 +312,7 @@ plt.show()
 
 def run_mc():
     # Simulate
-    n_toys = 100  # increase for smoother bands
+    n_toys = 1000  # increase for smoother bands
     dnde_ul_toys = []
     for idx in range(n_toys):
         if idx % 10 == 0:
@@ -367,7 +377,7 @@ def run_mc():
 
 ######################################################################
 # If the observed upper limits lie inside the bands, it implies the data are
-# consistent with background only.
+# consistent with background only fluctuations.
 # If they fall below the yellow band, the background is overestimated.
 # To avoid this, you should always
 # *reoptimize the parameters of the other models, specially the background model*.
@@ -378,8 +388,8 @@ def run_mc():
 ######################################################################
 # .. _bayesian_upper_lims:
 #
-# Bayesian upper limits
-# ~~~~~~~~~~~~~~~~~~~~~
+# Bayesian credible limits
+# ~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # An alternative to the frequentist approach above is
 # a **Bayesian credible upper limit**, the flux below which a chosen fraction
@@ -390,10 +400,12 @@ def run_mc():
 # free parameter. We use a uniform prior starting at zero.
 # Its upper bound must lie well above the upper limits.
 #
-# **Note:** a Bayesian upper limit depends on the choice of prior. A prior that is
-# uniform in amplitude is the usual choice for upper limits. A log-uniform prior
-# would favour small fluxes and give a lower limit, which then depends on the
-# lower bound of the prior.
+#
+# .. note::
+#    A Bayesian upper credible limit depends on the choice of prior.
+#    A prior that is uniform in amplitude is the usual choice for upper limits.
+#    A log-uniform prior would favour small fluxes and give a
+#    lower limit, which then depends on the lower bound of the prior.
 #
 # `~gammapy.estimators.FluxCollectionEstimator` fits the same normalisation per
 # energy bin as above. It can use either a `~gammapy.modeling.Fit` or a
@@ -442,19 +454,19 @@ plt.show()
 # sphinx_gallery_thumbnail_number = 6
 
 ######################################################################
-# Comparing the two upper limits
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Comparing the two limits
+# ~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Note that the frequentist and Bayesian upper limits answer different questions, so
+# Note that the frequentist confidence limits and Bayesian credible limits answer different questions, so
 # they do not have to give the same number.
 #
-# - **Frequentist (profile likelihood) upper limit.** This is a statement about
+# - **Frequentist (profile likelihood) upper confidence limit.** This is a statement about
 #   the *procedure*. If the experiment were repeated many times, the intervals
 #   it produces would contain the true flux in a fixed fraction of the
 #   repetitions (this is called *coverage*). In this approach, the other free
 #   parameters ("nuisance parameters") are re-fitted to their best values.
 #
-# - **Bayesian credible upper limit.** This is a statement about the flux,
+# - **Bayesian upper credible limit.** This is a statement about the flux,
 #   given the data we actually observed and the prior we chose: "there is a 99.8%
 #   probability that the flux lies below this value". It depends heavily on the
 #   choice of the prior. The nuisance parameters are integrated out.
