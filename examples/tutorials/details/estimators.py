@@ -131,7 +131,7 @@ fp_estimator.norm.scan_max = 20
 # Normally, the ``min`` and ``max`` values are not set. If you want to add, eg: a positivity
 # constraint you can configure the same
 
-fp_estimator.norm.min = 0.1
+fp_estimator.norm.min = 0
 #
 # The various quantities utilised in this tutorial are described here:
 #
