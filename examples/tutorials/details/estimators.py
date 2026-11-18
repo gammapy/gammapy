@@ -98,7 +98,7 @@ fit = Fit(
 #
 
 energy_edges = np.geomspace(0.7, 100, 9) * u.TeV
-norm = Parameter(name="norm", value=1.0, interp="log", min=0.1, max=10.0)
+norm = Parameter(name="norm", value=1.0, interp="log")
 
 fp_estimator = FluxPointsEstimator(
     source="crab",
@@ -125,8 +125,13 @@ fp_estimator.norm.scan_max = 20
 # Note: The default scan range of the norm parameter is between 0.1 to 10. In case the upper
 # limit values lie outside this range, nan values will be returned. It may thus be useful to
 # increase this range, specially for the computation of upper limits from weak sources.
-# Normally, the ``min`` and ``max`` values are not set. We have set it in this example
-# to prevent it from going negative, as might be required at times.
+#
+# For bright sources, you should also increase ``norm.scan_n_values`` if the range is increased,
+# so as not to lose resolution close to the minima.
+# Normally, the ``min`` and ``max`` values are not set. If you want to add, eg: a positivity
+# constraint you can configure the same
+
+fp_estimator.norm.min = 0.1
 #
 # The various quantities utilised in this tutorial are described here:
 #
