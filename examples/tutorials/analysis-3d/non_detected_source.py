@@ -272,14 +272,6 @@ fpe = FluxPointsEstimator(
     source="source",
 )
 
-#####################################################################
-# To avoid the norm from scanning unphysical spaces, we set a ``min`` and
-# ``max`` value on it. It is often useful to later look at the
-# ``fp1.norm.data`` to see that the values don't hit the edges of the scan
-# range. If so, increase the same ``min`` and ``max`` values.
-
-fpe.norm.min = 0.01
-fpe.norm.max = 100
 fp1 = fpe.run(dataset)
 
 ######################################################################
@@ -465,16 +457,16 @@ plt.show()
 # Comparing the two limits
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Note that the frequentist and Bayesian limits answer different questions, so
+# Note that the frequentist confidence limits and Bayesian credible limits answer different questions, so
 # they do not have to give the same number.
 #
-# - **Frequentist (profile likelihood) upper limit.** This is a statement about
+# - **Frequentist (profile likelihood) upper confidence limit.** This is a statement about
 #   the *procedure*. If the experiment were repeated many times, the intervals
 #   it produces would contain the true flux in a fixed fraction of the
 #   repetitions (this is called *coverage*). In this approach, the other free
 #   parameters ("nuisance parameters") are re-fitted to their best values.
 #
-# - **Bayesian credible upper limit.** This is a statement about the flux,
+# - **Bayesian upper credible limit.** This is a statement about the flux,
 #   given the data we actually observed and the prior we chose: "there is a 99.8%
 #   probability that the flux lies below this value". It depends heavily on the
 #   choice of the prior. The nuisance parameters are integrated out.
