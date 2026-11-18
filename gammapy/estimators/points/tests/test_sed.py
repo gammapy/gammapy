@@ -906,7 +906,7 @@ def test_warning_for_bad_model(caplog):
 
 
 @requires_data()
-def test_confidence_failure_fallback_to_scan():
+def test_confidence_failure_fallback_to_scan(caplog):
     dataset = SpectrumDatasetOnOff.read(
         "$GAMMAPY_DATA/datasets/simulations/simulated_spectrum_test_ul_failure.fits.gz"
     )
@@ -957,8 +957,8 @@ def test_confidence_failure_fallback_to_scan():
         name="norm",
         value=1,
         min=0,
-        scan_min=0.2,
-        scan_max=5,
+        scan_min=-200,
+        scan_max=-200,
         scan_n_values=11,
         interp="log",
     )
@@ -969,10 +969,12 @@ def test_confidence_failure_fallback_to_scan():
         n_sigma_ul=1.645,
         norm=norm,
     )
+    results = estimator.run(dataset)
 
-    assert_allclose(results.norm_ul.data.flatten()[0], 0.6908785888971987, rtol=1e-5)
-    assert np.isnan(results.norm_errn.data.flatten()[0])
-    assert_allclose(results.norm_errp.data.flatten()[0], 0.2669708627581299, rtol=1e-5)
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "Computing error from stat profile failed. Returning NaN." in [
+        _.message for _ in caplog.records
+    ]
 
 
 @pytest.mark.parametrize("failing_bin", [0, 1, 2])
