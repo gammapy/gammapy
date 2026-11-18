@@ -69,7 +69,7 @@ class DataStore:
     Number of observations: 105
     <BLANKLINE>
 
-    For further usage example see :doc:`/tutorials/data/cta` tutorial.
+    For further usage example see :doc:`/tutorials/data/ctao` tutorial.
     """
 
     DEFAULT_HDU_TABLE = "hdu-index.fits.gz"
