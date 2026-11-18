@@ -22,7 +22,6 @@ def _get_error_from_scan(scan_values, stat_scan, delta_ts):
         log.info("Computing error from stat profile.")
         return stat_profile_ul_scipy(scan_values, stat_scan, delta_ts=delta_ts)
     except (ValueError, RuntimeError):
-        log.warning("Computing error from stat profile failed. Returning NaN.")
         return np.nan
 
 
@@ -280,22 +279,29 @@ class ParameterEstimator(Estimator):
             results["stat_scan"] = profile["stat_scan"]
 
         if estimate_err and "errn-errp" in self.selection_optional:
-            results[f"{parameter.name}_errn"] = _get_error_from_scan(
+            root = _get_error_from_scan(
                 scan_values[::-1],
                 profile["stat_scan"][::-1],
                 delta_ts=self.n_sigma**2,
             )
-            results[f"{parameter.name}_errp"] = _get_error_from_scan(
+            results[f"{parameter.name}_errn"] = parameter.value - root
+
+            root = _get_error_from_scan(
                 scan_values,
                 profile["stat_scan"],
                 delta_ts=self.n_sigma**2,
             )
+            results[f"{parameter.name}_errp"] = root - parameter.value
+
         if estimate_ul and "ul" in self.selection_optional:
-            results[f"{parameter.name}_ul"] = _get_error_from_scan(
+            root = _get_error_from_scan(
                 scan_values,
                 profile["stat_scan"],
                 delta_ts=self.n_sigma_ul**2,
             )
+            results[f"{parameter.name}_ul"] = root
+            if np.isnan(root):
+                log.warning("Computing error from stat profile failed. Returning NaN.")
 
         return results
 
