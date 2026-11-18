@@ -613,6 +613,8 @@ ax2.tick_params(left=False, labelleft=False)
 plt.show()
 
 ######################################################################
+# .. _flux-points-collection-example:
+#
 # Flux points computation using sampler
 # ------------------------------------
 #

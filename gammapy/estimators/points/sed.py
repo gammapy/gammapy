@@ -383,6 +383,8 @@ class FluxCollectionEstimator:
     ...     models=[model_fce],
     ... )
     >>> results = fce.run(dataset)
+
+    For a usage example see :ref:`here <flux-points-collection-example>`.
     """
 
     tag = "FluxCollectionEstimator"
