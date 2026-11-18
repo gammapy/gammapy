@@ -7,25 +7,24 @@ Access and inspect CTAO data and instrument response functions (IRFs) using Gamm
 Introduction
 ------------
 
-The `Cherenkov Telescope Array Observatory (CTAO) <https://www.ctao.org/>`__ is the next generation
-ground-based observatory for gamma-ray astronomy. Gammapy is the core
-library for the Cherenkov Telescope Array Observatory (CTAO) science tools
+The `Cherenkov Telescope Array Observatory (CTAO) <https://www.ctao.org/>`__ is
+the next generation ground-based observatory for gamma-ray astronomy. Gammapy is
+the core library for the Cherenkov Telescope Array Observatory (CTAO) science tools
 (`CTAO Press
 Release <https://www.ctao.org/news/ctao-adopts-the-gammapy-software-package-for-science-analysis/>`__).
 
-CTAO will start taking data in the coming years. To prepare the community, a full simulation of 7 years of observations has been produced for open access as part of the CTAO Science Data Challenge. You can learn how to analyse CTAO data and to use Gammapy
-using these data.
-
-If you are a member of the CTAO consortium, you can also use older simulated dataset from previous internal
-CTAO data challenges which ran in 2018 (see `here <https://forge.in2p3.fr/projects/data-challenge-1-dc-1/wiki>`__)
-and  2024 (see `here <https://ctaoobservatory.sharepoint.com/:f:/r/sites/share-open-data/Shared%20Documents/Reference%20datasets/Internal%20Science%20Data%20Challenge?csf=1&web=1&e=gNuFzI>`__)
+CTAO will start taking data in the coming years. To prepare the community, a full
+simulation of 7 years of observations has been produced for open access as part of
+the CTAO Science Data Challenge. You can learn how to analyse CTAO data and to use
+Gammapy using these data.
 
 You can also use Gammapy to simulate CTAO data and evaluate CTAO performance
-using the CTAO response files. The latest ones, for the Beta array configuration (prod 6, 2026), are available
-on Zenodo: https://zenodo.org/records/22871179.
+using the CTAO response files. The latest ones, for the Beta array configuration
+(prod 6, 2026), are available on Zenodo: https://zenodo.org/records/22871179.
 
-Additionally, two sets of responses are available for older array layouts: the `Omega (prod3b, 2016) <https://zenodo.org/records/5163273>`__,
-and `Alpha (prod5, 2021) <https://zenodo.org/records/5499840>`__ array configurations.
+Additionally, two sets of responses are available for older array layouts: the
+`Omega (prod3b, 2016) <https://zenodo.org/records/5163273>`__, and
+`Alpha (prod5, 2021) <https://zenodo.org/records/5499840>`__ array configurations.
 
 They are all fully supported by Gammapy.
 
@@ -34,7 +33,7 @@ Tutorial overview
 -----------------
 
 This notebook shows how to access CTAO data and instrument response
-functions (IRFs) using Gammapy, and gives some examples how to quick
+functions (IRFs) using Gammapy, and gives some examples how to quickly
 look the content of CTAO files, especially to see the shape of CTAO IRFs.
 
 At the end of the notebooks, we give several links to other tutorial
@@ -65,20 +64,17 @@ from gammapy.irf import load_irf_dict_from_file
 
 
 ######################################################################
-# CTAO SDC
-# -------
+# CTAO open science data challenge (SDC)
+# --------------------------------------
 #
-# The CTAO open data challenge
 #
 # **For convenience**, since the SDC data files are large, we have taken
-# a tiny subset of the data, and **included them at** `$GAMMAPY_DATA/cta-sdc`.
+# a small subset of the data, and **included them at** `$GAMMAPY_DATA/cta-sdc`.
 # Data are distributed for different sites (North or South) and night sky
 # conditions (Dark or Moon).
 #
-# Files
-# ~~~~~
 #
-# Next we will show a quick overview of the files and how to load them,
+# In the following, we will show a quick overview of the files and how to load them,
 # and some quick look plots showing the shape of the CTAO IRFs. How to do
 # CTAO simulations and analyses is shown in other tutorials, see links at
 # the end of this notebook.
@@ -92,6 +88,7 @@ from gammapy.irf import load_irf_dict_from_file
 # Gammapy provides the `~gammapy.data.DataStore` interface to access the data.
 # It can be created via the index files when they are provided.
 # Index files consist in two tables:
+#
 # - the HDU index table which connects every observation element to its location on disk
 # - the observation table which provides a summary of observation metadata
 #
@@ -267,8 +264,8 @@ plt.show()
 
 
 ######################################################################
-# Latest CTAO IRFs
-# ~~~~~~~~~~~~~~~~
+# Further CTAO IRFs
+# ~~~~~~~~~~~~~~~~~
 #
 # If you want to use other response files, the following code cells (remove the # to uncomment)
 # explain how to proceed. This example is made with the Beta configuration (Prod6).
