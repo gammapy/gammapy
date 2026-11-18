@@ -225,7 +225,7 @@ print(analysis.observations.ids)
 
 ######################################################################
 # To see how to explore observations, please refer to the following
-# notebook: :doc:`/tutorials/data/cta` or :doc:`/tutorials/data/hess`
+# notebook: :doc:`/tutorials/data/ctao` or :doc:`/tutorials/data/hess`
 #
 
 
