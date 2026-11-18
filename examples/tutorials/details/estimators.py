@@ -74,7 +74,7 @@ datasets.models = SkyModel(spectral_model=pwl, name="crab")
 #
 
 fit = Fit()
-fit_result = fit.optimize(datasets=datasets)
+fit_result = fit.run(datasets=datasets)
 print(fit_result)
 
 ######################################################################
@@ -108,20 +108,30 @@ fp_estimator = FluxPointsEstimator(
     selection_optional="all",
     fit=fit,
     norm=norm,
+    n_jobs=4,
 )
 
 ######################################################################
-# The ``norm`` parameter can be adjusted in a few different ways. For example, we can change its
+# The ``norm`` parameter can be adjusted in a few different ways; either by specifying
+# them during configuration of the norm as before, or after defining the estimator as
+# shown below. For example, we can change its
 # minimum and maximum values that it scans over, as follows.
 #
 
-fp_estimator.norm.scan_min = 0.1
-fp_estimator.norm.scan_max = 10
+fp_estimator.norm.scan_min = 0.05
+fp_estimator.norm.scan_max = 20
 
 ######################################################################
-# Note: The default scan range of the norm parameter is between 0.2 to 5. In case the upper
+# Note: The default scan range of the norm parameter is between 0.1 to 10. In case the upper
 # limit values lie outside this range, nan values will be returned. It may thus be useful to
 # increase this range, specially for the computation of upper limits from weak sources.
+#
+# For bright sources, you should also increase ``norm.scan_n_values`` if the range is increased,
+# so as not to lose resolution close to the minima.
+# Normally, the ``min`` and ``max`` values are not set. If you want to add, eg: a positivity
+# constraint you can configure the same
+
+fp_estimator.norm.min = 0
 #
 # The various quantities utilised in this tutorial are described here:
 #
@@ -133,13 +143,12 @@ fp_estimator.norm.scan_max = 10
 # -  ``fit``: the fit instance (as defined above)
 # -  ``reoptimize``: whether to reoptimize the flux points with other model parameters, aside from the ``norm``
 # -  ``norm``: normalisation parameter for the fit
+# -  ``n_jobs``: Number of processes used in parallel for the computation, limited to the no of CPUs
 #
 # **Important note**: the output ``energy_edges`` are taken from the parent dataset energy bins,
 # selecting the bins closest to the requested ``energy_edges``. To match the input bins directly,
 # specific binning must be defined based on the parent dataset geometry. This could be done in the following way:
 # ``energy_edges = datasets[0].geoms["geom"].axes["energy"].downsample(factor=5).edges``
-#
-
 
 fp_result = fp_estimator.run(datasets=datasets)
 
@@ -200,6 +209,27 @@ print(fp_result.dnde.quantity[:, 0, 0])
 # Or even extract an energy range:
 
 fp_result.dnde.slice_by_idx({"energy": slice(3, 10)})
+
+######################################################################
+# Plotting the likelihood profile.
+# It is often useful to visualise the likelihood profiles to ensure that
+# the minima was scanned over for all the energy bands. This is available in
+# ``fp_result.ts_scan``
+
+# The scanned points may be printed as:
+print(fp_result.ts_scan.geom.axes["norm"].center)
+
+######################################################################
+# The TS values are stored in ``fp_result.ts_scan.data``
+# To the plot likelihood profile for the, say, 4th energy slice:
+
+plt.plot(
+    fp_result.ts_scan.geom.axes["norm"].center,
+    fp_result.ts_scan.data[3][:][:][:].ravel(),
+)
+plt.title(f"Likelihood scan for energy {fp_result.energy_axis.slice(3).edges}")
+plt.xscale("log")
+plt.show()
 
 
 ######################################################################
