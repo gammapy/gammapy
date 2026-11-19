@@ -100,7 +100,7 @@ for `Fermi-LAT`_ and `HAWC`_ data analysis.
       .. button-link:: https://github.com/gammapy/gammapy/discussions/6982
          :color: secondary
 
-         Known issues of |version|
+         Known issues
 
       .. button-link:: https://github.com/gammapy/gammapy/issues
          :color: secondary
