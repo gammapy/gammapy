@@ -8,7 +8,7 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
-date-released: 2026-11-17
+date-released: 2026-11-19
 keywords:
 - Astronomy
 - "Gamma-rays"
@@ -55,7 +55,8 @@ authors:
   orcid: "https://orcid.org/0000-0002-4893-7615"
 - given-names: Nicki R.
   family-names: Bond
-  affiliation: "School of Physics, University College Dublin, Belfield, Dublin 4, Ireland"
+  affiliation: "School of Physics, University College Dublin, Belfield, Dublin 4,
+    Ireland"
   orcid: "https://orcid.org/0009-0008-1656-4907"
 - given-names: Tomas
   family-names: Bylund
@@ -101,7 +102,8 @@ authors:
   orcid: "https://orcid.org/0000-0001-6155-4742"
 - given-names: Esther
   family-names: Michelle
-  affiliation: "Cairo University, Faculty of Engineering, Computer Engineering Department, Giza, Egypt"
+  affiliation: "Cairo University, Faculty of Engineering, Computer Engineering Department,
+    Giza, Egypt"
   orcid: "https://orcid.org/0009-0009-3880-5916"
 - given-names: Kirsty
   family-names: Feijen
@@ -115,7 +117,8 @@ authors:
   orcid: "https://orcid.org/0000-0002-7372-9703"
 - given-names: Júlia
   family-names: Gouvêa Mamprim
-  affiliation: "São Carlos Institute of Physics, University of São Paulo, IFSC-USP, São Carlos, Brazil"
+  affiliation: "São Carlos Institute of Physics, University of São Paulo, IFSC-USP,
+    São Carlos, Brazil"
   orcid: "https://orcid.org/0000-0002-3297-960X"
 - given-names: Karthik Koundinya
   family-names: Gowrawaram
@@ -142,9 +145,9 @@ authors:
   orcid: "https://orcid.org/0000-0001-7993-8189"
 - given-names: Ahmed
   family-names: Mahmoud
-  affiliation: "Faculty of Engineering, Systems and Biomedical Engineering,
-    Cairo University, Egypt."
-  orcid : "https://orcid.org/0009-0008-8751-0615"
+  affiliation: "Faculty of Engineering, Systems and Biomedical Engineering, Cairo
+    University, Egypt."
+  orcid: "https://orcid.org/0009-0008-8751-0615"
 - given-names: Daniel
   family-names: Morcuende
   affiliation: "CTAO Central Organisation, Science Data Management Centre, Platanenallee
@@ -185,7 +188,8 @@ authors:
   orcid: "https://orcid.org/0009-0001-7110-6764"
 - given-names: Syed Ahnaf
   family-names: Raza
-  affiliation: "Department of Computer Science, Bahria University, Karachi, Pakistan; VentureDive, Karachi, Pakistan"
+  affiliation: "Department of Computer Science, Bahria University, Karachi, Pakistan;
+    VentureDive, Karachi, Pakistan"
   orcid: "https://orcid.org/0009-0005-5218-378X"
 - given-names: Maxime
   family-names: Regeard
