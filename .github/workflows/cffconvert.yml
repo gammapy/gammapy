@@ -44,6 +44,12 @@ jobs:
         with:
           overwrite: true
 
+      - name: Remove publication_date from .zenodo.json
+        if: success()
+        run: |
+          jq 'del(.publication_date)' .zenodo.json > .zenodo.json.tmp
+          mv .zenodo.json.tmp .zenodo.json
+
       - name: Validate Zenodo Metadata
         uses: vsoch/zenodo-validator@main
         with:
