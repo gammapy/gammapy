@@ -1,1 +1,0 @@
-Add configuration of interpolation options for  `~gammapy.modeling.models.LightCurveTemplateTemporalModel`, now default is to return zero when evaluating outside the times in the template.
