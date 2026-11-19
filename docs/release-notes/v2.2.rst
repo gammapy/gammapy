@@ -20,7 +20,7 @@ a broad overhaul of the dark matter module, and ASDF serialization of the core d
 structures.
 
 Python 3.14 and 3.15 are now supported, and issues encountered with `~regions` in the
-previous versions are now resolved. Two new notebooks have been added and the CTAO
+previous versions are now resolved. Three new notebooks have been added and the CTAO
 notebook significantly updated.
 
 Dark matter module
