@@ -1,1 +1,0 @@
-Fix broadcasting in `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel.integral`

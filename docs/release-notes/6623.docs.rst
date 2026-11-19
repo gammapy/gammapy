@@ -1,1 +1,0 @@
-Improves the documentation in the user guide on fit statistics.
