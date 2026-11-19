@@ -77,7 +77,7 @@ observatory_locations["hawc"] = EarthLocation(
 
 # https://en.wikipedia.org/wiki/HEGRA
 observatory_locations["hegra"] = EarthLocation(
-    lon="17d53m27s", lat="28d45m42s", height="2200m"
+    lon="-17d53m27s", lat="28d45m42s", height="2200m"
 )
 
 # Precision position of HESS from the HESS software (slightly different from Wikipedia)
