@@ -1,1 +1,0 @@
-Fix `nan` in sensitivity computation using Asimov dataset.
