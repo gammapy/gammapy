@@ -1,1 +1,0 @@
-Makes sure FoV offsets in `_get_fov_coord` are calculated in the correct coordinate frame.
