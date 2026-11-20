@@ -1102,7 +1102,6 @@ def plot_exclusion_curve(results):
 # .. figure:: /_static/dark_matter_bands_plot_example.png
 #    :alt: image
 #
-#    image
 #
 
 
