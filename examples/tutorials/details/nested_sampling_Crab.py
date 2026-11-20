@@ -66,21 +66,26 @@ A demonstration of a Bayesian analysis using the nested sampling technique.
 # (N*(N-1)/2 contour plots to generate). In addition, it is more robust
 # to the choice of initialisation, requires less human intervention and
 # is therefore readily integrated in pipeline analysis. In Gammapy, we
-# used the NS implementation of the UltraNest package
-# (see `here <https://johannesbuchner.github.io/UltraNest/>`__ for more information), one of the
-# leading package in Astronomy (already used in Cosmology and in
-# X-rays).
-# For a nice visualisation of the NS method see here : `sampling
+# provide several NS backends: UltraNest and Nautilus. UltraNest is a package
+# that implements the NS algorithm and is used in many astrophysical applications.
+# Nautilus is a more recent implementation of the NS algorithm that exploits
+# neural networks to learn a likelihood function emulator to propose new live points.
+# It is designed to be faster and more efficient than UltraNest,
+# especially for high-dimensional problems.
+# For a nice visualisation of the NS method see here: `sampling
 # visualisation <https://johannesbuchner.github.io/UltraNest/method.html#visualisation>`__.
-# And for a tutorial of UltraNest applied to X-ray fitting with concrete examples and questions see : `BXA
+# And for a tutorial of UltraNest applied to X-ray fitting with concrete examples and questions see: `BXA
 # Tutorial <https://peterboorman.com/tutorial_bxa.html>`__.
 #
-#
+# See the UltraNest docs `here <https://johannesbuchner.github.io/UltraNest/>`__).
 # **Note: please cite UltraNest if used for a paper**
-#
 # If you are using the "UltraNest" library for a paper, please follow its citation scheme:
 # `Cite UltraNest <https://johannesbuchner.github.io/UltraNest/issues.html#how-should-i-cite-ultranest>`__.
 #
+# See the Nautilus docs `here <https://nautilus-sampler.readthedocs.io/>`__).
+# **Note: please cite Nautilus if used for a paper**
+# If you are using the "Nautilus" library for a paper, please follow its citation scheme:
+# `Cite Nautilus <https://nautilus-sampler.readthedocs.io/en/latest/#attribution>`__.
 #
 
 ######################################################################
@@ -114,6 +119,8 @@ from gammapy.modeling.models import (
 
 from gammapy.modeling.sampler import Sampler
 
+from gammapy.estimators import FluxCollectionEstimator
+from gammapy.visualization import plot_samples_violin_vs_energy
 
 ######################################################################
 # Loading the spectral datasets
@@ -172,13 +179,14 @@ print(datasets.models)
 # --------------------------------
 #
 # As for the `~gammapy.modeling.Fit` object, the `~gammapy.modeling.Sampler` object can receive
-# different backend (although just one is available for now).
+# different backends.
 # The `~gammapy.modeling.Sampler` comes with “reasonable” default parameters, but you can
-# change them via the ``sampler_opts`` dictionary.
-# Here is a short description of the most relevant parameters that you
-# could change :
+# change them via the ``options`` dictionary, using the backend's own option names.
+# Gammapy passes each option to the backend sampler constructor or to its ``run`` method.
+# Here is a short description of the most relevant UltraNest options that you
+# could change:
 #
-# -  ``live_points``: minimum number of live points throughout the run.
+# -  ``min_num_live_points``: minimum number of live points throughout the run.
 #    More points allow to discover multiple peaks if existing, but is
 #    slower. To test the Prior boundaries and for debugging, a lower
 #    number (~100) can be used before a production run with more points
@@ -194,18 +202,49 @@ print(datasets.models)
 #    For time consuming analysis, it is highly recommended to use that option to monitor
 #    the run and restart it in case of a crash (with ``resume=True``).
 #
+# More information about the UltraNest options can be found in the `UltraNest
+# docs <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler>`__.
+#
+# More information about the Nautilus options can be found in the `Nautilus
+# docs <https://nautilus-sampler.readthedocs.io/en/latest/api_high.html>`__.
+#
+# A few useful options for Nautilus are:
+#
+# -  ``n_live``: number of live points. Equivalent of ``min_num_live_points``
+#    in UltraNest. Due to a different methodology the recommended number of
+#    live points should be higher than in UltraNest (1000-3000) while still
+#    being faster in high-dimensional problems.
+# -  ``f_live``: fraction of the evidence from live points to use for
+#    convergence. Equivalent of ``frac_remain`` in UltraNest.
+# -  ``pool``: Pool used for parallelization of likelihood calls and sampler
+#    calculations.
+# -  ``filepath``: file path with .hdf5 extension (not directory path) where
+#    the output files will be stored.
+#
+# **Backend comparison:** For a comparison between the two backends methods,
+# see `here <https://nautilus-sampler.readthedocs.io/en/latest/discussion/nested_sampling.html>`__.
+# For a gamma-ray analysis, current testing shows that UltraNest can be faster
+# (or equivalent) than Nautilus for low-dimensional problems (1-5 parameters)
+# and Nautilus is faster for high-dimensional problems (>10 parameters) but
+# this of course case specific. If your analysis is dominated by likelihood
+# evaluation time, the parallelisation of the likelihood evaluation in Nautilus
+# (using multiprocessing, just setting pool=nCPUs in the sampler options) has a
+# simpler setup than UltraNest (MPI) and can be more efficient on laptops.
+# Notably, multiprocessing with Nautilus can work in a Jupyter notebook while
+# MPI with UltraNest is not supported in a notebook.
+#
 # **Important note:** unlike the MCMC method, you don’t need to define the
 # number of steps for which the sampler will run. The algorithm will
 # automatically stop once a convergence criteria has been reached.
 #
 
-sampler_opts = {
-    "live_points": 300,
+options = {
+    "min_num_live_points": 400,
     "frac_remain": 0.3,
     "log_dir": None,
 }
 
-sampler = Sampler(backend="ultranest", sampler_opts=sampler_opts)
+sampler = Sampler(backend="ultranest", options=options)
 
 
 ######################################################################
@@ -571,4 +610,51 @@ ax2.set_xlabel("Amplitude")
 
 ax2.tick_params(left=False, labelleft=False)
 
+plt.show()
+
+######################################################################
+# .. _flux-points-collection-example:
+#
+# Flux points computation using sampler
+# ------------------------------------
+#
+#
+# The `~gammapy.estimators.FluxCollectionEstimator` estimator computes spectral flux points
+# for a *collection of sources* over a set of predefined energy bins.
+# The operation can be performed either with the standard likelihood optimizer
+# (`~gammapy.modeling.Fit`) or with a sampler
+# (`~gammapy.modeling.Sampler`), which can be used to derive asymmetric
+# errors and upper limits. Default is a Sampler with options live_points=300, frac_remain=0.3.
+# If the `solver` is a sampler the default prior is uniform between [-10, 10].
+
+options = {
+    "min_num_live_points": 400,
+    "frac_remain": 0.3,
+    "log_dir": None,
+    "viz_callback": False,
+    "show_status": False,
+}
+
+estimator_sampler = FluxCollectionEstimator(
+    energy_edges=[0.5, 1, 2, 5, 10, 50] * u.TeV,
+    models=datasets.models,
+    solver=Sampler(options=options),
+)
+results = estimator_sampler.run(datasets)
+
+######################################################################
+# To visualize the results one can use a so-called violin plot.
+# Unlike standard error bars which only shows summary statistics,
+# a violin plot shows the full probability density for each energy bin.
+
+fig, ax = plt.subplots(figsize=(6.5, 4), dpi=120)
+plot_samples_violin_vs_energy(
+    energy_edges=results["energy_edges"],
+    samples_per_band=results["samples"]["dnde"]["crab"],
+    weights_per_band=results["samples"]["weights"],
+    energy_power=2,
+    ax=ax,
+)
+results["flux_points"]["crab"].plot(ax=ax, energy_power=2, color="k", lw=1)
+plt.ylim([2e-13, 8e-11])
 plt.show()

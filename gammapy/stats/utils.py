@@ -1,12 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
 import numpy as np
-from scipy.stats import ncx2
-
+from scipy.stats import ncx2, chi2
+from scipy.optimize import brentq
+from gammapy.utils.deprecation import deprecated_renamed_argument
+from gammapy.utils.roots import find_roots
 
 __all__ = ["sigma_to_ts", "ts_to_sigma"]
 
 
+@deprecated_renamed_argument("n_sigma_asimov", None, "2.2")
 def sigma_to_ts(n_sigma, df=1, n_sigma_asimov=0):
     """Convert number of sigma to delta ts.
 
@@ -23,12 +26,9 @@ def sigma_to_ts(n_sigma, df=1, n_sigma_asimov=0):
     df : int, optional
         Number of degree of freedom. Default is 1.
     n_sigma_asimov : float, optional
-        Significance in number of sigma in the Asimov dataset
-        (in which counts are equal to the predicted counts).
-        In that case the function applies the Wald test described in [2] and [3],
-        where the TS of H1 under the H0 assumption is assumed to follow a non-central chi2 distribution.
+        Significance in number of sigma in the Asimov dataset.
         Should only be used for sensitivity computations. Default is 0.
-
+        Deprecated since v2.2.
     Returns
     -------
     ts : float
@@ -37,17 +37,63 @@ def sigma_to_ts(n_sigma, df=1, n_sigma_asimov=0):
     References
     ----------
     .. [1] Wilks theorem: https://en.wikipedia.org/wiki/Wilks%27_theorem
+    """
+    # invert ts_to_sigma step
+    p_value = chi2.sf(n_sigma**2, df=1)
+    ts = chi2.isf(p_value, df=df)
 
-    .. [2] Wald (1943): https://www.pp.rhul.ac.uk/~cowan/stat/wald1943.pdf
+    return ts
 
-    .. [3] Cowan et al. (2011), European Physical Journal C, 71, 1554.
+
+def sigma_to_ts_sensitivity(n_sigma, df=1):
+    """Convert median significance to an Asimov test statistic.
+
+    Under the regular Wald approximation [1]_ [2]_, the test statistic
+    follows a non-central chi-square distribution under the alternative
+    hypothesis. Its noncentrality parameter is estimated by the test
+    statistic evaluated on an Asimov dataset. The null distribution is
+    a central chi-square distribution with the same degrees of freedom.
+
+    Parameters
+    ----------
+    n_sigma : float
+        Target median significance in non-negative Gaussian sigma, using
+        the two-sided convention ``p = 2 * norm.sf(n_sigma)``.
+    df : int, optional
+        Number of degree of freedom. Default is 1.
+
+    Returns
+    -------
+    ts : float
+        Asimov test statistic, interpreted as the noncentrality parameter.
+        Returns zero for targets below the minimum attainable median
+        significance.
+
+    References
+    ----------
+    .. [1] Wald (1943): https://www.pp.rhul.ac.uk/~cowan/stat/wald1943.pdf
+
+    .. [2] Cowan et al. (2011), European Physical Journal C, 71, 1554.
         doi:10.1140/epjc/s10052-011-1554-0.
     """
-    ts_asimov = n_sigma_asimov**2
-    p_value = ncx2.sf(n_sigma**2, df=1, nc=ts_asimov)
-    return ncx2.isf(p_value, df=df, nc=ts_asimov)
+    # invert ts_to_sigma step
+    p_value = chi2.sf(n_sigma**2, df=1)
+    q_med = chi2.isf(p_value, df=df)
+
+    def f(nc):
+        return ncx2.ppf(0.5, df=df, nc=nc) - q_med
+
+    # f rises monotonically with nc
+    # if f(nc=0) is already positive there is no root to find
+    if f(0.0) >= 0:
+        return 0.0
+
+    # solve for nc = ts
+    roots, _ = find_roots(f, 0, q_med)
+    return roots[0]
 
 
+@deprecated_renamed_argument("ts_asimov", None, "2.2")
 def ts_to_sigma(ts, df=1, ts_asimov=0):
     """Convert delta ts to number of sigma.
 
@@ -64,13 +110,9 @@ def ts_to_sigma(ts, df=1, ts_asimov=0):
     df : int, optional
         Number of degree of freedom. Default is 1.
     ts_asimov : float, optional
-        TS value in the Asimov dataset
-        (in which counts equal to the predicted counts).
-        In that case the function applies the Wald test described in [2] and [3],
-        and the TS is assumed to follow a non-central chi2 distribution.
+        TS value in the Asimov dataset.
         Should only be used for sensitivity computations. Default is 0.
-
-
+        Deprecated since v2.2.
     Returns
     -------
     n_sigma : float
@@ -79,11 +121,42 @@ def ts_to_sigma(ts, df=1, ts_asimov=0):
     References
     ----------
     .. [1] Wilks theorem: https://en.wikipedia.org/wiki/Wilks%27_theorem
+    """
+    p_value = chi2.sf(ts, df=df)
+    return np.sqrt(chi2.isf(p_value, df=1))
 
-    .. [2] Wald (1943): https://www.pp.rhul.ac.uk/~cowan/stat/wald1943.pdf
 
-    .. [3] Cowan et al. (2011), European Physical Journal C, 71, 1554.
+def ts_to_sigma_sensitivity(ts, df=1):
+    """Convert an Asimov test statistic to median significance.
+
+    Under the regular Wald approximation [1]_ [2]_, the test statistic
+    follows a non-central chi-square distribution under the alternative
+    hypothesis. Its noncentrality parameter is estimated by the test
+    statistic evaluated on an Asimov dataset. The null distribution is
+    a central chi-square distribution with the same degrees of freedom.
+
+    Parameters
+    ----------
+    ts : float
+        Non-negative Asimov test statistic, interpreted as the
+        noncentrality parameter. Only use for sensitivity computations.
+    df : int, optional
+        Number of degree of freedom. Default is 1.
+
+    Returns
+    -------
+    n_sigma : float
+        Median significance in Gaussian sigma, using the two-sided
+        convention ``n_sigma = norm.isf(p / 2)``.
+
+    References
+    ----------
+    .. [1] Wald (1943): https://www.pp.rhul.ac.uk/~cowan/stat/wald1943.pdf
+
+    .. [2] Cowan et al. (2011), European Physical Journal C, 71, 1554.
         doi:10.1140/epjc/s10052-011-1554-0.
     """
-    p_value = ncx2.sf(ts, df=df, nc=ts_asimov)
-    return np.sqrt(ncx2.isf(p_value, df=1, nc=ts_asimov))
+    q_med = ncx2.ppf(0.5, df=df, nc=ts)
+
+    p_value = chi2.sf(q_med, df=df)
+    return np.sqrt(chi2.isf(p_value, df=1))

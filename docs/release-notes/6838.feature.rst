@@ -1,2 +1,0 @@
-Add Fourth Fermi-LAT Catalog of High-Energy Sources (4FHL).
-Older 2FHL catalog has been deprecated as of next release (v2.2).

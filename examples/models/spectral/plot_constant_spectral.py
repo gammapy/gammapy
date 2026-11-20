@@ -4,9 +4,10 @@ r"""
 Constant spectral model
 =======================
 
-This model takes a constant value along the spectral range.
+This model takes a constant value along the spectral range:
 
-    .. math:: \phi(E) = k
+.. math::
+    \phi(E) = k
 """
 
 # %%

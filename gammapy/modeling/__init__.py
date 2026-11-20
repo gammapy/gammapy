@@ -5,10 +5,17 @@ from .covariance import Covariance
 from .fit import CovarianceResult, Fit, FitResult, OptimizeResult
 from .parameter import Parameter, Parameters, PriorParameter, PriorParameters
 from .scipy import stat_profile_ul_scipy
-from .selection import select_nested_models
-from .sampler import Sampler, SamplerResult
+from .selection import (
+    BayesianModelSelection,
+    BayesianModelSelectionResult,
+    select_nested_models,
+)
+from .sampler import Sampler, SamplerResult, _NautilusBackend, _UltranestBackend
+from gammapy.utils.registry import Registry
 
 __all__ = [
+    "BayesianModelSelection",
+    "BayesianModelSelectionResult",
     "Covariance",
     "Fit",
     "FitResult",
@@ -23,3 +30,5 @@ __all__ = [
     "Sampler",
     "SamplerResult",
 ]
+
+SAMPLER_BACKEND_REGISTRY = Registry([_UltranestBackend, _NautilusBackend])

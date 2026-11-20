@@ -273,10 +273,10 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert_allclose(table["norm_ul"], [[1.029989], [1.025061]], rtol=1e-2)
     assert_allclose(table["sqrt_ts"], [[19.384781], [19.161769]], rtol=1e-2)
     assert_allclose(table["ts"], [[375.769735], [367.173374]], rtol=1e-2)
-    assert_allclose(table[0]["norm_scan"], [[0.2, 1.0, 5.0]])
+    assert_allclose(table[0]["norm_scan"], [[0.1, 1.0, 10.0]])
     assert_allclose(
         table[0]["stat_scan"],
-        [[224.058304, 19.074405, 2063.75636]],
+        [[300.147625, 19.074407, 6054.822551]],
         rtol=1e-5,
     )
     assert table.meta["TIMESYS"] == "tt"
@@ -364,10 +364,10 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
         [[16.233236, 10.608376], [16.609784, 9.557339]],
         rtol=1e-2,
     )
-    assert_allclose(table[0]["norm_scan"], [[0.2, 1.0, 5.0], [0.2, 1.0, 5.0]])
+    assert_allclose(table[0]["norm_scan"], [[0.1, 1.0, 10.0], [0.1, 1.0, 10.0]])
     assert_allclose(
         table[0]["stat_scan"],
-        [[153.880281, 10.701492, 1649.609684], [70.178023, 8.372913, 414.146676]],
+        [[207.259557, 10.701494, 4870.107174], [92.888068, 8.372912, 1184.715377]],
         rtol=1e-5,
     )
 
@@ -884,3 +884,34 @@ def test_lightcurve_stacking():
     results_stacked = estimator.run(stacked_datasets)
     table_stack_outside = results_stacked.to_table()
     assert_allclose(table_stack["stat_null"], table_stack_outside["stat_null"])
+
+
+@pytest.mark.parametrize("failing_bin", [0, 1])
+def test_lightcurve_fallback_scan_in_single_time_bin(monkeypatch, failing_bin):
+    datasets = Datasets(get_spectrum_datasets())
+
+    confidence = Fit.confidence
+    calls = []
+
+    # confidence function set to fail on a specific bin to get deterministic failure
+    def confidence_failing_in_one_bin(self, *args, **kwargs):
+        result = confidence(self, *args, **kwargs)
+        if len(calls) == failing_bin:
+            result["success"] = False
+        calls.append(1)
+        return result
+
+    # Replace Fit.confidence with this function for this specific test
+    monkeypatch.setattr(Fit, "confidence", confidence_failing_in_one_bin)
+
+    estimator = LightCurveEstimator(
+        energy_edges=[1, 30] * u.TeV,
+        selection_optional=["ul"],
+        n_jobs=1,
+    )
+    lightcurve = estimator.run(datasets)
+
+    assert lightcurve.geom.axes["time"].nbin == 2
+    # the fallback scan is used for the UL but not returned, since not requested
+    assert "stat_scan" not in lightcurve.available_quantities
+    assert np.all(np.isfinite(lightcurve.norm_ul.data))

@@ -1,1 +1,0 @@
-Deprecated `gammap.utils.make_map_exposure_true_energy`, use the `make_exposure` method on `MapDatasetMaker` instead.

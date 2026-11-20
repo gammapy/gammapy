@@ -93,6 +93,7 @@ class PSFMap(IRFMap):
 
     tag = "psf_map"
     required_axes = ["rad", "energy_true"]
+    downsample_axes = ["energy_true"]
 
     def __init__(self, psf_map, exposure_map=None):
         super().__init__(irf_map=psf_map, exposure_map=exposure_map)

@@ -277,9 +277,6 @@ plt.show()
 # This way of accessing residuals is quick and handy, but comes with
 # limitations. For example:
 #
-# - In case a fitting energy range was defined using a
-#   `~gammapy.datasets.MapDataset.mask_fit`, it won’t be taken into account.
-#   Residuals will be summed up over the whole reconstructed energy range
 # - In order to make a proper statistic treatment, instead of simple
 #   residuals a proper residuals significance map should be computed
 #

@@ -11,19 +11,23 @@ Source catalogs
 * ``4fgl`` / `~gammapy.catalog.SourceCatalog4FGL` - LAT 8-year point source catalog
 * ``2fhl`` / `~gammapy.catalog.SourceCatalog2FHL` - LAT second high-energy source catalog
 * ``3fhl`` / `~gammapy.catalog.SourceCatalog3FHL` - LAT third high-energy source catalog
+* ``2PC`` / `~gammapy.catalog.SourceCatalog2PC` - LAT first pulsar catalog
+* ``3PC`` / `~gammapy.catalog.SourceCatalog3PC` - LAT second pulsar catalog
 * ``2hwc`` / `~gammapy.catalog.SourceCatalog2HWC` - 2HWC catalog from the HAWC observatory
 * ``3hwc`` / `~gammapy.catalog.SourceCatalog3HWC` - 3HWC catalog from the HAWC observatory
+* ``1LHAASO`` / `~gammapy.catalog.SourceCatalog1LHAASO` - First catalog from LHAASO
 
-For each catalog, a `~gammapy.catalog.SourceCatalog` class is provided to represent the catalog table,
-and a matching `~gammapy.catalog.SourceCatalogObject` class to represent one catalog source and table row.
+For each catalog, a `~gammapy.catalog.SourceCatalog` class is provided to represent the
+catalog table, and a matching `~gammapy.catalog.SourceCatalogObject` class to represent one catalog
+source and table row.
 
 The main functionality provided is methods that map catalog information to
 `~gammapy.modeling.models.SkyModel`, `~gammapy.modeling.models.SpectralModel`,
-`~gammapy.modeling.models.SpatialModel`, `~gammapy.estimators.FluxPoints` and `~gammapy.estimators.LightCurve` objects.
+`~gammapy.modeling.models.SpatialModel`, and `~gammapy.estimators.FluxPoints` objects.
 
-`gammapy.catalog` is independent from the rest of Gammapy. The typical use cases
-are to compare your results against previous results in the catalogs (e.g. overplot a spectral model),
-or to create initial source models for certain energy bands and sky regions.
+`gammapy.catalog` is independent from the rest of Gammapy. The typical use cases are to
+compare your results against previous results in the catalogs (e.g. overplot a spectral
+model), or to create initial source models for certain energy bands and sky regions.
 
 
 Using gammapy.catalog
@@ -32,8 +36,7 @@ Using gammapy.catalog
 .. minigallery::
     :add-heading: Examples using `~gammapy.catalog`
 
-    ../examples/tutorials/tutorials/details/catalog.py
+    ../examples/tutorials/details/catalog.py
     ../examples/tutorials/starting/overview.py
-    ../examples/tutorials/analysis-1d/sed_fitting
+    ../examples/tutorials/analysis-1d/sed_fitting.py
     ../examples/tutorials/details/model_management.py
-

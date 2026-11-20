@@ -47,13 +47,9 @@ def bms_results(alternative_models):
         dataset = SpectrumDatasetOnOff.read(f"{path}pha_obs{id}.fits")
         datasets.append(dataset)
 
-    sampler_opts = {
-        "live_points": 50,
-        "frac_remain": 0.5,
-        "log_dir": None,
-    }
+    options = {"log_dir": None, "min_num_live_points": 50, "frac_remain": 0.5}
 
-    sampler = Sampler(backend="ultranest", sampler_opts=sampler_opts)
+    sampler = Sampler(backend="ultranest", options=options)
 
     bms = BayesianModelSelection(
         sampler, posterior_downsample_factor=5, n_prior_samples=10

@@ -424,3 +424,36 @@ Please give feedback and suggest additions to this page!
         # The new observation and the new events table can be serialised independently
         obs2.write("new_obs.fits.gz", overwrite=True)
         obs2.write("events.fits.gz", include_irfs=False, overwrite=True)
+
+
+.. dropdown:: Write and read Gammapy objects with ASDF
+    :name: dropdown-ASDF
+
+    Besides FITS, some Gammapy objects can be written to and read from files in
+    the `ASDF <https://www.asdf-format.org/en/latest/overview.html>`__ (Advanced Scientific Data Format) format.
+
+    ASDF is a hierarchically-structured, human-readable data format that
+    stores numerical data in binary blocks along with the YAML metadata in one file.
+    Objects are validated against YAML schemas on read and write. The format
+    also supports memory mapping and compression.
+
+    ASDF support requires the optional ``asdf`` and ``asdf-astropy`` packages.
+    They can be installed together with Gammapy using
+    ``pip install gammapy[asdf]``.
+
+    Gammapy registers its ASDF extension automatically when ``asdf`` is
+    installed, so users can use Gammapy's ASDF support without any manual setup.
+
+    Currently `~gammapy.datasets.MapDataset` and `~gammapy.modeling.models.Models` are serializable with ASDF.
+
+    **Example: write Models to ASDF and read them back**
+
+    .. testcode::
+
+        import asdf
+        from gammapy.modeling.models import Models, SkyModel
+        models = Models([SkyModel.create("pl", "point", name="source")])
+        with asdf.AsdfFile({"models": models}) as af:
+            af.write_to("models.asdf")
+        with asdf.open("models.asdf") as af:
+            models_reloaded = af["models"]

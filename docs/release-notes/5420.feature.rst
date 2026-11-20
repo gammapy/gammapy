@@ -1,1 +1,0 @@
-Add `~gammapy.utils.region.CirclePixelRegionArray` and  `~gammapy.utils.region.CircleSkyRegionArray` classes to support array valued regions.

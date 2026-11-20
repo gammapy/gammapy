@@ -209,7 +209,7 @@ dataset = maker.run(dataset_empty, obs)
 ######################################################################
 # The livetime information is used by the `~gammapy.makers.SafeMaskMaker` to retrieve the
 # effective area from the exposure. The HAWC effective area is computed
-# for one source transit above 45º zenith, which is around 6h.
+# for one source transit below 45º zenith, which is around 6h.
 # Since the effective area condition used here is relative to
 # the maximum, this value does not actually impact the result.
 

@@ -907,3 +907,21 @@ def test_hpx_template_normalize():
     integral = np.sum(model.map.data * solid_angle, axis=-1)
 
     assert_allclose(integral, [1.0, 1.0])
+
+
+def test_piecewise_spatial_model_to_dict_big_endian():
+    geom = WcsGeom.create(skydir=(0, 0), npix=(2, 2), binsz=0.3, frame="galactic")
+    footprint = MapCoord.create(geom.footprint)
+    coords = MapCoord.create(
+        {
+            "lon": np.asarray(footprint["lon"], dtype=">f8") * u.deg,
+            "lat": np.asarray(footprint["lat"], dtype=">f8") * u.deg,
+        },
+        frame="galactic",
+    )
+    model = PiecewiseNormSpatialModel(coords, frame="galactic")
+
+    data = model.to_dict()["spatial"]
+
+    assert_allclose(data["lon"]["data"], model.coords["lon"].value)
+    assert_allclose(data["lat"]["data"], model.coords["lat"].value)

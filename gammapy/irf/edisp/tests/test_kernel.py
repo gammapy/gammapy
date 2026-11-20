@@ -6,6 +6,7 @@ from astropy.io import fits
 from gammapy.irf import EDispKernel, EnergyDispersion2D
 from gammapy.maps import MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data
+from gammapy.data import DataStore
 
 
 class TestEDispKernel:
@@ -152,3 +153,36 @@ def test_edisp_to_edisp_kernel_extrapolation_errors():
     diag_mask = np.abs(i - j) <= 20
 
     assert_allclose(edisp_kernel.pdf_matrix[~diag_mask], 0, atol=1e-20)
+
+
+@requires_data()
+def test_edisp_to_edisp_kernel_no_nan():
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
+    observation = datastore.get_observations()[0]
+
+    offset = 0 * u.deg
+    ekern_data = observation.edisp.to_edisp_kernel(offset).data
+
+    assert ekern_data.shape == (96, 96)
+    assert np.all(np.isfinite(ekern_data))
+
+    expected = np.array(
+        [
+            0.00000000e00,
+            0.00000000e00,
+            5.48722291e-04,
+            5.36129715e-04,
+            1.15733882e-03,
+            1.22715248e-03,
+            9.88907011e-04,
+            3.44358376e-04,
+            9.15390213e-03,
+            2.14023659e-02,
+            6.64940347e-02,
+            2.12883806e-01,
+            5.61128800e-01,
+            1.24134483e-01,
+        ]
+    )
+    assert_allclose(ekern_data[0, :], 0.0)
+    assert_allclose(ekern_data[-1, -14:], expected)

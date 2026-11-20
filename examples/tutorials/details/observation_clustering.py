@@ -146,7 +146,7 @@ plt.show()
 #
 # The ``grouped_observations`` provide a list of `~gammapy.data.Observations`
 # which can be utilised in the usual way to show the various properties
-# of the observations i.e. see the :doc:`/tutorials/data/cta` tutorial.
+# of the observations i.e. see the :doc:`/tutorials/data/ctao` tutorial.
 #
 
 

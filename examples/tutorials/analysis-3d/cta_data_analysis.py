@@ -171,7 +171,7 @@ plt.show()
 #
 # Use the class `~gammapy.estimators.TSMapEstimator` and function
 # `~gammapy.estimators.utils.find_peaks` to detect sources on the images.
-# We search for 0.1 deg sigma gaussian sources in the dataset.
+# We search the dataset for Gaussian sources with a sigma of 0.5 degrees.
 #
 
 spatial_model = GaussianSpatialModel(sigma="0.05 deg")

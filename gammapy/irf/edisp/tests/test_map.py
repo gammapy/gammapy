@@ -14,7 +14,6 @@ from gammapy.irf import (
     EnergyDispersion2D,
 )
 from gammapy.makers import MapDatasetMaker
-from gammapy.makers.utils import make_edisp_map
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.utils.scripts import make_path
@@ -67,10 +66,7 @@ def make_edisp_map_test():
         irfs={"aeff": aeff2d, "edisp": edisp2d},
     )
 
-    exposure_geom = geom.squash(axis_name="migra")
-    exposure_map = MapDatasetMaker.make_exposure(exposure_geom, test_obs)
-
-    return make_edisp_map(edisp2d, pointing, geom, exposure_map)
+    return MapDatasetMaker.make_edisp(geom, test_obs)
 
 
 def test_make_edisp_map():
