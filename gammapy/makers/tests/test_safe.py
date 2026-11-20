@@ -294,7 +294,7 @@ def test_safe_mask_maker_no_root(dataset):
 
 
 @requires_data()
-def test_safe_mask_maker_bkg_invalid(observations_hess_dl3):
+def test_safe_mask_maker_bkg_invalid(observations_hess_dl3, caplog):
     obs = observations_hess_dl3[0]
     pointing = obs.get_pointing_icrs(obs.tmid)
 
@@ -323,3 +323,11 @@ def test_safe_mask_maker_bkg_invalid(observations_hess_dl3):
 
     dataset = safe_mask_maker_nonan.run(dataset, obs)
     assert_allclose(dataset.mask_safe, mask_nonan)
+
+    bkg = np.zeros_like(dataset.background.data)
+    dataset.background.data = bkg
+    dataset.stat_type = "cash"
+
+    dataset = safe_mask_maker_nonan.run(dataset, obs)
+
+    assert "All background counts are less or equal to zero" in caplog.text
