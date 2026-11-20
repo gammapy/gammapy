@@ -33,7 +33,7 @@ The expected gamma-ray flux from DM annihilation is:
 .. math::
 
    \Phi_{\rm ann}(>E_{\rm min}) = \frac{\langle\sigma v\rangle}{8\pi m_\chi^2}
-   \cdot J \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
+   \times J \times \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
 
 The physical quantity of interest is the **velocity-averaged
 annihilation cross section** ⟨σv⟩. A larger ⟨σv⟩ means a brighter
@@ -60,7 +60,7 @@ The expected gamma-ray flux from DM decay is:
 .. math::
 
    \Phi_{\rm dec}(>E_{\rm min}) = \frac{1}{4\pi \tau_\chi m_\chi}
-   \cdot D \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
+   \times D \times \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
 
 The physical quantity of interest is the **DM lifetime** τ_χ. Note that
 it appears in the **denominator**: a *longer* lifetime means a *fainter*
