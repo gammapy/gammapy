@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import logging
+import os
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
@@ -757,3 +758,35 @@ def test_wcsgeom_pix_to_idx_clip_edge_from_wcs_edges():
     # After clipping, the index should be on the edge of the map
     assert idx[0] == geom.npix[0] - 1
     assert 0 <= idx[1] <= geom.npix[1] - 1
+
+
+def test_wcsgeom_from_header_wcsshape_valid():
+    header = WcsGeom.create(npix=(20, 10), binsz=0.1).to_header()
+
+    header["WCSSHAPE"] = "(10,20)"
+    geom = WcsGeom.from_header(header)
+    assert geom.data_shape == (20, 10)
+
+    header["WCSSHAPE"] = " ( 10, 20 ) "
+    geom = WcsGeom.from_header(header)
+    assert geom.data_shape == (20, 10)
+
+    header["WCSSHAPE"] = " ( a, 20 ) "
+    with pytest.raises(ValueError, match="Incorrect WCSSHAPE keyword."):
+        geom = WcsGeom.from_header(header)
+
+
+def test_wcsgeom_wcsshape_roundtrip(monkeypatch):
+    geom = WcsGeom.create(npix=(20, 10), binsz=0.1)
+    m = Map.from_geom(geom)
+    hdulist = m.to_hdulist()
+
+    monkeypatch.setenv("BAD", "0")
+
+    harmful = "(__import__('os').environ('BAD', '1'),(20,10))[1]"
+    hdulist[0].header["WCSSHAPE"] = harmful
+
+    with pytest.raises(ValueError, match="Incorrect WCSSHAPE keyword."):
+        Map.from_hdulist(hdulist)
+
+    assert os.environ["BAD"] == "0"
