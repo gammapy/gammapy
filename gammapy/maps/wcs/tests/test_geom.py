@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import logging
+import os
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
@@ -771,13 +772,17 @@ def test_wcsgeom_from_header_wcsshape_valid():
     assert geom.data_shape == (20, 10)
 
 
-def test_wcsgeom_wcsshape_roundtrip():
+def test_wcsgeom_wcsshape_roundtrip(monkeypatch):
     geom = WcsGeom.create(npix=(20, 10), binsz=0.1)
     m = Map.from_geom(geom)
     hdulist = m.to_hdulist()
 
-    harmful = "(__import__('os').system('ls'),(20,10))[1]"
+    monkeypatch.setenv("BAD", "0")
+
+    harmful = "(__import__('os').environ('BAD', '1'),(20,10))[1]"
     hdulist[0].header["WCSSHAPE"] = harmful
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Incorrect WCSSHAPE keyword."):
         Map.from_hdulist(hdulist)
+
+    assert os.environ["BAD"] == "0"
