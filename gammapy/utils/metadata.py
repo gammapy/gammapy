@@ -20,6 +20,7 @@ from .types import AltAzSkyCoordType, ICRSSkyCoordType, SkyCoordType, TimeType
 __all__ = [
     "MetaData",
     "CreatorMetaData",
+    "add_creator_metadata",
     "ObsInfoMetaData",
     "PointingInfoMetaData",
     "TimeInfoMetaData",
@@ -199,6 +200,28 @@ class CreatorMetaData(MetaData):
     def update_time(self):
         """Change creation date to Time.now()."""
         self.date = Time.now()
+
+
+def add_creator_metadata(headers, creation=None):
+    """Add creator metadata to one or more FITS headers, in place.
+
+    Parameters
+    ----------
+    headers : `~astropy.io.fits.Header` or list of `~astropy.io.fits.Header`
+        Header(s) to update in place. When several are passed they all receive
+        the same creation metadata (a single timestamp).
+    creation : `~gammapy.utils.metadata.CreatorMetaData`, optional
+        Existing creation metadata. If None, a new one is created
+        (current Gammapy version and time). Default is None.
+    """
+    creation = creation or CreatorMetaData()
+    creation.update_time()
+
+    if not isinstance(headers, (list, tuple)):
+        headers = [headers]
+
+    for header in headers:
+        header.update(creation.to_header())
 
 
 class ObsInfoMetaData(MetaData):

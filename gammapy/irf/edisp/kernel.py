@@ -10,7 +10,7 @@ from matplotlib.colors import PowerNorm
 from gammapy.maps import MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.scripts import make_path
-from gammapy.utils.metadata import CreatorMetaData
+from gammapy.utils.metadata import add_creator_metadata
 from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
 
@@ -321,7 +321,7 @@ class EDispKernel(IRF):
         ----------
         format : {"ogip", "ogip-sherpa"}
             Format to use. Default is "ogip".
-        creation : `~gammapy.utils.metadata.CreatorMetadata`, optional
+        creation : `~gammapy.utils.metadata.CreatorMetaData`, optional
             Creation metadata to add to the file. If None, default metadata is added.
             Default is None.
 
@@ -364,13 +364,10 @@ class EDispKernel(IRF):
         ebounds_hdu = self.axes["energy"].to_table_hdu(format=format)
         prim_hdu = fits.PrimaryHDU()
 
-        creation = creation or CreatorMetaData()
-        creation.update_time()
+        hdus = [prim_hdu, hdu, ebounds_hdu]
+        add_creator_metadata([hd.header for hd in hdus], creation)
 
-        for hd in [prim_hdu, hdu, ebounds_hdu]:
-            hd.header.update(creation.to_header())
-
-        return fits.HDUList([prim_hdu, hdu, ebounds_hdu])
+        return fits.HDUList(hdus)
 
     def to_table(self, format="ogip"):
         """Convert to `~astropy.table.Table`.
