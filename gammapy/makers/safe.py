@@ -340,6 +340,13 @@ class SafeMaskMaker(Maker):
         mask = np.isfinite(bkg)
 
         if dataset.stat_type != "wstat":
+            if np.sum(bkg > 0.0) == 0:
+                log.warning(
+                    "All background counts are less or equal to zero and the dataset is"
+                    f" using {dataset.stat_type} - all the data will be masked by the "
+                    "SafeMaskMaker. Consider changing to wstat if applicable."
+                )
+
             mask &= bkg > 0.0
 
         return mask
