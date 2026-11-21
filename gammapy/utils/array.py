@@ -90,7 +90,7 @@ def shape_divisible_by(shape, factor):
         New shape extended to integers divisible by factor.
     """
     shape = np.array(shape)
-    new_shape = shape + (shape % factor)
+    new_shape = shape + (-shape % factor)
     return tuple(new_shape)
 
 
