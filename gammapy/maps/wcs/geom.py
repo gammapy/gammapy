@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import ast
 import copy
 import logging
 from gammapy.utils.cache import CacheInstanceMixin, cachemethod
@@ -498,7 +499,7 @@ class WcsGeom(Geom, CacheInstanceMixin):
             cdelt = hdu_bands.data.field("CDELT").reshape(shape + (2,))
             cdelt = (cdelt[..., 0], cdelt[..., 1])
         elif "WCSSHAPE" in header:
-            wcs_shape = eval(header["WCSSHAPE"])
+            wcs_shape = ast.literal_eval(header["WCSSHAPE"])
             npix = (wcs_shape[0], wcs_shape[1])
             cdelt = None
             wcs.array_shape = npix
