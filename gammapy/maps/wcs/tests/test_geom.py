@@ -771,6 +771,10 @@ def test_wcsgeom_from_header_wcsshape_valid():
     geom = WcsGeom.from_header(header)
     assert geom.data_shape == (20, 10)
 
+    header["WCSSHAPE"] = " ( a, 20 ) "
+    with pytest.raises(ValueError, match="Incorrect WCSSHAPE keyword."):
+        geom = WcsGeom.from_header(header)
+
 
 def test_wcsgeom_wcsshape_roundtrip(monkeypatch):
     geom = WcsGeom.create(npix=(20, 10), binsz=0.1)
