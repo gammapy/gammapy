@@ -757,3 +757,27 @@ def test_wcsgeom_pix_to_idx_clip_edge_from_wcs_edges():
     # After clipping, the index should be on the edge of the map
     assert idx[0] == geom.npix[0] - 1
     assert 0 <= idx[1] <= geom.npix[1] - 1
+
+
+def test_wcsgeom_from_header_wcsshape_valid():
+    header = WcsGeom.create(npix=(20, 10), binsz=0.1).to_header()
+
+    header["WCSSHAPE"] = "(10,20)"
+    geom = WcsGeom.from_header(header)
+    assert geom.data_shape == (20, 10)
+
+    header["WCSSHAPE"] = " ( 10, 20 ) "
+    geom = WcsGeom.from_header(header)
+    assert geom.data_shape == (20, 10)
+
+
+def test_wcsgeom_wcsshape_roundtrip():
+    geom = WcsGeom.create(npix=(20, 10), binsz=0.1)
+    m = Map.from_geom(geom)
+    hdulist = m.to_hdulist()
+
+    harmful = "(__import__('os').system('ls'),(20,10))[1]"
+    hdulist[0].header["WCSSHAPE"] = harmful
+
+    with pytest.raises(ValueError):
+        Map.from_hdulist(hdulist)
