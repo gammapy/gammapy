@@ -34,13 +34,17 @@ class PWN:
 
     def __init__(
         self,
-        pulsar=Pulsar(),
-        snr=SNRTrueloveMcKee(),
+        pulsar=None,
+        snr=None,
         eta_e=0.999,
         eta_B=0.001,
         morphology="Gaussian2D",
         age=None,
     ):
+        if pulsar is None:
+            pulsar = Pulsar()
+        if snr is None:
+            snr = SNRTrueloveMcKee()
         self.pulsar = pulsar
         if not isinstance(snr, SNRTrueloveMcKee):
             raise ValueError("SNR must be instance of SNRTrueloveMcKee")

@@ -27,6 +27,26 @@ DISTANCE_INTEGRAL = 8.5 * u.kpc
 
 
 @pytest.mark.parametrize("profile", dm_profiles)
+def test_rho_s_default(profile):
+    """Test that all profiles have rho_s parameter with default value."""
+    p = profile()
+    # Check that rho_s parameter exists
+    assert "rho_s" in p.parameters.names
+    # Check that it has the default value
+    assert p.parameters["rho_s"].quantity == profiles.RHO_S
+
+
+def test_dmprofile_abstract():
+    """Test that DMProfile cannot be instantiated directly because it has abstract methods.
+
+    This test covers the @abc.abstractmethod decorator added to the evaluate method
+    in the DMProfile class (B024 ruff rule fix).
+    """
+    with pytest.raises(TypeError, match="Can't instantiate abstract class DMProfile"):
+        profiles.DMProfile()
+
+
+@pytest.mark.parametrize("profile", dm_profiles)
 def test_profile_instantiation(profile):
     """Test that all profiles can be instantiated with default parameters."""
     p = profile()

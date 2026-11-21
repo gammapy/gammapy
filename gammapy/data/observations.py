@@ -235,7 +235,7 @@ class Observation:
         tstop=None,
         irfs=None,
         deadtime_fraction=0.0,
-        reference_time=Time("2000-01-01 00:00:00"),
+        reference_time=None,
     ):
         """Create an observation.
 
@@ -269,6 +269,8 @@ class Observation:
         obs : `gammapy.data.MemoryObservation`
             Observation.
         """
+        if reference_time is None:
+            reference_time = Time("2000-01-01 00:00:00")
         if tstart is None:
             tstart = reference_time.copy()
 
@@ -303,6 +305,7 @@ class Observation:
             warnings.warn(
                 "Pointing will be required to be provided as FixedPointingInfo",
                 GammapyDeprecationWarning,
+                stacklevel=2,
             )
             pointing = FixedPointingInfo.from_fits_header(obs_info)
 
@@ -981,7 +984,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting psf check")
 
         try:
-            self.observation.psf
+            _ = self.observation.psf
         except Exception:
             yield self._record(level="warning", msg="Loading psf failed")
             return

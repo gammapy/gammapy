@@ -433,7 +433,8 @@ class EventList:
             # Handle numerical range case
             if len(values) > 2:
                 warnings.warn(
-                    "More than two arguments were given while selecting a range, only the first two were used for events selection."
+                    "More than two arguments were given while selecting a range, only the first two were used for events selection.",
+                    stacklevel=2,
                 )
 
             mask = (values[0] <= col_data) & (col_data < values[1])

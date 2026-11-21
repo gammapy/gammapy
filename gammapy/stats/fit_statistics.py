@@ -265,8 +265,9 @@ class FitStatistic(ABC):
         return np.sum(stat_array)
 
     @classmethod
+    @abstractmethod
     def stat_array_dataset(cls, dataset):
-        """Calculate -2 * log(L)."""
+        """Calculate -2 * log(L). Must be implemented by subclasses."""
         raise NotImplementedError
 
     @classmethod

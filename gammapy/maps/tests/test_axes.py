@@ -532,13 +532,13 @@ def test_time_axis(time_intervals):
         ValueError,
         match="Time axis is not contiguous, therefore cannot compute bin edges.",
     ):
-        axis.edges
+        _ = axis.edges
 
     with pytest.raises(
         ValueError,
         match="Time axis is not contiguous, therefore cannot compute bin edges.",
     ):
-        axis.time_edges
+        _ = axis.time_edges
 
     ax_cont = axis.to_contiguous()
     assert_allclose(ax_cont.nbin, 39)
@@ -931,7 +931,7 @@ def test_label_map_axis_basics():
     assert axis.name == "label-axis"
 
     with pytest.raises(ValueError, match="A LabelMapAxis does not define edges"):
-        axis.edges
+        _ = axis.edges
 
     axis_copy = axis.copy()
     assert axis_copy.name == "label-axis"

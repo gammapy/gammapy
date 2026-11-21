@@ -502,7 +502,7 @@ custom_table = Table(rows=rows)
 #
 
 custom_table.write("custom_spectra.ecsv", overwrite=True)
-custom_table
+custom_table  # noqa B018
 
 mDM = 1.0 * u.TeV
 

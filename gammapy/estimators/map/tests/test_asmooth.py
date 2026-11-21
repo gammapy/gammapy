@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.convolution import Tophat2DKernel
+from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.estimators import ASmoothMapEstimator
 from gammapy.maps import Map, MapAxis, WcsNDMap
@@ -118,3 +119,17 @@ def test_asmooth_map_dataset_on_off():
     assert_allclose(smoothed["counts"].data[0, 25, 25], 2)
     assert_allclose(smoothed["background"].data[0, 25, 25], 1)
     assert_allclose(smoothed["sqrt_ts"].data[0, 25, 25], 4.39, rtol=1e-2)
+
+
+def test_asmooth_get_scales_default_factor():
+    """Test that get_scales works with default factor=None.
+
+    This test covers the change from factor=np.sqrt(2) to factor=None
+    in the get_scales method (B008 ruff rule fix).
+    """
+    scales = ASmoothMapEstimator.get_scales(n_scales=5)
+    assert len(scales) == 5
+    expected = ASmoothMapEstimator.get_scales(
+        n_scales=5, factor=np.sqrt(2), kernel=Gaussian2DKernel
+    )
+    assert_allclose(scales, expected)
