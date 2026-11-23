@@ -498,7 +498,11 @@ class WcsGeom(Geom, CacheInstanceMixin):
             cdelt = hdu_bands.data.field("CDELT").reshape(shape + (2,))
             cdelt = (cdelt[..., 0], cdelt[..., 1])
         elif "WCSSHAPE" in header:
-            wcs_shape = eval(header["WCSSHAPE"])
+            try:
+                s = header["WCSSHAPE"]
+                wcs_shape = tuple(int(v) for v in s.strip("() ").split(","))
+            except ValueError:
+                raise ValueError("Incorrect WCSSHAPE keyword.")
             npix = (wcs_shape[0], wcs_shape[1])
             cdelt = None
             wcs.array_shape = npix
