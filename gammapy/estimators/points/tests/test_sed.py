@@ -20,7 +20,7 @@ from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from
 from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
-from gammapy.modeling import Fit, Parameter
+from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     FoVBackgroundModel,
