@@ -8,6 +8,7 @@ PIG 33 - Format validation of data products and data stores
 
 * Author: Marie-Sophie Carrasco
 * Created: ``2026-10-07``
+* Accepted: ``2026-11-20``
 * Status: Accepted
 * Discussion: `GH 6886`_
 
@@ -642,7 +643,7 @@ cost of rejecting files whose units are only equivalent to the specified ones.
 Decision
 ========
 
-To be completed after discussion.
+The PIG was discussed and reviewed among Gammapy developers. It is considered accepted.
 
 .. [HESS-DR1] `H.E.S.S. Collaboration 2018, H.E.S.S. first public test data
    release, arXiv:1810.04516 <https://arxiv.org/abs/1810.04516>`_
