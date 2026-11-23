@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
+from gammapy.stats import CashCountsStatistic, CstatFitStatistic, WStatCountsStatistic
 
 ref_array = np.ones((3, 2, 4))
 

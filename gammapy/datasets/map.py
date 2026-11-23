@@ -15,6 +15,7 @@ from gammapy.maps import LabelMapAxis, Map, MapAxes, MapAxis, WcsGeom
 from gammapy.modeling.models import DatasetModels, FoVBackgroundModel, Models
 from gammapy.stats import (
     CashCountsStatistic,
+    CstatCountsStatistic,
     WStatCountsStatistic,
     get_wstat_mu_bkg,
 )
@@ -1171,7 +1172,7 @@ class MapDataset(Dataset):
                         "livetime"
                     ].copy()
 
-        if self.stat_type == "cash":
+        if self.stat_type in ["cash", "cstat"]:
             if self.background and other.background:
                 background = self.npred_background()
                 background.stack(
@@ -1399,6 +1400,8 @@ class MapDataset(Dataset):
             )
         elif self.stat_type == "cash":
             stat = CashCountsStatistic(counts_spec.data, npred_spec.data)
+        elif self.stat_type == "cstat":
+            stat = CstatCountsStatistic(counts_spec.data, npred_spec.data)
         excess_error = stat.error
 
         if method == "diff":
@@ -1786,7 +1789,10 @@ class MapDataset(Dataset):
     @property
     def _counts_statistic(self):
         """Counts statistics of the dataset."""
-        return CashCountsStatistic(self.counts, self.npred_background())
+        if self.stat_type == "cash":
+            return CashCountsStatistic(self.counts, self.npred_background())
+        elif self.stat_type == "cstat":
+            return CstatCountsStatistic(self.counts, self.npred_background())
 
     def info_dict(self, in_safe_data_range=True):
         """Info dict with summary statistics, summed over energy.
@@ -1959,7 +1965,7 @@ class MapDataset(Dataset):
         ]:
             kwargs[key] = getattr(dataset, key)
 
-        if self.stat_type == "cash":
+        if self.stat_type in ["cash", "cstat"]:
             kwargs["background"] = dataset.background
 
         return SpectrumDataset(**kwargs)
@@ -2026,7 +2032,7 @@ class MapDataset(Dataset):
                 region, np.sum, weights=self.mask_safe
             )
 
-        if self.stat_type == "cash" and self.background:
+        if self.stat_type in ["cash", "cstat"] and self.background:
             kwargs["background"] = self.npred_background().to_region_nd_map(
                 region, func=np.sum, weights=self.mask_safe
             )
@@ -2076,7 +2082,7 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
-        if self.background is not None and self.stat_type == "cash":
+        if self.background is not None and self.stat_type in ["cash", "cstat"]:
             kwargs["background"] = self.background.cutout(**cutout_kwargs)
 
         if self.edisp is not None:
@@ -2133,7 +2139,7 @@ class MapDataset(Dataset):
             else:
                 kwargs["exposure"] = self.exposure.copy()
 
-        if self.background is not None and self.stat_type == "cash":
+        if self.background is not None and self.stat_type in ["cash", "cstat"]:
             kwargs["background"] = self.background.downsample(
                 factor=factor, axis_name=axis_name, weights=self.mask_safe
             )
@@ -2257,7 +2263,7 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.slice_by_idx(slices=slices)
 
-        if self.background is not None and self.stat_type == "cash":
+        if self.background is not None and self.stat_type in ["cash", "cstat"]:
             kwargs["background"] = self.background.slice_by_idx(slices=slices)
 
         if self.edisp is not None:
@@ -2367,7 +2373,7 @@ class MapDataset(Dataset):
                 axis=energy_axis, weights=self.mask_safe
             )
 
-        if self.background is not None and self.stat_type == "cash":
+        if self.background is not None and self.stat_type in ["cash", "cstat"]:
             kwargs["background"] = self.background.resample_axis(
                 axis=energy_axis, weights=self.mask_safe
             )

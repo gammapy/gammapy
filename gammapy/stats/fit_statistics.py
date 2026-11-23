@@ -19,6 +19,7 @@ __all__ = [
     "get_wstat_mu_bkg",
     "get_wstat_gof_terms",
     "CashFitStatistic",
+    "CstatFitStatistic",
     "WStatFitStatistic",
     "Chi2FitStatistic",
     "Chi2AsymmetricErrorFitStatistic",
@@ -296,6 +297,29 @@ class CashFitStatistic(FitStatistic):
     def stat_array_dataset(cls, dataset):
         counts, npred = dataset.counts.data, dataset.npred().data
         return cash(n_on=counts, mu_on=npred)
+
+
+class CstatFitStatistic(FitStatistic):
+    """Cash statistic class for Poisson with known background."""
+
+    @classmethod
+    def stat_sum_dataset(cls, dataset):
+        mask = dataset.mask
+        counts, npred = dataset.counts.data, dataset.npred().data
+
+        if mask is not None:
+            mask = mask.data.astype("bool")
+            counts, npred = counts[mask], npred[mask]
+
+        counts = counts.astype(float)  # This might be done in the Dataset
+        return get_fit_statistics_compiled()["cstat_sum_compiled"](
+            counts.ravel(), npred.ravel()
+        )
+
+    @classmethod
+    def stat_array_dataset(cls, dataset):
+        counts, npred = dataset.counts.data, dataset.npred().data
+        return cstat(n_on=counts, mu_on=npred)
 
 
 class WeightedCashFitStatistic(FitStatistic):
