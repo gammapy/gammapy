@@ -33,7 +33,7 @@ The expected gamma-ray flux from DM annihilation is:
 .. math::
 
    \Phi_{\rm ann}(>E_{\rm min}) = \frac{\langle\sigma v\rangle}{8\pi m_\chi^2}
-   \cdot J \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
+   J \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
 
 The physical quantity of interest is the **velocity-averaged
 annihilation cross section** ⟨σv⟩. A larger ⟨σv⟩ means a brighter
@@ -50,7 +50,7 @@ where :math:`\langle\sigma v\rangle_{\rm ref} \approx 3\times10^{-26}`
 cm³ s⁻¹ is the thermal relic value. An upper limit on ``scale``
 translates directly into an upper limit on ⟨σv⟩:
 
-.. math:: \langle\sigma v\rangle < \text{scale}_{\rm UL} \times \langle\sigma v\rangle_{\rm ref}
+.. math:: \langle\sigma v\rangle < \text{scale}_{\rm UL} \langle\sigma v\rangle_{\rm ref}
 
 Dark matter decay
 -----------------
@@ -60,7 +60,7 @@ The expected gamma-ray flux from DM decay is:
 .. math::
 
    \Phi_{\rm dec}(>E_{\rm min}) = \frac{1}{4\pi \tau_\chi m_\chi}
-   \cdot D \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
+   D \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
 
 The physical quantity of interest is the **DM lifetime** τ_χ. Note that
 it appears in the **denominator**: a *longer* lifetime means a *fainter*
@@ -643,7 +643,7 @@ print(f"  Lifetime lower limit (95% CL): {tau_lower_limit:.3e} s")
 # :math:`\tau_\chi > \tau_{\rm ref} / \text{scale}_{\rm UL}`. For the
 # annihilation case, it gives an **upper limit on the annihilation cross
 # section**:
-# :math:`\langle\sigma v\rangle < \text{scale}_{\rm UL} \times \langle\sigma v\rangle_{\rm ref}`.
+# :math:`\langle\sigma v\rangle < \text{scale}_{\rm UL} \langle\sigma v\rangle_{\rm ref}`.
 #
 
 
@@ -929,9 +929,9 @@ def plot_exclusion_curve(results):
 #
 # .. math::
 #
-#    \langle\sigma v\rangle_{\rm p16} = \text{scale}_{\rm p16} \times \langle\sigma v\rangle_{\rm ref}
+#    \langle\sigma v\rangle_{\rm p16} = \text{scale}_{\rm p16} \langle\sigma v\rangle_{\rm ref}
 #    \qquad
-#    \langle\sigma v\rangle_{\rm p84} = \text{scale}_{\rm p84} \times \langle\sigma v\rangle_{\rm ref}
+#    \langle\sigma v\rangle_{\rm p84} = \text{scale}_{\rm p84} \langle\sigma v\rangle_{\rm ref}
 #
 # This asymmetry between the two cases follows directly from how `scale`
 # enters each physical quantity: linearly for
@@ -1118,7 +1118,6 @@ def plot_exclusion_curve(results):
 # .. figure:: /_static/dark_matter_bands_plot_example.png
 #    :alt: image
 #
-#    image
 #
 
 
