@@ -561,12 +561,12 @@
         "active"
     ],
     "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
-    "dateModified": "2026-05-29",
+    "dateModified": "2026-11-23",
     "softwareRequirements": [
         "numpy>=2.0",
-        "scipy>=1.13",
-        "astropy>=6.1.5",
-        "regions>=0.9.0",
+        "scipy>=1.13,<1.18",
+        "astropy>=6.1.5,<8.0",
+        "regions>=0.9.0,!=0.12",
         "pyyaml>=5.3",
         "click>=8.0",
         "pydantic>=2.8.0",
