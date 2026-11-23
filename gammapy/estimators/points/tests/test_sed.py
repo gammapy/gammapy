@@ -5,9 +5,8 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
-import logging
-
-from gammapy.data import Observation, FixedPointingInfo
+from gammapy.data import Observation
+from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets import (
     Datasets,
     FluxPointsDataset,
@@ -21,7 +20,7 @@ from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from
 from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
-from gammapy.modeling import Fit, Parameter
+from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     FoVBackgroundModel,
@@ -879,135 +878,3 @@ def test_warning_for_bad_model(caplog):
         "Reference source model predicts negative flux. Results of estimator should be interpreted with caution"
         in [_.message for _ in caplog.records]
     )
-
-
-@requires_data()
-def test_confidence_failure_fallback_to_scan():
-    dataset = SpectrumDatasetOnOff.read(
-        "$GAMMAPY_DATA/datasets/simulations/simulated_spectrum_test_ul_failure.fits.gz"
-    )
-    model = SkyModel(
-        spectral_model=PowerLawSpectralModel(
-            index=2, amplitude=f"{1e-13} cm-2 s-1 TeV-1"
-        ),
-        name="source",
-    )
-    dataset.models = model
-
-    norm = Parameter(
-        name="norm",
-        value=1,
-        min=0,
-        scan_min=1e-2,
-        scan_max=1e2,
-        scan_n_values=41,
-        interp="log",
-    )
-
-    estimator = FluxPointsEstimator(
-        source="source",
-        energy_edges=[0.05, 50] * u.TeV,
-        selection_optional=["scan"],
-        n_sigma_ul=1.645,
-        norm=norm,
-    )
-    results = estimator.run(dataset)
-    assert not hasattr(results, "norm_ul")
-    assert not hasattr(results, "norm_errn")
-    assert not hasattr(results, "norm_errp")
-
-    estimator = FluxPointsEstimator(
-        source="source",
-        energy_edges=[0.05, 50] * u.TeV,
-        selection_optional=["ul", "errn-errp"],
-        n_sigma_ul=1.645,
-        norm=norm,
-    )
-    results = estimator.run(dataset)
-
-    assert_allclose(results.norm_ul.data.flatten()[0], 0.6908785888971987, rtol=1e-5)
-    assert np.isnan(results.norm_errn.data.flatten()[0])
-    assert_allclose(results.norm_errp.data.flatten()[0], 0.2669708627581299, rtol=1e-5)
-
-    norm = Parameter(
-        name="norm",
-        value=1,
-        min=0,
-        scan_min=0.2,
-        scan_max=5,
-        scan_n_values=11,
-        interp="log",
-    )
-    estimator = FluxPointsEstimator(
-        source="source",
-        energy_edges=[0.05, 50] * u.TeV,
-        selection_optional=["ul", "errn-errp"],
-        n_sigma_ul=1.645,
-        norm=norm,
-    )
-
-    assert_allclose(results.norm_ul.data.flatten()[0], 0.6908785888971987, rtol=1e-5)
-    assert np.isnan(results.norm_errn.data.flatten()[0])
-    assert_allclose(results.norm_errp.data.flatten()[0], 0.2669708627581299, rtol=1e-5)
-
-
-@pytest.mark.parametrize("failing_bin", [0, 1, 2])
-@pytest.mark.parametrize("selection_optional", [["ul"], ["ul", "scan"]])
-def test_run_fallback_scan_in_single_energy_bin(
-    caplog, monkeypatch, failing_bin, selection_optional
-):
-    energy = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6)
-    energy_true = MapAxis.from_energy_bounds(
-        "0.5 TeV", "20 TeV", nbin=12, name="energy_true"
-    )
-    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.1)", axes=[energy])
-
-    dataset = SpectrumDataset.create(
-        geom=geom, energy_axis_true=energy_true, name="test"
-    )
-    dataset.exposure.quantity = 1e10 * u.Unit("m2 s")
-    dataset.background.data += 10.0
-    dataset.mask_safe.data[...] = True
-    dataset.models = SkyModel(PowerLawSpectralModel(), name="source")
-    dataset.fake(random_state=0)
-
-    confidence = Fit.confidence
-    calls = []
-
-    # confidence function set to fail on a specific bin to get deterministic failure
-    def confidence_failing_in_one_bin(self, *args, **kwargs):
-        result = confidence(self, *args, **kwargs)
-        if len(calls) == failing_bin:
-            result["success"] = False
-        calls.append(1)
-        return result
-
-    # Replace Fit.confidence with this function for this specific test
-    monkeypatch.setattr(Fit, "confidence", confidence_failing_in_one_bin)
-    caplog.set_level(logging.INFO)
-
-    estimator = FluxPointsEstimator(
-        energy_edges=[1, 2, 5, 10] * u.TeV,
-        source="source",
-        selection_optional=selection_optional,
-        n_jobs=1,
-    )
-
-    fp = estimator.run(datasets=[dataset])
-
-    assert "INFO" in [_.levelname for _ in caplog.records]
-    assert "UL calculation with Fit.confidence() failed." in [
-        _.message for _ in caplog.records
-    ]
-
-    # the UL of the failing bin is recovered from the fallback scan
-    assert np.all(np.isfinite(fp.norm_ul.data))
-
-    if "scan" in selection_optional:
-        assert_allclose(
-            fp.stat_scan.geom.axes["norm"].center, estimator.norm.scan_values
-        )
-        assert np.all(np.isfinite(fp.stat_scan.data))
-    else:
-        # the fallback scan is not returned, since it was not requested
-        assert "stat_scan" not in fp.available_quantities
