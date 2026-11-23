@@ -1,5 +1,7 @@
 # Security Policy
 
+If you believe you have found a security vulnerability, please report it as described below.
+
 ## Supported Versions
 
 The table below indicates which versions of `gammapy` are
@@ -11,6 +13,8 @@ currently being supported with security updates.
 | 2.0.x (LTS)  | :white_check_mark: |
 
 ## Reporting a Vulnerability
+
+**Please do not report security vulnerabilities through public GitHub issues.**
 
 Please report security vulnerabilities privately through
 [GitHub private vulnerability reporting](https://github.com/gammapy/gammapy/security/advisories/new).
