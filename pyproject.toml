@@ -54,7 +54,7 @@ build-backend = "setuptools.build_meta"
 [project.optional-dependencies]
 all = [
     "naima",
-    "sherpa<4.18; platform_system != 'Windows'",
+    "sherpa<4.19; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
     "ipywidgets",
     "ray[default]>=2.9",
@@ -63,7 +63,7 @@ all = [
 ]
 all_no_ray = [
     "naima",
-    "sherpa<4.18; platform_system != 'Windows'",
+    "sherpa<4.19; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
     "ipywidgets",
     "ultranest",
@@ -71,7 +71,7 @@ all_no_ray = [
 ]
 cov = [
     "naima",
-    "sherpa<4.18; platform_system != 'Windows'",
+    "sherpa<4.19; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
     "ipywidgets",
     "ultranest",
