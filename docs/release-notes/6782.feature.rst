@@ -1,1 +1,0 @@
-Add a dark matter analysis tutorial covering the basics of J/D-factor computation, spectral models, and expected gamma-ray flux.

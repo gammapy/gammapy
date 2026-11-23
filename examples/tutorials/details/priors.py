@@ -18,7 +18,7 @@ Context
 -------
 
 Generally, the set of parameters describing best the data is where the
-fit statistic :math:`2 x log L` has its global minimum. Depending on
+fit statistic :math:`- 2 log L` has its global minimum. Depending on
 the type of background estimation, it is either the Cash fit statistic
 or the WStat (see :doc:`/user-guide/stats/fit_statistics` for more
 details).
@@ -46,10 +46,10 @@ The tutorial addresses three examples:
 
 In the first example, the Gaussian prior is used. It is shown how to set
 a prior on a model parameter and how it modifies the fit statistics. A
-source is simulated without statistics and fitted with and without the
+source is simulated without Poission fluctuations and fitted with and without the
 priors. The different fit results are discussed.
 
-For the second example, 1000 datasets containing a very weak source are
+For the second example, 100 datasets containing a very weak source are
 simulated. Due to the statistical fluctuations, the amplitude’s best-fit
 value is negative for some draws. By setting a uniform prior on the
 amplitude, this can be avoided.
@@ -135,10 +135,10 @@ model_prior.parameters["index"].prior = gaussianprior
 
 ######################################################################
 # The value of the prior depends on the value of the index. If the index
-# value equals the Gaussians mean (here 2.1), the prior is zero. This
+# value equals the Gaussians mean (here 2.1), the prior is minimum. This
 # means that nothing is added to the cash statistics, and this value is
 # favoured in the fit. If the value of the index deviates from the mean of
-# 2.1, a prior value > 0 is added to the cash statistics.
+# 2.1, a positive prior value is added to the cash statistics.
 #
 
 # For the visualisation, the values are appended to the list; this is not a necessity for the fitting
@@ -301,9 +301,10 @@ plt.show()
 # -  if the prior has to be used for sampling it should also define a `_inverse_cdf` function
 #    (in that case the pdf has to integrate to unity).
 #
-# As an example for a custom prior a Jeffrey prior for a scale parameter is chosen.
-# The only parameter is ``sigma`` and the evaluation method return the squared inverse of ``sigma``.
-
+# As an example for a custom prior, we define a prior that penalises large values
+# of the parameter linearly: the fit statistic increases by ``value / sigma**2``,
+# which corresponds to
+# an (unnormalised) exponential prior :math:`p(x) ∝ exp(-x / (2 sigma^2))`.
 
 from gammapy.modeling import PriorParameter
 from gammapy.modeling.models import Model, Prior
@@ -424,6 +425,7 @@ model_weak_prior.parameters["amplitude"].prior = uniform_penalty
 # As we are only interested in the behaviour of the amplitude, we freeze the
 # spectral index here
 model_weak.parameters["index"].frozen = True
+model_weak_prior.parameters["index"].frozen = True
 
 ######################################################################
 # We set the minimum value to zero and the maximum value

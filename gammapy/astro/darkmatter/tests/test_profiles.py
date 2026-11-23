@@ -4,7 +4,6 @@
 import astropy.units as u
 import numpy as np
 import pytest
-from astropy.units import Quantity
 
 from gammapy.astro.darkmatter import profiles
 from gammapy.utils.testing import assert_quantity_allclose

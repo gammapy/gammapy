@@ -135,7 +135,7 @@ Feature releases
 
 #. Add a new milestone to the `GitHub issue tracker <https://github.com/gammapy/gammapy/milestones>`__ for the version
    ``v<version>.x`` (this will also be used for the next bugfix release). Also create a ``backport-v<version>.x``
-   `label <https://github.com/gammapy/gammapy/labels>`__, which has the description ``on merge: backport to
+   `label <https://github.com/gammapy/gammapy/labels>`__, which has the description ``on-merge: backport to
    v<version.x`` to allow for automatic backport triggering.
 
 #. Update your local ``main`` branch to the latest from remote::

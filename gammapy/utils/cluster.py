@@ -3,6 +3,7 @@
 
 import numpy as np
 import scipy.cluster.hierarchy as sch
+from scipy.spatial.distance import pdist
 
 __all__ = ["standard_scaler", "hierarchical_clustering"]
 
@@ -131,7 +132,7 @@ def hierarchical_clustering(features, linkage_kwargs=None, fcluster_kwargs=None)
     if linkage_kwargs is not None:
         default_linkage_kwargs.update(linkage_kwargs)
 
-    pairwise_distances = sch.distance.pdist(features_array)
+    pairwise_distances = pdist(features_array)
     linkage = sch.linkage(pairwise_distances, **default_linkage_kwargs)
 
     default_fcluster_kwargs = dict(criterion="maxclust", t=3)

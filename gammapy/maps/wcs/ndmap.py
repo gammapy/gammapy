@@ -976,7 +976,7 @@ class WcsNDMap(WcsMap):
             if not geom.shape_axes == shape_axes_kernel:
                 raise ValueError(
                     f"Incompatible shape between data {geom.shape_axes}"
-                    " and kernel {shape_axes_kernel}"
+                    f" and kernel {shape_axes_kernel}"
                 )
 
         if self.geom.is_image and kernel.ndim == 3:

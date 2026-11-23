@@ -478,7 +478,7 @@ stat_surface = np.sqrt(TS.T)
 
 ######################################################################
 # Notice that, as explained before, :math:`1\sigma` contour obtained this
-# way will not contain 68% of the probability, but rather
+# way will not contain 68% of the probability, but only approximately 39.4%.
 #
 
 # Compute the corresponding statistical significance surface
@@ -509,7 +509,7 @@ plt.show()
 
 ######################################################################
 # Note that, if computed with ``reoptimize=True``, this plot would be
-# completely consistent with the third panel of the plot produced with
+# completely consistent with the first panel of the plot produced with
 # `~gammapy.modeling.Fit.stat_contour` (try!).
 #
 

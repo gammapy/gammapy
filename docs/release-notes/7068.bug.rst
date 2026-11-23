@@ -1,0 +1,1 @@
+Correct location of HEGRA array in ~gammapy.utils.observers.py

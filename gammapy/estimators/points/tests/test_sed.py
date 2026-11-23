@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import pytest
-import logging
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
+import logging
 from numpy.testing import assert_allclose
 
 from gammapy.data import Observation, FixedPointingInfo
@@ -20,7 +20,7 @@ from gammapy.estimators.utils import get_rebinned_axis
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
-from gammapy.modeling import Fit
+from gammapy.modeling import Fit, Parameter
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     FoVBackgroundModel,
@@ -232,7 +232,6 @@ def test_run_pwl(fpe_pwl, tmpdir):
     datasets, fpe = fpe_pwl
 
     fp = fpe.run(datasets)
-    assert fp.meta["n_sigma_sensitivity"] == 2
     table = fp.to_table()
 
     actual = table["e_min"].data
@@ -275,7 +274,7 @@ def test_run_pwl(fpe_pwl, tmpdir):
     assert_allclose(actual, [1.216227, 1.035472, 1.316878], rtol=1e-2)
 
     actual = table["norm_sensitivity"].data
-    assert_allclose(actual, [0.103896, 0.08386, 0.194146], rtol=1e-2)
+    assert_allclose(actual, [0.265929, 0.217676, 0.579713], rtol=1e-2)
 
     actual = table["sqrt_ts"].data
     assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-2)
@@ -290,10 +289,10 @@ def test_run_pwl(fpe_pwl, tmpdir):
     assert_allclose(actual, [347.55159, 339.08952, 53.50424], rtol=1e-2)
 
     actual = table["norm_scan"][0][[0, 5, -1]]
-    assert_allclose(actual, [0.2, 1.0, 5.0])
+    assert_allclose(actual, [0.1, 1.0, 10.0])
 
     actual = table["stat_scan"][0][[0, 5, -1]]
-    assert_allclose(actual, [220.369, 4.301, 1881.626], rtol=1e-2)
+    assert_allclose(actual, [2.795218e02, 4.301011e00, 6.228218e03], rtol=1e-2)
 
     actual = table["npred"].data
     assert_allclose(actual, [[1492.966], [749.459], [43.105]], rtol=1e-3)
@@ -406,10 +405,10 @@ def test_run_map_pwl(fpe_map_pwl, tmpdir):
     assert_allclose(actual, [16.681221, 28.408676, 21.91912], rtol=1e-2)
 
     actual = table["norm_scan"][0]
-    assert_allclose(actual, [0.2, 1.0, 5])
+    assert_allclose(actual, [0.1, 1.0, 10])
 
     actual = table["stat_scan"][0] - table["stat"][0]
-    assert_allclose(actual, [1.628398e02, 1.452456e-01, 2.008018e03], rtol=1e-2)
+    assert_allclose(actual, [2.153318e02, 1.466019e-01, 6.980637e03], rtol=1e-2)
 
     # test GADF I/O
     fp.write(tmpdir / "test.fits")
@@ -529,7 +528,6 @@ def test_no_likelihood_contribution():
     dataset.mask_safe = RegionNDMap.from_geom(dataset.counts.geom, dtype=bool)
 
     fpe = FluxPointsEstimator(energy_edges=[1.0, 3.0, 10.0] * u.TeV, source="source")
-
     table = fpe.run([dataset, dataset_2]).to_table()
 
     assert np.isnan(table["norm"]).all()
@@ -636,7 +634,7 @@ def test_flux_points_recompute_ul(fpe_pwl):
     fp1 = fp.recompute_ul(n_sigma_ul=4)
     assert_allclose(
         fp1.flux_ul.data,
-        [[[2.92877891e-12]], [[1.04993236e-12]], [[1.22089744e-13]]],
+        [[[2.91814e-12]], [[1.05582e-12]], [[1.22476e-13]]],
         rtol=1e-3,
     )
     assert fp1.meta["n_sigma_ul"] == 4
@@ -739,10 +737,10 @@ def test_flux_points_parallel_ray_actor_map(fpe_map_pwl_ray):
     assert_allclose(actual, [16.681221, 28.408676, 21.91912], rtol=1e-2)
 
     actual = table["norm_scan"][0]
-    assert_allclose(actual, [0.2, 1.0, 5])
+    assert_allclose(actual, [0.1, 1.0, 10])
 
     actual = table["stat_scan"][0] - table["stat"][0]
-    assert_allclose(actual, [1.628398e02, 1.452456e-01, 2.008018e03], rtol=1e-2)
+    assert_allclose(actual, [2.153318e02, 1.466019e-01, 6.980637e03], rtol=1e-2)
 
 
 def test_fpe_non_aligned_energy_axes():
@@ -891,7 +889,7 @@ def test_resample_axis():
     flux_points = fpe.run(ds)
     axis_new = get_rebinned_axis(flux_points, method="fixed-bins", group_size=3)
     flux_new = flux_points.resample_axis(axis_new)
-    assert_allclose(flux_new.flux.data, [[[3.1050191 * 1e-12]]], rtol=1e-5)
+    assert_allclose(flux_new.flux.data, [[[3.118082e-12]]], rtol=1e-5)
 
 
 def test_warning_for_bad_model(caplog):
@@ -907,13 +905,135 @@ def test_warning_for_bad_model(caplog):
     )
 
 
-def test_sensitivity_limit(caplog):
-    caplog.set_level(logging.INFO)
-    fpe = FluxPointsEstimator(energy_edges=[1, 2, 4, 10] * u.TeV)
-    assert "INFO" in [record.levelname for record in caplog.records]
-    message = "By default, 'n_sigma_sensitivity' is set to the same value as 'n_sigma_ul', i.e., 2."
-    assert message in [record.message for record in caplog.records]
-    assert fpe.n_sigma_sensitivity == fpe.n_sigma_ul
+@requires_data()
+def test_confidence_failure_fallback_to_scan(caplog):
+    dataset = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_spectrum_test_ul_failure.fits.gz"
+    )
+    model = SkyModel(
+        spectral_model=PowerLawSpectralModel(
+            index=2, amplitude=f"{1e-13} cm-2 s-1 TeV-1"
+        ),
+        name="source",
+    )
+    dataset.models = model
 
-    fpe = FluxPointsEstimator(energy_edges=[1, 2, 4, 10] * u.TeV, n_sigma_sensitivity=4)
-    assert fpe.n_sigma_sensitivity == 4
+    norm = Parameter(
+        name="norm",
+        value=1,
+        min=0,
+        scan_min=1e-2,
+        scan_max=1e2,
+        scan_n_values=41,
+        interp="log",
+    )
+
+    estimator = FluxPointsEstimator(
+        source="source",
+        energy_edges=[0.05, 50] * u.TeV,
+        selection_optional=["scan"],
+        n_sigma_ul=1.645,
+        norm=norm,
+    )
+    results = estimator.run(dataset)
+    assert not hasattr(results, "norm_ul")
+    assert not hasattr(results, "norm_errn")
+    assert not hasattr(results, "norm_errp")
+
+    estimator = FluxPointsEstimator(
+        source="source",
+        energy_edges=[0.05, 50] * u.TeV,
+        selection_optional=["ul", "errn-errp"],
+        n_sigma_ul=1.645,
+        norm=norm,
+    )
+    results = estimator.run(dataset)
+
+    assert_allclose(results.norm_ul.data.flatten()[0], 0.6908785888971987, rtol=1e-5)
+    assert np.isnan(results.norm_errn.data.flatten()[0])
+    assert_allclose(results.norm_errp.data.flatten()[0], 0.2669708627581299, rtol=1e-5)
+
+    norm = Parameter(
+        name="norm",
+        value=1,
+        min=0,
+        scan_min=-200,
+        scan_max=-200,
+        scan_n_values=11,
+        interp="log",
+    )
+    estimator = FluxPointsEstimator(
+        source="source",
+        energy_edges=[0.05, 50] * u.TeV,
+        selection_optional=["ul", "errn-errp"],
+        n_sigma_ul=1.645,
+        norm=norm,
+    )
+    results = estimator.run(dataset)
+
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "Computing error from stat profile failed. Returning NaN." in [
+        _.message for _ in caplog.records
+    ]
+
+
+@pytest.mark.parametrize("failing_bin", [0, 1, 2])
+@pytest.mark.parametrize("selection_optional", [["ul"], ["ul", "scan"]])
+def test_run_fallback_scan_in_single_energy_bin(
+    caplog, monkeypatch, failing_bin, selection_optional
+):
+    energy = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6)
+    energy_true = MapAxis.from_energy_bounds(
+        "0.5 TeV", "20 TeV", nbin=12, name="energy_true"
+    )
+    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.1)", axes=[energy])
+
+    dataset = SpectrumDataset.create(
+        geom=geom, energy_axis_true=energy_true, name="test"
+    )
+    dataset.exposure.quantity = 1e10 * u.Unit("m2 s")
+    dataset.background.data += 10.0
+    dataset.mask_safe.data[...] = True
+    dataset.models = SkyModel(PowerLawSpectralModel(), name="source")
+    dataset.fake(random_state=0)
+
+    confidence = Fit.confidence
+    calls = []
+
+    # confidence function set to fail on a specific bin to get deterministic failure
+    def confidence_failing_in_one_bin(self, *args, **kwargs):
+        result = confidence(self, *args, **kwargs)
+        if len(calls) == failing_bin:
+            result["success"] = False
+        calls.append(1)
+        return result
+
+    # Replace Fit.confidence with this function for this specific test
+    monkeypatch.setattr(Fit, "confidence", confidence_failing_in_one_bin)
+    caplog.set_level(logging.INFO)
+
+    estimator = FluxPointsEstimator(
+        energy_edges=[1, 2, 5, 10] * u.TeV,
+        source="source",
+        selection_optional=selection_optional,
+        n_jobs=1,
+    )
+
+    fp = estimator.run(datasets=[dataset])
+
+    assert "INFO" in [_.levelname for _ in caplog.records]
+    assert "UL calculation with Fit.confidence() failed." in [
+        _.message for _ in caplog.records
+    ]
+
+    # the UL of the failing bin is recovered from the fallback scan
+    assert np.all(np.isfinite(fp.norm_ul.data))
+
+    if "scan" in selection_optional:
+        assert_allclose(
+            fp.stat_scan.geom.axes["norm"].center, estimator.norm.scan_values
+        )
+        assert np.all(np.isfinite(fp.stat_scan.data))
+    else:
+        # the fallback scan is not returned, since it was not requested
+        assert "stat_scan" not in fp.available_quantities

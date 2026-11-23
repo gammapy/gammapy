@@ -496,6 +496,14 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
     significance = fpp / fpp_err
 
     energies = lightcurve.geom.axes["energy"].edges
+    for energy_min, energy_max, value in zip(energies[:-1], energies[1:], fpp):
+        if np.all(np.isnan(value)):
+            log.warning(
+                "No two consecutive valid flux points were found in the energy range "
+                f"{energy_min:.3g} - {energy_max:.3g}. Therefore, F_pp cannot be "
+                "computed and has been set to NaN."
+            )
+
     table = Table(
         [energies[:-1], energies[1:], fpp, fpp_err, significance],
         names=("min_energy", "max_energy", "fpp", "fpp_err", "significance"),
@@ -1434,9 +1442,9 @@ def _generate_scan_values(power_min=-6, power_max=2, relative_error=1e-2):
 
 def _get_default_norm(
     norm,
-    scan_min=0.2,
-    scan_max=5,
-    scan_n_values=11,
+    scan_min=0.1,
+    scan_max=10,
+    scan_n_values=21,
     scan_n_sigma=2,
     scan_values=None,
     interp="lin",

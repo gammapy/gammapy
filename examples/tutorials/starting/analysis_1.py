@@ -258,7 +258,7 @@ print(analysis.observations.ids)
 
 ######################################################################
 # To see how to explore observations, please refer to the following
-# notebook: :doc:`CTAO with Gammapy </tutorials/data/cta>` or :doc:`H.E.S.S. with
+# notebook: :doc:`CTAO with Gammapy </tutorials/data/ctao>` or :doc:`H.E.S.S. with
 # Gammapy </tutorials/data/hess>`
 #
 

@@ -1,1 +1,0 @@
-Add ASDF serialization support for `~gammapy.maps.MapAxis`.

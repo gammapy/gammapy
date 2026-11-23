@@ -207,13 +207,19 @@ def test_compute_lightcurve_fvar(lc):
     assert_allclose(ffvar_err, [[[0.0795621]], [[0.074706]]])
 
 
-def test_compute_lightcurve_fpp(lc):
+def test_compute_lightcurve_fpp(lc, caplog):
     fpp = compute_lightcurve_fpp(lc)
     ffpp = fpp["fpp"].quantity
     ffpp_err = fpp["fpp_err"].quantity
 
-    assert_allclose(ffpp, [[[0.99373035]], [[0.53551551]]])
-    assert_allclose(ffpp_err, [[[0.07930673]], [[0.07397653]]])
+    assert_allclose(ffpp, [[[0.698212]], [[0.37150576]]], rtol=1e-3)
+    assert_allclose(ffpp_err, [[[0.0795621]], [[0.074706]]], rtol=1e-3)
+
+    lc.success.data[1, 1] = False
+    fpp = compute_lightcurve_fpp(lc)
+
+    assert "energy range 2 TeV - 5 TeV" in caplog.text
+    assert_allclose(fpp["fpp"].quantity.ravel(), [0.698212, np.nan], rtol=1e-3)
 
 
 def test_compute_lightcurve_doublingtime(lc):

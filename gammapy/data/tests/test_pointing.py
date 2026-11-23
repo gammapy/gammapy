@@ -57,6 +57,14 @@ def test_fixed_pointing_icrs():
     assert header["DEC_PNT"] == fixed_icrs.dec.deg
 
 
+def test_fixed_pointing_wrong_type_error():
+    with pytest.raises(TypeError, match="fixed_icrs must be .* or ICRS instance"):
+        FixedPointingInfo(fixed_icrs=(83.6, 22.0))
+
+    with pytest.raises(TypeError, match="fixed_altaz must be .* or AltAz instance"):
+        FixedPointingInfo(fixed_altaz=(83.6, 22.0))
+
+
 def test_fixed_pointing_info_altaz():
     """Test new api of FixedPointingInfo in AltAz (DRIFT)"""
     location = observatory_locations["ctao_south"]
