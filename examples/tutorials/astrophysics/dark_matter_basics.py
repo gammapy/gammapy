@@ -32,11 +32,11 @@ The total flux is simply their product `(Bergström, L. et al.,
 
 **Annihilation:**
 
-.. math:: \Phi_{\rm ann}(>E_{\rm min}) = \frac{\langle\sigma v\rangle}{8\pi m_\chi^2} \cdot J \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
+.. math:: \Phi_{\rm ann}(>E_{\rm min}) = \frac{\langle\sigma v\rangle}{8\pi m_\chi^2} J \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
 
 **Decay:**
 
-.. math:: \Phi_{\rm dec}(>E_{\rm min}) = \frac{1}{4\pi \tau_\chi m_\chi} \cdot D \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
+.. math:: \Phi_{\rm dec}(>E_{\rm min}) = \frac{1}{4\pi \tau_\chi m_\chi} D \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
 
 where :math:`m_\chi` is the DM particle mass,
 :math:`\langle\sigma v\rangle` is the velocity-averaged annihilation
@@ -551,11 +551,11 @@ fluxes_from_table = ContinuumPrimaryFlux(mDM=mDM, channel="tau", source=table)
 #
 # **Annihilation:**
 #
-# .. math:: \Phi_{\rm ann}(>E_{\rm min}) = \frac{\langle\sigma v\rangle}{8\pi m_\chi^2} \cdot J \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
+# .. math:: \Phi_{\rm ann}(>E_{\rm min}) = \frac{\langle\sigma v\rangle}{8\pi m_\chi^2} J \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
 #
 # **Decay:**
 #
-# .. math:: \Phi_{\rm dec}(>E_{\rm min}) = \frac{1}{4\pi \tau_\chi m_\chi} \cdot D \cdot \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
+# .. math:: \Phi_{\rm dec}(>E_{\rm min}) = \frac{1}{4\pi \tau_\chi m_\chi} D \int_{E_{\rm min}}^{E_{\rm max}} \frac{dN}{dE} \, dE
 #
 # The maps below show the absolute physical flux arriving at Earth (in
 # cm⁻² s⁻¹), **before** any telescope instrumental effects are applied.
