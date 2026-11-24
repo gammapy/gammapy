@@ -56,13 +56,13 @@ headers, but no HDU is compared with a definition of the format.
 v0.3: the release "mainly contains a change to allow wide-field instruments to
 use the format, namely the removal of the right ascension / declination pointing
 coordinates as mandatory and the elevation of the ``OBS_MODE`` keyword to a
-required keyword with defined values" `GADF-releases`_ . Gammapy has no
+required keyword with defined values" (`GADF releases`_). Gammapy has no
 representation of this difference, so it can neither validate against a chosen
 version nor report which version a file actually satisfies.
 
 **Conditional requirements.** In GADF v0.3, ``RA_PNT`` and ``DEC_PNT`` are
 mandatory except when ``OBS_MODE=DRIFT``, in which case ``ALT_PNT`` and
-``AZ_PNT`` are mandatory instead [GADF-events]_. A flat list of mandatory
+``AZ_PNT`` are mandatory instead (`GADF EVENTS`_). A flat list of mandatory
 keywords cannot express this.
 
 **No single place for the specification.** The expected HDU names, columns and
@@ -119,8 +119,8 @@ Compare versions
 The same file can be checked against several versions. An EVENTS header with
 ``OBS_MODE=DRIFT`` and no ``RA_PNT`` / ``DEC_PNT`` fails v0.2 (pointing
 keywords unconditionally mandatory) and passes v0.3 if ``ALT_PNT`` and
-``AZ_PNT`` are present. Conversely, the files of the H.E.S.S. DL3 DR1 data
-set [HESS-DR1]_ satisfy v0.2 but not v0.3 (see below).
+``AZ_PNT`` are present. Conversely, the files of the `H.E.S.S. DL3 DR1`_
+data set satisfy v0.2 but not v0.3 (see below).
 
 Validate a data store
 ---------------------
@@ -139,8 +139,8 @@ A data store can be validated at creation, or at any time afterwards:
 ``validate`` returns an `~astropy.table.Table` with one row per HDU of the HDU
 index table (columns ``OBS_ID``, ``HDU_CLASS``, ``HDU_NAME``, ``FILE``,
 ``VERSION``, ``HEADER``, ``TABLE``, ``N_ERRORS``, ``ERRORS``). The ``print``
-above, run with the implementation of this proposal on the H.E.S.S. DL3 DR1
-data set [HESS-DR1]_, gives:
+above, run with the implementation of this proposal on the
+`H.E.S.S. DL3 DR1`_ data set, gives:
 
 .. code-block:: text
 
@@ -286,11 +286,11 @@ optional:
      - documentation, not checked
 
 GADF specifies "the key name and data type for each metadata or data field"
-[GADF-about]_, so a type given by the specification is checked like any other
+(`GADF about`_), so a type given by the specification is checked like any other
 requirement. A column ``dtype`` is set only where the specification gives one:
 the EVENTS, GTI and POINTING columns and the WCS columns of BANDS tables. There,
 ``int64`` and ``float64`` are exact, ``float`` and ``int`` accept any width, and
-``EVENT_TYPE`` is a bit field (TFORM ``32X``) [GADF-events]_. The IRF pages give
+``EVENT_TYPE`` is a bit field (TFORM ``32X``) (`GADF EVENTS`_). The IRF pages give
 only the dimensionality and the unit of their columns, so the IRF column
 definitions carry no ``dtype``. Names that are not in a definition are allowed,
 since FITS headers and tables are open. A keyword value of ``""``, ``[]`` or
@@ -323,10 +323,11 @@ and an event-list column definition:
 The mandatory sets follow the specification page of each HDU. For instance,
 EVENTS, GTI and POINTING must carry the FITS reference-time keywords
 (``MJDREFI``, ``MJDREFF``, ``TIMEUNIT``, ``TIMESYS``, ``TIMEREF``), since "new
-files should always be written with all five header keys" [GADF-time]_, and
+files should always be written with all five header keys" (`GADF time`_), and
 EVENTS and POINTING must give the observatory Earth location (``GEOLON``,
-``GEOLAT``, ``ALTITUDE``) [GADF-events]_ [GADF-coords]_. The ``OBS_MODE``
-values are those defined by v0.3 [GADF-events]_, v0.2 defines none.
+``GEOLAT``, ``ALTITUDE``) (`GADF EVENTS`_, `GADF Earth location`_). The
+``OBS_MODE`` values are those defined by v0.3 (`GADF EVENTS`_), v0.2 defines
+none.
 
 Header definitions are composed from keyword blocks with
 ``compose_header(*blocks, required=..., updates=...)``. Blocks that any FITS
@@ -380,7 +381,7 @@ HDU against the definitions of a format:
 
 1. **Resolve the HDU class key.** It is either given (``hdu="AEFF_2D"``) or
    resolved from the header by the format's ``HDU_CLASS_KEY`` function. For
-   GADF this uses the ``HDUCLASn`` hierarchy [GADF-hduclass]_, with a fallback
+   GADF this uses the ``HDUCLASn`` hierarchy (`GADF HDU classes`_), with a fallback
    on ``EXTNAME`` when ``HDUCLAS4`` is absent. Identification is part of
    validation because the class selects the definitions, and the hard case is
    precisely a header whose identifying keywords are missing. An ``EXTNAME``
@@ -505,7 +506,7 @@ Importing the validator does not load ``gammapy.data``, ``gammapy.irf`` or
 Relation to other work
 ======================
 
-**PIG 25 metadata containers.** ``MetaData`` classes [PIG25]_ are the data
+**PIG 25 metadata containers.** ``MetaData`` classes (:ref:`PIG 25 <pig-025>`) are the data
 model: typed Python objects describing an observation, converted to and from
 FITS keywords through ``METADATA_FITS_KEYS``. The format registry is the format
 specification: which keywords and columns a file must carry, for which
@@ -581,7 +582,7 @@ Implementation plan
 
 The implementation will be split into three pull requests, one for each part of
 the design, each with its tests. Tests marked ``requires_data`` run on the
-H.E.S.S. DL3 DR1 data set [HESS-DR1]_.
+`H.E.S.S. DL3 DR1`_ data set.
 
 1. Registry and DefinitionValidator
 -----------------------------------
@@ -645,21 +646,11 @@ Decision
 
 The PIG was discussed and reviewed among Gammapy developers. It is considered accepted.
 
-.. [HESS-DR1] `H.E.S.S. Collaboration 2018, H.E.S.S. first public test data
-   release, arXiv:1810.04516 <https://arxiv.org/abs/1810.04516>`_
-.. [PIG25] `PIG 25 - Metadata container for Gammapy
-   <https://docs.gammapy.org/dev/development/pigs/pig-025.html>`_
-.. [GADF-about] `GADF v0.3, About
-   <https://gamma-astro-data-formats.readthedocs.io/en/v0.3/about.html>`_
-.. [GADF-coords] `GADF v0.3, Earth location
-   <https://gamma-astro-data-formats.readthedocs.io/en/v0.3/general/coordinates.html#coords-location>`_
-.. [GADF-events] `GADF v0.3, EVENTS
-   <https://gamma-astro-data-formats.readthedocs.io/en/v0.3/events/events.html>`_
-.. [GADF-hduclass] `GADF v0.3, HDU classes
-   <https://gamma-astro-data-formats.readthedocs.io/en/v0.3/general/hduclass.html>`_
-.. [GADF-releases] `GADF releases
-   <https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/releases>`_
-.. [GADF-time] `GADF v0.3, Time
-   <https://gamma-astro-data-formats.readthedocs.io/en/v0.3/general/time.html#time-formats>`_
-
+.. _GADF about: https://gamma-astro-data-formats.readthedocs.io/en/v0.3/about.html
+.. _GADF Earth location: https://gamma-astro-data-formats.readthedocs.io/en/v0.3/general/coordinates.html#coords-location
+.. _GADF EVENTS: https://gamma-astro-data-formats.readthedocs.io/en/v0.3/events/events.html
+.. _GADF HDU classes: https://gamma-astro-data-formats.readthedocs.io/en/v0.3/general/hduclass.html
+.. _GADF releases: https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/releases
+.. _GADF time: https://gamma-astro-data-formats.readthedocs.io/en/v0.3/general/time.html#time-formats
+.. _H.E.S.S. DL3 DR1: https://arxiv.org/abs/1810.04516
 .. _GH 6886: https://github.com/gammapy/gammapy/pull/6886
