@@ -5,9 +5,9 @@ import numpy as np
 from scipy.special import lambertw
 from scipy.stats import chi2
 from gammapy.utils.roots import find_roots
-from .fit_statistics import cash, wstat
+from .fit_statistics import cash, wstat, cstat
 
-__all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
+__all__ = ["WStatCountsStatistic", "CashCountsStatistic", "CstatCountsStatistic"]
 
 
 class CountsStatistic(abc.ABC):
@@ -479,3 +479,80 @@ class WStatCountsStatistic(CountsStatistic):
         return WStatCountsStatistic(
             n_on=self.n_on[key], n_off=self.n_off[key], alpha=self.alpha[key]
         )
+
+
+class CstatCountsStatistic(CountsStatistic):
+    """Class to compute statistics for Poisson distributed variable with known background using the cstat parametrization.
+
+    Parameters
+    ----------
+    n_on : int
+        Measured counts.
+    mu_bkg : float
+        Known level of background.
+    """
+
+    def __init__(self, n_on, mu_bkg):
+        self.n_on = np.asanyarray(n_on)
+        self.mu_bkg = np.asanyarray(mu_bkg)
+
+    @property
+    def n_bkg(self):
+        """Expected background counts."""
+        return self.mu_bkg
+
+    @property
+    def n_sig(self):
+        """Excess."""
+        return self.n_on - self.n_bkg
+
+    @property
+    def error(self):
+        """Approximate error from the covariance matrix."""
+        return np.sqrt(self.n_on)
+
+    @property
+    def stat_null(self):
+        """Stat value for null hypothesis, i.e. 0 expected signal counts."""
+        return cstat(self.n_on, self.mu_bkg + 0)
+
+    @property
+    def stat_max(self):
+        """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - mu_bkg."""
+        return cstat(self.n_on, self.n_on)
+
+    def info_dict(self):
+        """A dictionary of the relevant quantities.
+
+        Returns
+        -------
+        info_dict : dict
+            Dictionary with summary info.
+        """
+        info_dict = super().info_dict()
+        info_dict["mu_bkg"] = self.mu_bkg
+        return info_dict
+
+    def __str__(self):
+        str_ = f"{self.__class__.__name__}\n"
+        str_ += super().__str__()
+        str_ += "\t{:32}: {:.2f} \n".format(
+            "Predicted background counts", self.info_dict()["mu_bkg"]
+        )
+        return str_.expandtabs(tabsize=2)
+
+    def _stat_fcn(self, mu, delta=0, index=None):
+        return cstat(self.n_on[index], self.mu_bkg[index] + mu) - delta
+
+    def _n_sig_matching_significance_fcn(self, n_sig, significance, index):
+        TS0 = cstat(n_sig + self.mu_bkg[index], self.mu_bkg[index])
+        TS1 = cstat(n_sig + self.mu_bkg[index], self.mu_bkg[index] + n_sig)
+        return np.sign(n_sig) * np.sqrt(np.clip(TS0 - TS1, 0, None)) - significance
+
+    def sum(self, axis=None):
+        n_on = self.n_on.sum(axis=axis)
+        bkg = self.n_bkg.sum(axis=axis)
+        return CstatCountsStatistic(n_on=n_on, mu_bkg=bkg)
+
+    def __getitem__(self, key):
+        return CstatCountsStatistic(n_on=self.n_on[key], mu_bkg=self.n_bkg[key])

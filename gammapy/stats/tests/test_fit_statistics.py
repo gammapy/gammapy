@@ -11,6 +11,7 @@ from gammapy import stats
 from gammapy.stats.fit_statistics_cython import cash_sum_cython
 from gammapy.stats.fit_statistics import (
     CashFitStatistic,
+    CstatFitStatistic,
     WeightedCashFitStatistic,
     WStatFitStatistic,
     Chi2FitStatistic,
@@ -145,6 +146,32 @@ def test_cash_sum_compiled(test_data):
 
     stat = stat_function(counts=counts, npred=npred)
     ref = stats.cash(counts, npred).sum()
+    assert_allclose(stat, ref)
+
+    compilation.COMPILATION_BACKEND_DEFAULT = compilation.CompilationBackendEnum.cython
+
+
+@requires_dependency("numba")
+def test_cstat_sum_compiled(test_data):
+    counts = np.array(test_data["n_on"], dtype=float)
+    npred = np.array(test_data["mu_sig"], dtype=float)
+
+    stat_function = get_fit_statistics_compiled()["cstat_sum_compiled"]
+    # assert stat_function == cstat_sum_cython
+
+    stat = stat_function(counts=counts, npred=npred)
+    ref = stats.cstat(counts, npred).sum()
+    assert_allclose(stat, ref)
+
+    import gammapy.utils.compilation as compilation
+
+    compilation.COMPILATION_BACKEND_DEFAULT = compilation.CompilationBackendEnum.jit
+
+    stat_function = get_fit_statistics_compiled()["cstat_sum_compiled"]
+    # assert stat_function != cstat_sum_cython
+
+    stat = stat_function(counts=counts, npred=npred)
+    ref = stats.cstat(counts, npred).sum()
     assert_allclose(stat, ref)
 
     compilation.COMPILATION_BACKEND_DEFAULT = compilation.CompilationBackendEnum.cython
