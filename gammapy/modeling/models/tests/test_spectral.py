@@ -773,7 +773,7 @@ def test_pivot_energy():
         ValueError,
         match="Pivot energy cannot be computed for the EBLAbsorptionNormSpectralModel model.",
     ):
-        ebl.pivot_energy
+        _ = ebl.pivot_energy
 
     compound = ebl * ecpl
     assert_quantity_allclose(compound.pivot_energy, 1.1608281 * u.TeV, rtol=5e-2)
@@ -797,7 +797,7 @@ def test_pivot_energy():
         match="Pivot energy cannot be computed for a CompoundSpectralModel "
         "contained within another CompoundSpectralModel.",
     ):
-        compound_double.pivot_energy
+        _ = compound_double.pivot_energy
 
     compound_ebl = ebl * ebl
     with pytest.raises(
@@ -806,7 +806,7 @@ def test_pivot_energy():
         "as none of its models \\(EBLAbsorptionNormSpectralModel, "
         "EBLAbsorptionNormSpectralModel\\) has a reference energy.",
     ):
-        compound_ebl.pivot_energy
+        _ = compound_ebl.pivot_energy
 
 
 def test_template_spectral_model_evaluate_tiny():
