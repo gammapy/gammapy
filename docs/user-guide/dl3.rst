@@ -69,6 +69,35 @@ More details on these tables and their content can be found in
 https://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/index.html.
 
 
+Validating a data store
+-----------------------
+
+The HDUs of a `~gammapy.data.DataStore` can be checked against a version of the
+`GADF <https://gamma-astro-data-formats.readthedocs.io>`_ specification with
+`~gammapy.data.DataStore.validate`. Only the FITS headers are read, so the
+validation is fast even for large event lists. It returns a table with one row
+per HDU of the HDU index table, with the errors found:
+
+.. testcode::
+
+    from gammapy.data import DataStore
+    data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
+
+    # each HDU against the version it declares in HDUVERS
+    summary = data_store.validate()
+
+    # selected observations against GADF v0.3
+    summary = data_store.validate(version="0.3", obs_id=[23523, 23526])
+    failed = summary[summary["N_ERRORS"] > 0]
+
+The full reports are stored in ``data_store.validation``, keyed by
+``(OBS_ID, HDU_CLASS)``. With ``strict=True``, a `ValueError` listing all the
+non-compliant HDUs is raised. The validation can also be run when the data store
+is created, with ``DataStore.from_dir(..., validate=True)``, or as the
+``"format"`` check of `~gammapy.data.DataStore.check`. Validation is off by
+default and does not change how observations are loaded.
+
+
 Working with event lists
 ------------------------
 
