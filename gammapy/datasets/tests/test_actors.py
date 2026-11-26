@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tests for the actors module."""
 
-import pytest
 from gammapy.datasets import Datasets, MapDataset
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.maps import MapAxis, WcsNDMap
