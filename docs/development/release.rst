@@ -229,12 +229,19 @@ Releasing the final version
 
     git checkout v2.0.x
     python ./dev/prepare-release.py --release v2.0
+    git add CITATION.cff
+    git commit -s -m "Prepare release v2.0"
     git push
+
+#. Next, you need to manually trigger the `cffconvert` workflow
+   `here <https://github.com/gammapy/gammapy/actions/workflows/cffconvert.yml>`__.
+   This allows conversion and validation of the codemeta.json to zenodo.json,
+   to allow for the automatic release on Zenodo.
 
 #. Locally create a new release tag like ``v2.0`` for Gammapy and push the tag to upstream::
 
     git tag -s v2.0 -m "Tagging v2.0"
-    git push upstream v2.0.x
+    git push upstream v2.0
 
 #. In the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__:
 
