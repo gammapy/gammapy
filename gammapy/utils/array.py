@@ -11,7 +11,6 @@ __all__ = [
     "round_up_to_even",
     "round_up_to_odd",
     "shape_2N",
-    "shape_divisible_by",
     "symmetric_crop_pad_width",
 ]
 
@@ -70,27 +69,6 @@ def shape_2N(shape, N=3):
     """
     shape = np.array(shape)
     new_shape = shape + (2**N - np.mod(shape, 2**N))
-    return tuple(new_shape)
-
-
-def shape_divisible_by(shape, factor):
-    """
-    Round a given shape to values that are divisible by factor.
-
-    Parameters
-    ----------
-    shape : tuple
-        Input shape.
-    factor : int
-        Divisor.
-
-    Returns
-    -------
-    new_shape : tuple
-        New shape extended to integers divisible by factor.
-    """
-    shape = np.array(shape)
-    new_shape = shape + (shape % factor)
     return tuple(new_shape)
 
 
