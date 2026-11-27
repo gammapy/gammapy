@@ -39,6 +39,15 @@ authors:
   affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad
     de La Laguna, C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
   orcid: "https://orcid.org/0009-0004-0816-0700"
+- given-names: Ebraam
+  family-names: Ashraf
+  affiliation: "Cairo University, Faculty of Engineering, Computer Engineering Department"
+  orcid: "https://orcid.org/0009-0005-2096-3466"
+- given-names: Y. Emre
+  family-names: Bahar
+  affiliation: "INAF, Osservatorio di Astrofisica e Scienza dello Spazio, via Piero
+    Gobetti 93/3, 40129 Bologna, Italy"
+  orcid: "https://orcid.org/0000-0002-4893-7615"
 - given-names: Luis
   family-names: Barrios-Jimenez
   affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad
@@ -58,6 +67,10 @@ authors:
   family-names: Biederbeck
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
   orcid: "https://orcid.org/0000-0003-3708-9785"
+- given-names: Nicki R.
+  family-names: Bond
+  affiliation: "School of Physics, University College Dublin, Belfield, Dublin 4, Ireland"
+  orcid: "https://orcid.org/0009-0008-1656-4907"
 - given-names: Johannes
   family-names: Buchner
   affiliation: "Max Planck Institute for Extraterrestrial Physics, Giessenbachstrasse
@@ -73,6 +86,15 @@ authors:
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
     Paris, France"
   orcid: "https://orcid.org/0000-0001-6484-485X"
+- given-names: Pratham
+  family-names: Chaudhary
+  affiliation: "Indian Institute of Technology (BHU) Varanasi, India"
+  orcid: "https://orcid.org/0009-0000-3755-6262"
+- given-names: Yaocheng
+  family-names: Chen
+  affiliation: "Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG),
+    University of São Paulo (USP), Rua do Matão 1226, 05508-090 São Paulo, SP, Brazil"
+  orcid: "https://orcid.org/0000-0002-8967-4911"
 - given-names: Julia
   family-names: Djuvsland
   affiliation: "University of Bergen, Norway and Max Planck Institute for Nuclear
@@ -82,6 +104,10 @@ authors:
   family-names: Donath
   affiliation: "Center for Astrophysics | Harvard & Smithsonian, USA"
   orcid: "https://orcid.org/0000-0003-4568-7005"
+- given-names: Anshita
+  family-names: Dubey
+  affiliation: "Department of Computer Science and Engineering, JSS University, India"
+  orcid: "https://orcid.org/0009-0002-0120-8586"
 - given-names: Katharina
   family-names: Egg
   affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
@@ -106,11 +132,24 @@ authors:
   affiliation: Laboratoire Univers et Théories, Observatoire de Paris, Université
     PSL,\ \ Université Paris Cité, CNRS, F-92190 Meudon, France
   orcid: "https://orcid.org/0000-0002-7372-9703"
+- given-names: Júlia
+  family-names: Gouvêa Mamprim
+  affiliation: "São Carlos Institute of Physics, University of São Paulo, IFSC-USP, São Carlos, Brazil"
+  orcid: "https://orcid.org/0000-0002-3297-960X"
+- given-names: Karthik Koundinya
+  family-names: Gowrawaram
+  affiliation: "Independent researcher"
+  orcid: "https://orcid.org/0009-0003-2088-6208"
 - given-names: Lucas
   family-names: Gréaux
   affiliation: "Fakultät für Physik & Astronomie, Ruhr-Universität Bochum, D-44780
     Bochum, Germany"
   orcid: "https://orcid.org/0000-0003-0627-8436"
+- given-names: Basmala
+  family-names: Hekal
+  affiliation: "Faculty of Computer and Information, Computer Science Department,
+    Tanta University, Egypt."
+  orcid: "https://orcid.org/0009-0001-6071-9522"
 - given-names: Bruno
   family-names: Khélifi
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -133,6 +172,11 @@ authors:
   family-names: Lundy
   affiliation: "Physics Department, McGill University, Montreal, QC H3A 2T8, Canada"
   orcid: "https://orcid.org/0000-0003-3802-1619"
+- given-names: Ahmed
+  family-names: Mahmoud
+  affiliation: "Faculty of Engineering, Systems and Biomedical Engineering,
+    Cairo University, Egypt."
+  orcid : "https://orcid.org/0009-0008-8751-0615"
 - given-names: 'Kurt'
   family-names: 'McKee'
   affiliation: 'University of Chicago, USA'
@@ -141,6 +185,10 @@ authors:
   family-names: Mender
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
   orcid: "https://orcid.org/0000-0002-0755-0609"
+- given-names: Esther
+  family-names: Michelle
+  affiliation: "Cairo University, Faculty of Engineering, Computer Engineering Department, Giza, Egypt"
+  orcid: "https://orcid.org/0009-0009-3880-5916"
 - given-names: Edgar
   family-names: Molina
   affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad
@@ -193,7 +241,7 @@ authors:
   family-names: Pintore
   affiliation: "INAF/IASF PALERMO, Italy"
   orcid: "https://orcid.org/0000-0002-3869-2925"
-- given-names: Tobi
+- given-names: Tobias
   family-names: Preis
   affiliation: "Universität Innsbruck, Institut für Astro- und Teilchenphysik, Technikerstraße
     25, 6020 Innsbruck, Austria"
@@ -203,6 +251,10 @@ authors:
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
     Paris, France"
   orcid: "https://orcid.org/0000-0002-4710-2165"
+- given-names: Syed Ahnaf
+  family-names: Raza
+  affiliation: "Department of Computer Science, Bahria University, Karachi, Pakistan; VentureDive, Karachi, Pakistan"
+  orcid: "https://orcid.org/0009-0005-5218-378X"
 - given-names: Maxime
   family-names: Regeard
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
