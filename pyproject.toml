@@ -62,6 +62,9 @@ distributed = [
     "ray[default]>=2.9,<2.55; python_version < '3.14'",
     "ray[default]>=2.55; python_version >= '3.14'",
 ]
+darkmatter = [
+    "HDMSpectra @ git+https://github.com/nickrodd/HDMSpectra.git",
+]
 extra = [
     "naima",
     "sherpa; platform_system != 'Windows'",
@@ -70,7 +73,7 @@ extra = [
     "numba",
 ]
 
-all = ["gammapy[extra, bayesian, distributed, asdf]"]
+all = ["gammapy[extra, bayesian, distributed, asdf, hdmspectra]"]
 
 all_no_ray = ["gammapy[extra, bayesian, asdf]"]
 

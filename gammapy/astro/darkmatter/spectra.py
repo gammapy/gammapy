@@ -25,8 +25,10 @@ from gammapy.utils.deprecation import (
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_map_columns
 
+
 __all__ = [
     "ContinuumPrimaryFlux",
+    "HDMSpectraPrimaryFlux",
     "DarkMatterSpectralModel",
     "DarkMatterAnnihilationSpectralModel",
     "DarkMatterDecaySpectralModel",
@@ -528,13 +530,170 @@ class ContinuumPrimaryFlux(TemplateNDSpectralModel):
         )
 
 
+class HDMSpectraPrimaryFlux(SpectralModel):
+    """Primary-particle spectrum computed with HDMSpectra.
+
+    HDMSpectra evaluates the yield ``dN/dx`` for a requested initial state,
+    final state, dark matter mass, and dimensionless energy fraction. This
+    class converts that yield to the differential spectrum ``dN/dE`` expected
+    by a Gammapy spectral model.
+
+    Parameters
+    ----------
+    mDM : `~astropy.units.Quantity`
+        Dark matter mass. The quantity is converted to GeV before it is passed
+        to HDMSpectra.
+    initialstate : str or int
+        HDMSpectra initial state, for example ``"b"`` or ``"W"``. Supported
+        particle identifiers and polarization labels are defined by
+        HDMSpectra.
+    finalstate : str or int
+        HDMSpectra final state, for example ``"gamma"``, ``"e"``, or ``"p"``.
+        Defaults to photons (``22``).
+    hdm_data_file : str or `~pathlib.Path`
+        Path to the HDMSpectra HDF5 data file. The file must exist.
+
+    Notes
+    -----
+    This implementation calls HDMSpectra with ``annihilation=True``, for which
+    ``x = E / mDM`` and ``dN/dE = (dN/dx) / mDM``. For a decay model,
+    `DarkMatterSpectralModel` passes ``mDM / 2`` to the primary-flux model;
+    this gives the decay energy fraction ``x = 2 E / mDM``.
+
+    The path in ``hdm_data_file`` must exist both when creating and restoring
+    the model. The HDMSpectra package is needed to evaluate the restored model.
+    """
+
+    def __init__(self, mDM, initialstate, finalstate=22, *, hdm_data_file):
+        super().__init__()
+        self.mDM = u.Quantity(mDM).to(u.GeV)
+        self.initialstate = initialstate
+        self.finalstate = finalstate
+        path = make_path(hdm_data_file)
+        if path is None or not Path(path).is_file():
+            raise FileNotFoundError(f"HDMSpectra data file not found: {hdm_data_file}")
+        self.hdm_data_file = Path(path)
+
+    def evaluate(self, energy, *args):
+        """Evaluate the primary differential particle (photon by default) yield using HDMSpectra.
+
+        HDMSpectra returns ``dN/dx``. This method converts it to ``dN/dE``
+        using the Jacobian for the energy-fraction convention used in the
+        HDMSpectra call.
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            Energy values (array-like) at which to evaluate the spectrum.
+        *args
+            Additional spectral-model evaluation arguments. They are
+            currently unused.
+
+        Returns
+        -------
+        dN_dE : `~astropy.units.Quantity`
+            Differential particle (photon by default) yield per unit energy.
+        """
+
+        mDM_gev = self.mDM.to_value(u.GeV)
+        energy_gev = u.Quantity(energy).to_value(u.GeV)
+        x = np.asarray(energy_gev / mDM_gev)
+        if np.any(~np.isfinite(x)):
+            raise ValueError("Energy values must be finite.")
+
+        x_flat = x.reshape(-1)
+        valid = (x_flat >= 1e-6) & (x_flat <= 1)
+        if np.any(valid & (x_flat < 1e-4)):
+            warnings.warn(
+                "Some supported energy fractions are below 1e-4, where "
+                "HDMSpectra results may be less reliable.",
+                stacklevel=2,
+            )
+
+        dN_dx = np.zeros(x_flat.shape, dtype=float)
+        if np.any(valid):
+            try:
+                from HDMSpectra import HDMSpectra
+            except ImportError as exc:
+                raise ImportError(
+                    "The HDMSpectra source requires the optional dependency. "
+                    "Install it with `pip install 'gammapy[hdmspectra]'`."
+                ) from exc
+
+            dN_dx[valid] = HDMSpectra.spec(
+                self.finalstate,
+                self.initialstate,
+                x_flat[valid],
+                mDM_gev,
+                self.hdm_data_file,
+                annihilation=True,
+            )
+
+        return dN_dx.reshape(x.shape) / self.mDM
+
+    def allowed_channels(self):
+        """Return the allowed initial-state channels for HDMSpectra."""
+        from HDMSpectra.pclid import str_i
+
+        return str_i.tolist()
+
+    def to_dict(self, full_output=False):
+        """Serialize the configuration needed to recreate this primary flux.
+
+        Parameters
+        ----------
+        full_output : bool, optional
+            Accepted for compatibility with the Gammapy model interface.
+            It does not change the returned data.
+
+        Returns
+        -------
+        data : dict
+            Dictionary containing the model type, mass, initial and final
+            states, and HDMSpectra data-file path. Use `from_dict` to recreate
+            the model.
+        """
+        return {
+            "type": "HDMSpectraPrimaryFlux",
+            "mDM": self.mDM.to_string(),
+            "initialstate": self.initialstate,
+            "finalstate": self.finalstate,
+            "hdm_data_file": str(self.hdm_data_file),
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        """Recreate a primary flux from `to_dict` output.
+
+        Parameters
+        ----------
+        data : dict
+            Dictionary containing ``mDM``, ``initialstate``, ``finalstate``,
+            and ``hdm_data_file``.
+
+        Returns
+        -------
+        flux : `HDMSpectraPrimaryFlux`
+            Reconstructed primary-flux model.
+        """
+        return cls(
+            mDM=u.Quantity(data["mDM"]),
+            initialstate=data["initialstate"],
+            finalstate=data["finalstate"],
+            hdm_data_file=data["hdm_data_file"],
+        )
+
+
 @deprecated("2.2", alternative="ContinuumPrimaryFlux")
 class PrimaryFlux(ContinuumPrimaryFlux):
     tag = ["PrimaryFlux", "dm-pf"]
     pass
 
 
-PRIMARY_FLUX_REGISTRY = {cls.tag[0]: cls for cls in (ContinuumPrimaryFlux, PrimaryFlux)}
+PRIMARY_FLUX_REGISTRY = {
+    cls.__name__: cls
+    for cls in (ContinuumPrimaryFlux, PrimaryFlux, HDMSpectraPrimaryFlux)
+}
 
 # ---------------------------------------------------------------------------
 # Spectral model
@@ -585,8 +744,10 @@ class DarkMatterSpectralModel(SpectralModel):
     mDM : `~astropy.units.Quantity`
         Dark matter particle mass.
     channel : str
-        Annihilation/Decay channel for the primary flux spectrum e.g. ``"b"`` for bb̄. See
-        `ContinuumPrimaryFlux.channel_registry` for available channels.
+        Annihilation/Decay channel or initial state for the primary spectrum.
+        For PPPC4, CosmiXs, or a custom table, see `ContinuumPrimaryFlux.channel_registry`.
+        For HDMSpectra, this is an HDMSpectra initial state such as
+        ``"b"`` or ``"W"``; its supported labels are defined by HDMSpectra.
     scale : float, optional
         Dimensionless normalization parameter applied multiplicatively to
         the predicted flux, intended to be left free in spectral fits.
@@ -607,8 +768,8 @@ class DarkMatterSpectralModel(SpectralModel):
         rate) or ``4`` for Dirac particles. Default is 2.
     primary_flux : primary flux model, optional
         Primary photon spectrum per annihilation event. Must be an
-        instance of `ContinuumPrimaryFlux`. If not provided, a default
-        `ContinuumPrimaryFlux` is constructed using ``mDM`` and ``channel``.
+        instance of a `SpectralModel`. If not provided, a primary flux is
+        constructed from ``source``.
     source : str, optional
         Data source for the spectral tables. Options are:
 
@@ -616,11 +777,16 @@ class DarkMatterSpectralModel(SpectralModel):
         * ``"pppc4"``: Cirelli et al. (2011, 2016) PPPC4DMID tables.
         * A path to a custom file readable by `astropy.table.Table.read`
           (extensions ``.dat``, ``.txt``, ``.csv``, or ``.ecsv``).
+        * ``"hdmspectra"``: Bauer et al. (2021) HDMSpectra computation.
 
-            If a custom file path is provided, it must contain ``"mDM"`` and
-            ``"Log[10,x]"`` columns (after applying ``mapping_dict`` if given),
-            plus columns named after the requested annihilation channel(s)
-            using the internal channel registry naming convention.
+        If a custom file path is provided, it must contain ``"mDM"`` and
+        ``"Log[10,x]"`` columns (after applying ``mapping_dict`` if given),
+        plus columns named after the requested annihilation channel(s)
+        using the internal channel registry naming convention.
+
+    hdm_data_file : str or `~pathlib.Path`, optional
+        Path to the HDMSpectra HDF5 data file. Required when
+        ``source="hdmspectra"``.
     mapping_dict : dict, optional
         Mapping dictionary used to rename the columns of a custom source
         file to the expected internal column names. Only used when
@@ -655,6 +821,8 @@ class DarkMatterSpectralModel(SpectralModel):
        uncertainties of Dbar spectrum produced from dark matter"
        <https://arxiv.org/abs/2411.04815>`_ and available on
        `GitHub <https://github.com/ajueid/CosmiXs>`_
+    .. [4] `Bauer et al. (2021), "Dark Matter Spectra from the Electroweak to the
+       Planck Scale" <https://arxiv.org/abs/2007.15001>`_
     """
 
     THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
@@ -682,6 +850,7 @@ class DarkMatterSpectralModel(SpectralModel):
         source=None,
         mapping_dict=None,
         annihilation=True,
+        hdm_data_file=None,
     ):
         self._annihilation = annihilation
 
@@ -700,11 +869,24 @@ class DarkMatterSpectralModel(SpectralModel):
         self._channel = channel
         self.source = source
         self.mapping_dict = mapping_dict
+
         if primary_flux is not None:
             if hasattr(primary_flux, "channel"):
                 primary_flux.channel = channel
             if hasattr(primary_flux, "mDM"):
                 primary_flux.mDM = self._expected_primary_flux_mass
+        elif source == "hdmspectra":
+            if hdm_data_file is None:
+                raise ValueError(
+                    "hdm_data_file is required when source is 'hdmspectra'."
+                )
+
+            primary_flux = HDMSpectraPrimaryFlux(
+                self._expected_primary_flux_mass,
+                initialstate=channel,
+                finalstate=22,
+                hdm_data_file=hdm_data_file,
+            )
         else:
             primary_flux = ContinuumPrimaryFlux(
                 self._expected_primary_flux_mass,
@@ -712,6 +894,7 @@ class DarkMatterSpectralModel(SpectralModel):
                 source=self.source,
                 mapping_dict=self.mapping_dict,
             )
+
         self._primary_flux = primary_flux
 
         factor = u.Quantity(factor)
@@ -901,8 +1084,8 @@ class DarkMatterSpectralModel(SpectralModel):
                 )
             primary_flux = pf_cls.from_dict(pf_data)
 
-        data.pop("source", None)
-        data.pop("mapping_dict", None)
+        source = data.pop("source", None)
+        mapping_dict = data.pop("mapping_dict", None)
         annihilation = data.pop("annihilation", default_annihilation)
         pars = {p["name"]: p for p in data.pop("parameters")}
 
@@ -917,6 +1100,8 @@ class DarkMatterSpectralModel(SpectralModel):
             scale=pars["scale"]["value"],
             factor=factor,
             primary_flux=primary_flux,
+            source=source,
+            mapping_dict=mapping_dict,
             annihilation=annihilation,
             **data,
         )

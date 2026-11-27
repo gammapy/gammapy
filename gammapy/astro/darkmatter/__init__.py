@@ -17,6 +17,7 @@ from .spectra import (
     DarkMatterSpectralModel,
     DarkMatterAnnihilationSpectralModel,
     DarkMatterDecaySpectralModel,
+    HDMSpectraPrimaryFlux,
     PrimaryFlux,
 )
 from .utils import JFactory, add_factor_prior
@@ -24,6 +25,7 @@ from .utils import JFactory, add_factor_prior
 __all__ = [
     "add_factor_prior",
     "ContinuumPrimaryFlux",
+    "HDMSpectraPrimaryFlux",
     "PrimaryFlux",
     "DarkMatterSpectralModel",
     "DarkMatterAnnihilationSpectralModel",
