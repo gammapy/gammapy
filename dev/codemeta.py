@@ -60,7 +60,7 @@ def update_codemeta(maintainers, filename, setup_file=None):
 @click.option(
     "--maintainers",
     multiple=True,
-    default=["Feijen", "Remy", "Sinha", "Terrier"],
+    default=["Feijen", "Khélifi", "Remy", "Sinha", "Terrier"],
     help="Maintainers name.",
 )
 @click.option(
