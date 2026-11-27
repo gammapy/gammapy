@@ -1,0 +1,1 @@
+Default ``energy`` was a single `~astropy.units.Quantity` instead of a list of `~astropy.units.Quantity`, causing `Background2D.plot_at_energy()` and `Background3D.plot_at_energy()` to fail when using the default.
