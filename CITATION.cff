@@ -8,12 +8,12 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
-date-released: 2025-12-16
+date-released: 2026-11-27
 keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
-version: v2.0.1
+version: v2.0.2
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
@@ -69,7 +69,8 @@ authors:
   orcid: "https://orcid.org/0000-0003-3708-9785"
 - given-names: Nicki R.
   family-names: Bond
-  affiliation: "School of Physics, University College Dublin, Belfield, Dublin 4, Ireland"
+  affiliation: "School of Physics, University College Dublin, Belfield, Dublin 4,
+    Ireland"
   orcid: "https://orcid.org/0009-0008-1656-4907"
 - given-names: Johannes
   family-names: Buchner
@@ -129,12 +130,13 @@ authors:
   orcid: "https://orcid.org/0000-0003-1832-4129"
 - given-names: Claudio
   family-names: Galelli
-  affiliation: Laboratoire Univers et Théories, Observatoire de Paris, Université
-    PSL,\ \ Université Paris Cité, CNRS, F-92190 Meudon, France
+  affiliation: Laboratoire Univers et Théories, Observatoire de Paris,
+    Université PSL,\ \ Université Paris Cité, CNRS, F-92190 Meudon, France
   orcid: "https://orcid.org/0000-0002-7372-9703"
 - given-names: Júlia
   family-names: Gouvêa Mamprim
-  affiliation: "São Carlos Institute of Physics, University of São Paulo, IFSC-USP, São Carlos, Brazil"
+  affiliation: "São Carlos Institute of Physics, University of São Paulo, IFSC-USP,
+    São Carlos, Brazil"
   orcid: "https://orcid.org/0000-0002-3297-960X"
 - given-names: Karthik Koundinya
   family-names: Gowrawaram
@@ -174,9 +176,9 @@ authors:
   orcid: "https://orcid.org/0000-0003-3802-1619"
 - given-names: Ahmed
   family-names: Mahmoud
-  affiliation: "Faculty of Engineering, Systems and Biomedical Engineering,
-    Cairo University, Egypt."
-  orcid : "https://orcid.org/0009-0008-8751-0615"
+  affiliation: "Faculty of Engineering, Systems and Biomedical Engineering, Cairo
+    University, Egypt."
+  orcid: "https://orcid.org/0009-0008-8751-0615"
 - given-names: 'Kurt'
   family-names: 'McKee'
   affiliation: 'University of Chicago, USA'
@@ -187,7 +189,8 @@ authors:
   orcid: "https://orcid.org/0000-0002-0755-0609"
 - given-names: Esther
   family-names: Michelle
-  affiliation: "Cairo University, Faculty of Engineering, Computer Engineering Department, Giza, Egypt"
+  affiliation: "Cairo University, Faculty of Engineering, Computer Engineering Department,
+    Giza, Egypt"
   orcid: "https://orcid.org/0009-0009-3880-5916"
 - given-names: Edgar
   family-names: Molina
@@ -253,7 +256,8 @@ authors:
   orcid: "https://orcid.org/0000-0002-4710-2165"
 - given-names: Syed Ahnaf
   family-names: Raza
-  affiliation: "Department of Computer Science, Bahria University, Karachi, Pakistan; VentureDive, Karachi, Pakistan"
+  affiliation: "Department of Computer Science, Bahria University, Karachi, Pakistan;
+    VentureDive, Karachi, Pakistan"
   orcid: "https://orcid.org/0009-0005-5218-378X"
 - given-names: Maxime
   family-names: Regeard
