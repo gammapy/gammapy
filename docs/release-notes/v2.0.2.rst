@@ -13,6 +13,13 @@
 Summary
 -------
 
+A security vulnerability was found (CVE-2026-134694). When reading a WCS map from a
+FITS file (e.g. with `gammapy.maps.Map.read`), Gammapy (<=2.1) evaluates the content
+of the ``WCSSHAPE`` GADF header keyword as Python code. A maliciously crafted FITS file
+could therefore execute arbitrary code as user on your computer when opened.
+**All Gammapy versions up to 2.0.1 and 2.1 are affected.** This has been adjusted in this version.
+We thank Dilanka Kaushal Hewage (@r3vpwnx) for reporting the issue.
+
 
 Documentation improvements
 --------------------------
