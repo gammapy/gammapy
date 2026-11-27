@@ -134,6 +134,8 @@ def test_background_3d_evaluate(bkg_3d):
 def test_plot_at_energy(bkg_3d):
     with mpl_plot_check():
         bkg_3d.plot_at_energy(energy=[5] * u.TeV)
+    with mpl_plot_check():
+        bkg_3d.plot_at_energy()
 
 
 def test_background_3d_missing_values(bkg_3d_interp):
@@ -423,6 +425,8 @@ def test_plot(bkg_2d):
 
     with mpl_plot_check():
         bkg_2d.plot_at_energy(energy=[1.0, 5.0] * u.TeV)
+    with mpl_plot_check():
+        bkg_2d.plot_at_energy()
 
 
 def test_eq(bkg_2d):
