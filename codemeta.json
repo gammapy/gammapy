@@ -37,6 +37,26 @@
             "givenName": "Tora T.H."
         },
         {
+            "@id": "https://orcid.org/0009-0005-2096-3466",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Cairo University, Faculty of Engineering, Computer Engineering Department"
+            },
+            "familyName": "Ashraf",
+            "givenName": "Ebraam"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-4893-7615",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "INAF, Osservatorio di Astrofisica e Scienza dello Spazio, via Piero Gobetti 93/3, 40129 Bologna, Italy"
+            },
+            "familyName": "Bahar",
+            "givenName": "Y. Emre"
+        },
+        {
             "@id": "https://orcid.org/0009-0008-6006-175X",
             "@type": "Person",
             "affiliation": {
@@ -77,6 +97,16 @@
             "givenName": "Noah"
         },
         {
+            "@id": "https://orcid.org/0009-0008-1656-4907",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "School of Physics, University College Dublin, Belfield, Dublin 4, Ireland"
+            },
+            "familyName": "Bond",
+            "givenName": "Nicki R."
+        },
+        {
             "@id": "https://orcid.org/0000-0003-0426-6634",
             "@type": "Person",
             "affiliation": {
@@ -107,6 +137,26 @@
             "givenName": "Marie-Sophie"
         },
         {
+            "@id": "https://orcid.org/0009-0000-3755-6262",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Indian Institute of Technology (BHU) Varanasi, India"
+            },
+            "familyName": "Chaudhary",
+            "givenName": "Pratham"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-8967-4911",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG), University of S\u00e3o Paulo (USP), Rua do Mat\u00e3o 1226, 05508-090 S\u00e3o Paulo, SP, Brazil"
+            },
+            "familyName": "Chen",
+            "givenName": "Yaocheng"
+        },
+        {
             "@id": "https://orcid.org/0000-0002-6488-8219",
             "@type": "Person",
             "affiliation": {
@@ -125,6 +175,16 @@
             },
             "familyName": "Donath",
             "givenName": "Axel"
+        },
+        {
+            "@id": "https://orcid.org/0009-0002-0120-8586",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Department of Computer Science and Engineering, JSS University, India"
+            },
+            "familyName": "Dubey",
+            "givenName": "Anshita"
         },
         {
             "@id": "https://orcid.org/0009-0002-4238-034X",
@@ -177,6 +237,26 @@
             "givenName": "Claudio"
         },
         {
+            "@id": "https://orcid.org/0000-0002-3297-960X",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "S\u00e3o Carlos Institute of Physics, University of S\u00e3o Paulo, IFSC-USP, S\u00e3o Carlos, Brazil"
+            },
+            "familyName": "Gouv\u00eaa Mamprim",
+            "givenName": "J\u00falia"
+        },
+        {
+            "@id": "https://orcid.org/0009-0003-2088-6208",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Independent researcher"
+            },
+            "familyName": "Gowrawaram",
+            "givenName": "Karthik Koundinya"
+        },
+        {
             "@id": "https://orcid.org/0000-0003-0627-8436",
             "@type": "Person",
             "affiliation": {
@@ -185,6 +265,16 @@
             },
             "familyName": "Gr\u00e9aux",
             "givenName": "Lucas"
+        },
+        {
+            "@id": "https://orcid.org/0009-0001-6071-9522",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Faculty of Computer and Information, Computer Science Department, Tanta University, Egypt."
+            },
+            "familyName": "Hekal",
+            "givenName": "Basmala"
         },
         {
             "@id": "https://orcid.org/0000-0001-6876-5577",
@@ -237,6 +327,16 @@
             "givenName": "Matthew"
         },
         {
+            "@id": "https://orcid.org/0009-0008-8751-0615",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Faculty of Engineering, Systems and Biomedical Engineering, Cairo University, Egypt."
+            },
+            "familyName": "Mahmoud",
+            "givenName": "Ahmed"
+        },
+        {
             "@id": "https://orcid.org/0000-0002-8547-8489",
             "@type": "Person",
             "affiliation": {
@@ -255,6 +355,16 @@
             },
             "familyName": "Mender",
             "givenName": "Simone"
+        },
+        {
+            "@id": "https://orcid.org/0009-0009-3880-5916",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Cairo University, Faculty of Engineering, Computer Engineering Department, Giza, Egypt"
+            },
+            "familyName": "Michelle",
+            "givenName": "Esther"
         },
         {
             "@id": "https://orcid.org/0000-0003-1204-5516",
@@ -374,7 +484,7 @@
                 "name": "Universit\u00e4t Innsbruck, Institut f\u00fcr Astro- und Teilchenphysik, Technikerstra\u00dfe 25, 6020 Innsbruck, Austria"
             },
             "familyName": "Preis",
-            "givenName": "Tobi"
+            "givenName": "Tobias"
         },
         {
             "@id": "https://orcid.org/0000-0002-4710-2165",
@@ -385,6 +495,16 @@
             },
             "familyName": "Punch",
             "givenName": "Michael"
+        },
+        {
+            "@id": "https://orcid.org/0009-0005-5218-378X",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Department of Computer Science, Bahria University, Karachi, Pakistan; VentureDive, Karachi, Pakistan"
+            },
+            "familyName": "Raza",
+            "givenName": "Syed Ahnaf"
         },
         {
             "@id": "https://orcid.org/0000-0002-3844-6003",
@@ -529,7 +649,7 @@
         }
     ],
     "codeRepository": "https://github.com/gammapy/gammapy",
-    "datePublished": "2025-12-16",
+    "datePublished": "2026-11-27",
     "description": "Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves, from event lists and instrument response information; it can also determine the position, morphology and spectra of gamma-ray sources. It is used to analyze data from H.E.S.S., Fermi-LAT, HAWC, and the Cherenkov Telescope Array (CTA).",
     "identifier": "https://doi.org/10.5281/zenodo.4701488",
     "keywords": [
@@ -540,7 +660,7 @@
     "license": "https://spdx.org/licenses/BSD-3-Clause",
     "name": "Gammapy: Python toolbox for gamma-ray astronomy",
     "url": "https://gammapy.org/",
-    "softwareVersion": "v2.0.1",
+    "softwareVersion": "v2.0.2",
     "maintainer": {
         "@id": "https://orcid.org/0000-0003-4568-7005",
         "@type": "Person",
@@ -561,7 +681,7 @@
         "active"
     ],
     "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
-    "dateModified": "2026-11-23",
+    "dateModified": "2026-11-27",
     "softwareRequirements": [
         "numpy>=2.0",
         "scipy>=1.13,<1.18",
