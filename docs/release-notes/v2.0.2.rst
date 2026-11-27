@@ -7,7 +7,7 @@
 
 - Released 27th November, 2026
 - contributors: 27
-- 172 pull requests since v2.0.1 (not all listed below)
+- 126 pull requests since v2.0.1 (not all listed below)
 - 18 closed issues
 
 Summary
@@ -24,7 +24,6 @@ We thank Dilanka Kaushal Hewage (@r3vpwnx) for reporting the issue.
 Documentation improvements
 --------------------------
 
-- Clarify usage of `~gammapy.maps.RegionGeom.from_regions` regarding underlying projection effects. [`#6272 <https://github.com/gammapy/gammapy/issues/6272>`_]
 - Remove unused ``obstime`` and ``location`` variables from `~gammapy.utils.coordinates.FoVICRSFrame` docstring example. [`#6460 <https://github.com/gammapy/gammapy/issues/6460>`_]
 - Fix issue in Fermi-LAT tutorial where dimmest sources are used for fitting rather than brightest. [`#6750 <https://github.com/gammapy/gammapy/issues/6750>`_]
 
@@ -32,22 +31,8 @@ Documentation improvements
 Bug Fixes
 ---------
 
-- The `~gammapy.estimators.FluxPoints.to_table` method now always outputs standard flux units. [`#6108 <https://github.com/gammapy/gammapy/issues/6108>`_]
-- Adapted the ``size_factor`` default value to be consistent for all spatial models. [`#6137 <https://github.com/gammapy/gammapy/issues/6137>`_]
-- Extra sensitivity options were added to `~gammapy.estimators.FluxMaps`. The additional options we now support are: "dnde_sensitivity", "e2dnde_sensitivity", "eflux_sensitivity". [`#6141 <https://github.com/gammapy/gammapy/issues/6141>`_]
-- Fixed `gammapy.irf.EDispKernel.plot_bias` so the correct axis is now being called for the ``xaxis.units``. [`#6159 <https://github.com/gammapy/gammapy/issues/6159>`_]
-- Fixed the incorrect brackets in the error calculation for `~gammapy.stats.compute_flux_doubling`. [`#6164 <https://github.com/gammapy/gammapy/issues/6164>`_]
-- Corrected `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel` integration by performing global normalisation by the duration of the integration window as done in the other temporal models. [`#6182 <https://github.com/gammapy/gammapy/issues/6182>`_]
-- Replaced the deprecated keyword ``RADECSYS`` for the coordinate system in the GADF event list fits table with ``RADESYSa``. [`#6189 <https://github.com/gammapy/gammapy/issues/6189>`_]
 - Ignore observations without spatial overlap with the target dataset geometry in `~gammapy.makers.DatasetsMaker` instead of raising an error. [`#6194 <https://github.com/gammapy/gammapy/issues/6194>`_]
-- Corrected SkyModel `_check_unit` unit requirement for models where exposure is not applied. [`#6227 <https://github.com/gammapy/gammapy/issues/6227>`_]
-- Modify default interpolation conditions in `~gammapy.modeling.models.TemplateSpatialModel` to allow using Hpx geometry maps. [`#6248 <https://github.com/gammapy/gammapy/issues/6248>`_]
-- Fixed ``plot_error`` for `~gammapy.modeling.models.BrokenPowerLawSpectralModel` and `~gammapy.modeling.models.TemplateNDSpectralModel` [`#6251 <https://github.com/gammapy/gammapy/issues/6251>`_]
-- Fix ``plot_error`` for models evaluated with non-finite values. [`#6252 <https://github.com/gammapy/gammapy/issues/6252>`_]
-- Fix the addition logic so that `gammapy.modeling.models.Models` and `gammapy.modeling.models.DatasetModels`  can be added together regardless of the order they are given. [`#6253 <https://github.com/gammapy/gammapy/issues/6253>`_]
-- Fix map stacking if data type is not float. [`#6254 <https://github.com/gammapy/gammapy/issues/6254>`_]
 - Adapted `SpectrumDataset.create()` to avoid creating PSFMap during dataset creation. Moved creation of `SpectrumDataset.create()` into the `SpectrumDataset` class. Added check for `RegionGeom` of given geometry. [`#6259 <https://github.com/gammapy/gammapy/issues/6259>`_]
-- Add an optional normalize argument on `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel`. It is set by default to True, for backward compatibility with 2.0. [`#6270 <https://github.com/gammapy/gammapy/issues/6270>`_]
 - Fixed kinematics in `gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`. The model now correctly uses mass/2 for the primary flux lookup. [`#6298 <https://github.com/gammapy/gammapy/issues/6298>`_]
 - Correct issue #6304. Include CITATION file in the gammapy directory. Modify the `_get_bibtex` and `_get_acknowledgement` functions accordingly. [`#6308 <https://github.com/gammapy/gammapy/issues/6308>`_]
 - Add default `~astropy.modeling.Parameter` values on init in gammapy.astro models. This solves docs build issues which appeared recently. [`#6333 <https://github.com/gammapy/gammapy/issues/6333>`_]
