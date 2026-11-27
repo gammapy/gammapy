@@ -880,6 +880,7 @@ class DarkMatterSpectralModel(SpectralModel):
                     f"be removed in a future version. Use '{new_name}' instead. "
                     f"This serialized model appears to use the old format.",
                     GammapyDeprecationWarning,
+                    stacklevel=2,
                 )
                 data[new_name] = data.pop(old_name)
 

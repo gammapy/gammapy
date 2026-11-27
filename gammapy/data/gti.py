@@ -158,6 +158,7 @@ class GTI:
                     warnings.warn(
                         f"Checksum verification failed for HDU {hdu} of {filename}.",
                         UserWarning,
+                        stacklevel=2,
                     )
 
             return cls.from_table_hdu(gti_hdu, format=format)

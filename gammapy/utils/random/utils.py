@@ -229,7 +229,7 @@ def sample_powerlaw(x_min, x_max, gamma, size=None, random_state="random-seed"):
 def sample_times(
     size,
     rate,
-    dead_time=TimeDelta(0, format="sec"),
+    dead_time=None,
     return_diff=False,
     random_state="random-seed",
 ):
@@ -275,6 +275,8 @@ def sample_times(
     >>> times[-1]
     <TimeDelta object: scale='None' format='sec' value=9.186484131475074>
     """
+    if dead_time is None:
+        dead_time = TimeDelta(0, format="sec")
     random_state = get_random_state(random_state)
 
     dead_time = TimeDelta(dead_time)

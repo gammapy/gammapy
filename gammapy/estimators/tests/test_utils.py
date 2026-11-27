@@ -176,7 +176,7 @@ class TestFindFluxPeaks:
 
 
 def test_resample_energy_edges(spectrum_dataset):
-    resampled_energy_edges = resample_energy_edges(spectrum_dataset, conditions={})
+    resampled_energy_edges = resample_energy_edges(spectrum_dataset)
     assert (resampled_energy_edges == spectrum_dataset._geom.axes["energy"].edges).all()
 
     with pytest.raises(ValueError):

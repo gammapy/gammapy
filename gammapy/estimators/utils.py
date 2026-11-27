@@ -324,7 +324,7 @@ def _satisfies_conditions(info_dict, conditions):
     return satisfies
 
 
-def resample_energy_edges(dataset, conditions={}):
+def resample_energy_edges(dataset, conditions=None):
     """Return energy edges that satisfy given condition on the per bin statistics.
 
     Parameters
@@ -360,6 +360,8 @@ def resample_energy_edges(dataset, conditions={}):
     ...     spectrum_dataset, conditions={"sqrt_ts_min": 2}
     ... )
     """
+    if conditions is None:
+        conditions = {}
     if not isinstance(dataset, (SpectrumDataset, SpectrumDatasetOnOff)):
         raise NotImplementedError(
             "This method is currently supported for spectral datasets only."

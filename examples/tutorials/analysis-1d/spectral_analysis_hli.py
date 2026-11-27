@@ -262,7 +262,7 @@ print(analysis.datasets[0])
 #
 
 info_table = analysis.datasets.info_table()
-info_table
+info_table  # noqa: B018
 
 print(
     f"Tobs={info_table['livetime'].to('h')[0]:.1f} Excess={info_table['excess'].value[0]:.1f} \
