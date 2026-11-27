@@ -1,1 +1,0 @@
-Modify handling of GADF keyword WCSSHAPE in `~gammapy.maps.WcsGeom` to validate its content.
