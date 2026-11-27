@@ -661,16 +661,58 @@
     "name": "Gammapy: Python toolbox for gamma-ray astronomy",
     "url": "https://gammapy.org/",
     "softwareVersion": "v2.0.2",
-    "maintainer": {
-        "@id": "https://orcid.org/0000-0003-4568-7005",
-        "@type": "Person",
-        "affiliation": {
-            "@type": "Organization",
-            "name": "Center for Astrophysics | Harvard & Smithsonian, USA"
+    "maintainer": [
+        {
+            "@id": "https://orcid.org/0000-0003-1476-3714",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
+            },
+            "familyName": "Feijen",
+            "givenName": "Kirsty"
         },
-        "familyName": "Donath",
-        "givenName": "Axel"
-    },
+        {
+            "@id": "https://orcid.org/0000-0001-6876-5577",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
+            },
+            "familyName": "Kh\u00e9lifi",
+            "givenName": "Bruno"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-8815-6530",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
+            },
+            "familyName": "Remy",
+            "givenName": "Quentin"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-9238-7163",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Dept. of High Energy Physics, Tata Institute of Fundamental Research, 400055 Mumbai, India"
+            },
+            "familyName": "Sinha",
+            "givenName": "Atreyee"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-8219-4667",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
+            },
+            "familyName": "Terrier",
+            "givenName": "R\u00e9gis"
+        }
+    ],
     "funding": [
         "10.13039/501100000780::101129751",
         "10.13039/501100000780::824064"
