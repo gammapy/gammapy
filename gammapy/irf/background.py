@@ -206,7 +206,7 @@ class Background3D(BackgroundIRF):
 
     def plot_at_energy(
         self,
-        energy=1 * u.TeV,
+        energy=[1 * u.TeV],
         add_cbar=True,
         ncols=3,
         figsize=None,
@@ -218,8 +218,8 @@ class Background3D(BackgroundIRF):
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`, optional
-            List of energies. Default is 1 TeV.
+        energy : list of `~astropy.units.Quantity`, optional
+            List of energies. Default is [1] TeV.
         add_cbar : bool, optional
             Add color bar. Default is True.
         ncols : int, optional
@@ -345,14 +345,14 @@ class Background2D(BackgroundIRF):
         )
 
     def plot_at_energy(
-        self, energy=1 * u.TeV, add_cbar=True, ncols=3, figsize=None, **kwargs
+        self, energy=[1 * u.TeV], add_cbar=True, ncols=3, figsize=None, **kwargs
     ):
         """Plot the background rate in FoV coordinates at a given energy.
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`, optional
-            List of energy. Default is 1 TeV.
+        energy : list of `~astropy.units.Quantity`, optional
+            List of energy. Default is [1] TeV.
         add_cbar : bool, optional
             Add color bar. Default is True.
         ncols : int, optional
