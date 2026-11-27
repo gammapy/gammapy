@@ -2,13 +2,13 @@
 
 .. _gammapy_2p2_release:
 
-2.2 (xx November, 2026)
-======================
+2.2 (27th November, 2026)
+=========================
 
-- Released: xx November, 2026
+- Released: 27th November, 2026
 - New contributors: 7 (Marked with * in the list)
 - Total contributors: 30
-- Total merged PRs: 192
+- Total merged PRs: 200
 
 
 Summary
@@ -22,6 +22,13 @@ structures.
 Python 3.14 and 3.15 are now supported, and issues encountered with `~regions` in the
 previous versions are now resolved. Three new notebooks have been added and the CTAO
 notebook significantly updated.
+
+A security vulnerability was found (CVE-2026-134694). When reading a WCS map from a
+FITS file (e.g. with `gammapy.maps.Map.read`), Gammapy (<=2.1) evaluates the content
+of the ``WCSSHAPE`` GADF header keyword as Python code. A maliciously crafted FITS file
+could therefore execute arbitrary code as user on your computer when opened.
+**All Gammapy versions up to 2.1 are affected.** This has been adjusted in this version.
+We thank Dilanka Kaushal Hewage (@r3vpwnx) for reporting the issue.
 
 Dark matter module
 ~~~~~~~~~~~~~~~~~~
@@ -83,7 +90,7 @@ API changes
 -----------
 
 - The constructor of `~gammapy.data.ObservationTable` now takes an argument ``table`` instead of ``data``. [`#6620 <https://github.com/gammapy/gammapy/issues/6620>`_]
-- Deprecated `~gammapy.utils.make_map_exposure_true_energy`, use the ``make_exposure`` method on `~gammapy.makers.MapDatasetMaker` instead. [`#6882 <https://github.com/gammapy/gammapy/issues/6882>`_]
+- Deprecated `~gammapy.makers.utils.make_map_exposure_true_energy`, use the ``make_exposure`` method on `~gammapy.makers.MapDatasetMaker` instead. [`#6882 <https://github.com/gammapy/gammapy/issues/6882>`_]
 - Deprecate `gammapy.makers.utils.make_psf_map`. [`#6893 <https://github.com/gammapy/gammapy/issues/6893>`_]
 - The options of `~gammapy.modeling.Sampler` are now given in a single ``options`` dictionary, using the backend's own option names. [`#6898 <https://github.com/gammapy/gammapy/issues/6898>`_]
 - Deprecate `gammapy.makers.utils.make_edisp_map` and `gammapy.makers.utils.make_edisp_kernel_map`. [`#6906 <https://github.com/gammapy/gammapy/issues/6906>`_]
@@ -103,9 +110,10 @@ Documentation improvements
 - Add PIG for introducing new plotter classes [`#5726 <https://github.com/gammapy/gammapy/issues/5726>`_]
 - Improves the documentation in the user guide on fit statistics. [`#6623 <https://github.com/gammapy/gammapy/issues/6623>`_]
 - Fix issue in Fermi-LAT tutorial where dimmest sources are used for fitting rather than brightest. [`#6750 <https://github.com/gammapy/gammapy/issues/6750>`_]
-- Add a new tutoial showing detailed Dark Matter analysis [`#6774 <https://github.com/gammapy/gammapy/issues/6774>`_]
+- Add a new tutorial showing detailed Dark Matter analysis [`#6774 <https://github.com/gammapy/gammapy/issues/6774>`_]
 - Update of the Dark Matter module main documentation. [`#6777 <https://github.com/gammapy/gammapy/issues/6777>`_]
 - Add tutorial for on-off analysis using paired off runs. [`#6835 <https://github.com/gammapy/gammapy/issues/6835>`_]
+- Add PIG for data format validation. [`#6886 <https://github.com/gammapy/gammapy/issues/6886>`_]
 - Add How-To entry to document ASDF [`#6981 <https://github.com/gammapy/gammapy/issues/6981>`_]
 - Update the Upper Limit tutorial. [`#6997 <https://github.com/gammapy/gammapy/issues/6997>`_]
 - Add a tutorial about Bayesian model selection using arviz package. [`#7018 <https://github.com/gammapy/gammapy/issues/7018>`_]
@@ -190,6 +198,9 @@ Bug Fixes
 - Fix error in `gammapy.data.ivoa.make_hdu_table`. [`#6920 <https://github.com/gammapy/gammapy/issues/6920>`_]
 - Fix ``to_dict()`` of `~gammapy.modeling.models.TemplateSpectralModel`, `~gammapy.modeling.models.PiecewiseNormSpectralModel`, `~gammapy.modeling.models.EBLAbsorptionNormSpectralModel` and `~gammapy.modeling.models.PiecewiseNormSpatialModel` failing on big-endian arrays. [`#6952 <https://github.com/gammapy/gammapy/issues/6952>`_]
 - Fix the normalisation of `~gammapy.stats.compute_fpp` to match Edelson et al. (2002), also when the light curve has NaN values. [`#7014 <https://github.com/gammapy/gammapy/issues/7014>`_]
+- Correct location of HEGRA array in ~gammapy.utils.observers.py [`#7068 <https://github.com/gammapy/gammapy/issues/7068>`_]
+- Modify handling of GADF keyword WCSSHAPE in `~gammapy.maps.WcsGeom` to validate its content. [`#7087 <https://github.com/gammapy/gammapy/issues/7087>`_]
+- Default ``energy`` was a single `~astropy.units.Quantity` instead of a list of `~astropy.units.Quantity`, causing `Background2D.plot_at_energy()` and `Background3D.plot_at_energy()` to fail when using the default. [`#7101 <https://github.com/gammapy/gammapy/issues/7101>`_]
 
 
 
