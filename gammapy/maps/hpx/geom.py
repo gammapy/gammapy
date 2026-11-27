@@ -1350,7 +1350,7 @@ class HpxGeom(Geom):
         """
         from gammapy.maps import Map, RegionGeom
 
-        if not self.is_regular:
+        if self.nside.size > 1:
             raise ValueError("Multi-resolution maps not supported yet")
 
         # TODO: use spatial coordinates only...
