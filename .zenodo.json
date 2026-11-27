@@ -237,7 +237,7 @@
   ],
   "license": "bsd-3-clause",
   "title": "Gammapy: Python toolbox for gamma-ray astronomy",
-  "version": "v2.2rc1",
+  "version": "v2.2",
   "contributors": [
     {
       "name": "Kirsty Feijen",
