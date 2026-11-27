@@ -87,6 +87,7 @@ Bug Fixes
 - Fix the normalisation of `~gammapy.stats.compute_fpp` to match Edelson et al. (2002), also when the light curve has NaN values. [`#7014 <https://github.com/gammapy/gammapy/issues/7014>`_]
 - Correct location of HEGRA array in ~gammapy.utils.observers.py [`#7068 <https://github.com/gammapy/gammapy/issues/7068>`_]
 - Modify handling of GADF keyword WCSSHAPE in `~gammapy.maps.WcsGeom` to validate its content. [`#7087 <https://github.com/gammapy/gammapy/issues/7087>`_]
+- Default ``energy`` was a single `~astropy.units.Quantity` instead of a list of `~astropy.units.Quantity`, causing `Background2D.plot_at_energy()` and `Background3D.plot_at_energy()` to fail when using the default. [`#7101 <https://github.com/gammapy/gammapy/issues/7101>`_]
 
 
 Contributors
