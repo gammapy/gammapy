@@ -468,6 +468,7 @@ class HpxGeom(Geom):
             nside = self._get_nside(idx)
             vec = hp.pix2vec(nside, idx[0], nest=self.nest)
             lon, lat = hp.vec2ang(np.mean(vec, axis=1), lonlat=True)
+            lon, lat = lon.item(), lat.item()
         else:
             tokens = parse_hpxregion(self.region)
             if tokens[0] in ["DISK", "DISK_INC"]:
