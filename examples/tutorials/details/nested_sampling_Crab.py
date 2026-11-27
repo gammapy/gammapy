@@ -421,7 +421,7 @@ def get_samples_from_posterior(spectral_model, results):
     samples = []
     for p in spectral_model.parameters:
         try:
-            idx = spectral_model.parameters.free_unique_parameters.index(p)
+            idx = results.models.parameters.free_unique_parameters.index(p)
             samples.append(results.samples[:, idx] * p.unit)
         except ValueError:
             samples.append(np.ones(n_samples) * p.quantity)
