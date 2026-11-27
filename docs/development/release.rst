@@ -177,21 +177,21 @@ Release candidates
 #. In the `gammapy repo <https://github.com/gammapy/gammapy>`__, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
    ``dev/prepare-release.py`` script::
 
-    git checkout v1.0.x
+    git checkout v2.0.x
     python ./dev/prepare-release.py --release v1.0rc1
 
    * This should update the date and the version of the `CITATION.cff` file.
 
 #. Commit and push the branch back to GitHub::
 
-    git push upstream v1.0.x
+    git push upstream v2.0.x
 
 #. Now merge the PR for the changelog, if this has not already been done.
 
-#. Locally create a new release candidate tag on the ``v1.0.x``, like ``v1.0rc1`` for Gammapy and push::
+#. Locally create a new release candidate tag on the ``v2.0.x``, like ``v2.0rc1`` for Gammapy and push::
 
-    git tag -s v1.0rc1 -m "Tagging v1.0rc1"
-    git push upstream v1.0rc1
+    git tag -s v2.0rc1 -m "Tagging v2.0rc1"
+    git push upstream v2.0rc1
 
 #. Once the tag is pushed, the ``release`` action in charge of packaging and uploading to `PyPi <https://pypi.org/>`__
    should be triggered automatically. Once complete, it will trigger the docs build on the  ``gammapy-docs``
@@ -205,7 +205,7 @@ Release candidates
 #. Update the entry for the release candidate in the
    `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`__.
 #. Create a testing page like
-   `Gammapy v1.0rc testing <https://github.com/gammapy/gammapy/wiki/Gammapy-v1.0rc-testing>`__.
+   `Gammapy v2.0rc testing <https://github.com/gammapy/gammapy/wiki/Testing-Gammpy2.0-release>`__.
 #. Advertise the release candidate and motivate developers and users to report test fails and bugs and list them
    on the page created before.
 
@@ -233,9 +233,9 @@ Releasing the final version
     git commit -s -m "Prepare release v2.0"
     git push
 
-#. Next, you need to manually trigger the `cffconvert` workflow
+#. Next, you need to manually trigger the ``cffconvert`` workflow
    `here <https://github.com/gammapy/gammapy/actions/workflows/cffconvert.yml>`__.
-   This allows conversion and validation of the codemeta.json to zenodo.json,
+   This allows conversion and validation of the ``codemeta.json`` to ``zenodo.json``,
    to allow for the automatic release on Zenodo.
 
 #. Locally create a new release tag like ``v2.0`` for Gammapy and push the tag to upstream::
