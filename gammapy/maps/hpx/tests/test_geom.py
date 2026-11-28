@@ -376,6 +376,9 @@ def test_hpxgeom_get_hpxregion_dir():
     assert_allclose(refdir.l.deg, 0.0)
     assert_allclose(refdir.b.deg, 0.0)
 
+    geom = HpxGeom(nside=8, region=(np.array([0, 1, 2]),))
+    assert geom.center_skydir.isscalar
+
 
 def test_hpxgeom_make_wcs():
     ax0 = np.linspace(0.0, 3.0, 4)
@@ -837,6 +840,20 @@ def test_hpx_geom_region_mask():
 
     solid_angle = (mask.data * geom.solid_angle()).sum()
     assert_allclose(solid_angle, 2 * np.pi * (1 - np.cos(3 * u.deg)) * u.sr, rtol=0.01)
+
+    geom = HpxGeom(nside=8, region=(np.array([0, 1, 2]),))
+    center = geom.get_coord().skycoord[0]
+    circle = CircleSkyRegion(center=center, radius=1 * u.deg)
+
+    mask = geom.region_mask(circle)
+
+    assert mask.data.sum() == 1
+
+    axis = MapAxis(np.logspace(0.0, 2.0, 3))
+    geom = HpxGeom(nside=[8, 16], axes=[axis])
+
+    with pytest.raises(ValueError, match="Multi-resolution maps not supported yet"):
+        geom.region_mask(circle)
 
 
 def test_hpx_geom_separation():
